@@ -6,7 +6,6 @@
 package app.passwordstore.crypto
 
 // import app.passwordstore.crypto.errors.UnusableKeyException
-// import kotlin.test.assertNotEquals
 import app.passwordstore.crypto.KeyUtils.tryGetId
 import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPIdentifier.UserId
@@ -20,6 +19,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -158,7 +158,7 @@ class PGPKeyManagerTest {
       assertEquals(2, singleKeyList.size)
     }
 
-  /*  @Test
+  @Test
   fun getMultipleIdentityKeyWithAllIdentities() =
     runTest(dispatcher) {
       val key = PGPKey(TestUtils.getArmoredSecretKeyWithMultipleIdentities())
@@ -167,7 +167,7 @@ class PGPKeyManagerTest {
       val janeKey = keyManager.getKeyById(UserId("jane@doe.org")).unwrap()
 
       assertContentEquals(johnKey.contents, janeKey.contents)
-    } */
+    }
 
   @Test
   fun replaceSecretKeyWithPublicKey() =
@@ -202,7 +202,7 @@ class PGPKeyManagerTest {
       assertTrue(keyManager.addKey(secretKey).isErr)
     }
 
-  /*  @Test
+  @Test
   fun addMultipleKeysWithSameEmail() =
     runTest(dispatcher) {
       val alice =
@@ -231,5 +231,5 @@ class PGPKeyManagerTest {
         assertTrue(bobby1.isOk)
         assertNotEquals(alice1.value.contents, bobby1.value.contents)
       }
-    } */
+    }
 }

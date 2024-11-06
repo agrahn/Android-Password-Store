@@ -4,7 +4,7 @@
 
 ## Download
 
-Latest [snapshot](https://github.com/agrahn/Android-Password-Store/releases/tag/latest).
+Latest [snapshot build (APK)](https://github.com/agrahn/Android-Password-Store/releases/tag/latest).
 
 ## Documentation
 
