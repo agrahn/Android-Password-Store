@@ -12,7 +12,6 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.os.StrictMode
 import androidx.appcompat.app.AppCompatDelegate.*
-import app.passwordstore.data.crypto.PGPPassphraseCache
 import app.passwordstore.injection.context.FilesDirPath
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.coroutines.DispatcherProvider
@@ -43,7 +42,6 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
   @Inject @SettingsPreferences lateinit var prefs: SharedPreferences
   @Inject @FilesDirPath lateinit var filesDirPath: String
   @Inject lateinit var dispatcherProvider: DispatcherProvider
-  @Inject lateinit var passphraseCache: PGPPassphraseCache
   @Inject lateinit var gitSettings: GitSettings
   @Inject lateinit var proxyUtils: ProxyUtils
   @Inject lateinit var features: Features
@@ -79,7 +77,10 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
     val screenOffReceiver: BroadcastReceiver =
       object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-          if (intent.action == Intent.ACTION_SCREEN_OFF) screenWasOff = true
+          if (intent.action == Intent.ACTION_SCREEN_OFF) {
+            cachedPassphrase?.fill(' ')
+            cachedPassphrase = null
+          }
         }
       }
     val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
@@ -146,6 +147,6 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
   companion object {
 
     lateinit var instance: Application
-    var screenWasOff: Boolean = true
+    var cachedPassphrase: CharArray? = null
   }
 }

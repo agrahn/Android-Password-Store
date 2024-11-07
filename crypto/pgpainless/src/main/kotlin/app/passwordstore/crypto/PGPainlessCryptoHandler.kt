@@ -43,7 +43,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
    */
   public override fun decrypt(
     keys: List<PGPKey>,
-    passphrase: String,
+    passphrase: CharArray?,
     ciphertextStream: InputStream,
     outputStream: OutputStream,
     options: PGPDecryptOptions,
@@ -56,15 +56,11 @@ public class PGPainlessCryptoHandler @Inject constructor() :
           keys
             .mapNotNull { key -> PGPainless.readKeyRing().secretKeyRing(key.contents) }
             .run(::PGPSecretKeyRingCollection)
-        val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword(passphrase))
+        val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
         val decryptionStream =
           PGPainless.decryptAndOrVerify()
             .onInputStream(ciphertextStream)
-            .withOptions(
-              ConsumerOptions()
-                .addDecryptionKeys(keyringCollection, protector)
-                .addMessagePassphrase(Passphrase.fromPassword(passphrase))
-            )
+            .withOptions(ConsumerOptions().addDecryptionKeys(keyringCollection, protector))
         decryptionStream.use { Streams.pipeAll(it, outputStream) }
         return@runCatching
       }

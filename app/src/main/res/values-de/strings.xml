@@ -137,13 +137,6 @@
   <string name="pref_import_pgp_key_title">Importiere PGP-Schlüssel.</string>
   <string name="pref_pgp_key_manager_title">Schlüsselmanager</string>
   <string name="pref_pgp_ascii_armor_title">Im ASCII-Armor-Modus verschlüsseln</string>
-  <string name="pref_passphrase_cache_title">Zwischenspeicher für Passphrase aktivieren</string>
-  <string name="pref_passphrase_cache_summary">WARNUNG: Dieses Feature ist funktionsbereit, befindet sich jedoch noch in der Erprobungsphase. Erfordert eine aktive Bildschirmsperre.</string>
-  <string name="pref_passphrase_cache_authenticate_enable">Zwischenspeicher für Passphrase aktivieren</string>
-  <string name="pref_passphrase_cache_authenticate_disable">Zwischenspeicher für Passphrase deaktivieren</string>
-  <string name="pref_passphrase_cache_auto_clear_authenticate_disable">Automatische Löschung des Zwischenspeichers deaktivieren</string>
-  <string name="pref_passphrase_cache_auto_clear_title">Automatische Löschung des Zwischenspeichers</string>
-  <string name="pref_passphrase_cache_auto_clear_summary">Löscht die Passphrase aus dem Zwischenspeicher nach Abschalten des Bildschirms.</string>
 
   <!-- PasswordGenerator fragment -->
   <string name="pwgen_title">Passwort erstellen</string>
@@ -382,8 +375,9 @@
   <string name="pgp_key_manager_no_keys_guidance">Importieren Sie einen Schlüssel über die unten befindliche Schaltfläche \"+\".</string>
   <string name="no_keys_imported_dialog_title">Keine Schlüssel importiert</string>
   <string name="no_keys_imported_dialog_message">Es wurden noch keine PGP-Schlüssel in die App importiert. Wählen Sie eine Schlüsseldatei über die Schaltfläche \"Importieren\" aus.</string>
-  <string name="biometric_prompt_title_gpg_passphrase_cache">Freischalten des Passphrase-Zwischenspeichers</string>
   <string name="aead_detect_title">AEAD-Verschlüsselung festgestellt</string>
   <string name="aead_detect_message">%1$s, siehe https://passwordstore.app/fix-aead für weiterführende Informationen.</string>
-  <string name="clear_cached_password_on_screen_off">Beim Abschalten des Bildschirms Passphrase aus dem Zwischenspeicher entfernen</string>
+
+  <!-- Passphrase input -->
+  <string name="cache_password_until_screen_off">Passphrase bis zum Abschalten des Bildschirms merken</string>
 </resources>

@@ -51,7 +51,7 @@ class PGPainlessCryptoHandlerTest {
     val decryptRes =
       cryptoHandler.decrypt(
         listOf(secretKey),
-        KEY_PASSPHRASE,
+        KEY_PASSPHRASE.toCharArray(),
         ciphertextStream.toByteArray().inputStream(),
         plaintextStream,
         PGPDecryptOptions.Builder().build(),
@@ -75,7 +75,7 @@ class PGPainlessCryptoHandlerTest {
     val result =
       cryptoHandler.decrypt(
         listOf(secretKey),
-        "very incorrect passphrase",
+        "very incorrect passphrase".toCharArray(),
         ciphertextStream.toByteArray().inputStream(),
         plaintextStream,
         PGPDecryptOptions.Builder().build(),
@@ -128,7 +128,7 @@ class PGPainlessCryptoHandlerTest {
       val res =
         cryptoHandler.decrypt(
           listOf(key),
-          KEY_PASSPHRASE,
+          KEY_PASSPHRASE.toCharArray(),
           ciphertextStreamCopy,
           plaintextStream,
           PGPDecryptOptions.Builder().build(),
@@ -145,7 +145,7 @@ class PGPainlessCryptoHandlerTest {
     val res =
       cryptoHandler.decrypt(
         listOf(secKey),
-        "Password",
+        "Password".toCharArray(),
         ciphertextStream,
         plaintextStream,
         PGPDecryptOptions.Builder().build(),
@@ -209,7 +209,7 @@ class PGPainlessCryptoHandlerTest {
     val res =
       cryptoHandler.decrypt(
         listOf(aliceKey, bobPublicKey),
-        KEY_PASSPHRASE,
+        KEY_PASSPHRASE.toCharArray(),
         ciphertextStreamCopy,
         plaintextStream,
         PGPDecryptOptions.Builder().build(),

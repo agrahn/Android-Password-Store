@@ -43,7 +43,7 @@ constructor(
   }
 
   suspend fun decrypt(
-    password: String,
+    passphrase: CharArray?,
     identities: List<PGPIdentifier>,
     message: ByteArrayInputStream,
     out: ByteArrayOutputStream,
@@ -51,7 +51,9 @@ constructor(
     withContext(dispatcherProvider.io()) {
       val keys = identities.map { id -> pgpKeyManager.getKeyById(id) }.filterValues()
       val decryptionOptions = PGPDecryptOptions.Builder().build()
-      pgpCryptoHandler.decrypt(keys, password, message, out, decryptionOptions).map { out }
+      // pgpCryptoHandler.decrypt(keys, String(passphrase ?: charArrayOf()), message, out,
+      // decryptionOptions).map { out }
+      pgpCryptoHandler.decrypt(keys, passphrase, message, out, decryptionOptions).map { out }
     }
 
   suspend fun encrypt(

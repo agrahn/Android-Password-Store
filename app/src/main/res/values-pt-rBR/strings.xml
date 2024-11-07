@@ -118,11 +118,6 @@
   <string name="pref_import_pgp_key_title">Importar chave PGP</string>
   <string name="pref_pgp_key_manager_title">Gerenciador de Chaves</string>
   <string name="pref_pgp_ascii_armor_title">Criptografar no modo de proteção ASCII</string>
-  <string name="pref_passphrase_cache_title">Ativar cache da senha</string>
-  <string name="pref_passphrase_cache_summary">AVISO: este recurso é funcional mas muito experimental. Requer um bloqueio de tela ativo.</string>
-  <string name="pref_passphrase_cache_authenticate_enable">Autenticar para ativar o cache</string>
-  <string name="pref_passphrase_cache_auto_clear_title">Limpar automaticamente cache de senha</string>
-  <string name="pref_passphrase_cache_auto_clear_summary">Limpa o cache de senha quando a tela está desligada</string>
   <!-- PasswordGenerator fragment -->
   <string name="pwgen_title">Gerar Senha</string>
   <string name="pwgen_generate">Gerar</string>
@@ -343,7 +338,6 @@
   <string name="pgp_key_manager_no_keys_guidance">Importar uma chave usando o botão Adicionar abaixo</string>
   <string name="no_keys_imported_dialog_title">Nenhuma chave importada</string>
   <string name="no_keys_imported_dialog_message">Não há chaves PGP importadas no aplicativo ainda, pressione o botão abaixo para escolher um arquivo de chave</string>
-  <string name="biometric_prompt_title_gpg_passphrase_cache">Desbloquear cache da senha</string>
   <string name="aead_detect_title">Criptografia AEAD detectada</string>
   <string name="aead_detect_message">%1$s, consulte https://passwordstore.app/fix-aead para obter mais informações</string>
 </resources>

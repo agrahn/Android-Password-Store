@@ -91,5 +91,8 @@ object PreferenceKeys {
   const val DICEWARE_LENGTH = "diceware_length"
   const val DISABLE_SYNC_ACTION = "disable_sync_action"
   const val ASCII_ARMOR = "pgpainless_ascii_armor"
+
+  @Deprecated("Persistent passphrase caching was removed.")
   const val CLEAR_PASSPHRASE_CACHE = "pgpainless_auto_clear_passphrase_cache_screen_off"
+  const val CACHE_PASSPHRASE = "cache_passphrase_until_screen_off"
 }

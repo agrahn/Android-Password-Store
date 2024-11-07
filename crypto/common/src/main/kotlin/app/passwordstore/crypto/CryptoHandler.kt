@@ -21,7 +21,7 @@ public interface CryptoHandler<Key, EncOpts : CryptoOptions, DecryptOpts : Crypt
    */
   public fun decrypt(
     keys: List<Key>,
-    passphrase: String,
+    passphrase: CharArray?,
     ciphertextStream: InputStream,
     outputStream: OutputStream,
     options: DecryptOpts,

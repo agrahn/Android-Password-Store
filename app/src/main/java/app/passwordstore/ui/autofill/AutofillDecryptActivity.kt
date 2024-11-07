@@ -14,20 +14,15 @@ import android.view.autofill.AutofillManager
 import androidx.core.content.edit
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
-import app.passwordstore.Application.Companion.screenWasOff
-import app.passwordstore.R
+import app.passwordstore.Application.Companion.cachedPassphrase
 import app.passwordstore.crypto.PGPIdentifier
-import app.passwordstore.data.crypto.PGPPassphraseCache
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.ui.crypto.BasePGPActivity
 import app.passwordstore.ui.crypto.PasswordDialog
-import app.passwordstore.util.auth.BiometricAuthenticator
-import app.passwordstore.util.auth.BiometricAuthenticator.Result as BiometricResult
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.autofill.AutofillResponseBuilder
 import app.passwordstore.util.extensions.asLog
-import app.passwordstore.util.features.Feature.EnablePGPPassphraseCache
 import app.passwordstore.util.features.Features
 import app.passwordstore.util.settings.DirectoryStructure
 import app.passwordstore.util.settings.PreferenceKeys
@@ -52,10 +47,9 @@ class AutofillDecryptActivity : BasePGPActivity() {
 
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
   @Inject lateinit var features: Features
-  @Inject lateinit var passphraseCache: PGPPassphraseCache
 
   private lateinit var directoryStructure: DirectoryStructure
-  private var clearCache = true
+  private var cacheEnabled = false
 
   override fun onStart() {
     super.onStart()
@@ -78,68 +72,19 @@ class AutofillDecryptActivity : BasePGPActivity() {
     val action = if (isSearchAction) AutofillAction.Search else AutofillAction.Match
     directoryStructure = AutofillPreferences.directoryStructure(this)
     logcat { action.toString() }
-    requireKeysExist {
-      if (
-        features.isEnabled(EnablePGPPassphraseCache) && BiometricAuthenticator.canAuthenticate(this)
-      ) {
-        BiometricAuthenticator.authenticate(
-          this,
-          R.string.biometric_prompt_title_gpg_passphrase_cache,
-        ) { authResult ->
-          decrypt(filePath, clientState, action, authResult)
-        }
-      } else {
-        decrypt(filePath, clientState, action, BiometricResult.CanceledByUser)
-      }
-    }
+    requireKeysExist { decrypt(filePath, clientState, action) }
   }
 
-  private fun decrypt(
-    filePath: String,
-    clientState: Bundle,
-    action: AutofillAction,
-    authResult: BiometricResult,
-  ) {
+  private fun decrypt(filePath: String, clientState: Bundle, action: AutofillAction) {
     val gpgIdentifiers =
       getPGPIdentifiers(
         getParentPath(filePath, PasswordRepository.getRepositoryDirectory().toString())
       ) ?: return
+    val passphrase = cachedPassphrase
     lifecycleScope.launch(dispatcherProvider.main()) {
-      when (authResult) {
-        // Internally handled by the prompt dialog
-        is BiometricResult.Retry -> {}
-        // If the dialog is dismissed for any reason, prompt for passphrase
-        is BiometricResult.CanceledBySystem,
-        is BiometricResult.CanceledByUser,
-        is BiometricResult.Failure,
-        is BiometricResult.HardwareUnavailableOrDisabled ->
-          askPassphrase(filePath, gpgIdentifiers, clientState, action)
-        is BiometricResult.Success -> {
-          /* clear passphrase cache on first use after application startup or if screen was off;
-          also make sure to purge a stale cache after caching has been disabled via PGP settings */
-          clearCache = settings.getBoolean(PreferenceKeys.CLEAR_PASSPHRASE_CACHE, true)
-          if (screenWasOff && clearCache) {
-            passphraseCache.clearAllCachedPassphrases(this@AutofillDecryptActivity)
-            screenWasOff = false
-          }
-          val cachedPassphrase =
-            passphraseCache.retrieveCachedPassphrase(
-              this@AutofillDecryptActivity,
-              gpgIdentifiers.first(),
-            )
-          if (cachedPassphrase != null) {
-            decryptWithPassphrase(
-              File(filePath),
-              gpgIdentifiers,
-              clientState,
-              action,
-              cachedPassphrase,
-            )
-          } else {
-            askPassphrase(filePath, gpgIdentifiers, clientState, action)
-          }
-        }
-      }
+      passphrase?.let {
+        decryptWithPassphrase(File(filePath), gpgIdentifiers, clientState, action, passphrase)
+      } ?: askPassphrase(filePath, gpgIdentifiers, clientState, action)
     }
   }
 
@@ -150,22 +95,22 @@ class AutofillDecryptActivity : BasePGPActivity() {
     action: AutofillAction,
   ) {
     if (!repository.isPasswordProtected(identifiers)) {
-      decryptWithPassphrase(File(filePath), identifiers, clientState, action, password = "")
+      decryptWithPassphrase(File(filePath), identifiers, clientState, action, passphrase = null)
       return
     }
     val dialog =
       PasswordDialog.newInstance(
-        cacheEnabled = features.isEnabled(EnablePGPPassphraseCache),
-        clearCache = clearCache,
+        cacheEnabled = settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)
       )
     dialog.show(supportFragmentManager, "PASSWORD_DIALOG")
     dialog.setFragmentResultListener(PasswordDialog.PASSWORD_RESULT_KEY) { key, bundle ->
       if (key == PasswordDialog.PASSWORD_RESULT_KEY) {
-        val value =
-          bundle.getString(PasswordDialog.PASSWORD_PHRASE_KEY) ?: throw NullPointerException()
-        clearCache = bundle.getBoolean(PasswordDialog.PASSWORD_CLEAR_KEY)
+        val passphrase =
+          bundle.getCharSequence(PasswordDialog.PASSWORD_PHRASE_KEY)?.toString()?.toCharArray()
+            ?: throw NullPointerException()
+        cacheEnabled = bundle.getBoolean(PasswordDialog.PASSWORD_CACHE_KEY)
         lifecycleScope.launch(dispatcherProvider.main()) {
-          decryptWithPassphrase(File(filePath), identifiers, clientState, action, value)
+          decryptWithPassphrase(File(filePath), identifiers, clientState, action, passphrase)
         }
       }
     }
@@ -176,9 +121,9 @@ class AutofillDecryptActivity : BasePGPActivity() {
     identifiers: List<PGPIdentifier>,
     clientState: Bundle,
     action: AutofillAction,
-    password: String,
+    passphrase: CharArray?,
   ) {
-    val credentials = decryptCredential(filePath, password, identifiers)
+    val credentials = decryptCredential(filePath, passphrase, identifiers)
     if (credentials == null) {
       setResult(RESULT_CANCELED)
     } else {
@@ -201,7 +146,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
 
   private suspend fun decryptCredential(
     file: File,
-    password: String,
+    passphrase: CharArray?,
     identifiers: List<PGPIdentifier>,
   ): Credentials? {
     runCatching { file.readBytes().inputStream() }
@@ -212,7 +157,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
       .onSuccess { encryptedInput ->
         val outputStream = ByteArrayOutputStream()
         repository
-          .decrypt(password, identifiers, encryptedInput, outputStream)
+          .decrypt(passphrase, identifiers, encryptedInput, outputStream)
           .onFailure { e ->
             logcat(ERROR) { e.asLog("Decryption failed") }
             return null
@@ -220,12 +165,8 @@ class AutofillDecryptActivity : BasePGPActivity() {
           .onSuccess { result ->
             return runCatching {
                 runCatching {
-                    if (features.isEnabled(EnablePGPPassphraseCache)) {
-                      passphraseCache.cachePassphrase(this, identifiers.first(), password)
-                      settings.edit {
-                        putBoolean(PreferenceKeys.CLEAR_PASSPHRASE_CACHE, clearCache)
-                      }
-                    }
+                    cachedPassphrase = if (cacheEnabled) passphrase else null
+                    settings.edit { putBoolean(PreferenceKeys.CACHE_PASSPHRASE, cacheEnabled) }
                   }
                   .onFailure { e -> logcat { e.asLog() } }
                 val entry = passwordEntryFactory.create(result.toByteArray())

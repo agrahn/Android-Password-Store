@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.core.os.bundleOf
-import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.setFragmentResult
@@ -26,22 +25,17 @@ class PasswordDialog : DialogFragment() {
 
   private val binding by unsafeLazy { DialogPasswordEntryBinding.inflate(layoutInflater) }
   private var isError: Boolean = false
-  private var clearCacheChecked: Boolean = true
+  private var cacheEnabledChecked: Boolean = false
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val builder = MaterialAlertDialogBuilder(requireContext())
     builder.setView(binding.root)
     builder.setTitle(R.string.password)
 
-    val cacheEnabled = requireArguments().getBoolean(CACHE_ENABLED_EXTRA, false)
-    binding.autoClearCache.isVisible = cacheEnabled
-
-    if (cacheEnabled) {
-      clearCacheChecked = requireArguments().getBoolean(AUTO_CLEAR_CACHE_EXTRA)
-      binding.autoClearCache.isChecked = clearCacheChecked
-      binding.autoClearCache.setOnCheckedChangeListener { _, isChecked ->
-        clearCacheChecked = isChecked
-      }
+    cacheEnabledChecked = requireArguments().getBoolean(CACHE_ENABLED_EXTRA)
+    binding.cacheEnabled.isChecked = cacheEnabledChecked
+    binding.cacheEnabled.setOnCheckedChangeListener { _, isChecked ->
+      cacheEnabledChecked = isChecked
     }
 
     builder.setPositiveButton(android.R.string.ok) { _, _ -> setPasswordAndDismiss() }
@@ -77,10 +71,10 @@ class PasswordDialog : DialogFragment() {
   }
 
   private fun setPasswordAndDismiss() {
-    val password = binding.passwordEditText.text.toString()
+    val password = binding.passwordEditText.text
     setFragmentResult(
       PASSWORD_RESULT_KEY,
-      bundleOf(PASSWORD_PHRASE_KEY to password, PASSWORD_CLEAR_KEY to clearCacheChecked),
+      bundleOf(PASSWORD_PHRASE_KEY to password, PASSWORD_CACHE_KEY to cacheEnabledChecked),
     )
     dismissAllowingStateLoss()
   }
@@ -88,15 +82,13 @@ class PasswordDialog : DialogFragment() {
   companion object {
 
     private const val CACHE_ENABLED_EXTRA = "CACHE_ENABLED"
-    private const val AUTO_CLEAR_CACHE_EXTRA = "AUTO_CLEAR_CACHE"
 
     const val PASSWORD_RESULT_KEY = "password_result"
     const val PASSWORD_PHRASE_KEY = "password_phrase"
-    const val PASSWORD_CLEAR_KEY = "password_clear"
+    const val PASSWORD_CACHE_KEY = "password_cache"
 
-    fun newInstance(cacheEnabled: Boolean, clearCache: Boolean): PasswordDialog {
-      val extras =
-        bundleOf(CACHE_ENABLED_EXTRA to cacheEnabled, AUTO_CLEAR_CACHE_EXTRA to clearCache)
+    fun newInstance(cacheEnabled: Boolean): PasswordDialog {
+      val extras = bundleOf(CACHE_ENABLED_EXTRA to cacheEnabled)
       val fragment = PasswordDialog()
       fragment.arguments = extras
       return fragment

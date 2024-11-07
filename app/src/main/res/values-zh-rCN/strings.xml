@@ -117,8 +117,6 @@
   <string name="pref_import_pgp_key_title">导入 PGP 密钥</string>
   <string name="pref_pgp_key_manager_title">密钥管理器</string>
   <string name="pref_pgp_ascii_armor_title">以 ASCII 装甲模式加密</string>
-  <string name="pref_passphrase_cache_title">启用密码短语缓存</string>
-  <string name="pref_passphrase_cache_summary">警告：此功能可以运作，但非常实验性，需要活跃的屏幕锁。</string>
   <!-- PasswordGenerator fragment -->
   <string name="pwgen_title">生成密码</string>
   <string name="pwgen_generate">生成</string>
@@ -348,5 +346,4 @@ GPG
   <string name="pgp_key_manager_no_keys_guidance">使用下面的添加按钮导入密钥</string>
   <string name="no_keys_imported_dialog_title">未导入密钥</string>
   <string name="no_keys_imported_dialog_message">应用中还没有导入PGP密钥，按下下面的按钮选择一个密钥文件</string>
-  <string name="biometric_prompt_title_gpg_passphrase_cache">解锁密码短语缓存</string>
 </resources>
