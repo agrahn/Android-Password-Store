@@ -19,7 +19,7 @@ import androidx.core.os.postDelayed
 import androidx.core.widget.doOnTextChanged
 import app.passwordstore.R
 import app.passwordstore.databinding.ActivityProxySelectorBinding
-import app.passwordstore.injection.prefs.ProxyPreferences
+import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.proxy.ProxyUtils
@@ -32,7 +32,7 @@ import javax.inject.Inject
 class ProxySelectorActivity : AppCompatActivity() {
 
   @Inject lateinit var gitSettings: GitSettings
-  @ProxyPreferences @Inject lateinit var proxyPrefs: SharedPreferences
+  @SettingsPreferences @Inject lateinit var proxyPrefs: SharedPreferences
   @Inject lateinit var proxyUtils: ProxyUtils
   private val binding by viewBinding(ActivityProxySelectorBinding::inflate)
 

@@ -18,7 +18,6 @@ import androidx.security.crypto.EncryptedFile
 import androidx.security.crypto.MasterKey
 import app.passwordstore.Application
 import app.passwordstore.R
-import app.passwordstore.util.extensions.getEncryptedGitPrefs
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.extensions.unsafeLazy
@@ -184,7 +183,6 @@ object SshKey {
     if (publicKeyFile.isFile) {
       publicKeyFile.delete()
     }
-    context.getEncryptedGitPrefs().edit { remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE) }
     type = null
   }
 

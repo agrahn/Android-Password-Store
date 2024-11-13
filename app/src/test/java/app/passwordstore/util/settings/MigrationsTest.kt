@@ -27,16 +27,17 @@ class MigrationsTest {
   private lateinit var context: Context
   private lateinit var filesDir: String
   private lateinit var sharedPrefs: SharedPreferences
-  private lateinit var encryptedSharedPreferences: SharedPreferences
-  private lateinit var proxySharedPreferences: SharedPreferences
+
+  //  private lateinit var encryptedSharedPreferences: SharedPreferences
+  //  private lateinit var proxySharedPreferences: SharedPreferences
 
   @BeforeTest
   fun setup() {
     context = SPMockBuilder().createContext()
     filesDir = tempFolder.root.path
     sharedPrefs = SPMockBuilder().createSharedPreferences()
-    encryptedSharedPreferences = SPMockBuilder().createSharedPreferences()
-    proxySharedPreferences = SPMockBuilder().createSharedPreferences()
+    //    encryptedSharedPreferences = SPMockBuilder().createSharedPreferences()
+    //    proxySharedPreferences =     SPMockBuilder().createSharedPreferences()
   }
 
   private fun checkOldKeysAreRemoved() =
@@ -58,11 +59,7 @@ class MigrationsTest {
       putString(PreferenceKeys.GIT_REMOTE_PROTOCOL, Protocol.Ssh.pref)
       putString(PreferenceKeys.GIT_REMOTE_AUTH, AuthMode.Password.pref)
     }
-    runMigrations(
-      filesDir,
-      sharedPrefs,
-      GitSettings(sharedPrefs, encryptedSharedPreferences, proxySharedPreferences, filesDir),
-    )
+    runMigrations(filesDir, sharedPrefs, GitSettings(sharedPrefs, filesDir), context, true)
     checkOldKeysAreRemoved()
     assertEquals(
       sharedPrefs.getString(PreferenceKeys.GIT_REMOTE_URL),
@@ -79,11 +76,7 @@ class MigrationsTest {
       putString(PreferenceKeys.GIT_REMOTE_PROTOCOL, Protocol.Ssh.pref)
       putString(PreferenceKeys.GIT_REMOTE_AUTH, AuthMode.SshKey.pref)
     }
-    runMigrations(
-      filesDir,
-      sharedPrefs,
-      GitSettings(sharedPrefs, encryptedSharedPreferences, proxySharedPreferences, filesDir),
-    )
+    runMigrations(filesDir, sharedPrefs, GitSettings(sharedPrefs, filesDir), context, true)
     checkOldKeysAreRemoved()
     assertEquals(
       sharedPrefs.getString(PreferenceKeys.GIT_REMOTE_URL),
@@ -100,11 +93,7 @@ class MigrationsTest {
       putString(PreferenceKeys.GIT_REMOTE_PROTOCOL, Protocol.Https.pref)
       putString(PreferenceKeys.GIT_REMOTE_AUTH, AuthMode.None.pref)
     }
-    runMigrations(
-      filesDir,
-      sharedPrefs,
-      GitSettings(sharedPrefs, encryptedSharedPreferences, proxySharedPreferences, filesDir),
-    )
+    runMigrations(filesDir, sharedPrefs, GitSettings(sharedPrefs, filesDir), context, true)
     checkOldKeysAreRemoved()
     assertEquals(
       sharedPrefs.getString(PreferenceKeys.GIT_REMOTE_URL),
@@ -114,11 +103,7 @@ class MigrationsTest {
 
   @Test
   fun verifyHiddenFoldersMigrationIfDisabled() {
-    runMigrations(
-      filesDir,
-      sharedPrefs,
-      GitSettings(sharedPrefs, encryptedSharedPreferences, proxySharedPreferences, filesDir),
-    )
+    runMigrations(filesDir, sharedPrefs, GitSettings(sharedPrefs, filesDir), context, true)
     assertEquals(true, sharedPrefs.getBoolean(PreferenceKeys.SHOW_HIDDEN_FOLDERS, true))
     assertEquals(false, sharedPrefs.getBoolean(PreferenceKeys.SHOW_HIDDEN_CONTENTS, false))
   }
@@ -126,11 +111,7 @@ class MigrationsTest {
   @Test
   fun verifyHiddenFoldersMigrationIfEnabled() {
     sharedPrefs.edit { putBoolean(PreferenceKeys.SHOW_HIDDEN_FOLDERS, true) }
-    runMigrations(
-      filesDir,
-      sharedPrefs,
-      GitSettings(sharedPrefs, encryptedSharedPreferences, proxySharedPreferences, filesDir),
-    )
+    runMigrations(filesDir, sharedPrefs, GitSettings(sharedPrefs, filesDir), context, true)
     assertEquals(false, sharedPrefs.getBoolean(PreferenceKeys.SHOW_HIDDEN_FOLDERS, false))
     assertEquals(true, sharedPrefs.getBoolean(PreferenceKeys.SHOW_HIDDEN_CONTENTS, false))
   }
@@ -138,11 +119,7 @@ class MigrationsTest {
   @Test
   fun verifyClearClipboardHistoryMigration() {
     sharedPrefs.edit { putBoolean(PreferenceKeys.CLEAR_CLIPBOARD_20X, true) }
-    runMigrations(
-      filesDir,
-      sharedPrefs,
-      GitSettings(sharedPrefs, encryptedSharedPreferences, proxySharedPreferences, filesDir),
-    )
+    runMigrations(filesDir, sharedPrefs, GitSettings(sharedPrefs, filesDir), context, true)
     assertEquals(true, sharedPrefs.getBoolean(PreferenceKeys.CLEAR_CLIPBOARD_HISTORY, false))
     assertFalse(sharedPrefs.contains(PreferenceKeys.CLEAR_CLIPBOARD_20X))
   }
@@ -150,22 +127,14 @@ class MigrationsTest {
   @Test
   fun verifyClassicPasswordGeneratorMigration() {
     sharedPrefs.edit { putString(PreferenceKeys.PREF_KEY_PWGEN_TYPE, "classic") }
-    runMigrations(
-      filesDir,
-      sharedPrefs,
-      GitSettings(sharedPrefs, encryptedSharedPreferences, proxySharedPreferences, filesDir),
-    )
+    runMigrations(filesDir, sharedPrefs, GitSettings(sharedPrefs, filesDir), context, true)
     assertEquals("classic", sharedPrefs.getString(PreferenceKeys.PREF_KEY_PWGEN_TYPE))
   }
 
   @Test
   fun verifyXkPasswdPasswordGeneratorMigration() {
     sharedPrefs.edit { putString(PreferenceKeys.PREF_KEY_PWGEN_TYPE, "xkpasswd") }
-    runMigrations(
-      filesDir,
-      sharedPrefs,
-      GitSettings(sharedPrefs, encryptedSharedPreferences, proxySharedPreferences, filesDir),
-    )
+    runMigrations(filesDir, sharedPrefs, GitSettings(sharedPrefs, filesDir), context, true)
     assertEquals("diceware", sharedPrefs.getString(PreferenceKeys.PREF_KEY_PWGEN_TYPE))
   }
 
@@ -175,13 +144,22 @@ class MigrationsTest {
       putBoolean(PreferenceKeys.GIT_EXTERNAL, true)
       putString(PreferenceKeys.GIT_EXTERNAL_REPO, "/sdcard/")
     }
-    runMigrations(
-      filesDir,
-      sharedPrefs,
-      GitSettings(sharedPrefs, encryptedSharedPreferences, proxySharedPreferences, filesDir),
-    )
+    runMigrations(filesDir, sharedPrefs, GitSettings(sharedPrefs, filesDir), context, true)
     assertFalse { sharedPrefs.contains(PreferenceKeys.GIT_EXTERNAL) }
     assertFalse { sharedPrefs.contains(PreferenceKeys.GIT_EXTERNAL_REPO) }
     assertTrue { sharedPrefs.getBoolean(PreferenceKeys.GIT_EXTERNAL_MIGRATED, false) }
+  }
+
+  @Test
+  fun verifyPersistentCredentialCache() {
+    sharedPrefs.edit {
+      putBoolean(PreferenceKeys.CLEAR_PASSPHRASE_CACHE, true)
+      putString(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE, "my secret local ssh key passphrase")
+      putString(PreferenceKeys.DICEWARE_SEPARATOR, "#")
+    }
+    runMigrations(filesDir, sharedPrefs, GitSettings(sharedPrefs, filesDir), context, true)
+    assertFalse { sharedPrefs.contains(PreferenceKeys.CLEAR_PASSPHRASE_CACHE) }
+    assertFalse { sharedPrefs.contains(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE) }
+    assertEquals(sharedPrefs.getString(PreferenceKeys.DICEWARE_SEPARATOR), "§")
   }
 }

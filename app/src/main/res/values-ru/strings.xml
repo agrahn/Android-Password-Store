@@ -204,9 +204,6 @@
   <!-- Autofill -->
   <string name="ssh_key_does_not_exist">Невозможно открыть приватный ключ ssh, пожалуйста проверьте, что файл существует</string>
   <string name="new_password_title">Новый пароль</string>
-  <string name="clear_saved_passphrase_ssh">Очистить сохраненную кодовую фразу для локального SSH ключа</string>
-  <string name="clear_saved_passphrase_https">Удалить сохраненный пароль HTTPS</string>
-  <string name="git_operation_remember_passphrase">Запомнить кодовую фразу</string>
   <string name="git_tools">Утилиты</string>
   <string name="abort_rebase">Прервать перебазирование и записать изменения в новую ветку</string>
   <string name="reset_to_remote">Полный сброс до состояния удаленной ветки</string>
@@ -255,7 +252,6 @@
   <string name="pref_debug_logging_title">Журнал отладки</string>
   <string name="preference_default_username_summary">Если автозаполнение не сможет определить имя пользователя из файла пароля или структуры каталога, оно будет использовать значение, указанное здесь</string>
   <string name="preference_default_username_title">Имя пользователя по умолчанию</string>
-  <string name="git_operation_remember_password">Запомнить пароль</string>
   <string name="git_operation_hint_password">Пароль</string>
   <string name="preference_custom_public_suffixes_title">Пользовательские домены</string>
   <string name="preference_custom_public_suffixes_summary">Автозаполнение будет разделять поддомены этих доменов</string>

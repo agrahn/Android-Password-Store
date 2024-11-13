@@ -4,12 +4,11 @@
  */
 package app.passwordstore.util.settings
 
+// import app.passwordstore.injection.prefs.ProxyPreferences
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.context.FilesDirPath
-import app.passwordstore.injection.prefs.GitPreferences
-import app.passwordstore.injection.prefs.ProxyPreferences
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.extensions.getString
 import com.github.michaelbull.result.getOrElse
@@ -51,8 +50,6 @@ class GitSettings
 @Inject
 constructor(
   @SettingsPreferences private val settings: SharedPreferences,
-  @GitPreferences private val encryptedSettings: SharedPreferences,
-  @ProxyPreferences private val proxySettings: SharedPreferences,
   @FilesDirPath private val filesDirPath: String,
 ) {
 
@@ -73,7 +70,6 @@ constructor(
       // When the server changes, remote password, multiplexing support and host key file
       // should be deleted/reset.
       useMultiplexing = true
-      encryptedSettings.edit { remove(PreferenceKeys.HTTPS_PASSWORD) }
       clearSavedHostKey()
     }
 
@@ -96,27 +92,31 @@ constructor(
     }
 
   var proxyHost
-    get() = proxySettings.getString(PreferenceKeys.PROXY_HOST)
+    // get() = settings.getString(PreferenceKeys.PROXY_HOST)
+    get() = settings.getString(PreferenceKeys.PROXY_HOST)
     set(value) {
-      proxySettings.edit { putString(PreferenceKeys.PROXY_HOST, value) }
+      // settings.edit { putString(PreferenceKeys.PROXY_HOST, value) }
+      settings.edit { putString(PreferenceKeys.PROXY_HOST, value) }
     }
 
   var proxyPort
-    get() = proxySettings.getInt(PreferenceKeys.PROXY_PORT, -1)
+    // get() = settings.getInt(PreferenceKeys.PROXY_PORT, -1)
+    get() = settings.getInt(PreferenceKeys.PROXY_PORT, -1)
     set(value) {
-      proxySettings.edit { putInt(PreferenceKeys.PROXY_PORT, value) }
+      // settings.edit { putInt(PreferenceKeys.PROXY_PORT, value) }
+      settings.edit { putInt(PreferenceKeys.PROXY_PORT, value) }
     }
 
   var proxyUsername
     get() = settings.getString(PreferenceKeys.PROXY_USERNAME)
     set(value) {
-      proxySettings.edit { putString(PreferenceKeys.PROXY_USERNAME, value) }
+      settings.edit { putString(PreferenceKeys.PROXY_USERNAME, value) }
     }
 
   var proxyPassword
-    get() = proxySettings.getString(PreferenceKeys.PROXY_PASSWORD)
+    get() = settings.getString(PreferenceKeys.PROXY_PASSWORD)
     set(value) {
-      proxySettings.edit { putString(PreferenceKeys.PROXY_PASSWORD, value) }
+      settings.edit { putString(PreferenceKeys.PROXY_PASSWORD, value) }
     }
 
   var rebaseOnPull

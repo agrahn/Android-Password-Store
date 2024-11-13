@@ -209,9 +209,6 @@ a app desde unha fonte de confianza, como a Play Store, Amazon Appstore, F-Droid
   <!-- Autofill -->
   <string name="ssh_key_does_not_exist">Non se pode abrir a chave privada ssh, comproba que existe tal ficheiro</string>
   <string name="new_password_title">Novo contrasinal</string>
-  <string name="clear_saved_passphrase_ssh">Baleirar a frase de paso gardada para a chave SSH local</string>
-  <string name="clear_saved_passphrase_https">Baleirar contrasinal HTTPS gardado</string>
-  <string name="git_operation_remember_passphrase">Lembrar frase de paso da chave</string>
   <string name="git_tools">Ferramentas</string>
   <string name="abort_rebase">Abortar rebase e push a unha nova rama</string>
   <string name="reset_to_remote">Hard reset na rama remota</string>
@@ -260,7 +257,6 @@ a app desde unha fonte de confianza, como a Play Store, Amazon Appstore, F-Droid
   <string name="pref_debug_logging_title">Rexistro de problemas</string>
   <string name="preference_default_username_summary">Se Autocompletado non é quen de determinar o identificador no ficheiro do contrasinal ou estructura de directorios, utilizará o valor indicado aquí</string>
   <string name="preference_default_username_title">Identificador por defecto</string>
-  <string name="git_operation_remember_password">Lembrar contrasinal</string>
   <string name="git_operation_hint_password">Contrasinal</string>
   <string name="preference_custom_public_suffixes_title">Dominios personalizados</string>
   <string name="preference_custom_public_suffixes_summary">Autofill distinguirá entre subdominios nestes dominios</string>

@@ -53,7 +53,7 @@ abstract class InteractivePasswordFinder(private val dispatcherProvider: Dispatc
 
   private var isRetry = false
 
-  abstract fun askForPassword(cont: Continuation<String?>, isRetry: Boolean)
+  abstract fun askForPassword(cont: Continuation<CharArray?>, isRetry: Boolean)
 
   override fun reqPassword(resource: Resource<*>?): CharArray {
     val password =
@@ -61,7 +61,7 @@ abstract class InteractivePasswordFinder(private val dispatcherProvider: Dispatc
         suspendCoroutine { cont -> askForPassword(cont, isRetry) }
       }
     isRetry = true
-    return password?.toCharArray() ?: throw SSHException(DisconnectReason.AUTH_CANCELLED_BY_USER)
+    return password ?: throw SSHException(DisconnectReason.AUTH_CANCELLED_BY_USER)
   }
 
   final override fun shouldRetry(resource: Resource<*>?) = true

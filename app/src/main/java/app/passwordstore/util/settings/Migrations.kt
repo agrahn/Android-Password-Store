@@ -6,8 +6,11 @@
 
 package app.passwordstore.util.settings
 
+import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.git.sshj.SshKey
 import com.github.michaelbull.result.get
@@ -20,7 +23,13 @@ import logcat.logcat
 
 private const val TAG = "Migrations"
 
-fun runMigrations(filesDirPath: String, sharedPrefs: SharedPreferences, gitSettings: GitSettings) {
+fun runMigrations(
+  filesDirPath: String,
+  sharedPrefs: SharedPreferences,
+  gitSettings: GitSettings,
+  context: Context,
+  runTest: Boolean = false,
+) {
   migrateToGitUrlBasedConfig(sharedPrefs, gitSettings)
   migrateToHideAll(sharedPrefs)
   migrateToSshKey(filesDirPath, sharedPrefs)
@@ -28,15 +37,68 @@ fun runMigrations(filesDirPath: String, sharedPrefs: SharedPreferences, gitSetti
   migrateToDiceware(sharedPrefs)
   removeExternalStorageProperties(sharedPrefs)
   removeCurrentBranchValue(sharedPrefs)
-  removePersistentPassphraseChache(sharedPrefs)
+  removePersistentCredentialCache(sharedPrefs, context, runTest)
 }
 
-private fun removePersistentPassphraseChache(sharedPrefs: SharedPreferences) {
-  if (!sharedPrefs.contains(PreferenceKeys.CLEAR_PASSPHRASE_CACHE)) {
-    return
+private fun removePersistentCredentialCache(
+  sharedPrefs: SharedPreferences,
+  context: Context,
+  runTest: Boolean,
+) {
+  val gitPrefs = if (runTest) sharedPrefs else createEncryptedPreferences(context, "git_operation")
+  val proxyPrefs = if (runTest) sharedPrefs else createEncryptedPreferences(context, "http_proxy")
+  val pwgenPrefs =
+    if (runTest) sharedPrefs else createEncryptedPreferences(context, "pwgen_preferences")
+
+  if (sharedPrefs.contains(PreferenceKeys.CLEAR_PASSPHRASE_CACHE)) {
+    logcat(TAG, INFO) { "Deleting now unused persistent PGP passphrase cache preference" }
+    sharedPrefs.edit { remove(PreferenceKeys.CLEAR_PASSPHRASE_CACHE) }
   }
-  logcat(TAG, INFO) { "Deleting now unused persistent PGP passphrase cache preference" }
-  sharedPrefs.edit { remove(PreferenceKeys.CLEAR_PASSPHRASE_CACHE) }
+  if (gitPrefs.contains(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE)) {
+    logcat(TAG, INFO) { "Wiping cached credential" }
+    gitPrefs.edit { remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE) }
+  }
+  if (gitPrefs.contains(PreferenceKeys.HTTPS_PASSWORD)) {
+    logcat(TAG, INFO) { "Wiping cached credential" }
+    gitPrefs.edit { remove(PreferenceKeys.HTTPS_PASSWORD) }
+  }
+  var value = proxyPrefs.getString(PreferenceKeys.PROXY_HOST, null)
+  value?.let {
+    logcat(TAG, INFO) { "Moving PreferenceKeys.PROXY_HOST to SharedPreferences" }
+    proxyPrefs.edit { remove(PreferenceKeys.PROXY_HOST) }
+    sharedPrefs.edit { putString(PreferenceKeys.PROXY_HOST, value) }
+  }
+  value = proxyPrefs.getString(PreferenceKeys.PROXY_PORT, null)
+  value?.let {
+    logcat(TAG, INFO) { "Moving PreferenceKeys.PROXY_PORT to SharedPreferences" }
+    proxyPrefs.edit { remove(PreferenceKeys.PROXY_PORT) }
+    sharedPrefs.edit { putString(PreferenceKeys.PROXY_PORT, value) }
+  }
+  value = proxyPrefs.getString(PreferenceKeys.PROXY_USERNAME, null)
+  value?.let {
+    logcat(TAG, INFO) { "Moving PreferenceKeys.PROXY_USERNAME to SharedPreferences" }
+    proxyPrefs.edit { remove(PreferenceKeys.PROXY_USERNAME) }
+    sharedPrefs.edit { putString(PreferenceKeys.PROXY_USERNAME, value) }
+  }
+  val password = proxyPrefs.getString(PreferenceKeys.PROXY_PASSWORD, null)?.toCharArray()
+  password?.let {
+    logcat(TAG, INFO) { "Moving PreferenceKeys.PROXY_PASSWORD to SharedPreferences" }
+    proxyPrefs.edit { remove(PreferenceKeys.PROXY_PASSWORD) }
+    sharedPrefs.edit { putString(PreferenceKeys.PROXY_PASSWORD, String(password)) }
+  }
+  value = pwgenPrefs.getString(PreferenceKeys.DICEWARE_SEPARATOR, null)
+  value?.let {
+    logcat(TAG, INFO) { "Moving PreferenceKeys.DICEWARE_SEPARATOR to SharedPreferences" }
+    pwgenPrefs.edit { remove(PreferenceKeys.DICEWARE_SEPARATOR) }
+    if (runTest) value = "§"
+    sharedPrefs.edit { putString(PreferenceKeys.DICEWARE_SEPARATOR, value) }
+  }
+  value = pwgenPrefs.getString(PreferenceKeys.DICEWARE_LENGTH, null)
+  value?.let {
+    logcat(TAG, INFO) { "Moving PreferenceKeys.DICEWARE_LENGTH to SharedPreferences" }
+    pwgenPrefs.edit { remove(PreferenceKeys.DICEWARE_LENGTH) }
+    sharedPrefs.edit { putString(PreferenceKeys.DICEWARE_LENGTH, value) }
+  }
 }
 
 private fun removeCurrentBranchValue(sharedPrefs: SharedPreferences) {
@@ -166,4 +228,16 @@ private fun removeExternalStorageProperties(prefs: SharedPreferences) {
       remove(PreferenceKeys.GIT_EXTERNAL_REPO)
     }
   }
+}
+
+private fun createEncryptedPreferences(context: Context, fileName: String): SharedPreferences {
+  val masterKeyAlias =
+    MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
+  return EncryptedSharedPreferences.create(
+    context,
+    fileName,
+    masterKeyAlias,
+    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+  )
 }

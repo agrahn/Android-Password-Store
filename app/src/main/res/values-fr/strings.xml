@@ -200,9 +200,6 @@
   <!-- Autofill -->
   <string name="ssh_key_does_not_exist">Impossible d\'ouvrir la clef ssh, merci de vérifier que le ficher existe</string>
   <string name="new_password_title">Nouveau mot de passe</string>
-  <string name="clear_saved_passphrase_ssh">Effacer le mot de passe enregistrée pour la clé SSH locale</string>
-  <string name="clear_saved_passphrase_https">Effacer le mot de passe HTTPS enregistré</string>
-  <string name="git_operation_remember_passphrase">Se rappeler de la phrase secrète dans la configuration de l\'application (peu sûr)</string>
   <string name="git_tools">Utilitaires</string>
   <string name="abort_rebase">Annuler rebase et pousser une nouvelle branche</string>
   <string name="reset_to_remote">Réinitialisation dure de la branche distante</string>
@@ -251,7 +248,6 @@
   <string name="pref_debug_logging_title">Journal de débogage</string>
   <string name="preference_default_username_summary">Si le remplissage automatique est incapable de déterminer un nom d\'utilisateur à partir de votre fichier de mot de passe ou de la structure de répertoire, il utilisera la valeur spécifiée ici</string>
   <string name="preference_default_username_title">Nom d\'utilisateur par défaut</string>
-  <string name="git_operation_remember_password">Mémoriser le mot de passe</string>
   <string name="git_operation_hint_password">Mot de passe</string>
   <string name="preference_custom_public_suffixes_title">Domaines personnalisés</string>
   <string name="preference_custom_public_suffixes_summary">Le remplissage automatique distinguera les sous-domaines de ces domaines</string>

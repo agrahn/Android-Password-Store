@@ -17,7 +17,7 @@ import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.databinding.FragmentPwgenDicewareBinding
-import app.passwordstore.injection.prefs.PasswordGeneratorPreferences
+import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.passgen.diceware.DicewarePassphraseGenerator
 import app.passwordstore.ui.crypto.PasswordCreationActivity
 import app.passwordstore.util.extensions.getString
@@ -34,7 +34,7 @@ import reactivecircus.flowbinding.android.widget.afterTextChanges
 class DicewarePasswordGeneratorDialogFragment : DialogFragment() {
 
   @Inject lateinit var dicewareGenerator: DicewarePassphraseGenerator
-  @Inject @PasswordGeneratorPreferences lateinit var prefs: SharedPreferences
+  @Inject @SettingsPreferences lateinit var prefs: SharedPreferences
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val builder = MaterialAlertDialogBuilder(requireContext())

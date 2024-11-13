@@ -195,9 +195,6 @@
   <!-- Autofill -->
   <string name="ssh_key_does_not_exist">Impossibile aprire la chiave privata ssh, sei pregato di controllare che il file esista</string>
   <string name="new_password_title">Nuova password</string>
-  <string name="clear_saved_passphrase_ssh">Cancella la frase segreta salvata per la chiave SSH locale</string>
-  <string name="clear_saved_passphrase_https">Cancella la password HTTPS salvata</string>
-  <string name="git_operation_remember_passphrase">Ricorda la frase segreta chiave</string>
   <string name="git_tools">Utilità</string>
   <string name="abort_rebase">Interrompi il rebase e premi nuovo ramo</string>
   <string name="reset_to_remote">Hard reset a ramo remoto</string>
@@ -246,7 +243,6 @@
   <string name="pref_debug_logging_title">Registrazione di debug</string>
   <string name="preference_default_username_summary">Se l\'autocompletamento non può determinare un nome utente dal tuo file della password o la struttura della directory, userà il valore qui specificato</string>
   <string name="preference_default_username_title">Nome utente predefinito</string>
-  <string name="git_operation_remember_password">Ricorda password</string>
   <string name="git_operation_hint_password">Password</string>
   <string name="preference_custom_public_suffixes_title">Domini personalizzati</string>
   <string name="preference_custom_public_suffixes_summary">L\'auto-completamento distinguerà i sottodomini di questi domini</string>

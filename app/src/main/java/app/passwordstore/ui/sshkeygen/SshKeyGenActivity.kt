@@ -4,19 +4,16 @@
  */
 package app.passwordstore.ui.sshkeygen
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.security.keystore.UserNotAuthenticatedException
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.databinding.ActivitySshKeygenBinding
-import app.passwordstore.injection.prefs.GitPreferences
 import app.passwordstore.util.auth.BiometricAuthenticator
 import app.passwordstore.util.auth.BiometricAuthenticator.Result
 import app.passwordstore.util.coroutines.DispatcherProvider
@@ -50,7 +47,6 @@ class SshKeyGenActivity : AppCompatActivity() {
 
   private var keyGenType = KeyGenType.Ecdsa
   private val binding by viewBinding(ActivitySshKeygenBinding::inflate)
-  @GitPreferences @Inject lateinit var gitPrefs: SharedPreferences
   @Inject lateinit var dispatcherProvider: DispatcherProvider
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,7 +136,6 @@ class SshKeyGenActivity : AppCompatActivity() {
         keyGenType.generateKey(requireAuthentication)
       }
     }
-    gitPrefs.edit { remove("ssh_key_local_passphrase") }
     binding.generate.apply {
       text = getString(R.string.ssh_keygen_generate)
       isEnabled = true

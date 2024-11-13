@@ -237,9 +237,6 @@
   <!-- Autofill -->
   <string name="ssh_key_does_not_exist">Unable to open the ssh private key, please check that the file exists</string>
   <string name="new_password_title">New password</string>
-  <string name="clear_saved_passphrase_ssh">Clear saved passphrase for local SSH key</string>
-  <string name="clear_saved_passphrase_https">Clear saved HTTPS password</string>
-  <string name="git_operation_remember_passphrase">Remember key passphrase</string>
   <string name="git_tools">Utilities</string>
   <string name="abort_rebase">Abort rebase and push new branch</string>
   <string name="reset_to_remote">Hard reset to remote branch</string>
@@ -289,7 +286,6 @@
   <string name="pref_debug_logging_title">Debug logging</string>
   <string name="preference_default_username_summary">If Autofill is unable to determine a username from your password file or directory structure, it will use the value specified here</string>
   <string name="preference_default_username_title">Default username</string>
-  <string name="git_operation_remember_password">Remember password</string>
   <string name="git_operation_hint_password">Password</string>
   <string name="preference_custom_public_suffixes_title">Custom domains</string>
   <string name="preference_custom_public_suffixes_summary">Autofill will distinguish subdomains of these domains</string>

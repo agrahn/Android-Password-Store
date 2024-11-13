@@ -207,9 +207,6 @@
   <!-- Autofill -->
   <string name="ssh_key_does_not_exist">Não foi possível abrir a chave privada ssh, por favor verifique se o arquivo existe</string>
   <string name="new_password_title">Nova senha</string>
-  <string name="clear_saved_passphrase_ssh">Limpar a frase secreta salva para chave SSH local</string>
-  <string name="clear_saved_passphrase_https">Limpar senha HTTPS salva</string>
-  <string name="git_operation_remember_passphrase">Lembrar senha da chave</string>
   <string name="git_tools">Utilitários</string>
   <string name="abort_rebase">Abortar rebase e realizar push do novo branch</string>
   <string name="reset_to_remote">Hard reset no branch remoto</string>
@@ -258,7 +255,6 @@
   <string name="pref_debug_logging_title">Debug log</string>
   <string name="preference_default_username_summary">Se o preenchimento automático não puder determinar um nome de usuário a partir do seu arquivo de senha ou estrutura de diretório, ele usará o valor especificado aqui</string>
   <string name="preference_default_username_title">Nome padrão</string>
-  <string name="git_operation_remember_password">Lembrar senha</string>
   <string name="git_operation_hint_password">Senha</string>
   <string name="preference_custom_public_suffixes_title">Domínios personalizados</string>
   <string name="preference_custom_public_suffixes_summary">O preenchimento automático distinguirá os subdomínios destes domínios</string>

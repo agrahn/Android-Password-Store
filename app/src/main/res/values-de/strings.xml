@@ -236,9 +236,6 @@
   <!-- Autofill -->
   <string name="ssh_key_does_not_exist">Der private SSH-Schlüssel konnte nicht geöffnet werden. Bitte überprüfen Sie, ob die Datei existiert.</string>
   <string name="new_password_title">Neues Passwort</string>
-  <string name="clear_saved_passphrase_ssh">Gespeicherte Passphrase für lokalen SSH-Schlüssel löschen</string>
-  <string name="clear_saved_passphrase_https">Gespeichertes HTTPS-Passwort löschen</string>
-  <string name="git_operation_remember_passphrase">Schlüsselpasswort merken</string>
   <string name="git_tools">Hilfsmittel</string>
   <string name="abort_rebase">Rebase abbrechen und neuen Branch pushen</string>
   <string name="reset_to_remote">Hard Reset auf Remote-Branch</string>
@@ -288,7 +285,6 @@
   <string name="pref_debug_logging_title">Debug-Logging</string>
   <string name="preference_default_username_summary">Wenn Autofill den Benutzernamen nicht aus der Passwortdatei oder dem Ordner herleiten kann, wird der hier festgelegte Wert verwendet.</string>
   <string name="preference_default_username_title">Standard-Benutzername</string>
-  <string name="git_operation_remember_password">Passwort merken</string>
   <string name="git_operation_hint_password">Passwort</string>
   <string name="preference_custom_public_suffixes_title">Benutzerdefinierte Domains</string>
   <string name="preference_custom_public_suffixes_summary">Autofill wird Subdomains dieser Domains unterscheiden.</string>

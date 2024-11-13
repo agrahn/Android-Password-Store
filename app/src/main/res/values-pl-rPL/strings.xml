@@ -203,9 +203,6 @@
   <!-- Autofill -->
   <string name="ssh_key_does_not_exist">Nie można otworzyć klucza prywatnego ssh, sprawdź czy plik istnieje</string>
   <string name="new_password_title">Nowe hasło</string>
-  <string name="clear_saved_passphrase_ssh">Wyczyść zapisane hasło dla lokalnego klucza SSH</string>
-  <string name="clear_saved_passphrase_https">Wyczyść zapisane hasło HTTPS</string>
-  <string name="git_operation_remember_passphrase">Zapamiętaj hasło klucza</string>
   <string name="git_tools">Narzędzia</string>
   <string name="abort_rebase">Przerwij \"rebase\" i wypchnij nową gałąź</string>
   <string name="reset_to_remote">Twardy reset do zdalnej gałęzi</string>
@@ -254,7 +251,6 @@
   <string name="pref_debug_logging_title">Logowanie w trybie \"debug\"</string>
   <string name="preference_default_username_summary">Jeśli autouzupełnianie nie jest w stanie określić nazwy użytkownika ze struktury pliku hasła lub katalogu, użyje wartości podanej tutaj</string>
   <string name="preference_default_username_title">Domyślna nazwa użytkownika</string>
-  <string name="git_operation_remember_password">Zapamiętaj hasło</string>
   <string name="git_operation_hint_password">Hasło</string>
   <string name="preference_custom_public_suffixes_title">Domeny niestandardowe</string>
   <string name="preference_custom_public_suffixes_summary">Autouzupełnianie rozróżni subdomeny tych domen</string>

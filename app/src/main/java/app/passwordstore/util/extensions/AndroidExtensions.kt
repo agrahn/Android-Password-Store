@@ -25,8 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.fragment.app.FragmentActivity
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
 import app.passwordstore.BuildConfig
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
@@ -43,22 +41,6 @@ val Context.autofillManager: AutofillManager?
 /** Get an instance of [ClipboardManager] */
 val Context.clipboard
   get() = getSystemService<ClipboardManager>()
-
-/** Wrapper for [getEncryptedPrefs] to avoid open-coding the file name at each call site */
-fun Context.getEncryptedGitPrefs() = getEncryptedPrefs("git_operation")
-
-/** Get an instance of [EncryptedSharedPreferences] with the given [fileName] */
-private fun Context.getEncryptedPrefs(fileName: String): SharedPreferences {
-  val masterKeyAlias =
-    MasterKey.Builder(applicationContext).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
-  return EncryptedSharedPreferences.create(
-    applicationContext,
-    fileName,
-    masterKeyAlias,
-    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-  )
-}
 
 /** Get an instance of [KeyguardManager] */
 val Context.keyguardManager: KeyguardManager
