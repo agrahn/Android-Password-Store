@@ -134,6 +134,8 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
           requestRebind()
         }
         onClick {
+          encryptedPreferences.edit { remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE) }
+          encryptedPreferences.edit { remove(PreferenceKeys.HTTPS_PASSWORD) }
           updatePref()
           true
         }

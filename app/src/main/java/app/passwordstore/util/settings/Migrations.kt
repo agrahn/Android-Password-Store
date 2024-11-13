@@ -28,9 +28,18 @@ fun runMigrations(filesDirPath: String, sharedPrefs: SharedPreferences, gitSetti
   migrateToDiceware(sharedPrefs)
   removeExternalStorageProperties(sharedPrefs)
   removeCurrentBranchValue(sharedPrefs)
+  removePersistentPassphraseChache(sharedPrefs)
 }
 
-fun removeCurrentBranchValue(sharedPrefs: SharedPreferences) {
+private fun removePersistentPassphraseChache(sharedPrefs: SharedPreferences) {
+  if (!sharedPrefs.contains(PreferenceKeys.CLEAR_PASSPHRASE_CACHE)) {
+    return
+  }
+  logcat(TAG, INFO) { "Deleting now unused persistent PGP passphrase cache preference" }
+  sharedPrefs.edit { remove(PreferenceKeys.CLEAR_PASSPHRASE_CACHE) }
+}
+
+private fun removeCurrentBranchValue(sharedPrefs: SharedPreferences) {
   if (!sharedPrefs.contains(PreferenceKeys.GIT_BRANCH_NAME)) {
     return
   }
