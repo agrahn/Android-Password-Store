@@ -70,7 +70,6 @@ dependencies {
   implementation(libs.aps.sublimeFuzzy)
   implementation(libs.aps.zxingAndroidEmbedded)
 
-  implementation(libs.thirdparty.eddsa)
   implementation(libs.thirdparty.fastscroll)
   implementation(libs.thirdparty.flowbinding.android)
   implementation(libs.thirdparty.jgit) {

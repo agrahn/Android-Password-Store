@@ -145,10 +145,8 @@
   <string name="ssh_keygen_require_authentication">Proteja com credenciais de bloqueio de tela</string>
   <string name="ssh_keygen_label_rsa">RSA</string>
   <string name="ssh_keygen_label_ecdsa">ECDSA</string>
-  <string name="ssh_keygen_label_ed25519">Ed25519</string>
   <string name="ssh_keygen_explanation_rsa"><b>RSA (3072 bits)</b>\nSuportado por todos os servidores, mas a autenticação é relativamente lenta.</string>
   <string name="ssh_keygen_explanation_ecdsa"><b>ECDSA (NIST P-256)</b>\nAutenticação rápida e suportada pela maioria dos servidores que ainda estão recebendo atualizações.</string>
-  <string name="ssh_keygen_explanation_ed25519"><b>Ed25519</b>\nAutenticação rápida, mas apenas suportada por servidores bastante modernos.</string>
   <string name="ssh_keygen_existing_title">Chave SSH</string>
   <string name="ssh_keygen_existing_message">Substituir a chave SSH existente? Você pode perder o acesso ao seu servidor.</string>
   <string name="ssh_keygen_existing_replace">Substituir</string>

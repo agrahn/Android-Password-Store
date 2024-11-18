@@ -167,10 +167,8 @@
   <string name="ssh_keygen_require_authentication">Mit Anmeldedaten für Bildschirmsperre schützen</string>
 
 
-
   <string name="ssh_keygen_explanation_rsa"><b>RSA (3072 Bit)</b>\nWird von allen Servern unterstützt, allerdings ist die Authentifizierung recht langsam.</string>
   <string name="ssh_keygen_explanation_ecdsa"><b>ECDSA (NIST P-256)</b>\nSchnelle Authentifizierung, unterstützt von den meisten Servern, die noch Updates erhalten.</string>
-  <string name="ssh_keygen_explanation_ed25519"><b>Ed25519</b>\nSchnelle Authentifizierung, aber nur von moderneren Servern unterstützt</string>
   <string name="ssh_keygen_existing_title">SSH-Schlüssel</string>
   <string name="ssh_keygen_existing_message">Existierenden SSH-Schlüssel ersetzen? Möglicherweise verlieren Sie den Zugriff auf Ihren Server.</string>
   <string name="ssh_keygen_existing_replace">Ersetzen</string>
@@ -376,4 +374,5 @@
 
   <!-- Passphrase input -->
   <string name="cache_password_until_screen_off">Passphrase bis zum Abschalten des Bildschirms merken</string>
+  <string name="password_input">PGP-Passphrase</string>
 </resources>

@@ -37,9 +37,6 @@ private enum class KeyGenType(val generateKey: suspend (requireAuthentication: B
   Ecdsa({ requireAuthentication ->
     SshKey.generateKeystoreNativeKey(SshKey.Algorithm.Ecdsa, requireAuthentication)
   }),
-  Ed25519({ requireAuthentication ->
-    SshKey.generateKeystoreWrappedEd25519Key(requireAuthentication)
-  }),
 }
 
 @AndroidEntryPoint
@@ -78,14 +75,12 @@ class SshKeyGenActivity : AppCompatActivity() {
         if (isChecked) {
           keyGenType =
             when (checkedId) {
-              R.id.key_type_ed25519 -> KeyGenType.Ed25519
               R.id.key_type_ecdsa -> KeyGenType.Ecdsa
               R.id.key_type_rsa -> KeyGenType.Rsa
               else -> throw IllegalStateException("Impossible key type selection")
             }
           keyTypeExplanation.setText(
             when (keyGenType) {
-              KeyGenType.Ed25519 -> R.string.ssh_keygen_explanation_ed25519
               KeyGenType.Ecdsa -> R.string.ssh_keygen_explanation_ecdsa
               KeyGenType.Rsa -> R.string.ssh_keygen_explanation_rsa
             }

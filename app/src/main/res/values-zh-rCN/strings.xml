@@ -146,13 +146,10 @@
   <string name="ssh_keygen_require_authentication">使用屏幕锁定进行保护</string>
   <string name="ssh_keygen_label_rsa">RSA</string>
   <string name="ssh_keygen_label_ecdsa">ECDSA</string>
-  <string name="ssh_keygen_label_ed25519">Ed25519</string>
   <string name="ssh_keygen_explanation_rsa"><b>RSA (3072 bit)</b>\"
 所有服务器都支持,但身份验证相对较慢\"</string>
   <string name="ssh_keygen_explanation_ecdsa"><b>ECDSA (NIST P-256)</b>\"
 快速身份验证,并受仍在接收更新的大多数服务器的支持\"</string>
-  <string name="ssh_keygen_explanation_ed25519"><b>Ed25519</b>\"
-快速身份验证,但仅受相当现代的服务器支持\"</string>
   <string name="ssh_keygen_existing_title">SSH密钥</string>
   <string name="ssh_keygen_existing_message">替换现有的SSH密钥?您可能会失去对服务器的访问权限</string>
   <string name="ssh_keygen_existing_replace">替换</string>

@@ -41,6 +41,8 @@ All notable changes to this project will be documented in this file.
 -   Using the `git://` protocol in the server URL now presents an explicit discouragement rather than a generic error
 -   Encrypted data is no longer ASCII armored, bringing it in line with `pass`
 -   Changing password generator parameters now automatically updates the password without needing to press the 'Generate' button again
+-   **BREAKING** The option for generating the SSH key pair in the Ed25519 format was removed from APS. It relied on the `androidx.security:security-crypto` library to store the private key file in an encrypted fashion in the application's the hidden directory. Use one of Android KeyStore native RSA or ECDSA key format options when generating the SSH key pair. Alternatively, an externally generated SSH private key can be imported into the app. Imported SSH private keys can be in any format, including Ed25519, but they should be secured with a passphrase.
+
 -   The app UI was reskinned to match Google's Material You guidelines
 -   Using HTTPS without authentication is now fully supported, and no longer asks for a username
 -   Enabling 'Show hidden files and folders' no longer shows Git-related files and folders

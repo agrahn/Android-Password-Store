@@ -168,10 +168,8 @@
   <string name="ssh_keygen_require_authentication">Protect with screen lock credential</string>
   <string name="ssh_keygen_label_rsa">RSA</string>
   <string name="ssh_keygen_label_ecdsa">ECDSA</string>
-  <string name="ssh_keygen_label_ed25519">Ed25519</string>
   <string name="ssh_keygen_explanation_rsa"><b>RSA (3072 bit)</b>\nSupported by all servers, but authentication is comparatively slow.</string>
   <string name="ssh_keygen_explanation_ecdsa"><b>ECDSA (NIST P-256)</b>\nFast authentication and supported by most servers that are still receiving updates.</string>
-  <string name="ssh_keygen_explanation_ed25519"><b>Ed25519</b>\nFast authentication, but only supported by rather modern servers.</string>
   <string name="ssh_keygen_existing_title">SSH key</string>
   <string name="ssh_keygen_existing_message">Replace existing SSH key? You might lose access to your server.</string>
   <string name="ssh_keygen_existing_replace">Replace</string>
@@ -376,5 +374,6 @@
   <string name="aead_detect_message">%1$s, see https://passwordstore.app/fix-aead for more information</string>
 
   <!-- Passphrase input -->
-  <string name="cache_password_until_screen_off">Keep password until screen-off</string>
+  <string name="cache_password_until_screen_off">Keep passphrase until screen-off</string>
+  <string name="password_input">PGP Passphrase</string>
 </resources>

@@ -13,11 +13,13 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import app.passwordstore.Application
 import app.passwordstore.util.extensions.getString
+import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.git.sshj.SshKey
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.runCatching
 import java.io.File
 import java.net.URI
+import java.security.KeyStore
 import logcat.LogPriority.ERROR
 import logcat.LogPriority.INFO
 import logcat.logcat
@@ -39,6 +41,39 @@ fun runMigrations(
   removeExternalStorageProperties(sharedPrefs)
   removeCurrentBranchValue(sharedPrefs)
   removePersistentCredentialCache(sharedPrefs, context, runTest)
+  deleteKeystoreWrappedEd25519Key(sharedPrefs, context)
+}
+
+private fun deleteKeystoreWrappedEd25519Key(sharedPrefs: SharedPreferences, context: Context) {
+  val gitRemoteKeyType = sharedPrefs.getString(PreferenceKeys.GIT_REMOTE_KEY_TYPE)
+  if (gitRemoteKeyType == "keystore_wrapped_ed25519") {
+    logcat(TAG, INFO) {
+      "Deleting APS-generated Ed25519 SSH key pair. Please, generate a new RSA or ECDSA key pair and transfer the public key to the Git server."
+    }
+
+    val PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore"
+    val KEYSTORE_ALIAS = "sshkey"
+    val androidKeystore: KeyStore by unsafeLazy {
+      KeyStore.getInstance(PROVIDER_ANDROID_KEY_STORE).apply { load(null) }
+    }
+    androidKeystore.deleteEntry(KEYSTORE_ALIAS)
+
+    val ANDROIDX_SECURITY_KEYSET_PREF_NAME = "androidx_sshkey_keyset_prefs"
+    context.getSharedPreferences(ANDROIDX_SECURITY_KEYSET_PREF_NAME, Context.MODE_PRIVATE).edit {
+      clear()
+    }
+
+    val privateKeyFile = File(context.filesDir, ".ssh_key")
+    if (privateKeyFile.isFile) {
+      privateKeyFile.delete()
+    }
+    val publicKeyFile = File(context.filesDir, ".ssh_key.pub")
+    if (publicKeyFile.isFile) {
+      publicKeyFile.delete()
+    }
+
+    sharedPrefs.edit { remove(PreferenceKeys.GIT_REMOTE_KEY_TYPE) }
+  }
 }
 
 private fun removePersistentCredentialCache(
@@ -166,7 +201,7 @@ private fun migrateToGitUrlBasedConfig(sharedPrefs: SharedPreferences, gitSettin
         newUrl = url,
       ) != GitSettings.UpdateConnectionSettingsResult.Valid
   ) {
-    logcat(TAG, ERROR) { "Failed to migrate to URL-based Git config, generated URL is invalid" }
+    logcat(TAG, ERROR) { "Failed to migrate to URL-based Git config, generated URL is invalid." }
   }
 }
 

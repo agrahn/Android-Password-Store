@@ -143,10 +143,8 @@
   <string name="ssh_keygen_require_authentication">Chroń za pomocą blokady ekranu</string>
   <string name="ssh_keygen_label_rsa">RSA</string>
   <string name="ssh_keygen_label_ecdsa">ECDSA</string>
-  <string name="ssh_keygen_label_ed25519">Ed25519</string>
   <string name="ssh_keygen_explanation_rsa"><b>RSA (3072 bity)</b>\nObsługiwane przez wszystkie serwery, ale uwierzytelnianie jest stosunkowo powolne.</string>
   <string name="ssh_keygen_explanation_ecdsa"><b>ECDSA (NIST P-256)</b>\nSzybkie uwierzytelnianie i obsługiwane przez większość serwerów, które nadal otrzymują aktualizacje.</string>
-  <string name="ssh_keygen_explanation_ed25519"><b>Ed25519</b>\nSzybkie uwierzytelnienie, ale obsługiwane tylko przez dość nowoczesne serwery.</string>
   <string name="ssh_keygen_existing_title">Klucz SSH</string>
   <string name="ssh_keygen_existing_message">Zastąpić istniejący klucz SSH? Możesz stracić dostęp do swojego serwera.</string>
   <string name="ssh_keygen_existing_replace">Zastąp</string>

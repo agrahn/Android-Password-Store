@@ -142,10 +142,8 @@
   <string name="ssh_keygen_require_authentication">Использовать настройки блокировки экрана устройства</string>
   <string name="ssh_keygen_label_rsa">RSA</string>
   <string name="ssh_keygen_label_ecdsa">ECDSA</string>
-  <string name="ssh_keygen_label_ed25519">Ed25519</string>
   <string name="ssh_keygen_explanation_rsa"><b>RSA (3072 бит)</b>\nПоддерживается всеми серверами, но аутентификация является относительно медленной.</string>
   <string name="ssh_keygen_explanation_ecdsa"><b>ECDSA (NIST P-256)</b>\nБыстрая аутентификация, поддерживается большинством современных серверов.</string>
-  <string name="ssh_keygen_explanation_ed25519"><b>Ed25519</b>\nБыстрая аутентификация, но поддерживается только современными серверами.</string>
   <string name="ssh_keygen_existing_title">SSH ключ</string>
   <string name="ssh_keygen_existing_message">Заменить существующий SSH ключ? Вы можете потерять доступ к вашему серверу.</string>
   <string name="ssh_keygen_existing_replace">Заменить</string>

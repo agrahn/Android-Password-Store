@@ -14,8 +14,6 @@ import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import androidx.core.content.edit
-import androidx.security.crypto.EncryptedFile
-import androidx.security.crypto.MasterKey
 import app.passwordstore.Application
 import app.passwordstore.R
 import app.passwordstore.util.extensions.getString
@@ -33,14 +31,8 @@ import java.security.PrivateKey
 import java.security.PublicKey
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import logcat.asLog
 import logcat.logcat
-import net.i2p.crypto.eddsa.EdDSAPrivateKey
-import net.i2p.crypto.eddsa.spec.EdDSANamedCurveTable
-import net.i2p.crypto.eddsa.spec.EdDSAPrivateKeySpec
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.common.Buffer
 import net.schmizz.sshj.common.KeyType
@@ -78,7 +70,7 @@ object SshKey {
     get() = if (publicKeyFile.exists()) publicKeyFile.readText() else null
 
   val canShowSshPublicKey
-    get() = type in listOf(Type.LegacyGenerated, Type.KeystoreNative, Type.KeystoreWrappedEd25519)
+    get() = type in listOf(Type.LegacyGenerated, Type.KeystoreNative)
 
   val exists
     get() = type != null
@@ -86,7 +78,7 @@ object SshKey {
   val mustAuthenticate: Boolean
     get() {
       return runCatching {
-          if (type !in listOf(Type.KeystoreNative, Type.KeystoreWrappedEd25519)) return false
+          if (type !in listOf(Type.KeystoreNative)) return false
           when (val key = androidKeystore.getKey(KEYSTORE_ALIAS, null)) {
             is PrivateKey -> {
               val factory = KeyFactory.getInstance(key.algorithm, PROVIDER_ANDROID_KEY_STORE)
@@ -131,7 +123,6 @@ object SshKey {
   private enum class Type(val value: String) {
     Imported("imported"),
     KeystoreNative("keystore_native"),
-    KeystoreWrappedEd25519("keystore_wrapped_ed25519"),
 
     // Behaves like `Imported`, but allows to view the public key.
     LegacyGenerated("legacy_generated");
@@ -232,44 +223,6 @@ object SshKey {
     type = if (isGenerated) Type.LegacyGenerated else Type.Imported
   }
 
-  private suspend fun getOrCreateWrappingMasterKey(requireAuthentication: Boolean) =
-    withContext(Dispatchers.IO) {
-      MasterKey.Builder(context, KEYSTORE_ALIAS)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .setRequestStrongBoxBacked(true)
-        .setUserAuthenticationRequired(requireAuthentication, 15)
-        .build()
-    }
-
-  private suspend fun getOrCreateWrappedPrivateKeyFile(requireAuthentication: Boolean) =
-    withContext(Dispatchers.IO) {
-      EncryptedFile.Builder(
-          context,
-          privateKeyFile,
-          getOrCreateWrappingMasterKey(requireAuthentication),
-          EncryptedFile.FileEncryptionScheme.AES256_GCM_HKDF_4KB,
-        )
-        .setKeysetPrefName(ANDROIDX_SECURITY_KEYSET_PREF_NAME)
-        .build()
-    }
-
-  suspend fun generateKeystoreWrappedEd25519Key(requireAuthentication: Boolean) =
-    withContext(Dispatchers.IO) {
-      delete()
-
-      val encryptedPrivateKeyFile = getOrCreateWrappedPrivateKeyFile(requireAuthentication)
-      // Generate the ed25519 key pair and encrypt the private key.
-      val keyPair = net.i2p.crypto.eddsa.KeyPairGenerator().generateKeyPair()
-      encryptedPrivateKeyFile.openFileOutput().use { os ->
-        os.write((keyPair.private as EdDSAPrivateKey).seed)
-      }
-
-      // Write public key in SSH format to .ssh_key.pub.
-      publicKeyFile.writeText(toSshPublicKey(keyPair.public))
-
-      type = Type.KeystoreWrappedEd25519
-    }
-
   fun generateKeystoreNativeKey(algorithm: Algorithm, requireAuthentication: Boolean) {
     delete()
 
@@ -304,7 +257,6 @@ object SshKey {
       Type.LegacyGenerated,
       Type.Imported -> client.loadKeys(privateKeyFile.absolutePath, passphraseFinder)
       Type.KeystoreNative -> KeystoreNativeKeyProvider
-      Type.KeystoreWrappedEd25519 -> KeystoreWrappedEd25519KeyProvider
       null -> null
     }
 
@@ -328,40 +280,6 @@ object SshKey {
             "Failed to access private key '$KEYSTORE_ALIAS' from Android Keystore",
             error,
           )
-        }
-
-    override fun getType(): KeyType = KeyType.fromKey(public)
-  }
-
-  private object KeystoreWrappedEd25519KeyProvider : KeyProvider {
-
-    override fun getPublic(): PublicKey =
-      runCatching {
-          parseSshPublicKey(sshPublicKey ?: throw NullPointerException())
-            ?: throw NullPointerException()
-        }
-        .getOrElse { error ->
-          logcat { error.asLog() }
-          throw IOException("Failed to get the public key for wrapped ed25519 key", error)
-        }
-
-    override fun getPrivate(): PrivateKey =
-      runCatching {
-          // The current MasterKey API does not allow getting a reference to an existing
-          // one
-          // without specifying the KeySpec for a new one. However, the value for passed
-          // here
-          // for `requireAuthentication` is not used as the key already exists at this
-          // point.
-          val encryptedPrivateKeyFile = runBlocking { getOrCreateWrappedPrivateKeyFile(false) }
-          val rawPrivateKey = encryptedPrivateKeyFile.openFileInput().use { it.readBytes() }
-          EdDSAPrivateKey(
-            EdDSAPrivateKeySpec(rawPrivateKey, EdDSANamedCurveTable.ED_25519_CURVE_SPEC)
-          )
-        }
-        .getOrElse { error ->
-          logcat { error.asLog() }
-          throw IOException("Failed to unwrap wrapped ed25519 key", error)
         }
 
     override fun getType(): KeyType = KeyType.fromKey(public)
