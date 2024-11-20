@@ -25,7 +25,7 @@ jobs:
       uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@develop
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f # v3.27.4
+      uses: github/codeql-action/init@f09c1c0a94de965c15400f5634aa42fac8fb8f88 # v3.27.5
       with:
         languages: java
         tools: latest
@@ -36,6 +36,6 @@ jobs:
       run: ./gradlew assembleFreeRelease
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f # v3.27.4
+      uses: github/codeql-action/analyze@f09c1c0a94de965c15400f5634aa42fac8fb8f88 # v3.27.5
       with:
         category: "/language:java"
