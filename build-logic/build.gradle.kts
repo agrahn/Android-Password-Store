@@ -49,10 +49,6 @@ gradlePlugin {
       id = "com.github.android-password-store.rename-artifacts"
       implementationClass = "app.passwordstore.gradle.RenameArtifactsPlugin"
     }
-    register("sentry") {
-      id = "com.github.android-password-store.sentry"
-      implementationClass = "app.passwordstore.gradle.SentryPlugin"
-    }
     register("spotless") {
       id = "com.github.android-password-store.spotless"
       implementationClass = "app.passwordstore.gradle.SpotlessPlugin"
@@ -82,7 +78,6 @@ dependencies {
   implementation(libs.build.okhttp)
   implementation(libs.build.r8)
   implementation(libs.build.semver)
-  implementation(libs.build.sentry)
   implementation(libs.build.spotless)
   implementation(libs.build.vcu)
   implementation(libs.kotlinx.coroutines.core)

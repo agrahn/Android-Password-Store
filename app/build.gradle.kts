@@ -9,7 +9,6 @@ plugins {
   id("com.github.android-password-store.kotlin-android")
   id("com.github.android-password-store.kotlin-kapt")
   id("com.github.android-password-store.versioning-plugin")
-  id("com.github.android-password-store.sentry")
   id("com.github.android-password-store.rename-artifacts")
   alias(libs.plugins.hilt)
   alias(libs.plugins.kotlin.composeCompiler)
@@ -86,10 +85,6 @@ dependencies {
   implementation(libs.thirdparty.slf4j.api) {
     because("SSHJ now uses SLF4J 2.0 which we don't want")
   }
-
-  nonFreeImplementation(libs.thirdparty.nonfree.googlePlayAuthApiPhone)
-  nonFreeImplementation(libs.thirdparty.nonfree.sentry)
-  freeImplementation(projects.sentryStub)
 
   testImplementation(libs.testing.robolectric)
   testImplementation(libs.testing.sharedPrefsMock)

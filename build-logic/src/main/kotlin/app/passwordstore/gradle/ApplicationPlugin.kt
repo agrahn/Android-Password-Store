@@ -56,10 +56,7 @@ class ApplicationPlugin : Plugin<Project> {
       }
 
       flavorDimensions.add(FlavorDimensions.FREE)
-      productFlavors {
-        register(ProductFlavors.FREE) {}
-        register(ProductFlavors.NON_FREE) {}
-      }
+      productFlavors { register(ProductFlavors.FREE) {} }
 
       project.configureBuildSigning()
     }

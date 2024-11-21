@@ -3,9 +3,6 @@ on:
   schedule:
     - cron: '0 12 * * 1'
 
-env:
-  SENTRY_DSN: 'https://public_key@example.com/project_id'
-
 name: Shadow job
 jobs:
   provide-agp-version-matrix:

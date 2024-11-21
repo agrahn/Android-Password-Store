@@ -36,7 +36,7 @@ internal fun Project.configureSlimTests() {
       beforeVariants(selector().withBuildType(BUILD_TYPE_RELEASE)) {
         (it as HasUnitTestBuilder).enableUnitTest = false
       }
-      beforeVariants(selector().withFlavor(FlavorDimensions.FREE to ProductFlavors.NON_FREE)) {
+      beforeVariants(selector().withFlavor(FlavorDimensions.FREE to ProductFlavors.FREE)) {
         (it as HasUnitTestBuilder).enableUnitTest = false
         it.androidTest.enable = false
       }

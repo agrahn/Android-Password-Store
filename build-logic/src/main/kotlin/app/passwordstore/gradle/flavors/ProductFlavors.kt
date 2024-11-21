@@ -11,5 +11,4 @@ object FlavorDimensions {
 
 object ProductFlavors {
   const val FREE = "free"
-  const val NON_FREE = "nonFree"
 }

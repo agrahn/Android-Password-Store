@@ -16,7 +16,6 @@ import app.passwordstore.injection.context.FilesDirPath
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.extensions.getString
-import app.passwordstore.util.features.Feature
 import app.passwordstore.util.features.Features
 import app.passwordstore.util.git.sshj.setUpBouncyCastleForSshj
 import app.passwordstore.util.proxy.ProxyUtils
@@ -25,8 +24,6 @@ import app.passwordstore.util.settings.PreferenceKeys
 import app.passwordstore.util.settings.runMigrations
 import com.google.android.material.color.DynamicColors
 import dagger.hilt.android.HiltAndroidApp
-import io.sentry.Sentry
-import io.sentry.protocol.User
 import java.util.concurrent.Executors
 import javax.inject.Inject
 import logcat.AndroidLogcatLogger
@@ -62,14 +59,6 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
     runMigrations(filesDirPath, prefs, gitSettings)
     proxyUtils.setDefaultProxy()
     DynamicColors.applyToActivitiesIfAvailable(this)
-    Sentry.configureScope { scope ->
-      val user = User()
-      user.data =
-        Feature.entries.associate { feature ->
-          "features.${feature.configKey}" to features.isEnabled(feature).toString()
-        }
-      scope.user = user
-    }
     setupScreenOffHandler()
   }
 

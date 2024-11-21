@@ -46,7 +46,6 @@ build-moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref =
 build-okhttp = "com.squareup.okhttp3:okhttp:5.0.0-alpha.14"
 build-r8 = "com.android.tools:r8:8.5.35"
 build-semver = "com.github.zafarkhaja:java-semver:0.10.2"
-build-sentry = "io.sentry.android.gradle:io.sentry.android.gradle.gradle.plugin:4.13.0"
 build-spotless = "com.diffplug.spotless:spotless-plugin-gradle:7.0.0.BETA4"
 build-vcu = "nl.littlerobots.version-catalog-update:nl.littlerobots.version-catalog-update.gradle.plugin:0.8.5"
 compose-bom = "androidx.compose:compose-bom:2024.11.00"
@@ -83,8 +82,6 @@ thirdparty-kotlinResult-coroutines = { module = "com.michael-bull.kotlin-result:
 thirdparty-leakcanary-plumber = "com.squareup.leakcanary:plumber-android-startup:2.14"
 thirdparty-logcat = "com.squareup.logcat:logcat:0.1"
 thirdparty-modernAndroidPrefs = "de.maxr1998:modernandroidpreferences:2.4.0-beta2"
-thirdparty-nonfree-googlePlayAuthApiPhone = "com.google.android.gms:play-services-auth-api-phone:18.1.0"
-thirdparty-nonfree-sentry = "io.sentry:sentry-android:7.18.0"
 thirdparty-pgpainless = "org.pgpainless:pgpainless-core:1.7.2"
 thirdparty-slack-lints = "com.slack.lint:slack-lint-checks:0.8.2"
 thirdparty-slf4j-api = { module = "org.slf4j:slf4j-api", version = { strictly = "[1.7, 1.8[", prefer = "1.7.36" } }

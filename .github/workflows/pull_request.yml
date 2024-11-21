@@ -8,9 +8,6 @@ concurrency:
   group: ${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
-env:
-  SENTRY_DSN: 'https://public_key@example.com/project_id'
-
 jobs:
   check-codestyle:
     runs-on: ubuntu-latest

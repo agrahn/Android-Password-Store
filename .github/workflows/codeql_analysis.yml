@@ -9,9 +9,6 @@ on:
     # branches:
       # - develop
 
-env:
-  SENTRY_DSN: 'https://public_key@example.com/project_id'
-
 jobs:
   analyze:
     name: Analyze
