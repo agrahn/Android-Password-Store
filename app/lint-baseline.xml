@@ -3,6 +3,20 @@
 
     <issue
         id="InvalidPackage"
+        message="Invalid package reference in org.eclipse.jgit:org.eclipse.jgit; not included in Android: `javax.management`. Referenced from `org.eclipse.jgit.util.Monitoring`.">
+        <location
+            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.eclipse.jgit/org.eclipse.jgit/7.0.0.202409031743-r/e11135ded2f1f78da9a028002ad7837cc970ee8e/org.eclipse.jgit-7.0.0.202409031743-r.jar"/>
+    </issue>
+
+    <issue
+        id="InvalidPackage"
+        message="Invalid package reference in org.eclipse.jgit:org.eclipse.jgit; not included in Android: `java.lang.management`. Referenced from `org.eclipse.jgit.util.Monitoring`.">
+        <location
+            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.eclipse.jgit/org.eclipse.jgit/7.0.0.202409031743-r/e11135ded2f1f78da9a028002ad7837cc970ee8e/org.eclipse.jgit-7.0.0.202409031743-r.jar"/>
+    </issue>
+
+    <issue
+        id="InvalidPackage"
         message="Invalid package reference in library; not included in Android: `javax.naming.directory`. Referenced from `org.bouncycastle.cert.dane.fetcher.JndiDANEFetcherFactory`.">
         <location
             file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.bouncycastle/bcpkix-jdk18on/1.78.1/17b3541f736df97465f87d9f5b5dfa4991b37bb3/bcpkix-jdk18on-1.78.1.jar"/>
