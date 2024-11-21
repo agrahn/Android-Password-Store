@@ -19,7 +19,7 @@ class ResetToRemoteOperation(callingActivity: AppCompatActivity, remoteBranch: S
       // Force-create $remoteBranch if it doesn't exist. This covers the case where a branch name is
       // changed.
       git.branchCreate().setName(remoteBranch).setForce(true),
-      git.checkout().setName(remoteBranch).setForce(true).setUpstreamMode(TRACK),
+      git.checkout().setName(remoteBranch).setForced(true).setUpstreamMode(TRACK),
       // Do a hard reset to the remote branch. Equivalent to git reset --hard
       // origin/$remoteBranch
       git.reset().setRef("origin/$remoteBranch").setMode(ResetCommand.ResetType.HARD),

@@ -88,6 +88,10 @@ class SshjSessionFactory(
       }
   }
 
+  override fun getType(): String {
+    return "SshjSessionFactory"
+  }
+
   fun close() {
     currentSession?.close()
   }
