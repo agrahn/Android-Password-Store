@@ -22,7 +22,9 @@ import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.onSuccess
 import com.github.michaelbull.result.runCatching
+import java.io.File
 import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
@@ -49,7 +51,19 @@ class CloneFragment : Fragment(R.layout.fragment_clone) {
 
   /** Clones a remote Git repository to the app's private directory */
   private fun cloneToHiddenDir() {
-    cloneAction.launch(GitServerConfigActivity.createCloneIntent(requireContext()))
+    runCatching { cloneAction.launch(GitServerConfigActivity.createCloneIntent(requireContext())) }
+      .onSuccess {
+        val gpgIdentifierFile = File(PasswordRepository.getRepositoryDirectory(), ".gpg-id")
+        if (!gpgIdentifierFile.exists()) {
+          runCatching {
+              parentFragmentManager.performTransactionWithBackStack(
+                KeySelectionFragment.newInstance()
+              )
+            }
+            .onFailure { e -> logcat(ERROR) { e.asLog() } }
+        }
+      }
+      .onFailure { e -> logcat(ERROR) { e.asLog() } }
   }
 
   private fun createRepository() {

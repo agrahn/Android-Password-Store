@@ -138,7 +138,7 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
       }
     }
 
-  /** @see KeyManager.getKeyById */
+  /** @see KeyManager.getKeyId */
   override suspend fun getKeyId(key: PGPKey): PGPIdentifier? = tryGetId(key)
 
   /** Checks if [keyDir] exists and attempts to create it if not. */

@@ -14,6 +14,8 @@ import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
+import app.passwordstore.crypto.PGPIdentifier
+import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.FragmentKeySelectionBinding
 import app.passwordstore.injection.prefs.SettingsPreferences
@@ -24,6 +26,7 @@ import app.passwordstore.util.extensions.finish
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.settings.PreferenceKeys
+import com.github.michaelbull.result.unwrap
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
@@ -34,6 +37,7 @@ import kotlinx.coroutines.withContext
 @AndroidEntryPoint
 class KeySelectionFragment : Fragment(R.layout.fragment_key_selection) {
 
+  @Inject lateinit var pgpKeyManager: PGPKeyManager
   @Inject @SettingsPreferences lateinit var settings: SharedPreferences
   @Inject lateinit var dispatcherProvider: DispatcherProvider
   private val binding by viewBinding(FragmentKeySelectionBinding::bind)
@@ -41,13 +45,16 @@ class KeySelectionFragment : Fragment(R.layout.fragment_key_selection) {
     registerForActivityResult(StartActivityForResult()) { result ->
       if (result.resultCode == AppCompatActivity.RESULT_OK) {
         val data = result.data ?: return@registerForActivityResult
-        val selectedKey =
+        val selectedUserId =
           data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
+        val pgpUserId = PGPIdentifier.fromString(selectedUserId) ?: return@registerForActivityResult
         lifecycleScope.launch {
           withContext(dispatcherProvider.io()) {
+            val key = pgpKeyManager.getKeyById(pgpUserId).unwrap()
+            val keyId = pgpKeyManager.getKeyId(key) ?: throw NullPointerException()
             val gpgIdentifierFile = File(PasswordRepository.getRepositoryDirectory(), ".gpg-id")
-            gpgIdentifierFile.writeText(selectedKey)
+            gpgIdentifierFile.writeText(keyId.toString())
           }
           settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
           requireActivity()
