@@ -5,6 +5,9 @@
   -->
 <resources>
   <plurals name="delete_title">
+    <item quantity="one">%d item selected</item>
+    <item quantity="two">%d items selected</item>
+    <item quantity="many">%d items selected</item>
     <item quantity="other">%d items selected</item>
   </plurals>
   <!-- Activity names -->
@@ -19,6 +22,9 @@
   <!-- Password Store -->
   <string name="creation_dialog_text">Please clone or create a new repository below before trying to add a password or running any synchronization operation.</string>
   <plurals name="delete_dialog_text">
+    <item quantity="one">Are you sure you want to delete the password?</item>
+    <item quantity="two">Are you sure you want to delete %d passwords?</item>
+    <item quantity="many">Are you sure you want to delete %d passwords?</item>
     <item quantity="other">Are you sure you want to delete %d passwords?</item>
   </plurals>
   <string name="delete_directory_progress_text">Deleting…</string>
