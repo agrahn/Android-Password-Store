@@ -48,8 +48,6 @@
       ],
       enabled: false,
       matchPackageNames: [
-        '/^com.android.tools:desugar_jdk_libs/',
-        '/^commons-codec:commons-codec/',
       ],
     },
   ],
