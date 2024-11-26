@@ -11,7 +11,7 @@ lifecycle = "2.8.7"
 moshi = "1.15.1"
 
 [libraries]
-android-desugarJdkLibs = "com.android.tools:desugar_jdk_libs:2.0.4"
+android-desugarJdkLibs = "com.android.tools:desugar_jdk_libs:2.1.3"
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidxActivity" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
 androidx-annotation = "androidx.annotation:annotation:1.9.1"
