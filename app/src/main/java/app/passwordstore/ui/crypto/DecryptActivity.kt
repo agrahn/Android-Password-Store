@@ -24,7 +24,6 @@ import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.features.Features
-import app.passwordstore.util.settings.Constants
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.runCatching
@@ -32,8 +31,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
 import java.io.File
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -90,22 +87,6 @@ class DecryptActivity : BasePGPActivity() {
       else -> return super.onOptionsItemSelected(item)
     }
     return true
-  }
-
-  /**
-   * Automatically finishes the activity after [PreferenceKeys.GENERAL_SHOW_TIME] seconds decryption
-   * succeeded to prevent information leaks from stale activities.
-   */
-  private fun startAutoDismissTimer() {
-    lifecycleScope.launch {
-      val timeout =
-        settings.getString(PreferenceKeys.GENERAL_SHOW_TIME)?.toIntOrNull()
-          ?: Constants.DEFAULT_DECRYPTION_TIMEOUT
-      if (timeout != 0) {
-        delay(timeout.seconds)
-        finish()
-      }
-    }
   }
 
   /**

@@ -65,6 +65,7 @@ import kotlin.io.path.nameWithoutExtension
 import kotlin.io.path.pathString
 import kotlin.io.path.relativeTo
 import kotlin.io.path.writeBytes
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
@@ -87,6 +88,8 @@ class PasswordCreationActivity : BasePGPActivity() {
   private val editing by unsafeLazy { intent.getBooleanExtra(EXTRA_EDITING, false) }
   private var oldCategory: String? = null
   private var copy: Boolean = false
+
+  private var timer: Job? = null
 
   private val otpImportAction =
     registerForActivityResult(StartActivityForResult()) { result ->
@@ -303,6 +306,8 @@ class PasswordCreationActivity : BasePGPActivity() {
 
   private fun updateViewState() =
     with(binding) {
+      timer?.cancel()
+      timer = startAutoDismissTimer()
       encryptUsername.apply {
         if (visibility != View.VISIBLE) return@apply
         val hasUsernameInFileName = filename.text.toString().isNotBlank()

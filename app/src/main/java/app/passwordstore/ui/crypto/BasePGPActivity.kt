@@ -36,6 +36,9 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -198,6 +201,23 @@ open class BasePGPActivity : AppCompatActivity() {
       parent.findTillRoot(fileName, rootPath)
     } else {
       null
+    }
+  }
+
+  /**
+   * Automatically finishes the activity after [PreferenceKeys.GENERAL_SHOW_TIME] seconds decryption
+   * succeeded to prevent information leaks from stale activities. Cancel with .cancel() on returned
+   * object.
+   */
+  protected fun startAutoDismissTimer(): Job {
+    return lifecycleScope.launch {
+      val timeout =
+        settings.getString(PreferenceKeys.GENERAL_SHOW_TIME)?.toIntOrNull()
+          ?: Constants.DEFAULT_DECRYPTION_TIMEOUT
+      if (timeout != 0) {
+        delay(timeout.seconds)
+        finish()
+      }
     }
   }
 
