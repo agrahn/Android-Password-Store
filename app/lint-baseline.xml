@@ -5,14 +5,14 @@
         id="InvalidPackage"
         message="Invalid package reference in org.eclipse.jgit:org.eclipse.jgit; not included in Android: `javax.management`. Referenced from `org.eclipse.jgit.util.Monitoring`.">
         <location
-            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.eclipse.jgit/org.eclipse.jgit/7.0.0.202409031743-r/e11135ded2f1f78da9a028002ad7837cc970ee8e/org.eclipse.jgit-7.0.0.202409031743-r.jar"/>
+            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.eclipse.jgit/org.eclipse.jgit/7.1.0.202411261347-r/67609d333b8ba11d5b3a509aca72c1c8ef72e17e/org.eclipse.jgit-7.1.0.202411261347-r.jar"/>
     </issue>
 
     <issue
         id="InvalidPackage"
         message="Invalid package reference in org.eclipse.jgit:org.eclipse.jgit; not included in Android: `java.lang.management`. Referenced from `org.eclipse.jgit.util.Monitoring`.">
         <location
-            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.eclipse.jgit/org.eclipse.jgit/7.0.0.202409031743-r/e11135ded2f1f78da9a028002ad7837cc970ee8e/org.eclipse.jgit-7.0.0.202409031743-r.jar"/>
+            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.eclipse.jgit/org.eclipse.jgit/7.1.0.202411261347-r/67609d333b8ba11d5b3a509aca72c1c8ef72e17e/org.eclipse.jgit-7.1.0.202411261347-r.jar"/>
     </issue>
 
     <issue
