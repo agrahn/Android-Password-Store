@@ -8,7 +8,7 @@ hilt = "2.53"
 kotlin = "2.1.0"
 kotlinResult = "2.0.0"
 lifecycle = "2.8.7"
-moshi = "1.15.1"
+moshi = "1.15.2"
 
 [libraries]
 # noinspection GradleDependency
