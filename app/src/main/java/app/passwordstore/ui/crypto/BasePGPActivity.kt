@@ -157,14 +157,12 @@ open class BasePGPActivity : AppCompatActivity() {
    */
   fun getPGPIdentifiers(subDir: String): List<PGPIdentifier>? {
     val repoRoot = PasswordRepository.getRepositoryDirectory()
-    val gpgIdentifierFile =
-      File(repoRoot, subDir).findTillRoot(".gpg-id", repoRoot)
-        ?: File(repoRoot, ".gpg-id").apply { createNewFile() }
+    val gpgIdentifierFile = File(repoRoot, subDir).findTillRoot(".gpg-id", repoRoot)
     val gpgIdentifiers =
       gpgIdentifierFile
-        .readLines()
-        .filter { it.isNotBlank() }
-        .map { line ->
+        ?.readLines()
+        ?.filter { it.isNotBlank() }
+        ?.map { line ->
           PGPIdentifier.fromString(line)
             ?: run {
               // The line being empty means this is most likely an empty `.gpg-id`
@@ -181,9 +179,14 @@ open class BasePGPActivity : AppCompatActivity() {
               return null
             }
         }
-        .filterIsInstance<PGPIdentifier>()
-    if (gpgIdentifiers.isEmpty()) {
-      error("Failed to parse identifiers from .gpg-id: ${gpgIdentifierFile.readText()}")
+        ?.filterIsInstance<PGPIdentifier>()
+    if (gpgIdentifiers.isNullOrEmpty()) {
+      if (gpgIdentifiers == null) {
+        snackbar(message = resources.getString(R.string.missing_gpg_id))
+      } else {
+        snackbar(message = resources.getString(R.string.empty_gpg_id))
+      }
+      return null
     }
     return gpgIdentifiers
   }

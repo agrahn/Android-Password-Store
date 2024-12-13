@@ -299,6 +299,8 @@
   <string name="otp_import_failure_no_selection">Keine Bilddatei ausgewählt</string>
   <string name="exporting_passwords">Passwörter werden exportiert.</string>
   <string name="invalid_gpg_id">.gpg-id wurde gefunden, enthält jedoch ungültige Schlüssel-ID, Fingerabdruck oder Benutzer-ID.</string>
+  <string name="empty_gpg_id">.gpg-id wurde gefunden, ist jedoch leer.</string>
+  <string name="missing_gpg_id">.gpg-id wurde nicht gefunden.</string>
   <string name="short_gpg_id">.gpg-id wurde gefunden, enthält jedoch eine kurze Hex-ID, die nicht unterstützt wird.</string>
   <string name="invalid_filename_text">Dateiname darf kein \'/\' enthalten; Verzeichnis oben setzen</string>
   <string name="directory_hint">Ordner</string>
