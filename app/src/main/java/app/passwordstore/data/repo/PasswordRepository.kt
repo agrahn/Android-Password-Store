@@ -122,6 +122,7 @@ object PasswordRepository {
         putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, false)
       } else {
         putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true)
+        putBoolean(PreferenceKeys.GPG_ID_INITIALIZED, File(dir, ".gpg-id").isFile())
       }
     }
     // Create the repository static variable in PasswordRepository

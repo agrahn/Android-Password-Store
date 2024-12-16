@@ -32,6 +32,7 @@ import app.passwordstore.ui.crypto.PasswordCreationActivity
 import app.passwordstore.ui.dialogs.FolderCreationDialogFragment
 import app.passwordstore.ui.folderselect.SelectFolderActivity
 import app.passwordstore.ui.git.base.BaseGitActivity
+import app.passwordstore.ui.onboarding.activity.KeySelectionActivity
 import app.passwordstore.ui.onboarding.activity.OnboardingActivity
 import app.passwordstore.ui.settings.SettingsActivity
 import app.passwordstore.util.autofill.AutofillMatcher
@@ -350,26 +351,30 @@ class PasswordStore : BaseGitActivity() {
 
   private fun checkLocalRepository(localDir: File?) {
     if (localDir != null && settings.getBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, false)) {
-      // do not push the fragment if we already have it
-      if (
-        getPasswordFragment() == null || settings.getBoolean(PreferenceKeys.REPO_CHANGED, false)
-      ) {
-        settings.edit { putBoolean(PreferenceKeys.REPO_CHANGED, false) }
-        val args = Bundle()
-        args.putString(REQUEST_ARG_PATH, PasswordRepository.getRepositoryDirectory().absolutePath)
+      if (!settings.getBoolean(PreferenceKeys.GPG_ID_INITIALIZED, false)) {
+        launchActivity(KeySelectionActivity::class.java)
+      } else {
+        // do not push the fragment if we already have it
+        if (
+          getPasswordFragment() == null || settings.getBoolean(PreferenceKeys.REPO_CHANGED, false)
+        ) {
+          settings.edit { putBoolean(PreferenceKeys.REPO_CHANGED, false) }
+          val args = Bundle()
+          args.putString(REQUEST_ARG_PATH, PasswordRepository.getRepositoryDirectory().absolutePath)
 
-        // if the activity was started from the autofill settings, the
-        // intent is to match a clicked pwd with app. pass this to fragment
-        if (intent.getBooleanExtra("matchWith", false)) {
-          args.putBoolean("matchWith", true)
-        }
-        supportActionBar?.apply {
-          show()
-          setDisplayHomeAsUpEnabled(false)
-        }
-        supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-        supportFragmentManager.commit {
-          replace(R.id.main_layout, PasswordFragment.newInstance(args), PASSWORD_FRAGMENT_TAG)
+          // if the activity was started from the autofill settings, the
+          // intent is to match a clicked pwd with app. pass this to fragment
+          if (intent.getBooleanExtra("matchWith", false)) {
+            args.putBoolean("matchWith", true)
+          }
+          supportActionBar?.apply {
+            show()
+            setDisplayHomeAsUpEnabled(false)
+          }
+          supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+          supportFragmentManager.commit {
+            replace(R.id.main_layout, PasswordFragment.newInstance(args), PASSWORD_FRAGMENT_TAG)
+          }
         }
       }
     } else {

@@ -44,6 +44,11 @@
       android:exported="false" />
 
     <activity
+      android:name=".ui.onboarding.activity.KeySelectionActivity"
+      android:configChanges="orientation|screenSize"
+      android:exported="false" />
+
+    <activity
       android:name=".ui.proxy.ProxySelectorActivity"
       android:exported="false"
       android:label="@string/activity_proxy_label"

@@ -16,6 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts.StartActivityFo
 import androidx.annotation.CallSuper
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
@@ -186,6 +187,7 @@ open class BasePGPActivity : AppCompatActivity() {
       } else {
         snackbar(message = resources.getString(R.string.empty_gpg_id))
       }
+      settings.edit { putBoolean(PreferenceKeys.GPG_ID_INITIALIZED, false) }
       return null
     }
     return gpgIdentifiers
