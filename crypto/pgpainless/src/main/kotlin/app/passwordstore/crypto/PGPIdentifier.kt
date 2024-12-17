@@ -79,6 +79,7 @@ public sealed class PGPIdentifier {
         return KeyId(keyId.toLong())
       }
 
+      // Match User ID: email (preferred) or name
       return splitUserId(identifier)?.let { UserId(it) }
     }
 
@@ -95,7 +96,7 @@ public sealed class PGPIdentifier {
 
     /**
      * Takes a 'Name (Comment) <Email>' user ID in any of its permutations and attempts to extract
-     * an email from it.
+     * Email from it. If Email is not present, return Name.
      */
     @Suppress("NestedBlockDepth")
     public fun splitUserId(userId: String): String? {
@@ -119,7 +120,7 @@ public sealed class PGPIdentifier {
               email = emailMatcher.group(EmailRegex.EMAIL)
             }
           }
-          return email
+          return email ?: name
         }
       }
       return null
