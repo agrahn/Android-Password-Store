@@ -16,7 +16,6 @@ import androidx.activity.result.contract.ActivityResultContracts.StartActivityFo
 import androidx.annotation.CallSuper
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
@@ -41,6 +40,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 @Suppress("Registered")
@@ -157,37 +157,44 @@ open class BasePGPActivity : AppCompatActivity() {
    * the problem.
    */
   fun getPGPIdentifiers(subDir: String): List<PGPIdentifier>? {
+    var shortIdCount = 0
+    var invalidIdCount = 0
     val repoRoot = PasswordRepository.getRepositoryDirectory()
     val gpgIdentifierFile = File(repoRoot, subDir).findTillRoot(".gpg-id", repoRoot)
+    if (gpgIdentifierFile == null) {
+      snackbar(message = resources.getString(R.string.missing_gpg_id))
+      PasswordRepository.gpgidIsValid = false
+      return null
+    }
     val gpgIdentifiers =
       gpgIdentifierFile
-        ?.readLines()
-        ?.filter { it.isNotBlank() }
-        ?.map { line ->
-          PGPIdentifier.fromString(line)
-            ?: run {
-              // The line being empty means this is most likely an empty `.gpg-id`
-              // file we created. Skip the validation so we can make the user add a
-              // real ID.
-              if (line.isEmpty()) return@run
-              // Apparently `gpg-id` being the first line is also acceptable?
-              if (line == "gpg-id") return@run
-              if (line.removePrefix("0x").matches("[a-fA-F0-9]{8}".toRegex())) {
-                snackbar(message = resources.getString(R.string.short_gpg_id))
-              } else {
-                snackbar(message = resources.getString(R.string.invalid_gpg_id))
-              }
-              return null
-            }
+        .readLines()
+        .filter { it.isNotBlank() }
+        .map { line ->
+          if (line == "gpg-id") {
+            null
+          } else if (line.removePrefix("0x").matches("[a-fA-F0-9]{8}".toRegex())) {
+            // Short key IDs are not accepted
+            shortIdCount++
+            null
+          } else {
+            val id = PGPIdentifier.fromString(line)
+            if (id == null || !runBlocking { repository.hasKey(id) }) {
+              invalidIdCount++
+              null
+            } else id
+          }
         }
-        ?.filterIsInstance<PGPIdentifier>()
+        .filterIsInstance<PGPIdentifier>()
     if (gpgIdentifiers.isNullOrEmpty()) {
-      if (gpgIdentifiers == null) {
-        snackbar(message = resources.getString(R.string.missing_gpg_id))
-      } else {
+      if (shortIdCount == 0 && invalidIdCount == 0) {
         snackbar(message = resources.getString(R.string.empty_gpg_id))
+      } else if (shortIdCount > 0 && invalidIdCount == 0) {
+        snackbar(message = resources.getString(R.string.short_gpg_id))
+      } else if (shortIdCount == 0 && invalidIdCount > 0) {
+        snackbar(message = resources.getString(R.string.invalid_gpg_id))
       }
-      settings.edit { putBoolean(PreferenceKeys.GPG_ID_INITIALIZED, false) }
+      PasswordRepository.gpgidIsValid = false
       return null
     }
     return gpgIdentifiers

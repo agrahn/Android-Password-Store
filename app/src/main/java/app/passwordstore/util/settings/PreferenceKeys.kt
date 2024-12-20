@@ -63,7 +63,6 @@ object PreferenceKeys {
   const val DIRECTORY_STRUCTURE = "oreo_autofill_directory_structure"
   const val PREF_KEY_PWGEN_TYPE = "pref_key_pwgen_type"
   const val REPOSITORY_INITIALIZED = "repository_initialized"
-  const val GPG_ID_INITIALIZED = "gpg_id_initialized"
   const val REPO_CHANGED = "repo_changed"
   const val SEARCH_ON_START = "search_on_start"
 

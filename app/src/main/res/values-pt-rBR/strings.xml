@@ -36,7 +36,7 @@
   <string name="git_commit_remove_text">Remova %1$s do armazenamento.</string>
   <string name="git_commit_move_text">Renomear %1$s para %2$s.</string>
   <string name="git_commit_move_multiple_text">Mova múltiplas senhas para %1$s.</string>
-  <string name="git_commit_gpg_id">Inicializar IDs GPG em %1$s.</string>
+  <string name="git_commit_gpg_id">Inicializar IDs PGP em %1$s.</string>
   <!-- PGPHandler -->
   <string name="clipboard_copied_text">Copiado para a área de transferência</string>
   <string name="file_toast_text">Por favor, informe um nome de arquivo</string>
@@ -267,11 +267,11 @@
   <string name="otp_import_failure_generic">Falha ao importar a configuração TOTP</string>
   <string name="otp_import_failure_no_selection">Nenhum arquivo de imagem foi selecionado</string>
   <string name="exporting_passwords">Exportando senhas…</string>
-  <string name="invalid_gpg_id">Encontrado .gpg-id, mas contém um ID de chave, fingerprint ou ID de usuário inválidos</string>
-  <string name="short_gpg_id">Encontrado .gpg-id, mas contém uma ID hexadecimal curta, que não é suportada</string>
+  <string name="invalid_gpg_id">O arquivo .gpg-id foi encontrado, mas contém um ID de chave inválido ou desconhecido.</string>
+  <string name="short_gpg_id">O arquivo .gpg-id foi encontrado, mas contém uma ID hexadecimal curta, que não é suportada.</string>
   <string name="invalid_filename_text">Nome do arquivo não deve conter \'/\', defina o diretório acima</string>
   <string name="directory_hint">Diretório</string>
-  <string name="new_folder_set_gpg_key">Definir chave GPG para diretório</string>
+  <string name="new_folder_set_gpg_key">Definir chave PGP para diretório</string>
   <!-- GitException messages -->
   <string name="git_unknown_error">Erro desconhecido</string>
   <string name="git_pull_rebase_fail_error">O pull falhou, você está em uma Head avulsa. Usando \"configurações &gt; utils\" do git, salve suas alterações no remoto em uma nova branch e resolva o conflito no seu computador.</string>
@@ -283,8 +283,8 @@
   <string name="git_operation_running">Executando operação do git…</string>
   <string name="git_break_out_of_detached_success">Houve um conflito ao executar o rebase. Houve um push de branch %1$s local para outra branch chamada %2$s\n Use esta branch para resolver o conflito no seu computador</string>
   <string name="git_break_out_of_detached_unneeded">O repositório não está sendo rebased, não há necessidade de fazer push para outro branch</string>
-  <!-- GPG key selection in folder creation -->
-  <string name="gpg_key_select_mandatory">A seleção de uma chave GPG é necessária para prosseguir</string>
+  <!-- PGP key selection in folder creation -->
+  <string name="gpg_key_select_mandatory">A seleção de uma chave PGP é necessária para prosseguir</string>
   <string name="folder_creation_err_file_exists">Já existe um arquivo com esse nome</string>
   <string name="folder_creation_err_folder_exists">Já existe uma pasta com esse nome</string>
   <!-- Onboarding flow -->
@@ -293,8 +293,8 @@
   <string name="select_repo_type_text">Selecione se você quer criar um repositório local ou clonar um repositório remoto.</string>
   <string name="clone_remote_repo">Clonar repositório remoto</string>
   <string name="create_local_repo">Criar repositório local</string>
-  <string name="select_gpg_key_title">Selecione\nChave GPG</string>
-  <string name="select_gpg_key_message">Selecione uma chave GPG para inicializar o armazenamento com</string>
+  <string name="select_gpg_key_title">Selecione\nChave PGP</string>
+  <string name="select_gpg_key_message">Selecione uma chave PGP para inicializar o armazenamento com</string>
   <string name="gpg_key_select">Selecione a chave</string>
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">URL potencialmente incorreta</string>

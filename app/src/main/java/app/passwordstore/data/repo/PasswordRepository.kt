@@ -33,6 +33,8 @@ object PasswordRepository {
   val isInitialized: Boolean
     get() = repository != null
 
+  var gpgidIsValid: Boolean = false
+
   fun isGitRepo(): Boolean {
     return repository?.objectDatabase?.exists() ?: false
   }
@@ -122,7 +124,6 @@ object PasswordRepository {
         putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, false)
       } else {
         putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true)
-        putBoolean(PreferenceKeys.GPG_ID_INITIALIZED, File(dir, ".gpg-id").isFile())
       }
     }
     // Create the repository static variable in PasswordRepository

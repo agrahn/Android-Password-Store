@@ -260,11 +260,11 @@
   <string name="add_otp">Dodaj OTP</string>
   <string name="otp_import_success">Pomyślnie zaimportowano konfigurację TOTP</string>
   <string name="exporting_passwords">Eksportowanie haseł…</string>
-  <string name="invalid_gpg_id">Znaleziono .gpg-id, ale zawiera nieprawidłowy identyfikator klucza, odcisk palca lub identyfikator użytkownika</string>
+  <string name="invalid_gpg_id">Znaleziono plik .gpg-id, ale zawiera on nieprawidłowy lub nieznany identyfikator klucza.</string>
   <string name="short_gpg_id">Znaleziono .gpg-id, ale zawarty w nim skrócony identyfikator nie jest obsługiwany</string>
   <string name="invalid_filename_text">Nazwa pliku nie może zawierać \'/\', ustaw katalog powyżej</string>
   <string name="directory_hint">Katalog</string>
-  <string name="new_folder_set_gpg_key">Ustaw klucz GPG dla katalogu</string>
+  <string name="new_folder_set_gpg_key">Ustaw klucz PGP dla katalogu</string>
   <!-- GitException messages -->
   <string name="git_unknown_error">Nieznany błąd</string>
   <string name="git_pull_rebase_fail_error">Zaciąganie zmian nie powiodło się, nie jesteś na żadnej gałęzi (detached head). Używając \"Ustawienia &gt; narzędzia Git\", wyślij lokalne zmiany do zdalnego repozytorium na nowej gałęzi i rozwiąż konflikt na komputerze.</string>
@@ -276,7 +276,7 @@
   <string name="git_operation_running">Operacja Git w toku…</string>
   <string name="git_break_out_of_detached_success">Podczas operacji \"rebase\" wystąpił konflikt. Twoja lokalna gałąź %1$s została przepchnięta do innej gałęzi o nazwie %2$s\n Użyj tej gałęzi do rozwiązania konfliktu na komputerze</string>
   <string name="git_break_out_of_detached_unneeded">Repozytorium nie jest w trakcie operacji \"rebase\", nie ma potrzeby wypychać do innej gałęzi</string>
-  <!-- GPG key selection in folder creation -->
+  <!-- PGP key selection in folder creation -->
   <string name="folder_creation_err_file_exists">Plik o tej nazwie już istnieje</string>
   <string name="folder_creation_err_folder_exists">Folder o tej nazwie już istnieje</string>
   <!-- Onboarding flow -->
@@ -285,8 +285,8 @@
   <string name="select_repo_type_text">Zaznacz, czy chcesz utworzyć lokalne repozytorium, czy sklonować zdalne repozytorium.</string>
   <string name="clone_remote_repo">Klonuj zdalne repozytorium</string>
   <string name="create_local_repo">Utwórz lokalne repozytorium</string>
-  <string name="select_gpg_key_title">Wybierz\nklucz GPG</string>
-  <string name="select_gpg_key_message">Wybierz klucz GPG, którym zainicjować swoje repozytorium</string>
+  <string name="select_gpg_key_title">Wybierz\nklucz PGP</string>
+  <string name="select_gpg_key_message">Wybierz klucz PGP, którym zainicjować swoje repozytorium</string>
   <string name="gpg_key_select">Wybierz klucz</string>
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">Potencjalnie nieprawidłowy adres URL</string>

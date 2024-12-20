@@ -35,7 +35,7 @@
   <string name="git_commit_remove_text">从仓库中删除%1$s</string>
   <string name="git_commit_move_text">将%1$s重命名为%2$s</string>
   <string name="git_commit_move_multiple_text">将多个密码移至%1$s</string>
-  <string name="git_commit_gpg_id">初始化 %1$s 中的 GPG ID</string>
+  <string name="git_commit_gpg_id">初始化 %1$s 中的 PGP ID</string>
   <!-- PGPHandler -->
   <string name="clipboard_copied_text">复制到剪切板</string>
   <string name="file_toast_text">请提供文件名</string>
@@ -271,11 +271,10 @@ personal.com</string>
   <string name="otp_import_failure_generic">导入TOTP配置失败</string>
   <string name="otp_import_failure_no_selection">没有选择镜像文件</string>
   <string name="exporting_passwords">正在导出密码…</string>
-  <string name="invalid_gpg_id">找到了 .gpg-id，但它包含无效的密钥ID、指纹或用户ID</string>
   <string name="short_gpg_id">找到 .gpg-id 但它包含一个不受支持的短十六进制ID。</string>
   <string name="invalid_filename_text">文件名不能包含\'/\'</string>
   <string name="directory_hint">目录</string>
-  <string name="new_folder_set_gpg_key">为目录设置GPG密钥</string>
+  <string name="new_folder_set_gpg_key">为目录设置PGP密钥</string>
   <!-- GitException messages -->
   <string name="git_unknown_error">未知错误</string>
   <string name="git_pull_merge_fail_error">合并失败，你处于冲突状态。TODO：添加恢复方法。</string>
@@ -287,8 +286,8 @@ personal.com</string>
   <string name="git_break_out_of_detached_success">尝试变更时发生冲突,您的本地%1$s分支被推送到另一个名为%2$s的分支
 使用此分支解决计算机上的冲突</string>
   <string name="git_break_out_of_detached_unneeded">存储库没有变更,无需推送到另一个分支</string>
-  <!-- GPG key selection in folder creation -->
-  <string name="gpg_key_select_mandatory">选择一个 GPG 密钥才能继续</string>
+  <!-- PGP key selection in folder creation -->
+  <string name="gpg_key_select_mandatory">选择一个 PGP 密钥才能继续</string>
   <string name="folder_creation_err_file_exists">该名称的文件已存在</string>
   <string name="folder_creation_err_folder_exists">该名称的文件夹已存在</string>
   <!-- Onboarding flow -->
@@ -298,9 +297,9 @@ personal.com</string>
   <string name="clone_remote_repo">同步远程仓库</string>
   <string name="create_local_repo">创建本地仓库</string>
   <string name="select_gpg_key_title">选择
-GPG
+PGP
 密钥</string>
-  <string name="select_gpg_key_message">选择一个GPG密钥来初始化您的仓库</string>
+  <string name="select_gpg_key_message">选择一个PGP密钥来初始化您的仓库</string>
   <string name="gpg_key_select">选择密钥</string>
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">URL可能不正确</string>

@@ -43,7 +43,7 @@
   <string name="git_commit_remove_text">Remove %1$s from store.</string>
   <string name="git_commit_move_text">Rename %1$s to %2$s.</string>
   <string name="git_commit_move_multiple_text">Move multiple passwords to %1$s.</string>
-  <string name="git_commit_gpg_id">Initialize GPG IDs in %1$s.</string>
+  <string name="git_commit_gpg_id">Initialize PGP IDs in %1$s.</string>
 
   <!-- PGPHandler -->
   <string name="clipboard_copied_text">Copied to clipboard</string>
@@ -299,13 +299,13 @@
   <string name="otp_import_failure_generic">Failed to import TOTP configuration</string>
   <string name="otp_import_failure_no_selection">No image file was selected</string>
   <string name="exporting_passwords">Exporting passwords…</string>
-  <string name="invalid_gpg_id">Found .gpg-id, but it contains an invalid key ID, fingerprint or user ID</string>
+  <string name="invalid_gpg_id">Found .gpg-id, but it contains an invalid or unknown key ID.</string>
   <string name="empty_gpg_id">Found .gpg-id, but it is empty.</string>
   <string name="missing_gpg_id">No .gpg-id could be found.</string>
-  <string name="short_gpg_id">Found .gpg-id, but it contains a short hex ID, which is not supported</string>
-  <string name="invalid_filename_text">File name must not contain \'/\', set directory above</string>
+  <string name="short_gpg_id">Found .gpg-id, but it contains a short hex ID, which is not supported.</string>
+  <string name="invalid_filename_text">File name must not contain \'/\', set directory above.</string>
   <string name="directory_hint">Directory</string>
-  <string name="new_folder_set_gpg_key">Set GPG key for directory</string>
+  <string name="new_folder_set_gpg_key">Set PGP key for directory</string>
 
   <!-- GitException messages -->
   <string name="git_unknown_error">Unknown error</string>
@@ -320,8 +320,8 @@
   <string name="git_break_out_of_detached_success">There was a conflict when trying to rebase. Your local %1$s branch was pushed to another branch named %2$s\n Use this branch to resolve conflict on your computer</string>
   <string name="git_break_out_of_detached_unneeded">The repository is not rebasing, no need to push to another branch</string>
 
-  <!-- GPG key selection in folder creation -->
-  <string name="gpg_key_select_mandatory">Selecting a GPG key is necessary to proceed</string>
+  <!-- PGP key selection in folder creation -->
+  <string name="gpg_key_select_mandatory">Selecting a PGP key is necessary to proceed</string>
   <string name="folder_creation_err_file_exists">A file by that name already exists</string>
   <string name="folder_creation_err_folder_exists">A folder by that name already exists</string>
 
@@ -331,8 +331,8 @@
   <string name="select_repo_type_text">Select if you want to create a local repo or clone a remote repo.</string>
   <string name="clone_remote_repo">Clone Remote Repo</string>
   <string name="create_local_repo">Create Local Repo</string>
-  <string name="select_gpg_key_title">Select\nGPG Key</string>
-  <string name="select_gpg_key_message">Select a GPG key to initialize your store with</string>
+  <string name="select_gpg_key_title">Select\nPGP Key</string>
+  <string name="select_gpg_key_message">Select a PGP key to initialize your store with</string>
   <string name="gpg_key_select">Select key</string>
 
   <!-- SSH port validation -->

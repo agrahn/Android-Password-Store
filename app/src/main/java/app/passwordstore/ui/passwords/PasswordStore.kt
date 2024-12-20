@@ -71,6 +71,7 @@ class PasswordStore : BaseGitActivity() {
   @Inject lateinit var shortcutHandler: ShortcutHandler
   private lateinit var searchItem: MenuItem
   private val settings by lazy { sharedPrefs }
+  //  @SettingsPreferences @Inject lateinit var settings: SharedPreferences
 
   private val model: SearchableRepositoryViewModel by viewModels()
 
@@ -351,7 +352,7 @@ class PasswordStore : BaseGitActivity() {
 
   private fun checkLocalRepository(localDir: File?) {
     if (localDir != null && settings.getBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, false)) {
-      if (!settings.getBoolean(PreferenceKeys.GPG_ID_INITIALIZED, false)) {
+      if (!PasswordRepository.gpgidIsValid) {
         launchActivity(KeySelectionActivity::class.java)
       } else {
         // do not push the fragment if we already have it

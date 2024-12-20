@@ -57,7 +57,7 @@ class KeySelectionFragment : Fragment(R.layout.fragment_key_selection) {
             gpgIdentifierFile.writeText(keyId.toString())
           }
           settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
-          settings.edit { putBoolean(PreferenceKeys.GPG_ID_INITIALIZED, true) }
+          PasswordRepository.gpgidIsValid = true
           requireActivity()
             .commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))
           finish()

@@ -261,7 +261,7 @@
   <string name="exporting_passwords">Exportation des mots de passe…</string>
   <string name="invalid_filename_text">Le nom du fichier ne doit pas contenir \'/\', définir le répertoire parent</string>
   <string name="directory_hint">Dossier</string>
-  <string name="new_folder_set_gpg_key">Définir la clé GPG pour le dossier</string>
+  <string name="new_folder_set_gpg_key">Définir la clé PGP pour le dossier</string>
   <!-- GitException messages -->
   <string name="git_unknown_error">Erreur inconnue</string>
   <string name="git_pull_rebase_fail_error">Tirer a échoué, vous êtes dans un \'head\' détaché. En utilisant \"settings &gt; git utils\", enregistrez vos modifications sur le dépôt distant dans une nouvelle branche et résolvez le conflit sur votre ordinateur.</string>
@@ -273,7 +273,7 @@
   <string name="git_operation_running">Opération git en cours…</string>
   <string name="git_break_out_of_detached_success">Il y a eu un conflit lors de la tentative de rebase. Votre branche locale %1$s a été poussée vers une autre branche nommée %2$s\n Utilisez cette branche pour résoudre les conflits sur votre ordinateur</string>
   <string name="git_break_out_of_detached_unneeded">Le dépôt n\'est pas rebasé, pas besoin de pousser vers une autre branche</string>
-  <!-- GPG key selection in folder creation -->
+  <!-- PGP key selection in folder creation -->
   <string name="folder_creation_err_file_exists">Un fichier portant ce nom existe déjà</string>
   <string name="folder_creation_err_folder_exists">Un dossier portant ce nom existe déjà</string>
   <!-- Onboarding flow -->
@@ -282,8 +282,8 @@
   <string name="select_repo_type_text">Sélectionnez si vous voulez créer un dépôt local ou cloner un dépôt distant.</string>
   <string name="clone_remote_repo">Cloner le dépôt distant</string>
   <string name="create_local_repo">Créer un dépôt local</string>
-  <string name="select_gpg_key_title">Sélectionnez\nla clé GPG</string>
-  <string name="select_gpg_key_message">Sélectionnez une clé GPG pour initialiser votre magasin</string>
+  <string name="select_gpg_key_title">Sélectionnez\nla clé PGP</string>
+  <string name="select_gpg_key_message">Sélectionnez une clé PGP pour initialiser votre magasin</string>
   <string name="gpg_key_select">Sélectionner la clé</string>
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">URL potentiellement incorrecte</string>

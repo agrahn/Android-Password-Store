@@ -298,7 +298,7 @@
   <string name="otp_import_failure_generic">Import der TOTP-Konfiguration fehlgeschlagen</string>
   <string name="otp_import_failure_no_selection">Keine Bilddatei ausgewählt</string>
   <string name="exporting_passwords">Passwörter werden exportiert.</string>
-  <string name="invalid_gpg_id">.gpg-id wurde gefunden, enthält jedoch ungültige Schlüssel-ID, Fingerabdruck oder Benutzer-ID.</string>
+  <string name="invalid_gpg_id">.gpg-id wurde gefunden, enthält jedoch ungültige oder unbekannte Schlüssel-ID.</string>
   <string name="empty_gpg_id">.gpg-id wurde gefunden, ist jedoch leer.</string>
   <string name="missing_gpg_id">.gpg-id wurde nicht gefunden.</string>
   <string name="short_gpg_id">.gpg-id wurde gefunden, enthält jedoch eine kurze Hex-ID, die nicht unterstützt wird.</string>
@@ -319,7 +319,7 @@
   <string name="git_break_out_of_detached_success">Es gab einen Konflikt während des Rebase-Prozesses. Ihr lokaler Branch %1$s wurde auf einen anderen Branch namens %2$s gepusht.\nNutzen Sie diesen Branch, um den Konflikt auf dem Server zu beheben</string>
   <string name="git_break_out_of_detached_unneeded">Das Repository befindet sich nicht im Rebase-Prozess; es ist nicht nötig, den Zustand auf einen weiteren Branch zu pushen.</string>
 
-  <!-- GPG key selection in folder creation -->
+  <!-- PGP key selection in folder creation -->
   <string name="gpg_key_select_mandatory">Um fortzufahren, muss ein PGP-Schlüssel ausgewählt werden.</string>
   <string name="folder_creation_err_file_exists">Dateiname bereits vergeben</string>
   <string name="folder_creation_err_folder_exists">Ein Ordner mit diesem Namen existiert bereits.</string>

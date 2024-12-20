@@ -37,6 +37,10 @@ constructor(
     }
   }
 
+  suspend fun hasKey(id: PGPIdentifier): Boolean {
+    return withContext(dispatcherProvider.io()) { pgpKeyManager.getKeyById(id).isOk }
+  }
+
   suspend fun isPasswordProtected(identifiers: List<PGPIdentifier>): Boolean {
     val keys = identifiers.map { pgpKeyManager.getKeyById(it) }.filterValues()
     return pgpCryptoHandler.isPassphraseProtected(keys)

@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 -   Auto-dismiss an abandoned password edit dialog after configurable timeout (password copy timeout is used) to prevent information leakage
 -   Initialising an empty cloned non-pass repo is now possible. The repo to be cloned should however already have at least one commit, e. g. an added and removed dummy file
+-   Fix app crashes due to `.gpg-id` with invalid or unknown key/user ID. Prompt for re-selecting/re-importing a PGP secret key file.
 
 ### Changed
 -   **BREAKING**: The option for generating the SSH key pair in the Ed25519 format was removed from APS. It relied on the now deprecated `androidx.security:security-crypto` library to store the private key as an encrypted file in the application's hidden directory. Use one of Android KeyStore native RSA or ECDSA key format options when generating the SSH key pair. Alternatively, an externally generated SSH private key can be imported into the app. Imported SSH private keys can be in any format, including Ed25519, but they should be secured with a passphrase

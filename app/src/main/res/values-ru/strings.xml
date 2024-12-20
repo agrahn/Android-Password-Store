@@ -40,7 +40,7 @@
   <string name="git_commit_remove_text">Удалить %1$s из хранилища.</string>
   <string name="git_commit_move_text">Переименовать %1$s в %2$s.</string>
   <string name="git_commit_move_multiple_text">Переместить несколько паролей в %1$s.</string>
-  <string name="git_commit_gpg_id">Инициализация GPG ID через %1$s.</string>
+  <string name="git_commit_gpg_id">Инициализация PGP ID через %1$s.</string>
   <!-- PGPHandler -->
   <string name="clipboard_copied_text">Скопировано в буфер обмена</string>
   <string name="file_toast_text">Пожалуйста, укажите имя файла</string>
@@ -264,10 +264,10 @@
   <string name="otp_import_failure_generic">Не удалось импортировать конфигурацию TOTP</string>
   <string name="otp_import_failure_no_selection">Не выбран файл изображения</string>
   <string name="exporting_passwords">Экспорт паролей…</string>
-  <string name="invalid_gpg_id">Найден .gpg-id, но он содержит неверный ID ключа, fingerprint или ID пользователя</string>
+  <string name="invalid_gpg_id">Файл .gpg-id найден, но содержит неверный или неизвестный идентификатор ключа.</string>
   <string name="invalid_filename_text">Имя файла не должно содержать \'/\', укажите директорию выше</string>
   <string name="directory_hint">Директория</string>
-  <string name="new_folder_set_gpg_key">Установить GPG ключ для каталога</string>
+  <string name="new_folder_set_gpg_key">Установить PGP ключ для каталога</string>
   <!-- GitException messages -->
   <string name="git_unknown_error">Неизвестная ошибка</string>
   <string name="git_pull_rebase_fail_error">Не удалось получить изменения, вы находитесь в состоянии \"оторванной головы\". Используйте \"настройки &gt; утилиты git\", сохраните ваши изменения в новую удаленную ветку и разрешите конфликты на своем компьютере.</string>
@@ -279,8 +279,8 @@
   <string name="git_operation_running">Выполнение операции git…</string>
   <string name="git_break_out_of_detached_success">При попытке rebase\'а возник конфликт. Ваша локальная ветка %1$s была запушена %2$s\n Используйте эту ветку для разрешения конфликтов с помощью компьютера</string>
   <string name="git_break_out_of_detached_unneeded">Не нужно пушить в другую ветку - rebase не был запущен</string>
-  <!-- GPG key selection in folder creation -->
-  <string name="gpg_key_select_mandatory">Для продолжения необходимо выбрать GPG-ключ</string>
+  <!-- PGP key selection in folder creation -->
+  <string name="gpg_key_select_mandatory">Для продолжения необходимо выбрать PGP-ключ</string>
   <string name="folder_creation_err_file_exists">Файл с таким именем уже существует</string>
   <string name="folder_creation_err_folder_exists">Папка с таким именем уже существует</string>
   <!-- Onboarding flow -->
@@ -289,8 +289,8 @@
   <string name="select_repo_type_text">Создать локальное хранилище, или клонировать удаленный репозиторий.</string>
   <string name="clone_remote_repo">Клонировать удаленный репозиторий</string>
   <string name="create_local_repo">Создать локальное хранилище</string>
-  <string name="select_gpg_key_title">Выберите\nGPG ключ</string>
-  <string name="select_gpg_key_message">Выберите GPG ключ для инициализации хранилища</string>
+  <string name="select_gpg_key_title">Выберите\nPGP ключ</string>
+  <string name="select_gpg_key_message">Выберите PGP ключ для инициализации хранилища</string>
   <string name="gpg_key_select">Выберите ключ</string>
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">Потенциально неправильный URL</string>
