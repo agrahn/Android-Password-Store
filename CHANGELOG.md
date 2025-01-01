@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Fixed
--   Auto-dismiss an abandoned password edit dialog after configurable timeout (password copy timeout is used) to prevent information leakage
+-   Auto-dismiss an abandoned password edit dialog after configurable timeout (password copy timeout is used if configured, default 60 seconds) to prevent information leakage
 -   Initialising an empty cloned non-pass repo is now possible. The repo to be cloned should however already have at least one commit, e. g. an added and removed dummy file
 -   Fix app crashes due to `.gpg-id` with invalid or unknown key/user ID. Prompt for re-selecting/re-importing a PGP secret key file.
 

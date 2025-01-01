@@ -264,6 +264,17 @@ class PasswordCreationActivity : BasePGPActivity() {
     updateViewState()
   }
 
+  override fun onResume() {
+    timer?.cancel()
+    super.onResume()
+  }
+
+  override fun onPause() {
+    timer?.cancel()
+    timer = startAutoDismissTimer()
+    super.onPause()
+  }
+
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
     menuInflater.inflate(R.menu.pgp_handler_new_password, menu)
     return true
@@ -306,8 +317,6 @@ class PasswordCreationActivity : BasePGPActivity() {
 
   private fun updateViewState() =
     with(binding) {
-      timer?.cancel()
-      timer = startAutoDismissTimer()
       encryptUsername.apply {
         if (visibility != View.VISIBLE) return@apply
         val hasUsernameInFileName = filename.text.toString().isNotBlank()
