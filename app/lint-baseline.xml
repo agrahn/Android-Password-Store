@@ -1,19 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 8.6.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.6.0)" variant="all" version="8.6.0">
-
-    <issue
-        id="InvalidPackage"
-        message="Invalid package reference in org.eclipse.jgit:org.eclipse.jgit; not included in Android: `javax.management`. Referenced from `org.eclipse.jgit.util.Monitoring`.">
-        <location
-            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.eclipse.jgit/org.eclipse.jgit/7.1.0.202411261347-r/67609d333b8ba11d5b3a509aca72c1c8ef72e17e/org.eclipse.jgit-7.1.0.202411261347-r.jar"/>
-    </issue>
-
-    <issue
-        id="InvalidPackage"
-        message="Invalid package reference in org.eclipse.jgit:org.eclipse.jgit; not included in Android: `java.lang.management`. Referenced from `org.eclipse.jgit.util.Monitoring`.">
-        <location
-            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.eclipse.jgit/org.eclipse.jgit/7.1.0.202411261347-r/67609d333b8ba11d5b3a509aca72c1c8ef72e17e/org.eclipse.jgit-7.1.0.202411261347-r.jar"/>
-    </issue>
+<issues format="6" by="lint 8.7.3" type="baseline" client="gradle" dependencies="false" name="AGP (8.7.3)" variant="all" version="8.7.3">
 
     <issue
         id="InvalidPackage"
@@ -27,6 +13,20 @@
         message="Invalid package reference in library; not included in Android: `javax.naming`. Referenced from `org.bouncycastle.cert.dane.fetcher.JndiDANEFetcherFactory.1`.">
         <location
             file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.bouncycastle/bcpkix-jdk18on/1.78.1/17b3541f736df97465f87d9f5b5dfa4991b37bb3/bcpkix-jdk18on-1.78.1.jar"/>
+    </issue>
+
+    <issue
+        id="InvalidPackage"
+        message="Invalid package reference in org.eclipse.jgit:org.eclipse.jgit; not included in Android: `java.lang.management`. Referenced from `org.eclipse.jgit.util.Monitoring`.">
+        <location
+            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.eclipse.jgit/org.eclipse.jgit/6.2.0.202206071550-r/d59e7ae8528fcc3854acbb307de8443b28a5c945/org.eclipse.jgit-6.2.0.202206071550-r.jar"/>
+    </issue>
+
+    <issue
+        id="InvalidPackage"
+        message="Invalid package reference in org.eclipse.jgit:org.eclipse.jgit; not included in Android: `javax.management`. Referenced from `org.eclipse.jgit.util.Monitoring`.">
+        <location
+            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.eclipse.jgit/org.eclipse.jgit/6.2.0.202206071550-r/d59e7ae8528fcc3854acbb307de8443b28a5c945/org.eclipse.jgit-6.2.0.202206071550-r.jar"/>
     </issue>
 
     <issue
