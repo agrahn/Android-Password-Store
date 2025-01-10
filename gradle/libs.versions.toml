@@ -45,7 +45,7 @@ build-metalava = "me.tylerbwong.gradle.metalava:plugin:0.3.5"
 build-moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
 build-moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
 build-okhttp = "com.squareup.okhttp3:okhttp:5.0.0-alpha.14"
-build-r8 = "com.android.tools:r8:8.5.35"
+build-r8 = "com.android.tools:r8:8.7.18"
 build-semver = "com.github.zafarkhaja:java-semver:0.10.2"
 build-spotless = "com.diffplug.spotless:spotless-plugin-gradle:7.0.1"
 build-vcu = "nl.littlerobots.version-catalog-update:nl.littlerobots.version-catalog-update.gradle.plugin:0.8.5"
