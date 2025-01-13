@@ -8,11 +8,11 @@ import android.app.assist.AssistStructure
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.ApplicationInfoFlags
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.autofill.AutofillId
 import androidx.annotation.RequiresApi
+import androidx.core.net.toUri
 import logcat.logcat
 
 /**
@@ -150,7 +150,8 @@ private class AutofillFormParser(
   }
 
   private fun webOriginToFormOrigin(context: Context, origin: String): FormOrigin? {
-    val uri = Uri.parse(origin) ?: return null
+    val uri = origin.toUri()
+
     val scheme = uri.scheme ?: return null
     if (scheme !in SUPPORTED_SCHEMES) return null
     val host = uri.host ?: return null
