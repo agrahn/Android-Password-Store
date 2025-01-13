@@ -7,9 +7,9 @@ package app.passwordstore.ui.settings
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.net.Uri
 import android.provider.Settings
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.net.toUri
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -73,7 +73,7 @@ class AutofillSettings(private val activity: FragmentActivity) : SettingsProvide
       setPositiveButton(R.string.dialog_ok) { _, _ ->
         val intent =
           Intent(Settings.ACTION_REQUEST_SET_AUTOFILL_SERVICE).apply {
-            data = Uri.parse("package:${BuildConfig.APPLICATION_ID}")
+            data = "package:${BuildConfig.APPLICATION_ID}".toUri()
           }
         activity.startActivity(intent)
       }

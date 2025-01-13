@@ -8,11 +8,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.ResolveInfoFlags
-import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.service.autofill.SaveInfo
 import androidx.annotation.RequiresApi
+import androidx.core.net.toUri
 
 /**
  * In order to add a new browser, do the following:
@@ -244,7 +244,7 @@ private fun getBrowserAutofillSupportLevel(
 public fun getInstalledBrowsersWithAutofillSupportLevel(
   context: Context
 ): List<Pair<String, BrowserAutofillSupportLevel>> {
-  val testWebIntent = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse("https://example.org") }
+  val testWebIntent = Intent(Intent.ACTION_VIEW).apply { data = "https://example.org".toUri() }
   val installedBrowsers =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
       context.packageManager.queryIntentActivities(
