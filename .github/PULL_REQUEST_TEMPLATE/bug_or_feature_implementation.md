@@ -22,7 +22,7 @@
 
 ## :pencil: Checklist
 <!--- Put an `x` in the boxes that apply -->
-- [ ] I formatted the code with `./gradlew ktfmtFormat`
+- [ ] I formatted the code with `./gradlew spotlessApply`
 - [ ] I reviewed the submitted code
 - [ ] I added a [CHANGELOG](CHANGELOG.md) entry if applicable
 
