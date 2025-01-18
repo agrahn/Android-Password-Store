@@ -85,6 +85,7 @@ class FieldItemAdapter(
                   null
                 }
               if (fieldItem.type == FieldItem.ItemType.PASSWORD) {
+                setTextIsSelectable(false)
                 typeface =
                   ResourcesCompat.getFont(
                     binding.root.context,

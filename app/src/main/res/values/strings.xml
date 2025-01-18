@@ -90,7 +90,6 @@
   <string name="password">Password</string>
   <string name="username">Username</string>
   <string name="otp_label_format">OTP (expires in %ds)</string>
-  <string name="copy_label">Copy</string>
   <string name="edit_password">Edit password</string>
   <string name="copy_password">Copy password</string>
   <string name="share_as_plaintext">Share as plaintext</string>

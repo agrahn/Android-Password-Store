@@ -70,7 +70,6 @@
   <string name="action_search">검색</string>
   <string name="password">비밀번호</string>
   <string name="username">사용자명</string>
-  <string name="copy_label">복사</string>
   <string name="edit_password">암호 수정</string>
   <string name="copy_password">암호 복사</string>
   <string name="share_as_plaintext">텍스트로 공유</string>
