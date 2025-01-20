@@ -72,7 +72,6 @@
   <string name="action_search">Buscar</string>
   <string name="password">Contrasinal</string>
   <string name="username">Identificador</string>
-  <string name="copy_label">Copiar</string>
   <string name="edit_password">Editar contrasinal</string>
   <string name="copy_password">Copiar contrasinal</string>
   <string name="share_as_plaintext">Compartir como texto plano</string>

@@ -71,7 +71,6 @@
   <string name="action_search">搜索</string>
   <string name="password">密码</string>
   <string name="username">用户名</string>
-  <string name="copy_label">复制</string>
   <string name="edit_password">编辑密码</string>
   <string name="copy_password">复制密码</string>
   <string name="share_as_plaintext">用明文分享</string>
