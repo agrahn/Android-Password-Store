@@ -87,13 +87,15 @@ class ClipboardService : Service() {
     if (clipboard != null) {
       scope.launch {
         logcat { "Clearing the clipboard" }
-        val clip = ClipData.newPlainText("pgp_handler_result_pm", "")
+        var randomNum = (100000..999999).random().toString()
+        var clip = ClipData.newPlainText(randomNum, randomNum)
         clipboard.setPrimaryClip(clip)
         if (deepClear) {
           withContext(dispatcherProvider.io()) {
             repeat(CLIPBOARD_CLEAR_COUNT) {
-              val count = (it * 500).toString()
-              clipboard.setPrimaryClip(ClipData.newPlainText(count, count))
+              randomNum = (100000..999999).random().toString()
+              clip = ClipData.newPlainText(randomNum, randomNum)
+              clipboard.setPrimaryClip(clip)
             }
           }
         }
