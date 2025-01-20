@@ -72,7 +72,6 @@
   <string name="action_search">Pesquisar</string>
   <string name="password">Senha:</string>
   <string name="username">Usuário:</string>
-  <string name="copy_label">Copiar</string>
   <string name="edit_password">Editar senha</string>
   <string name="copy_password">Copiar senha</string>
   <string name="share_as_plaintext">Compartilhar como texto</string>
