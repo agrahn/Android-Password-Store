@@ -228,7 +228,6 @@
   <string name="button_create">Создать</string>
   <string name="pref_search_on_start_title">Открыть поиск на старте</string>
   <string name="pref_search_on_start_summary">Открыть панель поиска при запуске приложения</string>
-  <string name="tap_clear_clipboard">Нажмите здесь чтобы очистить буфер обмена</string>
   <string name="clone_git_repo">Для синхронизации изменений клонируйте git репозиторий</string>
   <string name="pref_app_theme_title">Тема приложения</string>
   <string name="pref_app_theme_value_light">Светлая</string>

@@ -83,7 +83,10 @@ class DecryptActivity : BasePGPActivity() {
       android.R.id.home -> onBackPressedDispatcher.onBackPressed()
       R.id.edit_password -> editPassword()
       R.id.share_password_as_plaintext -> shareAsPlaintext()
-      R.id.copy_password -> copyPasswordToClipboard(passwordEntry?.password)
+      R.id.copy_password -> {
+        clearTimer?.shutdownNow()
+        clearTimer = copyPasswordToClipboard(passwordEntry?.password)
+      }
       else -> return super.onOptionsItemSelected(item)
     }
     return true
@@ -221,7 +224,8 @@ class DecryptActivity : BasePGPActivity() {
           )
         )
         if (settings.getBoolean(PreferenceKeys.COPY_ON_DECRYPT, false)) {
-          copyPasswordToClipboard(entry.password)
+          clearTimer?.shutdownNow()
+          clearTimer = copyPasswordToClipboard(entry.password)
         }
       }
 
