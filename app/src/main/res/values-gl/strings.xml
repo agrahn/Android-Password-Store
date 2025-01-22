@@ -232,7 +232,6 @@ a app desde unha fonte de confianza, como a Play Store, Amazon Appstore, F-Droid
   <string name="button_create">Crear</string>
   <string name="pref_search_on_start_title">Abrir busca ao inicio</string>
   <string name="pref_search_on_start_summary">Abrir a barra de busca cando se inicia a app</string>
-  <string name="tap_clear_clipboard">Toca aquí para baleirar o portapapeis</string>
   <string name="clone_git_repo">Hai que clonar o repositorio antes de sincronizar os cambios.</string>
   <string name="pref_app_theme_title">Decorado da App</string>
   <string name="pref_app_theme_value_light">Claro</string>

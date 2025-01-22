@@ -233,7 +233,6 @@
   <string name="button_create">创建</string>
   <string name="pref_search_on_start_title">开始时打开搜索</string>
   <string name="pref_search_on_start_summary">启动应用时打开搜索栏</string>
-  <string name="tap_clear_clipboard">点击此处清除剪贴板</string>
   <string name="clone_git_repo">必须在同步更改之前同步存储库</string>
   <string name="pref_app_theme_title">应用主题</string>
   <string name="pref_app_theme_value_light">浅色</string>
