@@ -29,20 +29,20 @@ import app.passwordstore.util.extensions.clipboard
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
-import app.passwordstore.util.services.ClipboardService
 import app.passwordstore.util.settings.Constants
 import app.passwordstore.util.settings.PreferenceKeys
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import logcat.logcat
 
 @Suppress("Registered")
 @AndroidEntryPoint
@@ -135,24 +135,39 @@ open class BasePGPActivity : AppCompatActivity() {
   }
 
   /**
-   * Copies a provided [password] string to the clipboard. This wraps [copyTextToClipboard] to hide
-   * the default [Snackbar] and starts off an instance of [ClipboardService] to provide a way of
-   * clearing the clipboard.
+   * Copies a provided [password] string to the clipboard. This wraps [copyTextToClipboard] to
+   * optionally hide the default [Snackbar] and starts off a timer to clear the clipboard.
    */
-  fun copyPasswordToClipboard(password: String?) {
+  protected fun copyPasswordToClipboard(password: String?): ScheduledExecutorService? {
     copyTextToClipboard(password)
-    val clearAfter =
-      settings.getString(PreferenceKeys.GENERAL_SHOW_TIME)?.toIntOrNull()
-        ?: Constants.DEFAULT_DECRYPTION_TIMEOUT
 
-    if (clearAfter != 0) {
-      val service =
-        Intent(this, ClipboardService::class.java).apply {
-          action = ClipboardService.ACTION_START
-          putExtra(ClipboardService.EXTRA_NOTIFICATION_TIME, clearAfter)
-        }
-      startForegroundService(service)
+    val clearAfter = settings.getString(PreferenceKeys.GENERAL_SHOW_TIME)?.toIntOrNull() ?: 45
+    val deepClear = settings.getBoolean(PreferenceKeys.CLEAR_CLIPBOARD_HISTORY, false)
+    val clipboard = clipboard
+
+    if (clearAfter != 0 && clipboard != null) {
+      val timer = Executors.newSingleThreadScheduledExecutor()
+      timer.schedule(
+        {
+          logcat { "Clearing the clipboard" }
+          var randomNum = (100000..999999).random().toString()
+          var clip = ClipData.newPlainText(randomNum, randomNum)
+          clipboard.setPrimaryClip(clip)
+          if (deepClear) {
+            repeat(CLIPBOARD_CLEAR_COUNT) {
+              randomNum = (100000..999999).random().toString()
+              clip = ClipData.newPlainText(randomNum, randomNum)
+              clipboard.setPrimaryClip(clip)
+            }
+          }
+        },
+        clearAfter.toLong(),
+        TimeUnit.SECONDS,
+      )
+      return timer
     }
+
+    return null
   }
 
   /**
@@ -223,25 +238,31 @@ open class BasePGPActivity : AppCompatActivity() {
 
   /**
    * Automatically finishes the activity after [PreferenceKeys.GENERAL_SHOW_TIME] seconds decryption
-   * succeeded to prevent information leaks from stale activities. Cancel with .cancel() on returned
-   * object.
+   * succeeded to prevent information leaks from stale activities. Cancel with .shutdownNow() on
+   * returned object.
    */
-  protected fun startAutoDismissTimer(): Job {
-    return lifecycleScope.launch {
-      val timeout =
-        settings.getString(PreferenceKeys.GENERAL_SHOW_TIME)?.toIntOrNull()
-          ?: Constants.DEFAULT_DECRYPTION_TIMEOUT
-      if (timeout != 0) {
-        delay(timeout.seconds)
-        finish()
-      }
+  protected fun startAutoDismissTimer(): ScheduledExecutorService? {
+    val timeout =
+      settings.getString(PreferenceKeys.GENERAL_SHOW_TIME)?.toIntOrNull()
+        ?: Constants.DEFAULT_DECRYPTION_TIMEOUT
+    if (timeout > 0) {
+      val timer = Executors.newSingleThreadScheduledExecutor()
+      timer.schedule({ finish() }, timeout.toLong(), TimeUnit.SECONDS)
+      return timer
     }
+
+    return null
   }
 
   companion object {
 
     const val EXTRA_FILE_PATH = "FILE_PATH"
     const val EXTRA_REPO_PATH = "REPO_PATH"
+
+    // Newest Samsung phones now feature a history of up to 30 items. To err on the side of
+    // caution,
+    // push 35 fake ones.
+    private const val CLIPBOARD_CLEAR_COUNT = 35
 
     /** Gets the relative path to the repository */
     fun getRelativePath(fullPath: String, repositoryPath: String): String =
@@ -273,5 +294,7 @@ open class BasePGPActivity : AppCompatActivity() {
     }
 
     var cachedPassphrase: CharArray? = null
+
+    var clearTimer: ScheduledExecutorService? = null
   }
 }
