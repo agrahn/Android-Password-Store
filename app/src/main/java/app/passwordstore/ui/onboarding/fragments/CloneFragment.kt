@@ -37,7 +37,10 @@ class CloneFragment : Fragment(R.layout.fragment_clone) {
   private val cloneAction =
     registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
       if (result.resultCode == AppCompatActivity.RESULT_OK) {
-        if (File(PasswordRepository.getRepositoryDirectory(), ".gpg-id").exists()) {
+        if (File(PasswordRepository.getRepositoryDirectory(), ".gpg-id").isFile()) {
+          // For now, we assume the gpg-id is valid. This will be checked later, on the first
+          // decryption attempt.
+          PasswordRepository.gpgidIsValid = true
           settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
           finish()
         } else {
