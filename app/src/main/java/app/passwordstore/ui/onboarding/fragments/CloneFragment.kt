@@ -22,7 +22,6 @@ import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.onFailure
-import com.github.michaelbull.result.onSuccess
 import com.github.michaelbull.result.runCatching
 import java.io.File
 import logcat.LogPriority.ERROR
@@ -38,8 +37,17 @@ class CloneFragment : Fragment(R.layout.fragment_clone) {
   private val cloneAction =
     registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
       if (result.resultCode == AppCompatActivity.RESULT_OK) {
-        settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
-        finish()
+        if (File(PasswordRepository.getRepositoryDirectory(), ".gpg-id").exists()) {
+          settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
+          finish()
+        } else {
+          runCatching {
+              parentFragmentManager.performTransactionWithBackStack(
+                KeySelectionFragment.newInstance()
+              )
+            }
+            .onFailure { e -> logcat(ERROR) { e.asLog() } }
+        }
       }
     }
 
@@ -51,19 +59,7 @@ class CloneFragment : Fragment(R.layout.fragment_clone) {
 
   /** Clones a remote Git repository to the app's private directory */
   private fun cloneToHiddenDir() {
-    runCatching { cloneAction.launch(GitServerConfigActivity.createCloneIntent(requireContext())) }
-      .onSuccess {
-        val gpgIdentifierFile = File(PasswordRepository.getRepositoryDirectory(), ".gpg-id")
-        if (!gpgIdentifierFile.exists()) {
-          runCatching {
-              parentFragmentManager.performTransactionWithBackStack(
-                KeySelectionFragment.newInstance()
-              )
-            }
-            .onFailure { e -> logcat(ERROR) { e.asLog() } }
-        }
-      }
-      .onFailure { e -> logcat(ERROR) { e.asLog() } }
+    cloneAction.launch(GitServerConfigActivity.createCloneIntent(requireContext()))
   }
 
   private fun createRepository() {
