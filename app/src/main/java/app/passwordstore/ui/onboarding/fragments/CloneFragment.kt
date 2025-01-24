@@ -38,12 +38,10 @@ class CloneFragment : Fragment(R.layout.fragment_clone) {
     registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
       if (result.resultCode == AppCompatActivity.RESULT_OK) {
         if (File(PasswordRepository.getRepositoryDirectory(), ".gpg-id").isFile()) {
-          // For now, we assume the gpg-id is valid. This will be checked later, on the first
-          // decryption attempt.
-          PasswordRepository.gpgidIsValid = true
           settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
           finish()
         } else {
+          // non-pass repository --> go to key selection
           runCatching {
               parentFragmentManager.performTransactionWithBackStack(
                 KeySelectionFragment.newInstance()

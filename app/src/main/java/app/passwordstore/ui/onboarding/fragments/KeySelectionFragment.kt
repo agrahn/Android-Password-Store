@@ -53,11 +53,10 @@ class KeySelectionFragment : Fragment(R.layout.fragment_key_selection) {
           withContext(dispatcherProvider.io()) {
             val key = pgpKeyManager.getKeyById(pgpUserId).unwrap()
             val keyId = pgpKeyManager.getKeyId(key) ?: throw NullPointerException()
-            val gpgIdentifierFile = File(PasswordRepository.getRepositoryDirectory(), ".gpg-id")
+            val gpgIdentifierFile = File(PasswordRepository.gpgidCurPath, ".gpg-id")
             gpgIdentifierFile.writeText(keyId.toString())
           }
           settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
-          PasswordRepository.gpgidIsValid = true
           requireActivity()
             .commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))
           finish()

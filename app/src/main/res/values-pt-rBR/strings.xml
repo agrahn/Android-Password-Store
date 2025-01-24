@@ -325,11 +325,10 @@
   <string name="pwgen_some_error_occurred">Ocorreu um erro</string>
   <string name="git_run_gc_job">Executar o serviço de limpeza</string>
   <string name="activity_label_pgp_key_manager">Gerenciador de Chaves PGP</string>
+  <string name="activity_label_pgp_key_select">Selecione Chave PGP</string>
   <string name="pgp_key_manager_delete_confirmation_dialog_title">Apagar chave?</string>
   <string name="git_utils_reset_remote_branch_title">Nome do branch remoto</string>
   <string name="pgp_key_manager_no_keys_guidance">Importar uma chave usando o botão Adicionar abaixo</string>
   <string name="no_keys_imported_dialog_title">Nenhuma chave importada</string>
   <string name="no_keys_imported_dialog_message">Não há chaves PGP importadas no aplicativo ainda, pressione o botão abaixo para escolher um arquivo de chave</string>
-  <string name="aead_detect_title">Criptografia AEAD detectada</string>
-  <string name="aead_detect_message">%1$s, consulte https://passwordstore.app/fix-aead para obter mais informações</string>
 </resources>

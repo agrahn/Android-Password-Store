@@ -45,7 +45,9 @@ class PGPKeyListActivity : ComponentActivity() {
         Scaffold(
           topBar = {
             APSAppBar(
-              title = stringResource(R.string.activity_label_pgp_key_manager),
+              title =
+                if (isSelecting) stringResource(R.string.activity_label_pgp_key_select)
+                else stringResource(R.string.activity_label_pgp_key_manager),
               navigationIcon = painterResource(R.drawable.ic_arrow_back_black_24dp),
               onNavigationIconClick = { finish() },
               backgroundColor = MaterialTheme.colorScheme.surface,
@@ -83,7 +85,7 @@ class PGPKeyListActivity : ComponentActivity() {
 
   companion object {
     const val EXTRA_SELECTED_KEY = "SELECTED_KEY"
-    private const val EXTRA_KEY_SELECTION = "KEY_SELECTION_MODE"
+    const val EXTRA_KEY_SELECTION = "KEY_SELECTION_MODE"
 
     fun newSelectionActivity(context: Context): Intent {
       val intent = Intent(context, PGPKeyListActivity::class.java)

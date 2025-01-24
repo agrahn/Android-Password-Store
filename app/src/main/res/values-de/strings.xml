@@ -364,13 +364,12 @@
   <string name="pwgen_some_error_occurred">Ein Fehler ist aufgetreten.</string>
   <string name="git_run_gc_job">Garbage Collection ausführen</string>
   <string name="activity_label_pgp_key_manager">PGP-Schlüsselmanager</string>
+  <string name="activity_label_pgp_key_select">Wählen Sie einen PGP-Schlüssel</string>
   <string name="pgp_key_manager_delete_confirmation_dialog_title">Schlüssel löschen?</string>
   <string name="git_utils_reset_remote_branch_title">Name des Remote-Branchs</string>
   <string name="pgp_key_manager_no_keys_guidance">Importieren Sie einen Schlüssel über die unten befindliche Schaltfläche \"+\".</string>
   <string name="no_keys_imported_dialog_title">Keine Schlüssel importiert</string>
   <string name="no_keys_imported_dialog_message">Es wurden noch keine PGP-Schlüssel in die App importiert. Wählen Sie eine Schlüsseldatei über die Schaltfläche \"Importieren\" aus.</string>
-  <string name="aead_detect_title">AEAD-Verschlüsselung festgestellt</string>
-  <string name="aead_detect_message">%1$s, siehe https://passwordstore.app/fix-aead für weiterführende Informationen.</string>
 
   <!-- Passphrase input -->
   <string name="cache_password_until_screen_off">Passphrase bis zum Abschalten des Bildschirms merken</string>

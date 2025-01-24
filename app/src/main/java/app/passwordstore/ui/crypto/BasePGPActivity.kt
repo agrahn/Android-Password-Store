@@ -32,7 +32,6 @@ import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.settings.Constants
 import app.passwordstore.util.settings.PreferenceKeys
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.util.concurrent.Executors
@@ -177,15 +176,17 @@ open class BasePGPActivity : AppCompatActivity() {
    * the problem.
    */
   fun getPGPIdentifiers(subDir: String): List<PGPIdentifier>? {
+    PasswordRepository.gpgidChecked = false
     var shortIdCount = 0
     var invalidIdCount = 0
     val repoRoot = PasswordRepository.getRepositoryDirectory()
     val gpgIdentifierFile = File(repoRoot, subDir).findTillRoot(".gpg-id", repoRoot)
-    if (gpgIdentifierFile == null) {
+    if (gpgIdentifierFile == null) { // no file found
       snackbar(message = resources.getString(R.string.missing_gpg_id))
-      PasswordRepository.gpgidIsValid = false
+      PasswordRepository.gpgidCurPath = repoRoot
       return null
     }
+    PasswordRepository.gpgidCurPath = gpgIdentifierFile.getParentFile()
     val gpgIdentifiers =
       gpgIdentifierFile
         .readLines()
@@ -211,12 +212,12 @@ open class BasePGPActivity : AppCompatActivity() {
         snackbar(message = resources.getString(R.string.empty_gpg_id))
       } else if (shortIdCount > 0 && invalidIdCount == 0) {
         snackbar(message = resources.getString(R.string.short_gpg_id))
-      } else if (shortIdCount == 0 && invalidIdCount > 0) {
+      } else {
         snackbar(message = resources.getString(R.string.invalid_gpg_id))
       }
-      PasswordRepository.gpgidIsValid = false
       return null
     }
+    PasswordRepository.gpgidChecked = true
     return gpgIdentifiers
   }
 

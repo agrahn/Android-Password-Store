@@ -33,7 +33,8 @@ object PasswordRepository {
   val isInitialized: Boolean
     get() = repository != null
 
-  var gpgidIsValid: Boolean = false
+  var gpgidChecked: Boolean = false
+  var gpgidCurPath: File? = null
 
   fun isGitRepo(): Boolean {
     return repository?.objectDatabase?.exists() ?: false
