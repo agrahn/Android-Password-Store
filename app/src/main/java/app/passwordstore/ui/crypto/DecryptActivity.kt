@@ -14,13 +14,13 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
-import app.passwordstore.crypto.errors.NonStandardAEAD
+import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.password.FieldItem
 import app.passwordstore.databinding.DecryptLayoutBinding
 import app.passwordstore.ui.adapters.FieldItemAdapter
-import app.passwordstore.ui.dialogs.BasicBottomSheet
 import app.passwordstore.util.extensions.getString
+import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.features.Features
@@ -189,22 +189,12 @@ class DecryptActivity : BasePGPActivity() {
     } else {
       logcat(ERROR) { result.error.stackTraceToString() }
       when (result.error) {
-        is NonStandardAEAD -> {
-          BasicBottomSheet.Builder(this)
-            .setTitle(getString(R.string.aead_detect_title))
-            .setMessage(getString(R.string.aead_detect_message, result.error.message))
-            .setPositiveButtonClickListener(getString(R.string.dialog_ok)) {
-              setResult(RESULT_CANCELED)
-              finish()
-            }
-            .setOnDismissListener {
-              setResult(RESULT_CANCELED)
-              finish()
-            }
-            .build()
-            .show(supportFragmentManager, "AEAD_INFO_SHEET")
+        is IncorrectPassphraseException -> {
+          decrypt(isError = true)
         }
-        else -> decrypt(isError = true)
+        else -> {
+          snackbar(message = result.error.toString())
+        }
       }
     }
   }

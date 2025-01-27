@@ -26,7 +26,6 @@ import app.passwordstore.util.settings.PreferenceKeys
 import app.passwordstore.util.settings.runMigrations
 import com.google.android.material.color.DynamicColors
 import dagger.hilt.android.HiltAndroidApp
-import java.io.File
 import java.util.concurrent.Executors
 import javax.inject.Inject
 import logcat.AndroidLogcatLogger
@@ -63,8 +62,7 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
     proxyUtils.setDefaultProxy()
     DynamicColors.applyToActivitiesIfAvailable(this)
     setupScreenOffHandler()
-    PasswordRepository.gpgidIsValid =
-      File(PasswordRepository.getRepositoryDirectory(), ".gpg-id").isFile()
+    PasswordRepository.gpgidCurPath = PasswordRepository.getRepositoryDirectory()
   }
 
   private fun setupScreenOffHandler() {

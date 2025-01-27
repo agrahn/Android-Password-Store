@@ -15,6 +15,7 @@ import android.view.MenuItem.OnActionExpandListener
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SearchView.OnQueryTextListener
 import androidx.core.content.edit
@@ -23,6 +24,8 @@ import androidx.fragment.app.commit
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
+import app.passwordstore.crypto.PGPIdentifier
+import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.data.password.PasswordItem
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.ui.crypto.BasePGPActivity
@@ -32,8 +35,8 @@ import app.passwordstore.ui.crypto.PasswordCreationActivity
 import app.passwordstore.ui.dialogs.FolderCreationDialogFragment
 import app.passwordstore.ui.folderselect.SelectFolderActivity
 import app.passwordstore.ui.git.base.BaseGitActivity
-import app.passwordstore.ui.onboarding.activity.KeySelectionActivity
 import app.passwordstore.ui.onboarding.activity.OnboardingActivity
+import app.passwordstore.ui.pgp.PGPKeyListActivity
 import app.passwordstore.ui.settings.SettingsActivity
 import app.passwordstore.util.autofill.AutofillMatcher
 import app.passwordstore.util.extensions.base64
@@ -51,6 +54,7 @@ import app.passwordstore.util.viewmodel.SearchableRepositoryViewModel
 import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.runCatching
+import com.github.michaelbull.result.unwrap
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
@@ -58,6 +62,7 @@ import java.io.File
 import java.lang.Character.UnicodeBlock
 import javax.inject.Inject
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
 import logcat.LogPriority.INFO
@@ -68,12 +73,33 @@ const val PASSWORD_FRAGMENT_TAG = "PasswordsList"
 @AndroidEntryPoint
 class PasswordStore : BaseGitActivity() {
 
+  @Inject lateinit var pgpKeyManager: PGPKeyManager
   @Inject lateinit var shortcutHandler: ShortcutHandler
   private lateinit var searchItem: MenuItem
   private val settings by lazy { sharedPrefs }
-  //  @SettingsPreferences @Inject lateinit var settings: SharedPreferences
 
   private val model: SearchableRepositoryViewModel by viewModels()
+
+  private val gpgKeySelectAction =
+    registerForActivityResult(StartActivityForResult()) { result ->
+      if (result.resultCode == AppCompatActivity.RESULT_OK) {
+        val data = result.data ?: return@registerForActivityResult
+        val selectedUserId =
+          data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
+            ?: return@registerForActivityResult
+        val pgpUserId = PGPIdentifier.fromString(selectedUserId) ?: return@registerForActivityResult
+        runBlocking {
+          withContext(dispatcherProvider.io()) {
+            val key = pgpKeyManager.getKeyById(pgpUserId).unwrap()
+            val keyId = pgpKeyManager.getKeyId(key) ?: throw NullPointerException()
+            val gpgIdentifierFile = File(PasswordRepository.gpgidCurPath, ".gpg-id")
+            gpgIdentifierFile.writeText(keyId.toString())
+          }
+          commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))
+        }
+        refreshPasswordList()
+      }
+    }
 
   private val listRefreshAction =
     registerForActivityResult(StartActivityForResult()) { result ->
@@ -352,8 +378,11 @@ class PasswordStore : BaseGitActivity() {
 
   private fun checkLocalRepository(localDir: File?) {
     if (localDir != null && settings.getBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, false)) {
-      if (!PasswordRepository.gpgidIsValid) {
-        launchActivity(KeySelectionActivity::class.java)
+      if (!PasswordRepository.gpgidChecked) {
+        val intent = Intent(this, PGPKeyListActivity::class.java)
+        intent.putExtra(PGPKeyListActivity.EXTRA_KEY_SELECTION, true)
+        gpgKeySelectAction.launch(intent)
+        PasswordRepository.gpgidChecked = true
       } else {
         // do not push the fragment if we already have it
         if (

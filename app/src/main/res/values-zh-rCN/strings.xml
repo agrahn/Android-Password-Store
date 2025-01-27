@@ -294,9 +294,7 @@ personal.com</string>
   <string name="select_repo_type_text">你是要同步仓库还是现在创建一个仓库呢?</string>
   <string name="clone_remote_repo">同步远程仓库</string>
   <string name="create_local_repo">创建本地仓库</string>
-  <string name="select_gpg_key_title">选择
-PGP
-密钥</string>
+  <string name="select_gpg_key_title">选择\nPGP 密钥</string>
   <string name="select_gpg_key_message">选择一个PGP密钥来初始化您的仓库</string>
   <string name="gpg_key_select">选择密钥</string>
   <!-- SSH port validation -->
@@ -331,6 +329,7 @@ PGP
   <string name="pwgen_some_error_occurred">发生某些错误</string>
   <string name="git_run_gc_job">运行垃圾收集作业</string>
   <string name="activity_label_pgp_key_manager">PGP 密钥管理器</string>
+  <string name="activity_label_pgp_key_select">选择 PGP 密钥</string>
   <string name="pgp_key_manager_delete_confirmation_dialog_title">删除密钥？</string>
   <string name="git_utils_reset_remote_branch_title">远程分支名称</string>
   <string name="pgp_key_manager_no_keys_guidance">使用下面的添加按钮导入密钥</string>
