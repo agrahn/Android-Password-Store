@@ -63,6 +63,7 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
     DynamicColors.applyToActivitiesIfAvailable(this)
     setupScreenOffHandler()
     PasswordRepository.gpgidCurPath = PasswordRepository.getRepositoryDirectory()
+    PasswordRepository.gpgidChecked = true
   }
 
   private fun setupScreenOffHandler() {
