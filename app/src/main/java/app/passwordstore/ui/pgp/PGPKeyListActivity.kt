@@ -21,14 +21,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import app.passwordstore.R
+import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.ui.APSAppBar
 import app.passwordstore.ui.compose.theme.APSTheme
 import app.passwordstore.util.viewmodel.PGPKeyListViewModel
+import com.github.michaelbull.result.unwrap
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import kotlinx.coroutines.runBlocking
 
 @AndroidEntryPoint
 class PGPKeyListActivity : ComponentActivity() {
 
+  @Inject lateinit var pgpKeyManager: PGPKeyManager
   private val viewModel: PGPKeyListViewModel by viewModels()
   private val keyImportAction =
     registerForActivityResult(StartActivityForResult()) {
@@ -71,8 +76,12 @@ class PGPKeyListActivity : ComponentActivity() {
             onKeySelected =
               if (isSelecting) {
                 { identifier ->
+                  val keyId = runBlocking {
+                    val key = pgpKeyManager.getKeyById(identifier).unwrap()
+                    pgpKeyManager.getKeyId(key) ?: throw NullPointerException()
+                  }
                   val result = Intent()
-                  result.putExtra(EXTRA_SELECTED_KEY, identifier.toString())
+                  result.putExtra(EXTRA_SELECTED_KEY, keyId.toString())
                   setResult(RESULT_OK, result)
                   finish()
                 }
