@@ -25,6 +25,8 @@
       android:id="@+id/secret"
       android:layout_width="match_parent"
       android:layout_height="match_parent"
+      android:importantForAutofill="no"
+      android:imeOptions="flagNoPersonalizedLearning"
       android:inputType="textPassword" />
 
     <requestFocus />

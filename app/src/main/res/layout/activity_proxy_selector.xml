@@ -89,6 +89,8 @@
       android:id="@+id/proxy_password"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
+      android:importantForAutofill="no"
+      android:imeOptions="flagNoPersonalizedLearning"
       android:inputType="textPassword" />
   </com.google.android.material.textfield.TextInputLayout>
 

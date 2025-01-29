@@ -24,8 +24,6 @@ import androidx.fragment.app.commit
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
-import app.passwordstore.crypto.PGPIdentifier
-import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.data.password.PasswordItem
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.ui.crypto.BasePGPActivity
@@ -54,7 +52,6 @@ import app.passwordstore.util.viewmodel.SearchableRepositoryViewModel
 import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.runCatching
-import com.github.michaelbull.result.unwrap
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
@@ -73,7 +70,6 @@ const val PASSWORD_FRAGMENT_TAG = "PasswordsList"
 @AndroidEntryPoint
 class PasswordStore : BaseGitActivity() {
 
-  @Inject lateinit var pgpKeyManager: PGPKeyManager
   @Inject lateinit var shortcutHandler: ShortcutHandler
   private lateinit var searchItem: MenuItem
   private val settings by lazy { sharedPrefs }
@@ -84,17 +80,12 @@ class PasswordStore : BaseGitActivity() {
     registerForActivityResult(StartActivityForResult()) { result ->
       if (result.resultCode == AppCompatActivity.RESULT_OK) {
         val data = result.data ?: return@registerForActivityResult
-        val selectedUserId =
+        val selectedKeyId =
           data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
-        val pgpUserId = PGPIdentifier.fromString(selectedUserId) ?: return@registerForActivityResult
         runBlocking {
-          withContext(dispatcherProvider.io()) {
-            val key = pgpKeyManager.getKeyById(pgpUserId).unwrap()
-            val keyId = pgpKeyManager.getKeyId(key) ?: throw NullPointerException()
-            val gpgIdentifierFile = File(PasswordRepository.gpgidCurPath, ".gpg-id")
-            gpgIdentifierFile.writeText(keyId.toString())
-          }
+          val gpgIdentifierFile = File(PasswordRepository.gpgidCurPath, ".gpg-id")
+          gpgIdentifierFile.writeText(selectedKeyId)
           commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))
         }
         refreshPasswordList()
