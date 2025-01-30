@@ -128,7 +128,7 @@ class DecryptActivity : BasePGPActivity() {
 
   private fun decrypt(isError: Boolean) {
     val gpgIdentifiers = getPGPIdentifiers(relativeParentPath) ?: return
-    val passphrase = cachedPassphrase
+    val passphrase = if (isError) null else cachedPassphrase
     lifecycleScope.launch(dispatcherProvider.main()) {
       passphrase?.let { decryptWithPassphrase(passphrase, gpgIdentifiers) }
         ?: askPassphrase(isError, gpgIdentifiers)
@@ -136,20 +136,20 @@ class DecryptActivity : BasePGPActivity() {
   }
 
   private suspend fun askPassphrase(isError: Boolean, gpgIdentifiers: List<PGPIdentifier>) {
+    if (!repository.isPasswordProtected(gpgIdentifiers) && !isError) {
+      decryptWithPassphrase(passphrase = null, gpgIdentifiers)
+      return
+    }
     if (retries < MAX_RETRIES) {
       retries += 1
     } else {
       finish()
     }
-    if (!repository.isPasswordProtected(gpgIdentifiers)) {
-      decryptWithPassphrase(passphrase = null, gpgIdentifiers)
-      return
-    }
     val dialog =
       PasswordDialog.newInstance(
         cacheEnabled = settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)
       )
-    if (isError) {
+    if (isError && retries > 1) {
       dialog.setError()
     }
     dialog.show(supportFragmentManager, "PASSWORD_DIALOG")
