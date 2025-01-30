@@ -9,8 +9,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import androidx.core.content.edit
-import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
@@ -23,10 +21,7 @@ import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
-import app.passwordstore.util.features.Features
 import app.passwordstore.util.settings.PreferenceKeys
-import com.github.michaelbull.result.onFailure
-import com.github.michaelbull.result.runCatching
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -35,20 +30,16 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
-import logcat.asLog
 import logcat.logcat
 
 @AndroidEntryPoint
 class DecryptActivity : BasePGPActivity() {
 
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
-  @Inject lateinit var features: Features
 
   private val binding by viewBinding(DecryptLayoutBinding::inflate)
   private val relativeParentPath by unsafeLazy { getParentPath(fullPath, repoPath) }
   private var passwordEntry: PasswordEntry? = null
-  private var retries = 0
-  private var cacheEnabled = false
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -63,7 +54,7 @@ class DecryptActivity : BasePGPActivity() {
         true
       }
     }
-    requireKeysExist { decrypt(isError = false) }
+    requireKeysExist { decrypt() }
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -126,7 +117,7 @@ class DecryptActivity : BasePGPActivity() {
     )
   }
 
-  private fun decrypt(isError: Boolean) {
+  private fun decrypt(isError: Boolean = false) {
     val gpgIdentifiers = getPGPIdentifiers(relativeParentPath) ?: return
     val passphrase = if (isError) null else cachedPassphrase
     lifecycleScope.launch(dispatcherProvider.main()) {
@@ -135,47 +126,10 @@ class DecryptActivity : BasePGPActivity() {
     }
   }
 
-  private suspend fun askPassphrase(isError: Boolean, gpgIdentifiers: List<PGPIdentifier>) {
-    if (!repository.isPasswordProtected(gpgIdentifiers) && !isError) {
-      decryptWithPassphrase(passphrase = null, gpgIdentifiers)
-      return
-    }
-    if (retries < MAX_RETRIES) {
-      retries += 1
-    } else {
-      finish()
-    }
-    val dialog =
-      PasswordDialog.newInstance(
-        cacheEnabled = settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)
-      )
-    if (isError && retries > 1) {
-      dialog.setError()
-    }
-    dialog.show(supportFragmentManager, "PASSWORD_DIALOG")
-    dialog.setFragmentResultListener(PasswordDialog.PASSWORD_RESULT_KEY) { key, bundle ->
-      if (key == PasswordDialog.PASSWORD_RESULT_KEY) {
-        val passphrase =
-          bundle.getCharSequence(PasswordDialog.PASSWORD_PHRASE_KEY)?.toString()?.toCharArray()
-            ?: throw NullPointerException()
-        cacheEnabled = bundle.getBoolean(PasswordDialog.PASSWORD_CACHE_KEY)
-        lifecycleScope.launch(dispatcherProvider.main()) {
-          decryptWithPassphrase(passphrase, gpgIdentifiers) {
-            runCatching {
-                cachedPassphrase = if (cacheEnabled) passphrase else null
-                settings.edit { putBoolean(PreferenceKeys.CACHE_PASSPHRASE, cacheEnabled) }
-              }
-              .onFailure { e -> logcat { e.asLog() } }
-          }
-        }
-      }
-    }
-  }
-
-  private suspend fun decryptWithPassphrase(
+  override suspend fun decryptWithPassphrase(
     passphrase: CharArray?,
     identifiers: List<PGPIdentifier>,
-    onSuccess: suspend () -> Unit = {},
+    onSuccess: suspend () -> Unit,
   ) {
     val message = withContext(dispatcherProvider.io()) { File(fullPath).readBytes().inputStream() }
     val outputStream = ByteArrayOutputStream()
@@ -245,7 +199,5 @@ class DecryptActivity : BasePGPActivity() {
       }
     }
 
-  private companion object {
-    private const val MAX_RETRIES = 3
-  }
+  private companion object {}
 }
