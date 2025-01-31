@@ -17,6 +17,8 @@ import androidx.activity.result.contract.ActivityResultContracts.StartActivityFo
 import androidx.annotation.CallSuper
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
@@ -31,6 +33,8 @@ import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.settings.Constants
 import app.passwordstore.util.settings.PreferenceKeys
+import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
@@ -41,6 +45,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import logcat.asLog
 import logcat.logcat
 
 @Suppress("Registered")
@@ -59,6 +64,12 @@ open class BasePGPActivity : AppCompatActivity() {
    * Converts personal/auth.foo.org/john_doe@example.org.gpg to john_doe.example.org
    */
   val name: String by unsafeLazy { File(fullPath).nameWithoutExtension }
+
+  /** Counter for the user's decryption attempts on the current password entry */
+  private var retries = 0
+
+  /** Caching the entered passphrase, user option */
+  private var cacheEnabled = false
 
   /** Action to invoke if [keyImportAction] succeeds. */
   private var onKeyImport: (() -> Unit)? = null
@@ -255,8 +266,51 @@ open class BasePGPActivity : AppCompatActivity() {
     return null
   }
 
+  /** Opens the dialog for passphrase input and then forwards it to the decryption method. */
+  protected suspend fun askPassphrase(isError: Boolean, identifiers: List<PGPIdentifier>) {
+    if (!repository.isPasswordProtected(identifiers) && !isError) {
+      decryptWithPassphrase(passphrase = null, identifiers)
+      return
+    }
+
+    if (++retries > MAX_RETRIES) finish()
+
+    val dialog =
+      PasswordDialog.newInstance(
+        cacheEnabled = settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)
+      )
+    if (isError && retries > 1) {
+      dialog.setError()
+    }
+    dialog.show(supportFragmentManager, "PASSWORD_DIALOG")
+    dialog.setFragmentResultListener(PasswordDialog.PASSWORD_RESULT_KEY) { key, bundle ->
+      if (key == PasswordDialog.PASSWORD_RESULT_KEY) {
+        val passphrase =
+          bundle.getCharSequence(PasswordDialog.PASSWORD_PHRASE_KEY)?.toString()?.toCharArray()
+            ?: throw NullPointerException()
+        cacheEnabled = bundle.getBoolean(PasswordDialog.PASSWORD_CACHE_KEY)
+        lifecycleScope.launch(dispatcherProvider.main()) {
+          decryptWithPassphrase(passphrase, identifiers) {
+            runCatching {
+                cachedPassphrase = if (cacheEnabled) passphrase else null
+                settings.edit { putBoolean(PreferenceKeys.CACHE_PASSPHRASE, cacheEnabled) }
+              }
+              .onFailure { e -> logcat { e.asLog() } }
+          }
+        }
+      }
+    }
+  }
+
+  open suspend fun decryptWithPassphrase(
+    passphrase: CharArray?,
+    identifiers: List<PGPIdentifier>,
+    onSuccess: suspend () -> Unit = {},
+  ) {}
+
   companion object {
 
+    const val MAX_RETRIES = 3
     const val EXTRA_FILE_PATH = "FILE_PATH"
     const val EXTRA_REPO_PATH = "REPO_PATH"
 

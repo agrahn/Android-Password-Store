@@ -11,55 +11,49 @@ import android.content.IntentSender
 import android.os.Build
 import android.os.Bundle
 import android.view.autofill.AutofillManager
-import androidx.core.content.edit
-import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.crypto.PGPIdentifier
+import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.ui.crypto.BasePGPActivity
-import app.passwordstore.ui.crypto.PasswordDialog
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.autofill.AutofillResponseBuilder
-import app.passwordstore.util.extensions.asLog
-import app.passwordstore.util.features.Features
-import app.passwordstore.util.settings.DirectoryStructure
-import app.passwordstore.util.settings.PreferenceKeys
+import app.passwordstore.util.extensions.snackbar
 import com.github.androidpasswordstore.autofillparser.AutofillAction
-import com.github.androidpasswordstore.autofillparser.Credentials
-import com.github.michaelbull.result.getOrElse
-import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.onSuccess
-import com.github.michaelbull.result.runCatching
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
-import logcat.asLog
 import logcat.logcat
 
 @AndroidEntryPoint
 class AutofillDecryptActivity : BasePGPActivity() {
 
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
-  @Inject lateinit var features: Features
 
-  private lateinit var directoryStructure: DirectoryStructure
-  private var cacheEnabled = false
+  private lateinit var filePath: String
+  private lateinit var repositoryPath: String
+  private lateinit var clientState: Bundle
+  private lateinit var action: AutofillAction
 
   override fun onStart() {
     super.onStart()
-    val filePath =
+    filePath =
       intent?.getStringExtra(EXTRA_FILE_PATH)
         ?: run {
           logcat(ERROR) { "AutofillDecryptActivity started without EXTRA_FILE_PATH" }
           finish()
           return
         }
-    val clientState =
+    repositoryPath = PasswordRepository.getRepositoryDirectory().toString()
+    clientState =
       intent?.getBundleExtra(AutofillManager.EXTRA_CLIENT_STATE)
         ?: run {
           logcat(ERROR) { "AutofillDecryptActivity started without EXTRA_CLIENT_STATE" }
@@ -68,64 +62,39 @@ class AutofillDecryptActivity : BasePGPActivity() {
         }
     val isSearchAction =
       intent?.getBooleanExtra(EXTRA_SEARCH_ACTION, true) ?: throw NullPointerException()
-    val action = if (isSearchAction) AutofillAction.Search else AutofillAction.Match
-    directoryStructure = AutofillPreferences.directoryStructure(this)
+    action = if (isSearchAction) AutofillAction.Search else AutofillAction.Match
     logcat { action.toString() }
-    requireKeysExist { decrypt(filePath, clientState, action) }
+    requireKeysExist { decrypt() }
   }
 
-  private fun decrypt(filePath: String, clientState: Bundle, action: AutofillAction) {
-    val gpgIdentifiers =
-      getPGPIdentifiers(
-        getParentPath(filePath, PasswordRepository.getRepositoryDirectory().toString())
-      ) ?: return
-    val passphrase = cachedPassphrase
+  private fun decrypt(isError: Boolean = false) {
+    val gpgIdentifiers = getPGPIdentifiers(getParentPath(filePath, repositoryPath)) ?: return
+    val passphrase = if (isError) null else cachedPassphrase
     lifecycleScope.launch(dispatcherProvider.main()) {
-      passphrase?.let {
-        decryptWithPassphrase(File(filePath), gpgIdentifiers, clientState, action, passphrase)
-      } ?: askPassphrase(filePath, gpgIdentifiers, clientState, action)
+      passphrase?.let { decryptWithPassphrase(passphrase, gpgIdentifiers) }
+        ?: askPassphrase(isError, gpgIdentifiers)
     }
   }
 
-  private suspend fun askPassphrase(
-    filePath: String,
-    identifiers: List<PGPIdentifier>,
-    clientState: Bundle,
-    action: AutofillAction,
-  ) {
-    if (!repository.isPasswordProtected(identifiers)) {
-      decryptWithPassphrase(File(filePath), identifiers, clientState, action, passphrase = null)
-      return
-    }
-    val dialog =
-      PasswordDialog.newInstance(
-        cacheEnabled = settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)
-      )
-    dialog.show(supportFragmentManager, "PASSWORD_DIALOG")
-    dialog.setFragmentResultListener(PasswordDialog.PASSWORD_RESULT_KEY) { key, bundle ->
-      if (key == PasswordDialog.PASSWORD_RESULT_KEY) {
-        val passphrase =
-          bundle.getCharSequence(PasswordDialog.PASSWORD_PHRASE_KEY)?.toString()?.toCharArray()
-            ?: throw NullPointerException()
-        cacheEnabled = bundle.getBoolean(PasswordDialog.PASSWORD_CACHE_KEY)
-        lifecycleScope.launch(dispatcherProvider.main()) {
-          decryptWithPassphrase(File(filePath), identifiers, clientState, action, passphrase)
-        }
-      }
-    }
-  }
-
-  private suspend fun decryptWithPassphrase(
-    filePath: File,
-    identifiers: List<PGPIdentifier>,
-    clientState: Bundle,
-    action: AutofillAction,
+  override suspend fun decryptWithPassphrase(
     passphrase: CharArray?,
+    identifiers: List<PGPIdentifier>,
+    onSuccess: suspend () -> Unit,
   ) {
-    val credentials = decryptCredential(filePath, passphrase, identifiers)
-    if (credentials == null) {
-      setResult(RESULT_CANCELED)
-    } else {
+    val encryptedFile = File(filePath)
+    val message = withContext(dispatcherProvider.io()) { encryptedFile.readBytes().inputStream() }
+    val outputStream = ByteArrayOutputStream()
+    val result = repository.decrypt(passphrase, identifiers, message, outputStream)
+    if (result.isOk) {
+      val entry = passwordEntryFactory.create(result.value.toByteArray())
+      val directoryStructure = AutofillPreferences.directoryStructure(this)
+      val credentials =
+        AutofillPreferences.credentialsFromStoreEntry(
+          this,
+          encryptedFile,
+          entry,
+          directoryStructure,
+        )
       val fillInDataset =
         AutofillResponseBuilder.makeFillInDataset(
           this@AutofillDecryptActivity,
@@ -139,45 +108,21 @@ class AutofillDecryptActivity : BasePGPActivity() {
           Intent().apply { putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, fillInDataset) },
         )
       }
+      onSuccess()
+      withContext(dispatcherProvider.main()) { finish() }
+    } else {
+      logcat(ERROR) { result.error.stackTraceToString() }
+      when (result.error) {
+        is IncorrectPassphraseException -> {
+          decrypt(isError = true)
+        }
+        else -> {
+          snackbar(message = result.error.toString())
+          val timer = Executors.newSingleThreadScheduledExecutor()
+          timer.schedule({ finish() }, 4.toLong(), TimeUnit.SECONDS)
+        }
+      }
     }
-    withContext(dispatcherProvider.main()) { finish() }
-  }
-
-  private suspend fun decryptCredential(
-    file: File,
-    passphrase: CharArray?,
-    identifiers: List<PGPIdentifier>,
-  ): Credentials? {
-    runCatching { file.readBytes().inputStream() }
-      .onFailure { e ->
-        logcat(ERROR) { e.asLog("File to decrypt not found") }
-        return null
-      }
-      .onSuccess { encryptedInput ->
-        val outputStream = ByteArrayOutputStream()
-        repository
-          .decrypt(passphrase, identifiers, encryptedInput, outputStream)
-          .onFailure { e ->
-            logcat(ERROR) { e.asLog("Decryption failed") }
-            return null
-          }
-          .onSuccess { result ->
-            return runCatching {
-                runCatching {
-                    cachedPassphrase = if (cacheEnabled) passphrase else null
-                    settings.edit { putBoolean(PreferenceKeys.CACHE_PASSPHRASE, cacheEnabled) }
-                  }
-                  .onFailure { e -> logcat { e.asLog() } }
-                val entry = passwordEntryFactory.create(result.toByteArray())
-                AutofillPreferences.credentialsFromStoreEntry(this, file, entry, directoryStructure)
-              }
-              .getOrElse { e ->
-                logcat(ERROR) { e.asLog("Failed to parse password entry") }
-                return null
-              }
-          }
-      }
-    return null
   }
 
   companion object {
