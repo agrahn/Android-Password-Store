@@ -133,6 +133,17 @@ object PasswordRepository {
     return repository
   }
 
+  fun isEmpty(): Boolean {
+    val dir = getRepositoryDirectory()
+    if (
+      !dir.exists() ||
+        requireNotNull(dir.listFiles()) { "Failed to list files in ${dir.path}" }.isEmpty()
+    ) {
+      return true
+    }
+    return false
+  }
+
   /** Get the currently checked out branch. */
   fun getCurrentBranch(): String? {
     val repository = repository ?: return null

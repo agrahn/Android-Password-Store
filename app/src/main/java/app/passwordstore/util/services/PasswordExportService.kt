@@ -17,6 +17,13 @@ import androidx.core.content.getSystemService
 import androidx.documentfile.provider.DocumentFile
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
+import java.io.IOException
+import java.nio.file.FileVisitResult
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import logcat.logcat
@@ -33,7 +40,46 @@ class PasswordExportService : Service() {
 
             if (targetDirectory != null) {
               createNotification()
-              exportPasswords(targetDirectory)
+
+              val repositoryDirectory =
+                requireNotNull(PasswordRepository.getRepositoryDirectory()) {
+                  "Password directory must be set to export them"
+                }
+              val sourcePassDir = DocumentFile.fromFile(repositoryDirectory)
+              logcat { "Copying ${repositoryDirectory.path} to $targetDirectory" }
+
+              val dateString = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
+              val passDir = targetDirectory.createDirectory("password_store_$dateString")
+
+              if (passDir != null) {
+                copyDirToDir(sourcePassDir, passDir)
+              }
+
+              stopSelf()
+              return START_NOT_STICKY
+            }
+          }
+        }
+        ACTION_IMPORT_PASSWORD -> {
+          val uri = IntentCompat.getParcelableExtra(intent, "uri", Uri::class.java)
+          if (uri != null) {
+            val externalDirectory = DocumentFile.fromTreeUri(applicationContext, uri)
+
+            if (externalDirectory != null) {
+              val repositoryDirectory =
+                requireNotNull(PasswordRepository.getRepositoryDirectory()) {
+                  "Password directory must be set to export them"
+                }
+              if (!repositoryDirectory.exists()) repositoryDirectory.mkdirs()
+              val internalRepository = DocumentFile.fromFile(repositoryDirectory)
+              logcat { "Copying $externalDirectory to ${repositoryDirectory.path}" }
+
+              copyDirToDir(externalDirectory, internalRepository)
+              /* When importing an external repo, the .bin extension is appended to the
+              files copied; we walk through the internal repo directory once more
+              and remove the .bin ending from all files we find. */
+              renameFilesInDirectoryTree(repositoryDirectory.getAbsolutePath(), ".bin", "")
+
               stopSelf()
               return START_NOT_STICKY
             }
@@ -46,31 +92,6 @@ class PasswordExportService : Service() {
 
   override fun onBind(intent: Intent?): IBinder? {
     return null
-  }
-
-  /**
-   * Exports passwords to the given directory.
-   *
-   * Recursively copies the existing password store to an external directory.
-   *
-   * @param targetDirectory directory to copy password directory to.
-   */
-  private fun exportPasswords(targetDirectory: DocumentFile) {
-
-    val repositoryDirectory =
-      requireNotNull(PasswordRepository.getRepositoryDirectory()) {
-        "Password directory must be set to export them"
-      }
-    val sourcePassDir = DocumentFile.fromFile(repositoryDirectory)
-
-    logcat { "Copying ${repositoryDirectory.path} to $targetDirectory" }
-
-    val dateString = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
-    val passDir = targetDirectory.createDirectory("password_store_$dateString")
-
-    if (passDir != null) {
-      copyDirToDir(sourcePassDir, passDir)
-    }
   }
 
   /**
@@ -113,6 +134,35 @@ class PasswordExportService : Service() {
     }
   }
 
+  private fun renameFilesInDirectoryTree(
+    rootDir: String,
+    oldExtension: String,
+    newExtension: String,
+  ) {
+    val startPath = Paths.get(rootDir)
+    Files.walkFileTree(
+      startPath,
+      object : SimpleFileVisitor<Path>() {
+        override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+          val fileName = file.fileName.toString()
+          if (fileName.endsWith(oldExtension)) {
+            val newFileName = fileName.replace(oldExtension, newExtension)
+            val newFile = file.resolveSibling(newFileName)
+            Files.move(file, newFile)
+            logcat { "Renamed: $file to $newFile" }
+          }
+          return FileVisitResult.CONTINUE
+        }
+
+        override fun visitFileFailed(file: Path, exc: IOException): FileVisitResult {
+          logcat { "Failed to access file: $file" }
+          exc.printStackTrace()
+          return FileVisitResult.CONTINUE
+        }
+      },
+    )
+  }
+
   private fun createNotification() {
     createNotificationChannel()
 
@@ -145,6 +195,7 @@ class PasswordExportService : Service() {
   companion object {
 
     const val ACTION_EXPORT_PASSWORD = "ACTION_EXPORT_PASSWORD"
+    const val ACTION_IMPORT_PASSWORD = "ACTION_IMPORT_PASSWORD"
     private const val CHANNEL_ID = "NotificationService"
   }
 }
