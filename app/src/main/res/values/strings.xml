@@ -127,8 +127,12 @@
   <string name="pref_clear_clipboard_title">Workaround clipboard history feature</string>
   <string name="pref_clear_clipboard_summary">Enable to flood clipboard history on devices that include such a feature with consecutive numbers, flushing out any passwords</string>
   <string name="pref_git_delete_repo_summary">Deletes local (hidden) repository</string>
-  <string name="prefs_export_passwords_title">Export passwords</string>
-  <string name="prefs_export_passwords_summary">Exports the encrypted passwords to an external directory</string>
+  <string name="prefs_export_passwords_title">Export repository</string>
+  <string name="prefs_export_passwords_summary">Exports the password repository to an external directory</string>
+  <string name="prefs_import_passwords_title">Import repository</string>
+  <string name="prefs_import_passwords_summary">Imports a password repository from an external directory</string>
+  <string name="prefs_repo_not_empty_dialog_title">Local repository not empty</string>
+  <string name="prefs_repo_not_empty_dialog_summary">The local password repository must be deleted first</string>
   <string name="pref_rebase_on_pull_title">Rebase on pull</string>
   <string name="pref_rebase_on_pull_summary">When pulling or syncing, create a merge commit with upstream changes</string>
   <string name="pref_rebase_on_pull_summary_on">When pulling or syncing, rebase commits that are not present in the remote repository</string>

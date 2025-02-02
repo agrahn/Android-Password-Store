@@ -5,11 +5,15 @@
 
 package app.passwordstore.ui.settings
 
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ShortcutManager
+import android.net.Uri
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
+import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
@@ -25,6 +29,7 @@ import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.git.sshj.SshKey
+import app.passwordstore.util.services.PasswordExportService
 import app.passwordstore.util.settings.GitSettings
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.onFailure
@@ -53,6 +58,58 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
       RepositorySettingsEntryPoint::class.java,
     )
   }
+
+  private val storeExportAction =
+    activity.registerForActivityResult(
+      object : ActivityResultContracts.OpenDocumentTree() {
+        override fun createIntent(context: Context, input: Uri?): Intent {
+          return super.createIntent(context, input).apply {
+            flags =
+              Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+          }
+        }
+      }
+    ) { uri: Uri? ->
+      if (uri == null) return@registerForActivityResult
+      val targetDirectory = DocumentFile.fromTreeUri(activity.applicationContext, uri)
+
+      if (targetDirectory != null) {
+        val service =
+          Intent(activity.applicationContext, PasswordExportService::class.java).apply {
+            action = PasswordExportService.ACTION_EXPORT_PASSWORD
+            putExtra("uri", uri)
+          }
+
+        activity.startForegroundService(service)
+      }
+    }
+
+  private val storeImportAction =
+    activity.registerForActivityResult(
+      object : ActivityResultContracts.OpenDocumentTree() {
+        override fun createIntent(context: Context, input: Uri?): Intent {
+          return super.createIntent(context, input).apply {
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+          }
+        }
+      }
+    ) { uri: Uri? ->
+      if (uri == null) return@registerForActivityResult
+      val sourceDirectory = DocumentFile.fromTreeUri(activity.applicationContext, uri)
+
+      if (sourceDirectory != null) {
+        val service =
+          Intent(activity.applicationContext, PasswordExportService::class.java).apply {
+            action = PasswordExportService.ACTION_IMPORT_PASSWORD
+            putExtra("uri", uri)
+          }
+
+        activity.startForegroundService(service)
+      }
+    }
 
   private var showSshKeyPref: Preference? = null
 
@@ -122,6 +179,33 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
           activity.sharedPrefs.edit { putString(PreferenceKeys.SSH_OPENKEYSTORE_KEYID, null) }
           visible = false
           true
+        }
+      }
+      pref(PreferenceKeys.EXPORT_PASSWORDS) {
+        titleRes = R.string.prefs_export_passwords_title
+        summaryRes = R.string.prefs_export_passwords_summary
+        onClick {
+          storeExportAction.launch(null)
+          true
+        }
+      }
+      pref(PreferenceKeys.IMPORT_PASSWORDS) {
+        titleRes = R.string.prefs_import_passwords_title
+        summaryRes = R.string.prefs_import_passwords_summary
+        onClick {
+          if (PasswordRepository.isEmpty()) {
+            storeImportAction.launch(null)
+            true
+          } else {
+            MaterialAlertDialogBuilder(activity)
+              .setTitle(activity.getString(R.string.prefs_repo_not_empty_dialog_title))
+              .setMessage(activity.getString(R.string.prefs_repo_not_empty_dialog_summary))
+              .setPositiveButton(activity.getString(R.string.dialog_ok)) { dialog, _ ->
+                dialog.dismiss()
+              }
+              .show()
+            false
+          }
         }
       }
       pref(PreferenceKeys.GIT_DELETE_REPO) {

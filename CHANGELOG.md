@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 -   Allow setting a subdirectory PGP key when creating folders (restored feature from [1.11.0])
+-   External repository import. An external "pass" repository or a repository previously exported from the app can now be imported via Settings --> Repository --> Import repository.
 
 ### Fixed
 
