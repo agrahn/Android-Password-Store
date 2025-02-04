@@ -129,7 +129,7 @@
   <!-- Password generator prefs -->
   <string name="pref_password_generator_type_title">Type de générateur de mot de passe</string>
   <!-- ssh keygen fragment -->
-  <string name="ssh_keygen_passphrase">Mot de passe</string>
+  <string name="ssh_keygen_passphrase">Phrase de passe</string>
   <string name="ssh_keygen_generate">Générer</string>
   <string name="ssh_keygen_share">Partager</string>
   <string name="ssh_keygen_later">Plus tard</string>

@@ -92,7 +92,11 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
       object : ActivityResultContracts.OpenDocumentTree() {
         override fun createIntent(context: Context, input: Uri?): Intent {
           return super.createIntent(context, input).apply {
-            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            flags =
+              Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
           }
         }
       }
@@ -100,13 +104,13 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
       if (uri == null) return@registerForActivityResult
       val sourceDirectory = DocumentFile.fromTreeUri(activity.applicationContext, uri)
 
-      if (sourceDirectory != null) {
+      // Minimal check to see if the source directory is a git repo
+      if (sourceDirectory?.findFile(".git")?.isDirectory() ?: false) {
         val service =
           Intent(activity.applicationContext, PasswordExportService::class.java).apply {
             action = PasswordExportService.ACTION_IMPORT_PASSWORD
             putExtra("uri", uri)
           }
-
         activity.startForegroundService(service)
       }
     }

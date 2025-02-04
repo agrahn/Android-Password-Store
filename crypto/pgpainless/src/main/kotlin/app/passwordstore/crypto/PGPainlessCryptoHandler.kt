@@ -16,6 +16,7 @@ import com.github.michaelbull.result.runCatching
 import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Inject
+import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -27,10 +28,18 @@ import org.pgpainless.encryption_signing.EncryptionOptions
 import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.key.protection.UnlockSecretKey
 import org.pgpainless.util.Passphrase
 
 public class PGPainlessCryptoHandler @Inject constructor() :
   CryptoHandler<PGPKey, PGPEncryptOptions, PGPDecryptOptions> {
+
+  public override fun passphraseIsCorrect(key: PGPKey, passphrase: CharArray): Boolean {
+    val secretKey =
+      PGPainless.readKeyRing().secretKeyRing(key.contents)?.getSecretKey() ?: return false
+    val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
+    return (UnlockSecretKey.unlockSecretKey(secretKey, protector) as? PGPPrivateKey) != null
+  }
 
   /**
    * Decrypts the given [ciphertextStream] using [PGPainless] and writes the decrypted output to

@@ -378,6 +378,7 @@
 
   <!-- Passphrase input -->
   <string name="cache_password_until_screen_off">Keep passphrase until screen-off</string>
-  <string name="pgp_passphrase_input">PGP passphrase</string>
-  <string name="pgp_wrong_passphrase_input">wrong PGP passphrase</string>
+  <string name="pgp_wrong_passphrase_input">Wrong passphrase</string>
+  <string name="pgp_id_label">PGP ID: </string>
+  <string name="pgp_id_label_plural">PGP IDs: </string>
 </resources>
