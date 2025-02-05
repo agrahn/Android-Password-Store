@@ -55,7 +55,7 @@ class PasswordExportService : Service() {
                 copyDirToDir(sourcePassDir, passDir)
               }
 
-              stopSelf()
+              stopForeground(Service.STOP_FOREGROUND_DETACH)
               return START_NOT_STICKY
             }
           }
@@ -75,12 +75,14 @@ class PasswordExportService : Service() {
               logcat { "Copying $externalDirectory to ${repositoryDirectory.path}" }
 
               copyDirToDir(externalDirectory, internalRepository)
-              /* When importing an external repo, the .bin extension is appended to the
-              files copied; we walk through the internal repo directory once more
-              and remove the .bin ending from all files we find. */
+              /**
+               * When importing an external repo, the .bin extension is appended to the files
+               * copied; we walk through the internal repo directory once more and remove the .bin
+               * ending from all files we find.
+               */
               renameFilesInDirectoryTree(repositoryDirectory.getAbsolutePath(), ".bin", "")
 
-              stopSelf()
+              stopForeground(Service.STOP_FOREGROUND_DETACH)
               return START_NOT_STICKY
             }
           }
@@ -124,7 +126,7 @@ class PasswordExportService : Service() {
    */
   private fun copyDirToDir(sourceDirectory: DocumentFile, targetDirectory: DocumentFile) {
     sourceDirectory.listFiles().forEach { file ->
-      if (file.isDirectory) {
+      if (file.isDirectory()) {
         // Create new directory and recurse
         val newDir = targetDirectory.createDirectory(file.name ?: throw NullPointerException())
         copyDirToDir(file, newDir ?: throw NullPointerException())

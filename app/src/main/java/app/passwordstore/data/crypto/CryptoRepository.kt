@@ -17,6 +17,9 @@ import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.filterValues
 import com.github.michaelbull.result.map
 import com.github.michaelbull.result.mapBoth
+import com.github.michaelbull.result.onSuccess
+import com.github.michaelbull.result.runCatching
+import com.github.michaelbull.result.unwrap
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
@@ -46,6 +49,25 @@ constructor(
     return pgpCryptoHandler.isPassphraseProtected(keys)
   }
 
+  private suspend fun findMatchingIdentifier(
+    identifiers: List<PGPIdentifier>,
+    passphrase: CharArray?,
+  ): List<PGPIdentifier> {
+    if (passphrase == null) return identifiers
+    for (identifier in identifiers) {
+      runCatching {
+          pgpCryptoHandler.passphraseIsCorrect(
+            pgpKeyManager.getKeyById(identifier).unwrap(),
+            passphrase,
+          )
+        }
+        .onSuccess {
+          return listOf(identifier)
+        }
+    }
+    return identifiers
+  }
+
   suspend fun decrypt(
     passphrase: CharArray?,
     identities: List<PGPIdentifier>,
@@ -53,7 +75,8 @@ constructor(
     out: ByteArrayOutputStream,
   ) =
     withContext(dispatcherProvider.io()) {
-      val keys = identities.map { id -> pgpKeyManager.getKeyById(id) }.filterValues()
+      val matchingIdentifier = findMatchingIdentifier(identities, passphrase)
+      val keys = matchingIdentifier.map { id -> pgpKeyManager.getKeyById(id) }.filterValues()
       val decryptionOptions = PGPDecryptOptions.Builder().build()
       pgpCryptoHandler.decrypt(keys, passphrase, message, out, decryptionOptions).map { out }
     }
