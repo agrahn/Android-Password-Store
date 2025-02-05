@@ -68,7 +68,8 @@ class CredentialFinder(
           setMessage(messageRes)
           setView(dialogView)
           setPositiveButton(R.string.dialog_ok) { _, _ ->
-            val credential = editCredential.text.toString().toCharArray()
+            val credential =
+              editCredential.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
             storedCredential = credential.clone()
             cont.resume(credential)
           }

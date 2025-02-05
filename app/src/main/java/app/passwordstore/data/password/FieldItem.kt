@@ -11,7 +11,7 @@ class FieldItem
 private constructor(
   val type: ItemType,
   val label: String,
-  val value: String,
+  val value: CharArray,
   val action: ActionType,
 ) {
   enum class ActionType {
@@ -31,21 +31,21 @@ private constructor(
       return FieldItem(
         ItemType.OTP,
         label.format(totp.remainingTime.inWholeSeconds),
-        totp.value,
+        totp.value.toCharArray(),
         ActionType.COPY,
       )
     }
 
-    fun createPasswordField(label: String, password: String): FieldItem {
+    fun createPasswordField(label: String, password: CharArray): FieldItem {
       return FieldItem(ItemType.PASSWORD, label, password, ActionType.HIDE)
     }
 
     fun createUsernameField(label: String, username: String): FieldItem {
-      return FieldItem(ItemType.USERNAME, label, username, ActionType.COPY)
+      return FieldItem(ItemType.USERNAME, label, username.toCharArray(), ActionType.COPY)
     }
 
     fun createFreeformField(label: String, content: String): FieldItem {
-      return FieldItem(ItemType.FREEFORM, label, content, ActionType.COPY)
+      return FieldItem(ItemType.FREEFORM, label, content.toCharArray(), ActionType.COPY)
     }
   }
 }

@@ -126,7 +126,7 @@ class AutofillSaveActivity : AppCompatActivity() {
         if (result.resultCode == RESULT_OK && data != null) {
           val createdPath = data.getStringExtra("CREATED_FILE") ?: throw NullPointerException()
           formOrigin?.let { AutofillMatcher.addMatchFor(this, it, File(createdPath)) }
-          val password = data.getStringExtra("PASSWORD")
+          val password = data.getCharArrayExtra("PASSWORD")
           val resultIntent =
             if (password != null) {
               // Password was generated and should be filled into a form.

@@ -41,6 +41,8 @@ class DecryptActivity : BasePGPActivity() {
   private val relativeParentPath by unsafeLazy { getParentPath(fullPath, repoPath) }
   private var passwordEntry: PasswordEntry? = null
 
+  private fun CharArray.isBlank() = this.isEmpty() || this.all { it.isWhitespace() }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -50,7 +52,7 @@ class DecryptActivity : BasePGPActivity() {
       passwordCategory.text = relativeParentPath
       passwordFile.text = name
       passwordFile.setOnLongClickListener {
-        copyTextToClipboard(name)
+        copyTextToClipboard(name.toCharArray())
         true
       }
     }
@@ -61,7 +63,7 @@ class DecryptActivity : BasePGPActivity() {
     menuInflater.inflate(R.menu.pgp_handler, menu)
     passwordEntry?.let { entry ->
       menu.findItem(R.id.edit_password).isVisible = true
-      if (!entry.password.isNullOrBlank()) {
+      if (entry.password?.let { !it.isBlank() } ?: false) {
         menu.findItem(R.id.share_password_as_plaintext).isVisible = true
         menu.findItem(R.id.copy_password).isVisible = true
       }
@@ -95,10 +97,7 @@ class DecryptActivity : BasePGPActivity() {
     intent.putExtra(PasswordCreationActivity.EXTRA_FILE_NAME, name)
     intent.putExtra(PasswordCreationActivity.EXTRA_USERNAME, passwordEntry?.username)
     intent.putExtra(PasswordCreationActivity.EXTRA_PASSWORD, passwordEntry?.password)
-    intent.putExtra(
-      PasswordCreationActivity.EXTRA_EXTRA_CONTENT,
-      passwordEntry?.extraContentWithoutUsername,
-    )
+    intent.putExtra(PasswordCreationActivity.EXTRA_EXTRA_CONTENT, passwordEntry?.extraContentString)
     intent.putExtra(PasswordCreationActivity.EXTRA_EDITING, true)
     startActivity(intent)
     finish()
@@ -108,7 +107,7 @@ class DecryptActivity : BasePGPActivity() {
     val sendIntent =
       Intent().apply {
         action = Intent.ACTION_SEND
-        putExtra(Intent.EXTRA_TEXT, passwordEntry?.password)
+        putExtra(Intent.EXTRA_TEXT, passwordEntry?.password?.let { String(it) })
         type = "text/plain"
       }
     // Always show a picker to give the user a chance to cancel
@@ -160,7 +159,7 @@ class DecryptActivity : BasePGPActivity() {
       invalidateOptionsMenu()
 
       val items = arrayListOf<FieldItem>()
-      if (!entry.password.isNullOrBlank()) {
+      if (entry.password?.let { !it.isBlank() } ?: false) {
         items.add(
           FieldItem.createPasswordField(
             getString(R.string.password),
@@ -190,7 +189,8 @@ class DecryptActivity : BasePGPActivity() {
         items.add(FieldItem.createFreeformField(key, value))
       }
 
-      val adapter = FieldItemAdapter(items, showPassword) { text -> copyTextToClipboard(text) }
+      val adapter =
+        FieldItemAdapter(items, showPassword) { text -> copyTextToClipboard(text?.toCharArray()) }
       binding.recyclerView.adapter = adapter
       binding.recyclerView.itemAnimator = null
 

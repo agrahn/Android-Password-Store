@@ -181,7 +181,6 @@
   <string name="oreo_autofill_save_app_not_supported">이 앱은 현재 지원하지 않습니다</string>
   <string name="oreo_autofill_save_passwords_dont_match">암호가 일치하지 않습니다</string>
   <string name="oreo_autofill_generate_password">항목 생성</string>
-  <string name="oreo_autofill_fill_otp_from_sms">SMS에서 코드 추출</string>
   <string name="oreo_autofill_max_matches_reached">최대 일치 수(%1$d) 에 도달했습니다. 새 일치 항목을 추가하기 전에 일치 항목을 지웁니다.</string>
   <string name="oreo_autofill_warning_publisher_header">비밀번호 저장소 항목을 처음 연결한 이후 이 앱의 게시자가 변경되었습니다:</string>
   <string name="oreo_autofill_warning_publisher_footer"><b>현재 설치된 앱이 신뢰할 수 있는 앱인 것처럼 가장하여 자격 증명을 도용하려고 시도하고 있을 수 있습니다.</b>\n\n앱을 삭제한 후 Play 스토어, Amazon 앱스토어, F-Droid 또는 휴대폰 제조업체 스토어와 같은 신뢰할 수 있는 출처에서 다시 설치해 보시기 바랍니다.</string>

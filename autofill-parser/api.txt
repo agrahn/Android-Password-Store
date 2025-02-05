@@ -4,7 +4,6 @@ package com.github.androidpasswordstore.autofillparser {
   public enum AutofillAction {
     method public static com.github.androidpasswordstore.autofillparser.AutofillAction valueOf(String value) throws java.lang.IllegalArgumentException, java.lang.NullPointerException;
     method public static com.github.androidpasswordstore.autofillparser.AutofillAction[] values();
-    enum_constant public static final com.github.androidpasswordstore.autofillparser.AutofillAction FillOtpFromSms;
     enum_constant public static final com.github.androidpasswordstore.autofillparser.AutofillAction Generate;
     enum_constant public static final com.github.androidpasswordstore.autofillparser.AutofillAction Match;
     enum_constant public static final com.github.androidpasswordstore.autofillparser.AutofillAction Search;
@@ -38,7 +37,7 @@ package com.github.androidpasswordstore.autofillparser {
 
   public final class AutofillScenarioKt {
     method @RequiresApi(android.os.Build.VERSION_CODES.O) public static void fillWithAutofillId(android.service.autofill.Dataset.Builder, com.github.androidpasswordstore.autofillparser.AutofillScenario<android.view.autofill.AutofillId> scenario, com.github.androidpasswordstore.autofillparser.AutofillAction action, com.github.androidpasswordstore.autofillparser.Credentials? credentials);
-    method @RequiresApi(android.os.Build.VERSION_CODES.O) public static String? getPasswordValue(com.github.androidpasswordstore.autofillparser.AutofillScenario<? extends android.app.assist.AssistStructure.ViewNode>);
+    method @RequiresApi(android.os.Build.VERSION_CODES.O) public static char[]? getPasswordValue(com.github.androidpasswordstore.autofillparser.AutofillScenario<? extends android.app.assist.AssistStructure.ViewNode>);
     method @RequiresApi(android.os.Build.VERSION_CODES.O) public static String? getUsernameValue(com.github.androidpasswordstore.autofillparser.AutofillScenario<? extends android.app.assist.AssistStructure.ViewNode>);
     method @RequiresApi(android.os.Build.VERSION_CODES.O) public static com.github.androidpasswordstore.autofillparser.AutofillScenario<android.app.assist.AssistStructure.ViewNode>? recoverNodes(com.github.androidpasswordstore.autofillparser.AutofillScenario<android.view.autofill.AutofillId>, android.app.assist.AssistStructure structure);
   }
@@ -55,16 +54,16 @@ package com.github.androidpasswordstore.autofillparser {
   }
 
   public final class Credentials {
-    ctor public Credentials(String? username, String? password, String? otp);
+    ctor public Credentials(String? username, char[]? password, String? otp);
     method public String? component1();
-    method public String? component2();
+    method public char[]? component2();
     method public String? component3();
-    method public com.github.androidpasswordstore.autofillparser.Credentials copy(String? username, String? password, String? otp);
+    method public com.github.androidpasswordstore.autofillparser.Credentials copy(String? username, char[]? password, String? otp);
     method public String? getOtp();
-    method public String? getPassword();
+    method public char[]? getPassword();
     method public String? getUsername();
     property public final String? otp;
-    property public final String? password;
+    property public final char[]? password;
     property public final String? username;
   }
 

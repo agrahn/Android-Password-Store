@@ -21,7 +21,9 @@ import androidx.core.content.edit
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
+import app.passwordstore.crypto.KeyUtils.tryGetEmail
 import app.passwordstore.crypto.PGPIdentifier
+import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.prefs.SettingsPreferences
@@ -35,6 +37,7 @@ import app.passwordstore.util.settings.Constants
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.runCatching
+import com.github.michaelbull.result.unwrap
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
@@ -71,6 +74,8 @@ open class BasePGPActivity : AppCompatActivity() {
   /** Caching the entered passphrase, user option */
   private var cacheEnabled = false
 
+  @Inject lateinit var pgpKeyManager: PGPKeyManager
+
   /** Action to invoke if [keyImportAction] succeeds. */
   private var onKeyImport: (() -> Unit)? = null
   private val keyImportAction =
@@ -103,12 +108,12 @@ open class BasePGPActivity : AppCompatActivity() {
    * [showSnackbar] as false.
    */
   fun copyTextToClipboard(
-    text: String?,
+    text: CharArray?,
     showSnackbar: Boolean = true,
     @StringRes snackbarTextRes: Int = R.string.clipboard_copied_text,
   ) {
     val clipboard = clipboard ?: return
-    val clip = ClipData.newPlainText((100000..999999).random().toString(), text)
+    val clip = ClipData.newPlainText((100000..999999).random().toString(), text?.let { String(it) })
     clip.description.extras =
       PersistableBundle().apply {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2)
@@ -148,7 +153,7 @@ open class BasePGPActivity : AppCompatActivity() {
    * Copies a provided [password] string to the clipboard. This wraps [copyTextToClipboard] to
    * optionally hide the default [Snackbar] and starts off a timer to clear the clipboard.
    */
-  protected fun copyPasswordToClipboard(password: String?): ScheduledExecutorService? {
+  protected fun copyPasswordToClipboard(password: CharArray?): ScheduledExecutorService? {
     copyTextToClipboard(password)
 
     val clearAfter = settings.getString(PreferenceKeys.GENERAL_SHOW_TIME)?.toIntOrNull() ?: 45
@@ -232,6 +237,20 @@ open class BasePGPActivity : AppCompatActivity() {
     return gpgIdentifiers
   }
 
+  private fun getEmailFromKeyId(identifier: PGPIdentifier): String? {
+    val key = runBlocking { pgpKeyManager.getKeyById(identifier).unwrap() }
+    val userId = tryGetEmail(key)
+    if (userId == null) return null
+    return PGPIdentifier.splitUserId(userId.email)
+  }
+
+  private fun getEmailsFromIdentifiers(identifiers: List<PGPIdentifier>): String? {
+    val emails = identifiers.map { getEmailFromKeyId(it) }.filter { it != null }
+    if (emails.isEmpty()) return null
+    val label = if (emails.size > 1) R.string.pgp_id_label_plural else R.string.pgp_id_label
+    return "${resources.getString(label)} ${emails.joinToString(", ")}"
+  }
+
   @Suppress("ReturnCount")
   private fun File.findTillRoot(fileName: String, rootPath: File): File? {
     val gpgFile = File(this, fileName)
@@ -277,7 +296,8 @@ open class BasePGPActivity : AppCompatActivity() {
 
     val dialog =
       PasswordDialog.newInstance(
-        cacheEnabled = settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)
+        cacheEnabled = settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false),
+        getEmailsFromIdentifiers(identifiers),
       )
     if (isError && retries > 1) {
       dialog.setError()
@@ -286,8 +306,7 @@ open class BasePGPActivity : AppCompatActivity() {
     dialog.setFragmentResultListener(PasswordDialog.PASSWORD_RESULT_KEY) { key, bundle ->
       if (key == PasswordDialog.PASSWORD_RESULT_KEY) {
         val passphrase =
-          bundle.getCharSequence(PasswordDialog.PASSWORD_PHRASE_KEY)?.toString()?.toCharArray()
-            ?: throw NullPointerException()
+          bundle.getCharArray(PasswordDialog.PASSWORD_PHRASE_KEY) ?: throw NullPointerException()
         cacheEnabled = bundle.getBoolean(PasswordDialog.PASSWORD_CACHE_KEY)
         lifecycleScope.launch(dispatcherProvider.main()) {
           decryptWithPassphrase(passphrase, identifiers) {
@@ -314,9 +333,10 @@ open class BasePGPActivity : AppCompatActivity() {
     const val EXTRA_FILE_PATH = "FILE_PATH"
     const val EXTRA_REPO_PATH = "REPO_PATH"
 
-    // Newest Samsung phones now feature a history of up to 30 items. To err on the side of
-    // caution,
-    // push 35 fake ones.
+    /**
+     * Newest Samsung phones now feature a history of up to 30 items. To err on the side of caution,
+     * push 35 fake ones.
+     */
     private const val CLIPBOARD_CLEAR_COUNT = 35
 
     /** Gets the relative path to the repository */

@@ -195,7 +195,7 @@ private class AutofillFormParser(
   }
 }
 
-public data class Credentials(val username: String?, val password: String?, val otp: String?)
+public data class Credentials(val username: String?, val password: CharArray?, val otp: String?)
 
 /**
  * Represents a collection of fields in a specific app that can be filled or saved. This is the

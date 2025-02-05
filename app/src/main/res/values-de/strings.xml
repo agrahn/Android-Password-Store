@@ -161,7 +161,7 @@
   <string name="pref_password_generator_type_title">Passwortgenerator</string>
 
   <!-- ssh keygen fragment -->
-  <string name="ssh_keygen_passphrase">Passwort</string>
+  <string name="ssh_keygen_passphrase">Kennwortsatz</string>
   <string name="ssh_keygen_generate">Erstellen</string>
   <string name="ssh_keygen_share">Teilen</string>
   <string name="ssh_keygen_later">Später</string>
@@ -212,7 +212,6 @@
   <string name="oreo_autofill_save_app_not_supported">Diese App wird derzeit nicht unterstützt.</string>
   <string name="oreo_autofill_save_passwords_dont_match">Die Passwörter stimmen nicht überein.</string>
   <string name="oreo_autofill_generate_password">Passwort erstellen…</string>
-  <string name="oreo_autofill_fill_otp_from_sms">Code aus SMS extrahieren…</string>
   <string name="oreo_autofill_max_matches_reached">Maximale Anzahl an Übereinstimmungen (%1$d) erreicht; lösche Übereinstimmungen, bevor neue hinzugefügt werden.</string>
   <string name="oreo_autofill_warning_publisher_header">Der Hersteller dieser App hat sich geändert, seit Sie einen Eintrag zum Passwort-Speicher mit ihr verknüpft haben:</string>
   <string name="oreo_autofill_warning_publisher_footer"><b>Die derzeit installierte App versucht, Ihre Anmeldeinformationen zu stehlen, indem sie vorgibt, eine vertrauenswürdige App zu sein.</b>\n\nVersuchen Sie, die App zu deinstallieren und installieren Sie sie erneut aus einer vertrauenswürdigen Quelle wie dem Play Store, Amazon Appstore, F-Droid oder dem Shop Ihres Telefonherstellers.</string>
@@ -277,7 +276,7 @@
   <string name="git_server_config_save_missing_username_https">Bitte geben Sie den HTTPS-Benutzernamen in der Form https://username@example.com/… an.</string>
   <string name="git_server_config_save_missing_username_ssh">Bitte geben Sie den SSH-Benutzernamen in der Form username@example.com:… an.</string>
   <string name="git_server_config_save_auth_mode_mismatch">Gültige Authentifizierungsarten für %1$s: %2$s</string>
-  <string name="git_operation_wrong_passphrase">Falsches Kennwort</string>
+  <string name="git_operation_wrong_passphrase">Falscher Kennwortsatz</string>
   <string name="git_operation_wrong_password">Falsches Passwort</string>
   <string name="bottom_sheet_create_new_folder">Neuen Ordner erstellen</string>
   <string name="bottom_sheet_create_new_password">Neues Passwort erstellen</string>
@@ -376,7 +375,8 @@
   <string name="no_keys_imported_dialog_message">Es wurden noch keine PGP-Schlüssel in die App importiert. Wählen Sie eine Schlüsseldatei über die Schaltfläche \"Importieren\" aus.</string>
 
   <!-- Passphrase input -->
-  <string name="cache_password_until_screen_off">Passphrase bis zum Abschalten des Bildschirms merken</string>
-  <string name="pgp_passphrase_input">PGP-Passphrase</string>
-  <string name="pgp_wrong_passphrase_input">Falsche PGP-Passphrase</string>
+  <string name="cache_password_until_screen_off">Kennwortsatz bis zum Abschalten des Bildschirms merken</string>
+  <string name="pgp_wrong_passphrase_input">Falsche Eingabe</string>
+  <string name="pgp_id_label">PGP-ID:</string>
+  <string name="pgp_id_label_plural">PGP-IDs:</string>
 </resources>

@@ -9,6 +9,7 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.KeyEvent
+import android.view.View
 import android.view.WindowManager
 import androidx.core.os.bundleOf
 import androidx.core.widget.doOnTextChanged
@@ -26,11 +27,18 @@ class PasswordDialog : DialogFragment() {
   private val binding by unsafeLazy { DialogPasswordEntryBinding.inflate(layoutInflater) }
   private var isError: Boolean = false
   private var cacheEnabledChecked: Boolean = false
+  private var userIds: String? = null
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val builder = MaterialAlertDialogBuilder(requireContext())
     builder.setView(binding.root)
-    builder.setTitle(R.string.pgp_passphrase_input)
+    builder.setTitle(R.string.ssh_keygen_passphrase)
+
+    userIds = requireArguments().getString(USER_IDS_EXTRA)
+    userIds?.let {
+      binding.userIdList.setText(userIds)
+      binding.userIdList.setVisibility(View.VISIBLE)
+    }
 
     cacheEnabledChecked = requireArguments().getBoolean(CACHE_ENABLED_EXTRA)
     binding.cacheEnabled.isChecked = cacheEnabledChecked
@@ -71,7 +79,7 @@ class PasswordDialog : DialogFragment() {
   }
 
   private fun setPasswordAndDismiss() {
-    val password = binding.passwordEditText.text
+    val password = binding.passwordEditText.text?.let { CharArray(it.length) { i -> it[i] } }
     setFragmentResult(
       PASSWORD_RESULT_KEY,
       bundleOf(PASSWORD_PHRASE_KEY to password, PASSWORD_CACHE_KEY to cacheEnabledChecked),
@@ -82,13 +90,14 @@ class PasswordDialog : DialogFragment() {
   companion object {
 
     private const val CACHE_ENABLED_EXTRA = "CACHE_ENABLED"
+    private const val USER_IDS_EXTRA = "USER_IDS"
 
     const val PASSWORD_RESULT_KEY = "password_result"
     const val PASSWORD_PHRASE_KEY = "password_phrase"
     const val PASSWORD_CACHE_KEY = "password_cache"
 
-    fun newInstance(cacheEnabled: Boolean): PasswordDialog {
-      val extras = bundleOf(CACHE_ENABLED_EXTRA to cacheEnabled)
+    fun newInstance(cacheEnabled: Boolean, userIds: String? = null): PasswordDialog {
+      val extras = bundleOf(CACHE_ENABLED_EXTRA to cacheEnabled, USER_IDS_EXTRA to userIds)
       val fragment = PasswordDialog()
       fragment.arguments = extras
       return fragment

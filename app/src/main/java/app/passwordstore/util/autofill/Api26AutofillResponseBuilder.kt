@@ -12,7 +12,6 @@ import android.service.autofill.FillCallback
 import android.service.autofill.FillRequest
 import android.service.autofill.FillResponse
 import android.service.autofill.SaveInfo
-import app.passwordstore.autofill.oreo.ui.AutofillSmsActivity
 import app.passwordstore.ui.autofill.AutofillDecryptActivity
 import app.passwordstore.ui.autofill.AutofillFilterView
 import app.passwordstore.ui.autofill.AutofillPublisherChangedActivity
@@ -79,14 +78,6 @@ class Api26AutofillResponseBuilder private constructor(form: FillableForm) :
     return makeIntentDataset(context, AutofillAction.Generate, intentSender, metadata)
   }
 
-  private fun makeFillOtpFromSmsDataset(context: Context): Dataset? {
-    if (!scenario.hasFieldsToFillOn(AutofillAction.FillOtpFromSms)) return null
-    if (!AutofillSmsActivity.shouldOfferFillFromSms(context)) return null
-    val metadata = makeFillOtpFromSmsMetadata(context)
-    val intentSender = AutofillSmsActivity.makeFillOtpFromSmsIntentSender(context)
-    return makeIntentDataset(context, AutofillAction.FillOtpFromSms, intentSender, metadata)
-  }
-
   private fun makePublisherChangedDataset(
     context: Context,
     publisherChangedException: AutofillPublisherChangedException,
@@ -145,10 +136,6 @@ class Api26AutofillResponseBuilder private constructor(form: FillableForm) :
         }
       }
       makeGenerateDataset(context)?.let {
-        datasetCount++
-        addDataset(it)
-      }
-      makeFillOtpFromSmsDataset(context)?.let {
         datasetCount++
         addDataset(it)
       }

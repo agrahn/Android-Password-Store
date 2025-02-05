@@ -80,7 +80,7 @@ class PasswordCreationActivity : BasePGPActivity() {
 
   private val suggestedName by unsafeLazy { intent.getStringExtra(EXTRA_FILE_NAME) }
   private val suggestedUsername by unsafeLazy { intent.getStringExtra(EXTRA_USERNAME) }
-  private val suggestedPass by unsafeLazy { intent.getStringExtra(EXTRA_PASSWORD) }
+  private val suggestedPass by unsafeLazy { intent.getCharArrayExtra(EXTRA_PASSWORD) }
   private val suggestedExtra by unsafeLazy { intent.getStringExtra(EXTRA_EXTRA_CONTENT) }
   private val shouldGeneratePassword by unsafeLazy {
     intent.getBooleanExtra(EXTRA_GENERATE_PASSWORD, false)
@@ -249,7 +249,7 @@ class PasswordCreationActivity : BasePGPActivity() {
         }
       }
       suggestedPass?.let {
-        password.setText(it)
+        password.setText(String(it))
         password.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
       }
       suggestedExtra?.let { extraContent.setText(it) }
@@ -336,7 +336,7 @@ class PasswordCreationActivity : BasePGPActivity() {
       val oldName = suggestedName
       val editName = filename.text.toString().trim()
       var editUsername = username.text.toString()
-      val editPass = password.text.toString()
+      val editPass = password.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
       val editExtra = extraContent.text.toString()
 
       if (editName.isEmpty()) {
@@ -363,7 +363,6 @@ class PasswordCreationActivity : BasePGPActivity() {
 
       // pass enters the key ID into `.gpg-id`.
       val gpgIdentifiers = getPGPIdentifiers(directory.text.toString()) ?: return@with
-      val content = "$editPass$editUsername\n$editExtra"
       val path =
         when {
           // If we allowed the user to edit the relative path, we have to consider it here
@@ -394,7 +393,11 @@ class PasswordCreationActivity : BasePGPActivity() {
             val result =
               withContext(dispatcherProvider.io()) {
                 val outputStream = ByteArrayOutputStream()
-                repository.encrypt(gpgIdentifiers, content.byteInputStream(), outputStream)
+                repository.encrypt(
+                  gpgIdentifiers,
+                  "${String(editPass)}$editUsername\n$editExtra".byteInputStream(),
+                  outputStream,
+                )
                 outputStream
               }
             val passwordFile = Paths.get(path)
@@ -435,7 +438,10 @@ class PasswordCreationActivity : BasePGPActivity() {
 
             if (shouldGeneratePassword) {
               val directoryStructure = AutofillPreferences.directoryStructure(applicationContext)
-              val entry = passwordEntryFactory.create(content.encodeToByteArray())
+              val entry =
+                passwordEntryFactory.create(
+                  "${String(editPass)}$editUsername\n$editExtra".encodeToByteArray()
+                )
               returnIntent.putExtra(RETURN_EXTRA_PASSWORD, entry.password)
               val username =
                 entry.username ?: directoryStructure.getUsernameFor(passwordFile.toFile())
@@ -448,7 +454,9 @@ class PasswordCreationActivity : BasePGPActivity() {
                 oldName != editName
             ) {
               val oldPath = Paths.get(repoPath, oldCategory?.trim('/') ?: "", "$oldName.gpg")
-              if (!oldPath.isSameFileAs(passwordFile) && !oldPath.deleteIfExists()) {
+              if (
+                oldPath.exists() && !oldPath.isSameFileAs(passwordFile) && !oldPath.deleteIfExists()
+              ) {
                 setResult(RESULT_CANCELED)
                 MaterialAlertDialogBuilder(this@PasswordCreationActivity)
                   .setTitle(R.string.password_creation_file_fail_title)

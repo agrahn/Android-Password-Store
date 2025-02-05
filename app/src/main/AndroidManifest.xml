@@ -147,12 +147,6 @@
       android:exported="false"
       android:theme="@style/NoBackgroundThemeM3" />
     <activity
-      android:name=".autofill.oreo.ui.AutofillSmsActivity"
-      android:configChanges="orientation"
-      android:exported="false"
-      android:theme="@style/DialogLikeThemeM3"
-      android:windowSoftInputMode="adjustNothing" />
-    <activity
       android:name=".ui.autofill.AutofillPublisherChangedActivity"
       android:configChanges="orientation|keyboardHidden"
       android:exported="false"

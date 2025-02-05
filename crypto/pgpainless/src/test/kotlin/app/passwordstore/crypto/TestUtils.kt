@@ -21,9 +21,6 @@ object TestUtils {
 
   fun getAEADSecretKey() = this::class.java.classLoader.getResource("aead_sec").readBytes()
 
-  fun getAEADEncryptedFile() =
-    this::class.java.classLoader.getResource("aead_encrypted_file").readBytes()
-
   enum class AllKeys(val keyMaterial: ByteArray) {
     ARMORED_SEC(getArmoredSecretKey()),
     ARMORED_PUB(getArmoredPublicKey()),

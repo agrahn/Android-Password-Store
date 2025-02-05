@@ -27,6 +27,7 @@ import kotlinx.coroutines.withContext
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.PGPainless
+import org.pgpainless.key.util.KeyRingUtils
 
 public class PGPKeyManager
 @Inject
@@ -95,32 +96,32 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
         if (keyFiles.isNullOrEmpty()) throw NoKeysAvailableException
         val keys = keyFiles.map { file -> PGPKey(file.readBytes()) }
 
-        val matchResult =
-          when (id) {
-            is PGPIdentifier.KeyId -> {
-              val keyIdMatch =
-                keys
-                  .map { key -> key to tryGetId(key) }
-                  .firstOrNull { (_, keyId) -> keyId?.id == id.id }
-              keyIdMatch?.first
-            }
-            is PGPIdentifier.UserId -> {
-              val userIdMatch =
-                keys
-                  .map { key -> key to tryParseKeyring(key) }
-                  .firstOrNull { (_, keyring) ->
-                    keyring?.let {
-                      PGPainless.inspectKeyRing(keyring).userIds.any {
-                        id.email == it || id.email == PGPIdentifier.splitUserId(it)
-                      }
-                    } ?: false
-                  }
-              userIdMatch?.first
+        when (id) {
+          is PGPIdentifier.KeyId -> {
+            for (key in keys) {
+              val keyRing = tryParseKeyring(key) ?: continue
+              if (
+                KeyRingUtils.keyRingContainsKeyWithId(
+                  KeyRingUtils.publicKeys(keyRing),
+                  id.id.toLong(),
+                )
+              ) {
+                return@runSuspendCatching key
+              }
             }
           }
-
-        if (matchResult != null) {
-          return@runSuspendCatching matchResult
+          is PGPIdentifier.UserId -> {
+            for (key in keys) {
+              val keyRing = tryParseKeyring(key) ?: continue
+              if (
+                PGPainless.inspectKeyRing(keyRing).userIds.any {
+                  id.email == it || id.email == PGPIdentifier.splitUserId(it)
+                }
+              ) {
+                return@runSuspendCatching key
+              }
+            }
+          }
         }
 
         throw KeyNotFoundException("$id")

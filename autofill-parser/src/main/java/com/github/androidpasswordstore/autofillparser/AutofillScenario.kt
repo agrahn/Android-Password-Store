@@ -21,7 +21,6 @@ public enum class AutofillAction {
   Match,
   Search,
   Generate,
-  FillOtpFromSms,
 }
 
 /**
@@ -149,13 +148,8 @@ public sealed class AutofillScenario<out T : Any> {
         AutofillAction.Match -> passwordFieldsToFillOnMatch + listOfNotNull(otp)
         AutofillAction.Search -> passwordFieldsToFillOnSearch + listOfNotNull(otp)
         AutofillAction.Generate -> passwordFieldsToFillOnGenerate
-        AutofillAction.FillOtpFromSms -> listOfNotNull(otp)
       }
     return when {
-      action == AutofillAction.FillOtpFromSms -> {
-        // When filling from an SMS, we cannot get any data other than the OTP itself.
-        credentialFieldsToFill
-      }
       credentialFieldsToFill.isNotEmpty() -> {
         // If the current action would fill into any password field, we also fill into the
         // username field if possible.
@@ -256,18 +250,21 @@ public fun Dataset.Builder.fillWith(
   action: AutofillAction,
   credentials: Credentials?,
 ) {
-  val credentialsToFill = credentials ?: Credentials("USERNAME", "PASSWORD", "OTP")
+  val credentialsToFill = credentials ?: Credentials("USERNAME", "PASSWORD".toCharArray(), "OTP")
   for (field in scenario.fieldsToFillOn(action)) {
     val value =
       when (field) {
-        scenario.username -> credentialsToFill.username
-        scenario.otp -> credentialsToFill.otp
+        scenario.username -> credentialsToFill.username?.toCharArray()
+        scenario.otp -> credentialsToFill.otp?.toCharArray()
         else -> credentialsToFill.password
       }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      setField(field, Field.Builder().setValue(AutofillValue.forText(value)).build())
+      setField(
+        field,
+        Field.Builder().setValue(AutofillValue.forText(value?.let { String(it) })).build(),
+      )
     } else {
-      @Suppress("DEPRECATION") setValue(field, AutofillValue.forText(value))
+      @Suppress("DEPRECATION") setValue(field, AutofillValue.forText(value?.let { String(it) }))
     }
   }
 }
@@ -334,14 +331,14 @@ public val AutofillScenario<AssistStructure.ViewNode>.usernameValue: String?
     val value = username?.autofillValue ?: return null
     return if (value.isText) value.textValue.toString() else null
   }
-public val AutofillScenario<AssistStructure.ViewNode>.passwordValue: String?
+public val AutofillScenario<AssistStructure.ViewNode>.passwordValue: CharArray?
   @RequiresApi(Build.VERSION_CODES.O)
   get() {
     val distinctValues =
       passwordFieldsToSave
         .map {
           if (it.autofillValue?.isText == true) {
-            it.autofillValue?.textValue?.toString()
+            it.autofillValue?.textValue?.let { CharArray(it.length) { i -> it[i] } }
           } else {
             null
           }

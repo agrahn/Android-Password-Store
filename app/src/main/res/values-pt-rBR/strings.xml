@@ -182,7 +182,6 @@
   <string name="oreo_autofill_save_app_not_supported">Este app não é suportado no momento</string>
   <string name="oreo_autofill_save_passwords_dont_match">As senhas não coincidem</string>
   <string name="oreo_autofill_generate_password">Gerar senha…</string>
-  <string name="oreo_autofill_fill_otp_from_sms">Extrair código do SMS…</string>
   <string name="oreo_autofill_max_matches_reached">Número máximo de correspondências (%1$d) atingidas; limpar correspondências antes de adicionar novas.</string>
   <string name="oreo_autofill_warning_publisher_header">O editor deste aplicativo mudou desde a primeira vez que você associou uma entrada no Password Store:</string>
   <string name="oreo_autofill_warning_publisher_footer"><b>O aplicativo atualmente instalado pode estar tentando roubar suas credenciais fingindo ser um aplicativo confiável.</b>\n\nTente desinstalar e reinstalar o aplicativo de uma fonte confiável, como a Play Store, Amazon Appstore, F-Droid ou a loja do fabricante do seu telefone.</string>

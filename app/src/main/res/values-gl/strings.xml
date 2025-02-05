@@ -183,7 +183,6 @@
   <string name="oreo_autofill_save_app_not_supported">Esta app non está soportada actualmente</string>
   <string name="oreo_autofill_save_passwords_dont_match">Non concordan os contrasinais</string>
   <string name="oreo_autofill_generate_password">Crear elemento</string>
-  <string name="oreo_autofill_fill_otp_from_sms">Extraer código do SMS</string>
   <string name="oreo_autofill_max_matches_reached">Acadouse o máximo número de coincidencias (%1$d); eliminar as coincidencias antes de engadir máis.</string>
   <string name="oreo_autofill_warning_publisher_header">A autoría desta app cambiou desde que rexistraches a entrada Password Store con ela:</string>
   <string name="oreo_autofill_warning_publisher_footer"><b>A aplicación actualmente instalada podería intentar roubar as túas credenciais pretendendo ser unha app de confianza.</b>\n\nIntenta desinstalar e reinstalar

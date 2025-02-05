@@ -213,7 +213,6 @@
   <string name="oreo_autofill_save_app_not_supported">This app is currently not supported</string>
   <string name="oreo_autofill_save_passwords_dont_match">Passwords don\'t match</string>
   <string name="oreo_autofill_generate_password">Create entry</string>
-  <string name="oreo_autofill_fill_otp_from_sms">Extract code from SMS</string>
   <string name="oreo_autofill_max_matches_reached">Maximum number of matches (%1$d) reached; clear matches before adding new ones.</string>
   <string name="oreo_autofill_warning_publisher_header">This app\'s publisher has changed since you first associated a Password Store entry with it:</string>
   <string name="oreo_autofill_warning_publisher_footer"><b>The currently installed app may be trying to steal your credentials by pretending to be a trusted app.</b>\n\nTry to uninstall and reinstall the app from a trusted source, such as the Play Store, Amazon Appstore, F-Droid, or your phone manufacturer\'s store.</string>
@@ -378,6 +377,7 @@
 
   <!-- Passphrase input -->
   <string name="cache_password_until_screen_off">Keep passphrase until screen-off</string>
-  <string name="pgp_passphrase_input">PGP passphrase</string>
-  <string name="pgp_wrong_passphrase_input">wrong PGP passphrase</string>
+  <string name="pgp_wrong_passphrase_input">Wrong passphrase</string>
+  <string name="pgp_id_label">PGP ID: </string>
+  <string name="pgp_id_label_plural">PGP IDs: </string>
 </resources>

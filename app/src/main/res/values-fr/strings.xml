@@ -129,7 +129,7 @@
   <!-- Password generator prefs -->
   <string name="pref_password_generator_type_title">Type de générateur de mot de passe</string>
   <!-- ssh keygen fragment -->
-  <string name="ssh_keygen_passphrase">Mot de passe</string>
+  <string name="ssh_keygen_passphrase">Phrase de passe</string>
   <string name="ssh_keygen_generate">Générer</string>
   <string name="ssh_keygen_share">Partager</string>
   <string name="ssh_keygen_later">Plus tard</string>
@@ -176,7 +176,6 @@
   <string name="oreo_autofill_save_app_not_supported">Cette application n\'est actuellement pas prise en charge</string>
   <string name="oreo_autofill_save_passwords_dont_match">Les mots de passe ne coïncident pas</string>
   <string name="oreo_autofill_generate_password">Créer une entrée</string>
-  <string name="oreo_autofill_fill_otp_from_sms">Extraire le code depuis un SMS</string>
   <string name="oreo_autofill_max_matches_reached">Nombre maximum de correspondances (%1$d) atteint; effacer les correspondances avant d\'en ajouter de nouvelles.</string>
   <string name="oreo_autofill_warning_publisher_header">L\'éditeur de cette application a changé depuis que vous avez appairé un mot de passe avec celle-ci:</string>
   <string name="oreo_autofill_warning_publisher_footer"><b>L\'application actuellement installée peut essayer de voler vos identifiants en faisant semblant d\'être une application de confiance.</b>\n\nEssayez de désinstaller et de réinstaller l\'application à partir d\'une source fiable, comme le Play Store, l\'AppStore d\'Amazon, le F-Droid ou la boutique du fabricant de votre téléphone.</string>
