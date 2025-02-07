@@ -9,6 +9,7 @@ import android.content.SharedPreferences
 import app.passwordstore.crypto.PGPDecryptOptions
 import app.passwordstore.crypto.PGPEncryptOptions
 import app.passwordstore.crypto.PGPIdentifier
+import app.passwordstore.crypto.PGPKey
 import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.crypto.PGPainlessCryptoHandler
 import app.passwordstore.injection.prefs.SettingsPreferences
@@ -19,7 +20,6 @@ import com.github.michaelbull.result.map
 import com.github.michaelbull.result.mapBoth
 import com.github.michaelbull.result.onSuccess
 import com.github.michaelbull.result.runCatching
-import com.github.michaelbull.result.unwrap
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
@@ -49,23 +49,18 @@ constructor(
     return pgpCryptoHandler.isPassphraseProtected(keys)
   }
 
-  private suspend fun findMatchingIdentifier(
-    identifiers: List<PGPIdentifier>,
+  private suspend fun findFirstMatchingKey(
+    keys: List<PGPKey>,
     passphrase: CharArray?,
-  ): List<PGPIdentifier> {
-    if (passphrase == null) return identifiers
-    for (identifier in identifiers) {
-      runCatching {
-          pgpCryptoHandler.passphraseIsCorrect(
-            pgpKeyManager.getKeyById(identifier).unwrap(),
-            passphrase,
-          )
-        }
+  ): List<PGPKey> {
+    if (passphrase == null || !(keys.size > 1)) return keys
+    keys.forEach { key ->
+      runCatching { pgpCryptoHandler.passphraseIsCorrect(key, passphrase) }
         .onSuccess {
-          return listOf(identifier)
+          return listOf(key)
         }
     }
-    return identifiers
+    return keys
   }
 
   suspend fun decrypt(
@@ -75,10 +70,10 @@ constructor(
     out: ByteArrayOutputStream,
   ) =
     withContext(dispatcherProvider.io()) {
-      val matchingIdentifier = findMatchingIdentifier(identities, passphrase)
-      val keys = matchingIdentifier.map { id -> pgpKeyManager.getKeyById(id) }.filterValues()
+      val keys = identities.map { id -> pgpKeyManager.getKeyById(id) }.filterValues()
+      val matchingKey = findFirstMatchingKey(keys, passphrase)
       val decryptionOptions = PGPDecryptOptions.Builder().build()
-      pgpCryptoHandler.decrypt(keys, passphrase, message, out, decryptionOptions).map { out }
+      pgpCryptoHandler.decrypt(matchingKey, passphrase, message, out, decryptionOptions).map { out }
     }
 
   suspend fun encrypt(
