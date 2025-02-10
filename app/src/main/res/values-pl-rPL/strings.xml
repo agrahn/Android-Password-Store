@@ -179,7 +179,6 @@
   <string name="oreo_autofill_save_app_not_supported">Ta aplikacja nie jest obecnie obsługiwana</string>
   <string name="oreo_autofill_save_passwords_dont_match">Hasła się nie zgadzają</string>
   <string name="oreo_autofill_generate_password">Utwórz wpis</string>
-  <string name="oreo_autofill_fill_otp_from_sms">Pobierz kod z wiadomości SMS</string>
   <string name="oreo_autofill_max_matches_reached">Osiągnięto maksymalną liczbę dopasowań (%1$d); wyczyść dopasowania przed dodaniem nowych.</string>
   <string name="oreo_autofill_warning_publisher_header">Wydawca tej aplikacji zmienił się od momentu wprowadzenia pierwszego wpisu z hasłem:</string>
   <string name="oreo_autofill_warning_publisher_footer"><b>Obecnie zainstalowana aplikacja może próbować ukraść twoje dane do logowania, udając, że jest zaufaną aplikacją.</b>\n\nSpróbuj odinstalować i ponownie zainstalować aplikację z zaufanego źródła, takiego jak sklep Play Store, Amazon Appstore, F-Droid lub sklep producenta telefonu.</string>

@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 -   Display user ID (or user IDs in case of multi-key encrypted entries) on the passphrase input dialog
--   Allow setting a subdirectory PGP key when creating folders (restored feature from [1.11.0])
+-   Allow setting a subdirectory PGP key when creating folders (restored feature from v[1.11.0])
 -   External repository import. An external "pass" repository or a repository previously exported from the app can now be imported via Settings --> Repository --> Import repository
 
 ### Fixed
@@ -15,8 +15,8 @@ All notable changes to this project will be documented in this file.
 -   Auto-dismiss an abandoned password edit dialog after configurable timeout (password copy timeout is used if configured, 60 seconds otherwise) to prevent information leakage
 -   Initialising an empty cloned non-pass repo is now possible. The repo to be cloned should however already have at least one commit, e. g. an added and removed dummy file
 -   Fix app crashes due to a `.gpg-id` file containing an invalid or unknown key/user ID. Prompt for re-selecting/re-importing a PGP secret key file
--   In case of multi-key encrypted store entries, decryption failed with passphrases for the other PGP IDs in the .gpg-id file that appear below the first entry
--   The PGP key is now retrieved also for subkey IDs listed in the .gpg-id file
+-   In case of multi-key encrypted store entries, decryption failed with passphrases for the other PGP IDs in the `.gpg-id` file that appear below the first entry
+-   The PGP key is now retrieved also for subkey IDs listed in the `.gpg-id` file
 
 ### Changed
 
