@@ -30,19 +30,28 @@ class PasswordEntryTest {
 
   @Test
   fun getPassword() {
-    assertEquals("fooooo", makeEntry("fooooo\nbla\n").password)
-    assertEquals("fooooo", makeEntry("fooooo\nbla").password)
-    assertEquals("fooooo", makeEntry("fooooo\n").password)
-    assertEquals("fooooo", makeEntry("fooooo").password)
-    assertEquals("", makeEntry("\nblubb\n").password)
-    assertEquals("", makeEntry("\nblubb").password)
-    assertEquals("", makeEntry("\n").password)
-    assertEquals("", makeEntry("").password)
+    assertEquals("fooooo", makeEntry("fooooo\nbla\n").password?.let { String(it) })
+    assertEquals("fooooo", makeEntry("fooooo\nbla").password?.let { String(it) })
+    assertEquals("fooooo", makeEntry("fooooo\n").password?.let { String(it) })
+    assertEquals("fooooo", makeEntry("fooooo").password?.let { String(it) })
+    assertEquals("", makeEntry("\nblubb\n").password?.let { String(it) })
+    assertEquals("", makeEntry("\nblubb").password?.let { String(it) })
+    assertEquals("", makeEntry("\n").password?.let { String(it) })
+    assertEquals("", makeEntry("").password?.let { String(it) })
     for (field in PasswordEntry.PASSWORD_FIELDS) {
-      assertEquals("fooooo", makeEntry("\n$field fooooo").password)
-      assertEquals("fooooo", makeEntry("\n${field.uppercase(Locale.getDefault())} fooooo").password)
-      assertEquals("fooooo", makeEntry("GOPASS-SECRET-1.0\n$field fooooo").password)
-      assertEquals("fooooo", makeEntry("someFirstLine\nUsername: bar\n$field fooooo").password)
+      assertEquals("fooooo", makeEntry("\n$field fooooo").password?.let { String(it) })
+      assertEquals(
+        "fooooo",
+        makeEntry("\n${field.uppercase(Locale.getDefault())} fooooo").password?.let { String(it) },
+      )
+      assertEquals(
+        "fooooo",
+        makeEntry("GOPASS-SECRET-1.0\n$field fooooo").password?.let { String(it) },
+      )
+      assertEquals(
+        "fooooo",
+        makeEntry("someFirstLine\nUsername: bar\n$field fooooo").password?.let { String(it) },
+      )
     }
   }
 
@@ -158,7 +167,7 @@ class PasswordEntryTest {
   @Test
   fun generatesOtpWithOnlyUriInFile() = runTest {
     val entry = makeEntry(TOTP_URI)
-    assertNull(entry.password)
+    assertNull(entry.password?.let { String(it) })
     entry.totp.test {
       val otp = expectMostRecentItem()
       assertEquals("818800", otp.value)
@@ -188,9 +197,9 @@ class PasswordEntryTest {
   @Test
   fun onlyLooksForUriInFirstLine() {
     val entry = makeEntry("id:\n$TOTP_URI")
-    assertNotNull(entry.password)
+    assertNull(entry.password?.let { String(it) })
     assertTrue(entry.hasTotp())
-    assertNull(entry.username)
+    assertNotNull(entry.username)
   }
 
   // https://github.com/android-password-store/Android-Password-Store/issues/1190
@@ -200,7 +209,7 @@ class PasswordEntryTest {
     assertTrue(entry.extraContent.isNotEmpty())
     assertTrue(entry.hasTotp())
     assertNotNull(entry.username)
-    assertEquals("pass", entry.password)
+    assertEquals("pass", entry.password?.let { String(it) })
     assertEquals("user", entry.username)
     assertEquals(mapOf("id" to "id"), entry.extraContent)
   }

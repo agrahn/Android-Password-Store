@@ -108,12 +108,12 @@ open class BasePGPActivity : AppCompatActivity() {
    * [showSnackbar] as false.
    */
   fun copyTextToClipboard(
-    text: String?,
+    text: CharArray?,
     showSnackbar: Boolean = true,
     @StringRes snackbarTextRes: Int = R.string.clipboard_copied_text,
   ) {
     val clipboard = clipboard ?: return
-    val clip = ClipData.newPlainText((100000..999999).random().toString(), text)
+    val clip = ClipData.newPlainText((100000..999999).random().toString(), text?.let { String(it) })
     clip.description.extras =
       PersistableBundle().apply {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2)
@@ -153,7 +153,7 @@ open class BasePGPActivity : AppCompatActivity() {
    * Copies a provided [password] string to the clipboard. This wraps [copyTextToClipboard] to
    * optionally hide the default [Snackbar] and starts off a timer to clear the clipboard.
    */
-  protected fun copyPasswordToClipboard(password: String?): ScheduledExecutorService? {
+  protected fun copyPasswordToClipboard(password: CharArray?): ScheduledExecutorService? {
     copyTextToClipboard(password)
 
     val clearAfter = settings.getString(PreferenceKeys.GENERAL_SHOW_TIME)?.toIntOrNull() ?: 45

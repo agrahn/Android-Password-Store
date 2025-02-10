@@ -50,7 +50,7 @@ class DecryptActivity : BasePGPActivity() {
       passwordCategory.text = relativeParentPath
       passwordFile.text = name
       passwordFile.setOnLongClickListener {
-        copyTextToClipboard(name)
+        copyTextToClipboard(name.toCharArray())
         true
       }
     }
@@ -61,7 +61,7 @@ class DecryptActivity : BasePGPActivity() {
     menuInflater.inflate(R.menu.pgp_handler, menu)
     passwordEntry?.let { entry ->
       menu.findItem(R.id.edit_password).isVisible = true
-      if (!entry.password.isNullOrBlank()) {
+      if (entry.password?.let { !String(it).isBlank() } ?: false) {
         menu.findItem(R.id.share_password_as_plaintext).isVisible = true
         menu.findItem(R.id.copy_password).isVisible = true
       }
@@ -108,7 +108,7 @@ class DecryptActivity : BasePGPActivity() {
     val sendIntent =
       Intent().apply {
         action = Intent.ACTION_SEND
-        putExtra(Intent.EXTRA_TEXT, passwordEntry?.password)
+        putExtra(Intent.EXTRA_TEXT, passwordEntry?.password?.let { String(it) })
         type = "text/plain"
       }
     // Always show a picker to give the user a chance to cancel
@@ -160,7 +160,7 @@ class DecryptActivity : BasePGPActivity() {
       invalidateOptionsMenu()
 
       val items = arrayListOf<FieldItem>()
-      if (!entry.password.isNullOrBlank()) {
+      if (entry.password?.let { !String(it).isBlank() } ?: false) {
         items.add(
           FieldItem.createPasswordField(
             getString(R.string.password),
@@ -190,7 +190,8 @@ class DecryptActivity : BasePGPActivity() {
         items.add(FieldItem.createFreeformField(key, value))
       }
 
-      val adapter = FieldItemAdapter(items, showPassword) { text -> copyTextToClipboard(text) }
+      val adapter =
+        FieldItemAdapter(items, showPassword) { text -> copyTextToClipboard(text?.toCharArray()) }
       binding.recyclerView.adapter = adapter
       binding.recyclerView.itemAnimator = null
 

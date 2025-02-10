@@ -60,7 +60,7 @@ class FieldItemAdapter(
       with(binding) {
         itemText.hint = fieldItem.label
         itemTextContainer.hint = fieldItem.label
-        itemText.setText(fieldItem.value)
+        itemText.setText(String(fieldItem.value))
 
         when (fieldItem.action) {
           FieldItem.ActionType.COPY -> {
