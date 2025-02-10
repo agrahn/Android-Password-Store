@@ -185,7 +185,6 @@
   <string name="oreo_autofill_save_app_not_supported">目前不支持此应用</string>
   <string name="oreo_autofill_save_passwords_dont_match">密码不匹配</string>
   <string name="oreo_autofill_generate_password">生成密码…</string>
-  <string name="oreo_autofill_fill_otp_from_sms">从短信中提取代码…</string>
   <string name="oreo_autofill_max_matches_reached">已达到最大匹配数(%1$d) 在添加新匹配之前清除匹配</string>
   <string name="oreo_autofill_warning_publisher_header">自从您首次将密码存储条目与其关联后,此应用的发布者已更改:</string>
   <string name="oreo_autofill_warning_publisher_footer"><b>当前安装的应用程序可能试图通过伪装成受信任的应用程序来窃取您的凭据</b>\"

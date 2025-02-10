@@ -1,7 +1,5 @@
 <p>Simple password manager that is compatible with <a href="https://www.passwordstore.org/">pass</a>: Passwords are stored in simple text files which are encrypted with OpenPGP.</p>
 
-<p>Requires <a href="https://f-droid.org/en/packages/org.sufficientlysecure.keychain/">OpenKeychain</a> to encrypt and decrypt passwords.</p>
-
 <p>
 <strong>Features:</strong>
 <ul>

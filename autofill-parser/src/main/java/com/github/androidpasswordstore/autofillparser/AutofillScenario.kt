@@ -21,7 +21,6 @@ public enum class AutofillAction {
   Match,
   Search,
   Generate,
-  FillOtpFromSms,
 }
 
 /**
@@ -149,13 +148,8 @@ public sealed class AutofillScenario<out T : Any> {
         AutofillAction.Match -> passwordFieldsToFillOnMatch + listOfNotNull(otp)
         AutofillAction.Search -> passwordFieldsToFillOnSearch + listOfNotNull(otp)
         AutofillAction.Generate -> passwordFieldsToFillOnGenerate
-        AutofillAction.FillOtpFromSms -> listOfNotNull(otp)
       }
     return when {
-      action == AutofillAction.FillOtpFromSms -> {
-        // When filling from an SMS, we cannot get any data other than the OTP itself.
-        credentialFieldsToFill
-      }
       credentialFieldsToFill.isNotEmpty() -> {
         // If the current action would fill into any password field, we also fill into the
         // username field if possible.

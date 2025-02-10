@@ -102,13 +102,6 @@ fun makeGenerateAndFillMetadata(context: Context) =
     R.drawable.ic_autofill_new_password,
   )
 
-fun makeFillOtpFromSmsMetadata(context: Context) =
-  DatasetMetadata(
-    context.getString(R.string.oreo_autofill_fill_otp_from_sms),
-    null,
-    R.drawable.ic_autofill_sms,
-  )
-
 fun makeEmptyMetadata() = DatasetMetadata("PLACEHOLDER", "PLACEHOLDER", R.mipmap.ic_launcher)
 
 fun makeWarningMetadata(context: Context) =

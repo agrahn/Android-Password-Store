@@ -17,7 +17,6 @@ import android.service.autofill.SaveInfo
 import android.view.inputmethod.InlineSuggestionsRequest
 import android.widget.inline.InlinePresentationSpec
 import androidx.annotation.RequiresApi
-import app.passwordstore.autofill.oreo.ui.AutofillSmsActivity
 import app.passwordstore.ui.autofill.AutofillDecryptActivity
 import app.passwordstore.ui.autofill.AutofillFilterView
 import app.passwordstore.ui.autofill.AutofillPublisherChangedActivity
@@ -146,23 +145,6 @@ class Api30AutofillResponseBuilder private constructor(form: FillableForm) :
     return makeIntentDataset(context, AutofillAction.Generate, intentSender, metadata, imeSpec)
   }
 
-  private fun makeFillOtpFromSmsDataset(
-    context: Context,
-    imeSpec: InlinePresentationSpec?,
-  ): Dataset? {
-    if (!scenario.hasFieldsToFillOn(AutofillAction.FillOtpFromSms)) return null
-    if (!AutofillSmsActivity.shouldOfferFillFromSms(context)) return null
-    val metadata = makeFillOtpFromSmsMetadata(context)
-    val intentSender = AutofillSmsActivity.makeFillOtpFromSmsIntentSender(context)
-    return makeIntentDataset(
-      context,
-      AutofillAction.FillOtpFromSms,
-      intentSender,
-      metadata,
-      imeSpec,
-    )
-  }
-
   private fun makePublisherChangedDataset(
     context: Context,
     publisherChangedException: AutofillPublisherChangedException,
@@ -211,10 +193,6 @@ class Api30AutofillResponseBuilder private constructor(form: FillableForm) :
         }
       }
       makeGenerateDataset(context, imeSpecs.getOrNull(datasetCount))?.let {
-        datasetCount++
-        addDataset(it)
-      }
-      makeFillOtpFromSmsDataset(context, imeSpecs.getOrNull(datasetCount))?.let {
         datasetCount++
         addDataset(it)
       }

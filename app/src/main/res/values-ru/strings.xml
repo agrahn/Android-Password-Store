@@ -180,7 +180,6 @@
   <string name="oreo_autofill_save_app_not_supported">Это приложение в настоящее время не поддерживается</string>
   <string name="oreo_autofill_save_passwords_dont_match">Пароли не совпадают</string>
   <string name="oreo_autofill_generate_password">Сгенерировать пароль</string>
-  <string name="oreo_autofill_fill_otp_from_sms">Извлечение кодов из SMS…</string>
   <string name="oreo_autofill_max_matches_reached">Достигнуто максимальное количество совпадений (%1$d); очистите совпадения перед тем как добавите новые.</string>
   <string name="oreo_autofill_warning_publisher_header">Издатель приложения изменился с тех пор как вы первый раз связали с ним запись хранилища паролей:</string>
   <string name="oreo_autofill_warning_publisher_footer"><b>Установленное приложение может попытаться украсть ваши учетные данные, выдавая себя за доверенное приложение</b>\n\nПопробуйте удалить или переустановить  приложение из доверенного источника, такого как Play Store, Amazon Appstore, F-Droid или магазин приложений производителя вашего смартфона.</string>
