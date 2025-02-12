@@ -448,7 +448,9 @@ class PasswordCreationActivity : BasePGPActivity() {
                 oldName != editName
             ) {
               val oldPath = Paths.get(repoPath, oldCategory?.trim('/') ?: "", "$oldName.gpg")
-              if (!oldPath.isSameFileAs(passwordFile) && !oldPath.deleteIfExists()) {
+              if (
+                oldPath.exists() && !oldPath.isSameFileAs(passwordFile) && !oldPath.deleteIfExists()
+              ) {
                 setResult(RESULT_CANCELED)
                 MaterialAlertDialogBuilder(this@PasswordCreationActivity)
                   .setTitle(R.string.password_creation_file_fail_title)
