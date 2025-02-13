@@ -37,10 +37,8 @@ constructor(
   @Assisted bytes: ByteArray,
 ) {
 
-  private val content = bytes.decodeToString()
-
   /** The password text for this entry. Can be null. */
-  public val password: String?
+  public val password: CharArray?
 
   /** The username for this entry. Can be null. */
   public val username: String?
@@ -91,15 +89,16 @@ constructor(
   private val totpSecret: String?
 
   init {
-    val (foundPassword, passContent) = findAndStripPassword(content.split("\n".toRegex()))
+    val (foundPassword, passContent) =
+      findAndStripPassword(bytes.decodeToString().split("\n".toRegex()).map { it.toCharArray() })
     password = foundPassword
-    extraContentString = passContent.joinToString("\n")
+    extraContentString = passContent.map { String(it) }.joinToString("\n")
     extraContentWithoutUsername = generateExtraContentWithoutUsername()
     extraContentWithoutAuthData = generateExtraContentWithoutAuthData()
     extraContent = generateExtraContentPairs()
     username = findUsername()
     // Verify the TOTP secret is valid and disable TOTP if not.
-    val secret = totpFinder.findSecret(content)
+    val secret = totpFinder.findSecret(extraContentString)
     totpSecret =
       if (secret != null && calculateTotp(secret).isOk) {
         secret
@@ -113,15 +112,30 @@ constructor(
   }
 
   @Suppress("ReturnCount")
-  private fun findAndStripPassword(passContent: List<String>): Pair<String?, List<String>> {
-    if (TotpFinder.TOTP_FIELDS.any { passContent[0].startsWith(it) }) return Pair(null, passContent)
-    for (line in passContent) {
+  private fun findAndStripPassword(
+    passContent: List<CharArray>
+  ): Pair<CharArray?, List<CharArray>> {
+    var lines = passContent
+    var passwdLine: CharArray? = null
+    var prefixLength = 0
+    for (line in lines) {
       for (prefix in PASSWORD_FIELDS) {
-        if (line.startsWith(prefix, ignoreCase = true)) {
-          return Pair(line.substring(prefix.length).trimStart(), passContent.minus(line))
+        if (String(line).startsWith(prefix, ignoreCase = true)) {
+          passwdLine = line // last line with prefixed password wins
+          lines = lines.minus(line)
+          prefixLength = prefix.length
+          break
         }
       }
     }
+    passwdLine?.let {
+      return Pair(String(passwdLine).substring(prefixLength).trimStart().toCharArray(), lines)
+    }
+    // If the first line contains any of the other known prefixes, we assume that no password
+    // is present
+    if (TotpFinder.TOTP_FIELDS.plus(USERNAME_FIELDS).any { String(passContent[0]).startsWith(it) })
+      return Pair(null, passContent)
+    // Otherwise, we assume that the first line is the (un-prefixed) password
     return Pair(passContent[0], passContent.minus(passContent[0]))
   }
 
@@ -211,10 +225,10 @@ constructor(
   }
 
   private fun calculateTotp(secret: String = totpSecret!!): Result<Totp, Throwable> {
-    val digits = totpFinder.findDigits(content)
-    val totpPeriod = totpFinder.findPeriod(content)
-    val totpAlgorithm = totpFinder.findAlgorithm(content)
-    val issuer = totpFinder.findIssuer(content)
+    val digits = totpFinder.findDigits(extraContentString)
+    val totpPeriod = totpFinder.findPeriod(extraContentString)
+    val totpAlgorithm = totpFinder.findAlgorithm(extraContentString)
+    val issuer = totpFinder.findIssuer(extraContentString)
     val millis = clock.millis()
     val remainingTime = (totpPeriod - ((millis / THOUSAND_MILLIS) % totpPeriod)).seconds
     return Otp.calculateCode(

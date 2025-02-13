@@ -54,16 +54,16 @@ package com.github.androidpasswordstore.autofillparser {
   }
 
   public final class Credentials {
-    ctor public Credentials(String? username, String? password, String? otp);
+    ctor public Credentials(String? username, char[]? password, String? otp);
     method public String? component1();
-    method public String? component2();
+    method public char[]? component2();
     method public String? component3();
-    method public com.github.androidpasswordstore.autofillparser.Credentials copy(String? username, String? password, String? otp);
+    method public com.github.androidpasswordstore.autofillparser.Credentials copy(String? username, char[]? password, String? otp);
     method public String? getOtp();
-    method public String? getPassword();
+    method public char[]? getPassword();
     method public String? getUsername();
     property public final String? otp;
-    property public final String? password;
+    property public final char[]? password;
     property public final String? username;
   }
 

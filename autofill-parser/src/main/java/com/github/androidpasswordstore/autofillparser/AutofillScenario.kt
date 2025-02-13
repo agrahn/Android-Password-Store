@@ -250,13 +250,13 @@ public fun Dataset.Builder.fillWith(
   action: AutofillAction,
   credentials: Credentials?,
 ) {
-  val credentialsToFill = credentials ?: Credentials("USERNAME", "PASSWORD", "OTP")
+  val credentialsToFill = credentials ?: Credentials("USERNAME", "PASSWORD".toCharArray(), "OTP")
   for (field in scenario.fieldsToFillOn(action)) {
     val value =
       when (field) {
         scenario.username -> credentialsToFill.username
         scenario.otp -> credentialsToFill.otp
-        else -> credentialsToFill.password
+        else -> credentialsToFill.password?.let { String(it) }
       }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
       setField(field, Field.Builder().setValue(AutofillValue.forText(value)).build())
