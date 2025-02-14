@@ -37,7 +37,7 @@ package com.github.androidpasswordstore.autofillparser {
 
   public final class AutofillScenarioKt {
     method @RequiresApi(android.os.Build.VERSION_CODES.O) public static void fillWithAutofillId(android.service.autofill.Dataset.Builder, com.github.androidpasswordstore.autofillparser.AutofillScenario<android.view.autofill.AutofillId> scenario, com.github.androidpasswordstore.autofillparser.AutofillAction action, com.github.androidpasswordstore.autofillparser.Credentials? credentials);
-    method @RequiresApi(android.os.Build.VERSION_CODES.O) public static String? getPasswordValue(com.github.androidpasswordstore.autofillparser.AutofillScenario<? extends android.app.assist.AssistStructure.ViewNode>);
+    method @RequiresApi(android.os.Build.VERSION_CODES.O) public static char[]? getPasswordValue(com.github.androidpasswordstore.autofillparser.AutofillScenario<? extends android.app.assist.AssistStructure.ViewNode>);
     method @RequiresApi(android.os.Build.VERSION_CODES.O) public static String? getUsernameValue(com.github.androidpasswordstore.autofillparser.AutofillScenario<? extends android.app.assist.AssistStructure.ViewNode>);
     method @RequiresApi(android.os.Build.VERSION_CODES.O) public static com.github.androidpasswordstore.autofillparser.AutofillScenario<android.app.assist.AssistStructure.ViewNode>? recoverNodes(com.github.androidpasswordstore.autofillparser.AutofillScenario<android.view.autofill.AutofillId>, android.app.assist.AssistStructure structure);
   }

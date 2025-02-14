@@ -95,10 +95,7 @@ class DecryptActivity : BasePGPActivity() {
     intent.putExtra(PasswordCreationActivity.EXTRA_FILE_NAME, name)
     intent.putExtra(PasswordCreationActivity.EXTRA_USERNAME, passwordEntry?.username)
     intent.putExtra(PasswordCreationActivity.EXTRA_PASSWORD, passwordEntry?.password)
-    intent.putExtra(
-      PasswordCreationActivity.EXTRA_EXTRA_CONTENT,
-      passwordEntry?.extraContentWithoutUsername,
-    )
+    intent.putExtra(PasswordCreationActivity.EXTRA_EXTRA_CONTENT, passwordEntry?.extraContentString)
     intent.putExtra(PasswordCreationActivity.EXTRA_EDITING, true)
     startActivity(intent)
     finish()

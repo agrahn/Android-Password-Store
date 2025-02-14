@@ -328,14 +328,14 @@ public val AutofillScenario<AssistStructure.ViewNode>.usernameValue: String?
     val value = username?.autofillValue ?: return null
     return if (value.isText) value.textValue.toString() else null
   }
-public val AutofillScenario<AssistStructure.ViewNode>.passwordValue: String?
+public val AutofillScenario<AssistStructure.ViewNode>.passwordValue: CharArray?
   @RequiresApi(Build.VERSION_CODES.O)
   get() {
     val distinctValues =
       passwordFieldsToSave
         .map {
           if (it.autofillValue?.isText == true) {
-            it.autofillValue?.textValue?.toString()
+            it.autofillValue?.textValue?.toString()?.toCharArray()
           } else {
             null
           }
