@@ -6,6 +6,8 @@
 
 package app.passwordstore.crypto
 
+import app.passwordstore.crypto.CryptoConstants.AEAD_ENCRYPTED_TEXT
+import app.passwordstore.crypto.CryptoConstants.AEAD_KEY_PASSPHRASE
 import app.passwordstore.crypto.CryptoConstants.KEY_PASSPHRASE
 import app.passwordstore.crypto.CryptoConstants.PLAIN_TEXT
 import app.passwordstore.crypto.errors.IncorrectPassphraseException
@@ -138,20 +140,39 @@ class PGPainlessCryptoHandlerTest {
   }
 
   @Test
-  fun aeadEncryptedMaterialIsSurfacedProperly() {
+  fun aeadDecryptEncryptReDecrypt() {
     val secKey = PGPKey(TestUtils.getAEADSecretKey())
     val plaintextStream = ByteArrayOutputStream()
-    val ciphertextStream = TestUtils.getAEADEncryptedFile().inputStream()
-    val res =
+    var decryptRes =
       cryptoHandler.decrypt(
         listOf(secKey),
-        "Password".toCharArray(),
-        ciphertextStream,
+        AEAD_KEY_PASSPHRASE.toCharArray(),
+        AEAD_ENCRYPTED_TEXT.trimIndent().byteInputStream(Charsets.UTF_8),
         plaintextStream,
         PGPDecryptOptions.Builder().build(),
       )
-    assertTrue(res.isErr)
-    // assertIs<NonStandardAEAD>(res.error, message = "${res.error.cause}")
+    assertTrue(decryptRes.isOk)
+    val decryptedText = plaintextStream.toString(Charsets.UTF_8)
+    val ciphertextStream = ByteArrayOutputStream()
+    val encryptRes =
+      cryptoHandler.encrypt(
+        listOf(secKey),
+        plaintextStream.toByteArray().inputStream(),
+        ciphertextStream,
+        PGPEncryptOptions.Builder().withAsciiArmor(true).build(),
+      )
+    assertTrue(encryptRes.isOk)
+    val plaintextStream2 = ByteArrayOutputStream()
+    decryptRes =
+      cryptoHandler.decrypt(
+        listOf(secKey),
+        AEAD_KEY_PASSPHRASE.toCharArray(),
+        ciphertextStream.toByteArray().inputStream(),
+        plaintextStream2,
+        PGPDecryptOptions.Builder().build(),
+      )
+    assertTrue(decryptRes.isOk)
+    assertEquals(decryptedText, plaintextStream2.toString(Charsets.UTF_8))
   }
 
   @Test
