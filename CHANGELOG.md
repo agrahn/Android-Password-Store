@@ -26,7 +26,7 @@ All notable changes to this project will be documented in this file.
 -   `.gpg-id` is now initialised with the numeric key ID instead of the user ID (email)
 -   PGP passphrase is no longer persistently cached (beyond the lifetime of the APS process / device restart) for security reasons, but flushed from memory when the screen is turned off (at the latest)
 
-## Unreleased ([original repo](https://github.com/android-password-store/Android-Password-Store) up to archiving)
+### [original repo](https://github.com/android-password-store/Android-Password-Store) up to archiving
 
 ### Added
 

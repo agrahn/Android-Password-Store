@@ -39,17 +39,17 @@ class PasswordEntryTest {
     assertEquals("", makeEntry("\n").password?.let { String(it) })
     assertEquals("", makeEntry("").password?.let { String(it) })
     for (field in PasswordEntry.PASSWORD_FIELDS) {
-      assertEquals("fooooo", makeEntry("\n$field fooooo").password?.let { String(it) })
+      assertEquals(" fooooo", makeEntry("\n$field fooooo").password?.let { String(it) })
       assertEquals(
-        "fooooo",
+        " fooooo",
         makeEntry("\n${field.uppercase(Locale.getDefault())} fooooo").password?.let { String(it) },
       )
       assertEquals(
-        "fooooo",
+        " fooooo",
         makeEntry("GOPASS-SECRET-1.0\n$field fooooo").password?.let { String(it) },
       )
       assertEquals(
-        "fooooo",
+        " fooooo",
         makeEntry("someFirstLine\nUsername: bar\n$field fooooo").password?.let { String(it) },
       )
     }
@@ -63,11 +63,16 @@ class PasswordEntryTest {
     assertEquals("", makeEntry("fooooo").extraContentString)
     assertEquals("blubb\n", makeEntry("\nblubb\n").extraContentString)
     assertEquals("blubb", makeEntry("\nblubb").extraContentString)
-    assertEquals("blubb", makeEntry("blubb\npassword: foo").extraContentString)
+    assertEquals("", makeEntry("blubb\npassword: foo").extraContentString)
     assertEquals("blubb", makeEntry("password: foo\nblubb").extraContentString)
+    assertEquals("", makeEntry("blubb\npassword: foo\nusername: bar").extraContentString)
     assertEquals(
-      "blubb\nusername: bar",
-      makeEntry("blubb\npassword: foo\nusername: bar").extraContentString,
+      "username: baz",
+      makeEntry("blubb\npassword: foo\nid:bar\nusername: baz").extraContentString,
+    )
+    assertEquals(
+      "username: baz",
+      makeEntry("blubb\npassword: foo\nid:bar\npass: 1234 \nusername: baz").extraContentString,
     )
     assertEquals("", makeEntry("\n").extraContentString)
     assertEquals("", makeEntry("").extraContentString)
