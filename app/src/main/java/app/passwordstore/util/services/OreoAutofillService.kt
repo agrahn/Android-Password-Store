@@ -135,12 +135,11 @@ class OreoAutofillService : AutofillService() {
 
     val username = scenario.usernameValue
     val password =
-      (scenario.passwordValue
-          ?: run {
-            callback.onFailure(getString(R.string.oreo_autofill_save_passwords_dont_match))
-            return
-          })
-        .toCharArray()
+      scenario.passwordValue
+        ?: run {
+          callback.onFailure(getString(R.string.oreo_autofill_save_passwords_dont_match))
+          return
+        }
     callback.onSuccess(
       AutofillSaveActivity.makeSaveIntentSender(
         this,

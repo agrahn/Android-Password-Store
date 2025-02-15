@@ -43,14 +43,14 @@ constructor(
   /** The username for this entry. Can be null. */
   public val username: String?
 
+  /** The totp entry extracted from the decrypted password file */
+  private val totpString: String
+
+  /** String representation of [bytes] but with passwords and first username stripped. */
+  public val extraContentString: String?
+
   /** A [String] to [String] [Map] of the extra content of this entry, in a key:value fashion. */
   public val extraContent: Map<String, String>
-
-  /**
-   * Direct [String] representation of the extra content of this entry, before any transforms are
-   * applied. Only use this when the extra content is required in a formatting-preserving manner.
-   */
-  public val extraContentString: String
 
   /**
    * A [Flow] providing the current TOTP. It will start emitting only when collected. If this entry
@@ -78,27 +78,23 @@ constructor(
       return otp.value.value
     }
 
-  /** String representation of [extraContent] but with usernames stripped. */
-  public val extraContentWithoutUsername: String
-
-  /**
-   * String representation of [extraContent] but with authentication related data such as TOTP URIs
-   * and usernames stripped.
-   */
-  public val extraContentWithoutAuthData: String
   private val totpSecret: String?
 
   init {
-    val (foundPassword, passContent) =
+    val (foundPassword, passContentWithoutPasswords) =
       findAndStripPassword(bytes.decodeToString().split("\n".toRegex()).map { it.toCharArray() })
     password = foundPassword
-    extraContentString = passContent.map { String(it) }.joinToString("\n")
-    extraContentWithoutUsername = generateExtraContentWithoutUsername()
-    extraContentWithoutAuthData = generateExtraContentWithoutAuthData()
-    extraContent = generateExtraContentPairs()
-    username = findUsername()
+    val (foundUsername, passContentWithoutPasswordsAndFirstUsername) =
+      findAndStripFirstUsername(passContentWithoutPasswords)
+    username = foundUsername?.let { String(it) }
+    extraContentString =
+      passContentWithoutPasswordsAndFirstUsername.map { String(it) }.joinToString("\n")
+    val (foundTotp, extraContentWithoutAuthData) =
+      findAndStripTotp(passContentWithoutPasswordsAndFirstUsername)
+    totpString = foundTotp?.let { String(it) } ?: ""
+    extraContent = generateExtraContentPairs(extraContentWithoutAuthData)
     // Verify the TOTP secret is valid and disable TOTP if not.
-    val secret = totpFinder.findSecret(extraContentString)
+    val secret = totpFinder.findSecret(foundTotp?.let { String(it) } ?: "")
     totpSecret =
       if (secret != null && calculateTotp(secret).isOk) {
         secret
@@ -116,65 +112,69 @@ constructor(
     passContent: List<CharArray>
   ): Pair<CharArray?, List<CharArray>> {
     var lines = passContent
-    var passwdLine: CharArray? = null
-    var prefixLength = 0
+    var password: CharArray? = null
+    // First line looks like a password
+    if (!USERNAME_FIELDS.plus(TotpFinder.TOTP_FIELDS).any { String(lines[0]).startsWith(it) }) {
+      password = lines[0]
+      lines = lines.minus(lines[0])
+    }
     for (line in lines) {
       for (prefix in PASSWORD_FIELDS) {
         if (String(line).startsWith(prefix, ignoreCase = true)) {
-          passwdLine = line // last line with prefixed password wins
+          // Last line with prefixed password wins
+          password = String(line).substring(prefix.length).toCharArray()
           lines = lines.minus(line)
-          prefixLength = prefix.length
           break
         }
       }
     }
-    passwdLine?.let {
-      return Pair(String(passwdLine).substring(prefixLength).trimStart().toCharArray(), lines)
+    password?.let {
+      return Pair(password, lines)
     }
-    // If the first line contains any of the other known prefixes, we assume that no password
-    // is present
-    if (TotpFinder.TOTP_FIELDS.plus(USERNAME_FIELDS).any { String(passContent[0]).startsWith(it) })
+    /**
+     * If the first line contains any of the other known prefixes, we assume that no password is
+     * present
+     */
+    if (USERNAME_FIELDS.plus(TotpFinder.TOTP_FIELDS).any { String(passContent[0]).startsWith(it) })
       return Pair(null, passContent)
     // Otherwise, we assume that the first line is the (un-prefixed) password
     return Pair(passContent[0], passContent.minus(passContent[0]))
   }
 
-  private fun generateExtraContentWithoutUsername(): String {
-    var foundUsername = false
-    return extraContentString
-      .lineSequence()
-      .filter { line ->
-        return@filter when {
-          USERNAME_FIELDS.any { prefix -> line.startsWith(prefix, ignoreCase = true) } &&
-            !foundUsername -> {
-            foundUsername = true
-            false
-          }
-          else -> {
-            true
-          }
+  private fun findAndStripFirstUsername(
+    passContent: List<CharArray>
+  ): Pair<CharArray?, List<CharArray>> {
+    var lines = passContent
+    var username: CharArray? = null
+    for (line in passContent) {
+      for (prefix in USERNAME_FIELDS) {
+        if (String(line).startsWith(prefix, ignoreCase = true)) {
+          username = String(line).substring(prefix.length).trimStart().toCharArray()
+          lines = lines.minus(line)
+          break
         }
       }
-      .joinToString(separator = "\n")
+      if (username != null) break
+    }
+    return Pair(username, lines)
   }
 
-  private fun generateExtraContentWithoutAuthData(): String {
-    return generateExtraContentWithoutUsername()
-      .lineSequence()
-      .filter { line ->
-        return@filter when {
-          TotpFinder.TOTP_FIELDS.any { prefix -> line.startsWith(prefix, ignoreCase = true) } -> {
-            false
-          }
-          else -> {
-            true
-          }
+  private fun findAndStripTotp(passContent: List<CharArray>): Pair<CharArray?, List<CharArray>> {
+    var lines = passContent
+    var totp: CharArray? = null
+    for (line in passContent) {
+      for (prefix in TotpFinder.TOTP_FIELDS) {
+        if (String(line).startsWith(prefix, ignoreCase = true)) {
+          totp = line // Last wins
+          lines = lines.minus(line)
+          break
         }
       }
-      .joinToString(separator = "\n")
+    }
+    return Pair(totp, lines)
   }
 
-  private fun generateExtraContentPairs(): Map<String, String> {
+  private fun generateExtraContentPairs(passContent: List<CharArray>): Map<String, String> {
     fun MutableMap<String, String>.putOrAppend(key: String, value: String) {
       if (value.isEmpty()) return
       val existing = this[key]
@@ -187,10 +187,10 @@ constructor(
     }
 
     val items = mutableMapOf<String, String>()
-    extraContentWithoutAuthData.lines().forEach { line ->
+    passContent.forEach { line ->
       // Split the line on ':' and save all the parts into an array
       // "ABC : DEF:GHI" --> ["ABC", "DEF", "GHI"]
-      val splitArray = line.split(":")
+      val splitArray = String(line).split(":")
       // Take the first element of the array. This will be the key for the key-value pair.
       // ["ABC ", " DEF", "GHI"] -> key = "ABC"
       val key = splitArray.first().trimEnd()
@@ -207,28 +207,18 @@ constructor(
       } else {
         // If either key or value is empty, we were not able to form proper key-value pair.
         // So append the original line into an "EXTRA CONTENT" map entry
-        items.putOrAppend(EXTRA_CONTENT, line)
+        items.putOrAppend(EXTRA_CONTENT, String(line))
       }
     }
 
     return items
   }
 
-  private fun findUsername(): String? {
-    extraContentString.splitToSequence("\n").forEach { line ->
-      for (prefix in USERNAME_FIELDS) {
-        if (line.startsWith(prefix, ignoreCase = true))
-          return line.substring(prefix.length).trimStart()
-      }
-    }
-    return null
-  }
-
   private fun calculateTotp(secret: String = totpSecret!!): Result<Totp, Throwable> {
-    val digits = totpFinder.findDigits(extraContentString)
-    val totpPeriod = totpFinder.findPeriod(extraContentString)
-    val totpAlgorithm = totpFinder.findAlgorithm(extraContentString)
-    val issuer = totpFinder.findIssuer(extraContentString)
+    val digits = totpFinder.findDigits(totpString)
+    val totpPeriod = totpFinder.findPeriod(totpString)
+    val totpAlgorithm = totpFinder.findAlgorithm(totpString)
+    val issuer = totpFinder.findIssuer(totpString)
     val millis = clock.millis()
     val remainingTime = (totpPeriod - ((millis / THOUSAND_MILLIS) % totpPeriod)).seconds
     return Otp.calculateCode(
