@@ -46,12 +46,12 @@ jobs:
           name: APS Free Release APK
           path: artifacts/free
 
-      - name: Get Changelog Entry
-        id: changelog_reader
-        uses: mindsers/changelog-reader-action@32aa5b4c155d76c94e4ec883a223c947b2f02656 # v2.2.3
-        with:
-          version: ${{ github.ref }}
-          path: ./CHANGELOG.md
+#      - name: Get Changelog Entry
+#        id: changelog_reader
+#        uses: mindsers/changelog-reader-action@32aa5b4c155d76c94e4ec883a223c947b2f02656 # v2.2.3
+#        with:
+#          version: ${{ github.ref }}
+#          path: ./CHANGELOG.md
 
       - name: Create Release
         id: create_release
@@ -61,7 +61,7 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: ${{ github.ref }}
-          body: ${{ steps.changelog_reader.outputs.changes }}
+#          body: ${{ steps.changelog_reader.outputs.changes }}
           draft: true
           prerelease: false
 
