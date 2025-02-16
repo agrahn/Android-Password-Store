@@ -46,24 +46,14 @@ jobs:
           name: APS Free Release APK
           path: artifacts/free
 
-      - name: Get Changelog Entry
-        id: changelog_reader
-        uses: artlaman/conventional-changelog-reader-action@v1.1.0
-        with:
-          version: ${{ github.ref }}
-          path: ./CHANGELOG.md
-
       - name: Create Release
         id: create_release
-        uses: actions/create-release@0cb9c9b65d5d1901c1f53e5e66eaf4afd303e70e # v1.1.4
+        uses: elgohr/Github-Release-Action@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          body: ${{ steps.changelog_reader.outputs.changes }}
-          draft: true
-          prerelease: false
+          tag: ${{ github.ref }}
+          title: "Stable release"
 
       - name: Get the version
         id: get_version
