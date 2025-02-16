@@ -48,7 +48,7 @@ jobs:
 
       - name: Get Changelog Entry
         id: changelog_reader
-        uses: artlaman/conventional-changelog-reader-action@v1.1.0
+        uses: artlaman/conventional-changelog-reader-action@a2ac23f78e2d16bfec78cd0028becf5ec2246eb8 # v1.1.0
         with:
           version: ${{ github.ref }}
           path: ./CHANGELOG.md
