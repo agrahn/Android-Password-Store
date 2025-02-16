@@ -16,8 +16,9 @@ jobs:
           RELEASE_VERSION="${VERSION/v/}"
           # Transforms 1.13.2 to 1.13 so that we can re-use the same
           # branch for patch releases.
-          BRANCH_VERSION="${RELEASE_VERSION:$i:-2}"
-          if [[ "${RELEASE_VERSION: -1}" == "0" ]]; then
+          BRANCH_VERSION="${RELEASE_VERSION%.*}"
+          PATCH_LEVEL="${RELEASE_VERSION##*.}"
+          if [[ "$PATCH_LEVEL" == "0" ]]; then
             CHECKOUT_REF="develop"
           else
             CHECKOUT_REF="release-${BRANCH_VERSION}"
@@ -40,7 +41,7 @@ jobs:
       - name: Update changelog
         uses: thomaseizinger/keep-a-changelog-new-release@f62c3c390716df5af712ba5d94f4f4a8efc1306d # 3.1.0
         with:
-          version: ${{ github.event.milestone.title }}
+          tag: ${{ github.event.milestone.title }}
 
       - name: Initialize git config and commit changes
         shell: bash
