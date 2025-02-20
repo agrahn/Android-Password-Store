@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Display user ID (or user IDs in case of multi-key encrypted entries) on the passphrase input dialog
 - Allow setting a subdirectory PGP key when creating folders (restored feature from v1.11.0)
 - External repository import. An external "pass" repository or a repository previously exported from the app can now be imported via Settings --> Repository --> Import repository
+- Copy OTP to the clipboard during autofill: If the pass entry contains an OTP, it is copied to the clipboard to facilitate autofill. The OTP in the clipboard is refreshed once when the first copy expires. This is to handle the situation when the first OTP was calculated just before its expiry.
 
   [Original repo](https://github.com/android-password-store/Android-Password-Store) up to archiving:
 - On Android 11, Autofill will use the new [inline autofill](https://developer.android.com/guide/topics/text/ime-autofill#configure-provider) UI that integrates Autofill results into your keyboard app.

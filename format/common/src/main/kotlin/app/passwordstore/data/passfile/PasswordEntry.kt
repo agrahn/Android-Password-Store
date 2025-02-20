@@ -73,11 +73,11 @@ constructor(
   }
 
   /** Obtain the [Totp.value] for this [PasswordEntry] at the current time. */
-  public val currentOtp: String
+  public val currentOtp: Totp
     get() {
       val otp = calculateTotp()
       check(otp.isOk)
-      return otp.value.value
+      return otp.value
     }
 
   private val totpSecret: String?

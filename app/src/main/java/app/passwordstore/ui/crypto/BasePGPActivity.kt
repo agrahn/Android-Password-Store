@@ -334,6 +334,9 @@ open class BasePGPActivity : AppCompatActivity() {
     const val EXTRA_FILE_PATH = "FILE_PATH"
     const val EXTRA_REPO_PATH = "REPO_PATH"
 
+    var cachedPassphrase: CharArray? = null
+    var clearTimer: ScheduledExecutorService? = null
+
     /**
      * Newest Samsung phones now feature a history of up to 30 items. To err on the side of caution,
      * push 35 fake ones.
@@ -368,9 +371,5 @@ open class BasePGPActivity : AppCompatActivity() {
         basename
       }
     }
-
-    var cachedPassphrase: CharArray? = null
-
-    var clearTimer: ScheduledExecutorService? = null
   }
 }

@@ -26,6 +26,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlinx.coroutines.launch
@@ -107,6 +108,19 @@ class AutofillDecryptActivity : BasePGPActivity() {
           RESULT_OK,
           Intent().apply { putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, fillInDataset) },
         )
+        if (entry.hasTotp()) {
+          val otp = entry.currentOtp
+          val remainingTime = otp.remainingTime.inWholeSeconds
+          copyTextToClipboard(otp.value.toCharArray(), isSensitive = false)
+          otpTimer?.shutdownNow()
+          val otpTimerNew = Executors.newSingleThreadScheduledExecutor()
+          otpTimer = otpTimerNew
+          otpTimerNew.schedule( // refresh otp once
+            { copyTextToClipboard(entry.currentOtp.value.toCharArray(), isSensitive = false) },
+            remainingTime,
+            TimeUnit.SECONDS,
+          )
+        }
       }
       onSuccess()
       withContext(dispatcherProvider.main()) { finish() }
@@ -131,6 +145,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
     private const val EXTRA_SEARCH_ACTION = "app.passwordstore.autofill.oreo.EXTRA_SEARCH_ACTION"
 
     private var decryptFileRequestCode = 1
+    private var otpTimer: ScheduledExecutorService? = null
 
     fun makeDecryptFileIntent(file: File, forwardedExtras: Bundle, context: Context): Intent {
       return Intent(context, AutofillDecryptActivity::class.java).apply {
