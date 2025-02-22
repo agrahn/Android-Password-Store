@@ -52,8 +52,11 @@ import com.google.zxing.integration.android.IntentIntegrator
 import com.google.zxing.integration.android.IntentIntegrator.QR_CODE
 import com.google.zxing.qrcode.QRCodeReader
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.nio.CharBuffer
+import java.nio.charset.Charset
 import java.nio.file.Paths
 import java.util.concurrent.ScheduledExecutorService
 import javax.inject.Inject
@@ -330,6 +333,13 @@ class PasswordCreationActivity : BasePGPActivity() {
       otpImportButton.isVisible = !entry.hasTotp()
     }
 
+  private fun CharArray.encodeToByteArray(charset: Charset = Charsets.UTF_8): ByteArray {
+    val byteBuffer = charset.encode(CharBuffer.wrap(this))
+    val byteArray = ByteArray(byteBuffer.remaining())
+    byteBuffer.get(byteArray)
+    return byteArray
+  }
+
   /** Encrypts the password and the extra content */
   private fun encrypt() {
     with(binding) {
@@ -395,7 +405,9 @@ class PasswordCreationActivity : BasePGPActivity() {
                 val outputStream = ByteArrayOutputStream()
                 repository.encrypt(
                   gpgIdentifiers,
-                  "${String(editPass)}$editUsername\n$editExtra".byteInputStream(),
+                  ByteArrayInputStream(
+                    (editPass + "$editUsername\n$editExtra".toCharArray()).encodeToByteArray()
+                  ),
                   outputStream,
                 )
                 outputStream
@@ -440,7 +452,7 @@ class PasswordCreationActivity : BasePGPActivity() {
               val directoryStructure = AutofillPreferences.directoryStructure(applicationContext)
               val entry =
                 passwordEntryFactory.create(
-                  "${String(editPass)}$editUsername\n$editExtra".encodeToByteArray()
+                  (editPass + "$editUsername\n$editExtra".toCharArray()).encodeToByteArray()
                 )
               returnIntent.putExtra(RETURN_EXTRA_PASSWORD, entry.password)
               val username =
