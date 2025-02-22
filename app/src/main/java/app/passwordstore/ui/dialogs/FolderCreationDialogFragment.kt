@@ -12,11 +12,14 @@ import androidx.activity.result.contract.ActivityResultContracts.StartActivityFo
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
 import androidx.fragment.app.DialogFragment
 import app.passwordstore.R
+import app.passwordstore.databinding.FolderDialogFragmentBinding
 import app.passwordstore.ui.passwords.PasswordStore
 import app.passwordstore.ui.pgp.PGPKeyListActivity
 import app.passwordstore.util.extensions.commitChange
+import app.passwordstore.util.extensions.unsafeLazy
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
@@ -27,6 +30,7 @@ import kotlinx.coroutines.runBlocking
 
 class FolderCreationDialogFragment : DialogFragment() {
 
+  private val binding by unsafeLazy { FolderDialogFragmentBinding.inflate(layoutInflater) }
   private lateinit var newFolder: File
 
   private val gpgKeySelectAction =
@@ -50,9 +54,10 @@ class FolderCreationDialogFragment : DialogFragment() {
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val alertDialogBuilder = MaterialAlertDialogBuilder(requireContext())
     alertDialogBuilder.setTitle(R.string.title_create_folder)
-    alertDialogBuilder.setView(R.layout.folder_dialog_fragment)
+    alertDialogBuilder.setView(binding.root)
     alertDialogBuilder.setPositiveButton(getString(R.string.button_create), null)
     alertDialogBuilder.setNegativeButton(getString(android.R.string.cancel)) { _, _ -> dismiss() }
+    binding.setGpgKey.isVisible = requireArguments().getBoolean(SET_GPG_KEY_EXTRA)
     val dialog = alertDialogBuilder.create()
     dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
     dialog.setOnShowListener {
@@ -91,9 +96,13 @@ class FolderCreationDialogFragment : DialogFragment() {
   companion object {
 
     private const val CURRENT_DIR_EXTRA = "CURRENT_DIRECTORY"
+    private const val SET_GPG_KEY_EXTRA = "SET_GPG_KEY"
 
-    fun newInstance(startingDirectory: String): FolderCreationDialogFragment {
-      val extras = bundleOf(CURRENT_DIR_EXTRA to startingDirectory)
+    fun newInstance(
+      startingDirectory: String,
+      setGpgKey: Boolean = false,
+    ): FolderCreationDialogFragment {
+      val extras = bundleOf(CURRENT_DIR_EXTRA to startingDirectory, SET_GPG_KEY_EXTRA to setGpgKey)
       val fragment = FolderCreationDialogFragment()
       fragment.arguments = extras
       return fragment

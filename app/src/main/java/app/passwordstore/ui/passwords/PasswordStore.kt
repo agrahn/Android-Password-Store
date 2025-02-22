@@ -444,7 +444,8 @@ class PasswordStore : BaseGitActivity() {
 
   fun createFolder() {
     if (!validateState()) return
-    FolderCreationDialogFragment.newInstance(currentDir.path).show(supportFragmentManager, null)
+    FolderCreationDialogFragment.newInstance(currentDir.path, setGpgKey = true)
+      .show(supportFragmentManager, null)
   }
 
   fun deletePasswords(selectedItems: List<PasswordItem>) {
