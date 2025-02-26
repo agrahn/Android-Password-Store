@@ -17,6 +17,7 @@ import app.passwordstore.injection.context.FilesDirPath
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.ui.crypto.BasePGPActivity.Companion.cachedPassphrase
 import app.passwordstore.util.coroutines.DispatcherProvider
+import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.features.Features
 import app.passwordstore.util.git.sshj.setUpBouncyCastleForSshj
@@ -64,6 +65,11 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
     setupScreenOffHandler()
     PasswordRepository.gpgidCurPath = PasswordRepository.getRepositoryDirectory()
     PasswordRepository.gpgidChecked = true
+    /**
+     * This way, when the app is restarted, a new AES key is generated to encrypt the passphrase for
+     * caching in memory.
+     */
+    AESEncryption.deleteKey()
   }
 
   private fun setupScreenOffHandler() {

@@ -17,6 +17,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.setFragmentResult
 import app.passwordstore.R
 import app.passwordstore.databinding.DialogPasswordEntryBinding
+import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.finish
 import app.passwordstore.util.extensions.unsafeLazy
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -40,6 +41,7 @@ class PasswordDialog : DialogFragment() {
       binding.userIdList.setVisibility(View.VISIBLE)
     }
 
+    if (AESEncryption.isHardwareBacked()) binding.cacheEnabled.setVisibility(View.VISIBLE)
     cacheEnabledChecked = requireArguments().getBoolean(CACHE_ENABLED_EXTRA)
     binding.cacheEnabled.isChecked = cacheEnabledChecked
     binding.cacheEnabled.setOnCheckedChangeListener { _, isChecked ->

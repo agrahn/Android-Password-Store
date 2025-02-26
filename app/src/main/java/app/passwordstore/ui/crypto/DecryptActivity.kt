@@ -17,6 +17,7 @@ import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.password.FieldItem
 import app.passwordstore.databinding.DecryptLayoutBinding
 import app.passwordstore.ui.adapters.FieldItemAdapter
+import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
@@ -118,7 +119,7 @@ class DecryptActivity : BasePGPActivity() {
 
   private fun decrypt(isError: Boolean = false) {
     val gpgIdentifiers = getPGPIdentifiers(relativeParentPath) ?: return
-    val passphrase = if (isError) null else cachedPassphrase
+    val passphrase = if (isError) null else AESEncryption.decrypt(cachedPassphrase)
     lifecycleScope.launch(dispatcherProvider.main()) {
       passphrase?.let { decryptWithPassphrase(passphrase, gpgIdentifiers) }
         ?: askPassphrase(isError, gpgIdentifiers)

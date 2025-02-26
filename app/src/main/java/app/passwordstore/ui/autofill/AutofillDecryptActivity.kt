@@ -19,6 +19,7 @@ import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.ui.crypto.BasePGPActivity
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.autofill.AutofillResponseBuilder
+import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.snackbar
 import com.github.androidpasswordstore.autofillparser.AutofillAction
 import com.github.michaelbull.result.onSuccess
@@ -70,7 +71,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
 
   private fun decrypt(isError: Boolean = false) {
     val gpgIdentifiers = getPGPIdentifiers(getParentPath(filePath, repositoryPath)) ?: return
-    val passphrase = if (isError) null else cachedPassphrase
+    val passphrase = if (isError) null else AESEncryption.decrypt(cachedPassphrase)
     lifecycleScope.launch(dispatcherProvider.main()) {
       passphrase?.let { decryptWithPassphrase(passphrase, gpgIdentifiers) }
         ?: askPassphrase(isError, gpgIdentifiers)

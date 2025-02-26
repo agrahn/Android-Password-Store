@@ -29,6 +29,7 @@ import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.ui.pgp.PGPKeyImportActivity
 import app.passwordstore.util.coroutines.DispatcherProvider
+import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.clipboard
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.snackbar
@@ -312,8 +313,16 @@ open class BasePGPActivity : AppCompatActivity() {
         lifecycleScope.launch(dispatcherProvider.main()) {
           decryptWithPassphrase(passphrase, identifiers) {
             runCatching {
-                cachedPassphrase = if (cacheEnabled) passphrase else null
-                settings.edit { putBoolean(PreferenceKeys.CACHE_PASSPHRASE, cacheEnabled) }
+                cachedPassphrase =
+                  if (AESEncryption.isHardwareBacked() && cacheEnabled)
+                    AESEncryption.encrypt(passphrase)
+                  else null
+                settings.edit {
+                  putBoolean(
+                    PreferenceKeys.CACHE_PASSPHRASE,
+                    AESEncryption.isHardwareBacked() && cacheEnabled,
+                  )
+                }
               }
               .onFailure { e -> logcat { e.asLog() } }
           }
