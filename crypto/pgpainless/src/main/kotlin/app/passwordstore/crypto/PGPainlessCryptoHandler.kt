@@ -34,10 +34,11 @@ import org.pgpainless.util.Passphrase
 public class PGPainlessCryptoHandler @Inject constructor() :
   CryptoHandler<PGPKey, PGPEncryptOptions, PGPDecryptOptions> {
 
-  public override fun passphraseIsCorrect(key: PGPKey, passphrase: CharArray): Boolean {
+  public override fun passphraseIsCorrect(key: PGPKey, passphrase: CharArray?): Boolean {
     val secretKey =
       PGPainless.readKeyRing().secretKeyRing(key.contents)?.getSecretKey() ?: return false
-    val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
+    val pass = passphrase ?: charArrayOf()
+    val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(pass))
     return (UnlockSecretKey.unlockSecretKey(secretKey, protector) as? PGPPrivateKey) != null
   }
 

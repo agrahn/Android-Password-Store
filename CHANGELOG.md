@@ -4,8 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [1.14.0] - 2025-02-17
-
 ### Added
 
 - Display user ID (or user IDs in case of multi-key encrypted entries) on the passphrase input dialog
@@ -51,7 +49,7 @@ All notable changes to this project will be documented in this file.
 - **BREAKING**: The option for generating the SSH key pair in the Ed25519 format was removed from APS. It relied on the now deprecated `androidx.security:security-crypto` library to store the private key as an encrypted file in the application's hidden directory. Use one of Android KeyStore native RSA or ECDSA key format options when generating the SSH key pair. Alternatively, an externally generated SSH private key can be imported into the app. Imported SSH private keys can be in any format, including Ed25519, but they should be protected with a passphrase
 - **BREAKING**: Non-free variant removed which allowed filling OTP fields with codes sent by SMS
 - `.gpg-id` is now initialised with the numeric key ID instead of the user ID (email)
-- PGP passphrase is no longer persistently cached (beyond the lifetime of the APS process / device restart) for security reasons, but flushed from memory when the screen is turned off (at the latest)
+- The implementation of the persistent PGP passphrase caching had to be rewritten because it depended on the deprecated `androidx.security:security-crypto` library. It can now be enabled via Settings --> Passwords --> Unlock Passwords with PIN/biometrics. The new cache also works with multi-key pass stores.
 
   [Original repo](https://github.com/android-password-store/Android-Password-Store) up to archiving:
 - **BREAKING**: The app's package name has been changed to `app.passwordstore` so users are aware that this is a new project with no compatibility guarantees with Password Store 1.x.y.

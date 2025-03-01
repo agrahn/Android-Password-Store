@@ -16,11 +16,6 @@ class MiscSettings(private val activity: FragmentActivity) : SettingsProvider {
 
   override fun provideSettings(builder: PreferenceScreen.Builder) {
     builder.apply {
-      switch(PreferenceKeys.CLEAR_CLIPBOARD_HISTORY) {
-        defaultValue = false
-        titleRes = R.string.pref_clear_clipboard_title
-        summaryRes = R.string.pref_clear_clipboard_summary
-      }
       switch(PreferenceKeys.ENABLE_DEBUG_LOGGING) {
         defaultValue = false
         titleRes = R.string.pref_debug_logging_title

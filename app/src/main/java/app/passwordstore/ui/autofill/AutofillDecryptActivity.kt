@@ -11,7 +11,7 @@ import android.content.IntentSender
 import android.os.Build
 import android.os.Bundle
 import android.view.autofill.AutofillManager
-import androidx.lifecycle.lifecycleScope
+import androidx.core.content.edit
 import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.data.passfile.PasswordEntry
@@ -19,8 +19,8 @@ import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.ui.crypto.BasePGPActivity
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.autofill.AutofillResponseBuilder
-import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.snackbar
+import app.passwordstore.util.settings.PreferenceKeys
 import com.github.androidpasswordstore.autofillparser.AutofillAction
 import com.github.michaelbull.result.onSuccess
 import dagger.hilt.android.AndroidEntryPoint
@@ -30,7 +30,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
 import logcat.logcat
@@ -66,27 +65,22 @@ class AutofillDecryptActivity : BasePGPActivity() {
       intent?.getBooleanExtra(EXTRA_SEARCH_ACTION, true) ?: throw NullPointerException()
     action = if (isSearchAction) AutofillAction.Search else AutofillAction.Match
     logcat { action.toString() }
-    requireKeysExist { decrypt() }
-  }
-
-  private fun decrypt(isError: Boolean = false) {
-    val gpgIdentifiers = getPGPIdentifiers(getParentPath(filePath, repositoryPath)) ?: return
-    val passphrase = if (isError) null else AESEncryption.decrypt(cachedPassphrase)
-    lifecycleScope.launch(dispatcherProvider.main()) {
-      passphrase?.let { decryptWithPassphrase(passphrase, gpgIdentifiers) }
-        ?: askPassphrase(isError, gpgIdentifiers)
+    requireKeysExist {
+      val gpgIdentifiers =
+        getPGPIdentifiers(getParentPath(filePath, repositoryPath)) ?: return@requireKeysExist
+      filterPersistentIdsAndDecrypt(gpgIdentifiers)
     }
   }
 
   override suspend fun decryptWithPassphrase(
-    passphrase: CharArray?,
+    passphrases: List<CharArray?>,
     identifiers: List<PGPIdentifier>,
-    onSuccess: suspend () -> Unit,
+    onSuccess: suspend (List<PGPIdentifier>) -> Unit,
   ) {
     val encryptedFile = File(filePath)
     val message = withContext(dispatcherProvider.io()) { encryptedFile.readBytes().inputStream() }
     val outputStream = ByteArrayOutputStream()
-    val result = repository.decrypt(passphrase, identifiers, message, outputStream)
+    val (ids, result) = repository.decrypt(passphrases, identifiers, message, outputStream)
     if (result.isOk) {
       val entry = passwordEntryFactory.create(result.value.toByteArray())
       val directoryStructure = AutofillPreferences.directoryStructure(this)
@@ -123,13 +117,19 @@ class AutofillDecryptActivity : BasePGPActivity() {
           )
         }
       }
-      onSuccess()
+      onSuccess(ids)
       withContext(dispatcherProvider.main()) { finish() }
     } else {
       logcat(ERROR) { result.error.stackTraceToString() }
       when (result.error) {
         is IncorrectPassphraseException -> {
-          decrypt(isError = true)
+          val idsToRemove = ids.map { it.toString() }
+          persistentPassphrases.edit { idsToRemove.forEach { remove(it) } }
+          idsToRemove.forEach {
+            cachedPassphrases[it]?.fill('\u0000')
+            cachedPassphrases.remove(it)
+          }
+          decrypt(identifiers, isError = true)
         }
         else -> {
           snackbar(message = result.error.toString())
@@ -137,6 +137,10 @@ class AutofillDecryptActivity : BasePGPActivity() {
           timer.schedule({ finish() }, 4.toLong(), TimeUnit.SECONDS)
         }
       }
+    }
+    if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {
+      cachedPassphrases.values.forEach { it.fill('\u0000') }
+      cachedPassphrases.clear()
     }
   }
 

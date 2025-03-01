@@ -204,7 +204,6 @@ class MigrationsTest {
     sharedPrefs.edit {
       putBoolean(PreferenceKeys.CLEAR_PASSPHRASE_CACHE, true)
       putString(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE, "my secret local ssh key passphrase")
-      putString(PreferenceKeys.DICEWARE_SEPARATOR, "#")
     }
     runMigrations(
       filesDir,
@@ -215,6 +214,5 @@ class MigrationsTest {
     )
     assertFalse { sharedPrefs.contains(PreferenceKeys.CLEAR_PASSPHRASE_CACHE) }
     assertFalse { sharedPrefs.contains(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE) }
-    assertEquals(sharedPrefs.getString(PreferenceKeys.DICEWARE_SEPARATOR), "§")
   }
 }

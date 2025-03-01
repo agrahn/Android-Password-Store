@@ -12,6 +12,8 @@ import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import app.passwordstore.Application
+import app.passwordstore.util.crypto.AESEncryption
+import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.git.sshj.SshKey
@@ -41,6 +43,7 @@ fun runMigrations(
   removeExternalStorageProperties(sharedPrefs)
   removeCurrentBranchValue(sharedPrefs)
   removePersistentCredentialCache(sharedPrefs, context, runTest)
+  if (!runTest) moveToPasswordGeneratorPrefs(sharedPrefs, context)
   deleteKeystoreWrappedEd25519Key(sharedPrefs, context)
 }
 
@@ -83,8 +86,6 @@ private fun removePersistentCredentialCache(
 ) {
   val gitPrefs = if (runTest) sharedPrefs else createEncryptedPreferences(context, "git_operation")
   val proxyPrefs = if (runTest) sharedPrefs else createEncryptedPreferences(context, "http_proxy")
-  val pwgenPrefs =
-    if (runTest) sharedPrefs else createEncryptedPreferences(context, "pwgen_preferences")
 
   if (sharedPrefs.contains(PreferenceKeys.CLEAR_PASSPHRASE_CACHE)) {
     logcat(TAG, INFO) { "Deleting now unused persistent PGP passphrase cache preference" }
@@ -102,38 +103,66 @@ private fun removePersistentCredentialCache(
   value?.let {
     logcat(TAG, INFO) { "Moving PreferenceKeys.PROXY_HOST to SharedPreferences" }
     proxyPrefs.edit { remove(PreferenceKeys.PROXY_HOST) }
-    sharedPrefs.edit { putString(PreferenceKeys.PROXY_HOST, value) }
+    sharedPrefs.edit { putString(PreferenceKeys.PROXY_HOST, it) }
   }
   value = proxyPrefs.getString(PreferenceKeys.PROXY_PORT, null)
   value?.let {
     logcat(TAG, INFO) { "Moving PreferenceKeys.PROXY_PORT to SharedPreferences" }
     proxyPrefs.edit { remove(PreferenceKeys.PROXY_PORT) }
-    sharedPrefs.edit { putString(PreferenceKeys.PROXY_PORT, value) }
+    sharedPrefs.edit { putString(PreferenceKeys.PROXY_PORT, it) }
   }
   value = proxyPrefs.getString(PreferenceKeys.PROXY_USERNAME, null)
   value?.let {
     logcat(TAG, INFO) { "Moving PreferenceKeys.PROXY_USERNAME to SharedPreferences" }
     proxyPrefs.edit { remove(PreferenceKeys.PROXY_USERNAME) }
-    sharedPrefs.edit { putString(PreferenceKeys.PROXY_USERNAME, value) }
+    sharedPrefs.edit { putString(PreferenceKeys.PROXY_USERNAME, it) }
   }
   val password = proxyPrefs.getString(PreferenceKeys.PROXY_PASSWORD, null)?.toCharArray()
   password?.let {
     logcat(TAG, INFO) { "Moving PreferenceKeys.PROXY_PASSWORD to SharedPreferences" }
     proxyPrefs.edit { remove(PreferenceKeys.PROXY_PASSWORD) }
-    sharedPrefs.edit { putString(PreferenceKeys.PROXY_PASSWORD, String(password)) }
+    sharedPrefs.edit { putString(PreferenceKeys.PROXY_PASSWORD, String(it)) }
   }
-  value = pwgenPrefs.getString(PreferenceKeys.DICEWARE_SEPARATOR, null)
-  value?.let {
-    logcat(TAG, INFO) { "Moving PreferenceKeys.DICEWARE_SEPARATOR to SharedPreferences" }
+}
+
+private fun moveToPasswordGeneratorPrefs(sharedPrefs: SharedPreferences, context: Context) {
+  // Old, encrypted preferences
+  val pwgenPrefs = createEncryptedPreferences(context, "pwgen_preferences")
+  // New destination
+  val passwordGeneratorPrefs =
+    context.getSharedPreferences("PasswordGenerator", Context.MODE_PRIVATE)
+
+  val separator =
+    pwgenPrefs.getString(PreferenceKeys.DICEWARE_SEPARATOR, null)
+      ?: sharedPrefs.getString(PreferenceKeys.DICEWARE_SEPARATOR, null)
+  separator?.let { v ->
+    logcat(TAG, INFO) {
+      "Moving PreferenceKeys.DICEWARE_SEPARATOR to  PasswordGenerator preferences"
+    }
     pwgenPrefs.edit { remove(PreferenceKeys.DICEWARE_SEPARATOR) }
-    if (runTest) value = "§"
-    sharedPrefs.edit { putString(PreferenceKeys.DICEWARE_SEPARATOR, value) }
+    sharedPrefs.edit { remove(PreferenceKeys.DICEWARE_SEPARATOR) }
+
+    passwordGeneratorPrefs.edit {
+      putString(
+        PreferenceKeys.DICEWARE_SEPARATOR,
+        AESEncryption.encrypt(v.toCharArray(), keyType = KeyType.PERSISTENT)?.let { String(it) },
+      )
+    }
   }
-  value = pwgenPrefs.getString(PreferenceKeys.DICEWARE_LENGTH, null)
-  value?.let {
-    logcat(TAG, INFO) { "Moving PreferenceKeys.DICEWARE_LENGTH to SharedPreferences" }
+
+  var dwLength = pwgenPrefs.getInt(PreferenceKeys.DICEWARE_LENGTH, -1000)
+  if (dwLength < 0) dwLength = sharedPrefs.getInt(PreferenceKeys.DICEWARE_LENGTH, -1000)
+  if (dwLength >= 0) {
     pwgenPrefs.edit { remove(PreferenceKeys.DICEWARE_LENGTH) }
-    sharedPrefs.edit { putString(PreferenceKeys.DICEWARE_LENGTH, value) }
+    sharedPrefs.edit { remove(PreferenceKeys.DICEWARE_LENGTH) }
+    logcat(TAG, INFO) { "Moving PreferenceKeys.DICEWARE_LENGTH to PasswordGenerator preferences" }
+    passwordGeneratorPrefs.edit {
+      putString(
+        PreferenceKeys.DICEWARE_LENGTH,
+        AESEncryption.encrypt(dwLength.toString().toCharArray(), keyType = KeyType.PERSISTENT)
+          ?.let { String(it) },
+      )
+    }
   }
 }
 

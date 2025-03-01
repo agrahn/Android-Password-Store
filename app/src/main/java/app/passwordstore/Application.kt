@@ -15,7 +15,7 @@ import androidx.appcompat.app.AppCompatDelegate.*
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.context.FilesDirPath
 import app.passwordstore.injection.prefs.SettingsPreferences
-import app.passwordstore.ui.crypto.BasePGPActivity.Companion.cachedPassphrase
+import app.passwordstore.ui.crypto.BasePGPActivity.Companion.cachedPassphrases
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.getString
@@ -66,8 +66,8 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
     PasswordRepository.gpgidCurPath = PasswordRepository.getRepositoryDirectory()
     PasswordRepository.gpgidChecked = true
     /**
-     * This way, when the app is restarted, a new AES key is generated to encrypt the passphrase for
-     * caching in memory.
+     * This way, when the app is restarted, a new AES key is generated to encrypt the passphrase
+     * cached in memory.
      */
     AESEncryption.deleteKey()
   }
@@ -77,8 +77,8 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
       object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
           if (intent.action == Intent.ACTION_SCREEN_OFF) {
-            cachedPassphrase?.fill(' ')
-            cachedPassphrase = null
+            cachedPassphrases.values.forEach { it.fill('\u0000') }
+            cachedPassphrases.clear()
           }
         }
       }

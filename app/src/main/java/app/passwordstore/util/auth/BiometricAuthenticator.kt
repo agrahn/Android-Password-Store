@@ -57,22 +57,29 @@ object BiometricAuthenticator {
   fun authenticate(
     activity: FragmentActivity,
     @StringRes dialogTitleRes: Int = R.string.biometric_prompt_title,
+    @StringRes dialogSubTitleRes: Int = 0,
+    @StringRes dialogDescriptionRes: Int = 0,
     callback: (Result) -> Unit,
   ) {
     val authCallback = createPromptAuthenticationCallback(activity, callback)
     val deviceHasKeyguard = activity.getSystemService<KeyguardManager>()?.isDeviceSecure == true
     if (canAuthenticate(activity) || deviceHasKeyguard) {
-      val promptInfo =
+      val promptInfoBuilder =
         BiometricPrompt.PromptInfo.Builder()
           .setTitle(activity.getString(dialogTitleRes))
           .setAllowedAuthenticators(VALID_AUTHENTICATORS)
-          .build()
+      if (dialogSubTitleRes != 0) {
+        promptInfoBuilder.setSubtitle(activity.getString(dialogSubTitleRes))
+      }
+      if (dialogDescriptionRes != 0) {
+        promptInfoBuilder.setDescription(activity.getString(dialogDescriptionRes))
+      }
       BiometricPrompt(
           activity,
           ContextCompat.getMainExecutor(activity.applicationContext),
           authCallback,
         )
-        .authenticate(promptInfo)
+        .authenticate(promptInfoBuilder.build())
     } else {
       callback(Result.HardwareUnavailableOrDisabled)
     }

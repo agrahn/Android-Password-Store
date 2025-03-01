@@ -7,6 +7,7 @@ package app.passwordstore.ui.dialogs
 
 import android.app.AlertDialog
 import android.app.Dialog
+import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Typeface
 import android.os.Bundle
@@ -17,9 +18,10 @@ import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.databinding.FragmentPwgenDicewareBinding
-import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.passgen.diceware.DicewarePassphraseGenerator
 import app.passwordstore.ui.crypto.PasswordCreationActivity
+import app.passwordstore.util.crypto.AESEncryption
+import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.settings.PreferenceKeys.DICEWARE_LENGTH
 import app.passwordstore.util.settings.PreferenceKeys.DICEWARE_SEPARATOR
@@ -34,16 +36,29 @@ import reactivecircus.flowbinding.android.widget.afterTextChanges
 class DicewarePasswordGeneratorDialogFragment : DialogFragment() {
 
   @Inject lateinit var dicewareGenerator: DicewarePassphraseGenerator
-  @Inject @SettingsPreferences lateinit var prefs: SharedPreferences
+  lateinit var prefs: SharedPreferences
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+    prefs = requireContext().getSharedPreferences("PasswordGenerator", Context.MODE_PRIVATE)
     val builder = MaterialAlertDialogBuilder(requireContext())
 
     val binding = FragmentPwgenDicewareBinding.inflate(layoutInflater)
     builder.setView(binding.root)
 
-    binding.passwordSeparatorText.setText(prefs.getString(DICEWARE_SEPARATOR) ?: "-")
-    binding.passwordLengthText.setText(prefs.getInt(DICEWARE_LENGTH, 5).toString())
+    binding.passwordSeparatorText.setText(
+      AESEncryption.decrypt(
+          prefs.getString(DICEWARE_SEPARATOR, null)?.toCharArray(),
+          keyType = KeyType.PERSISTENT,
+        )
+        ?.let { String(it) } ?: "-"
+    )
+    binding.passwordLengthText.setText(
+      AESEncryption.decrypt(
+          prefs.getString(DICEWARE_LENGTH, null)?.toCharArray(),
+          keyType = KeyType.PERSISTENT,
+        )
+        ?.let { String(it) } ?: "5"
+    )
     binding.passwordText.typeface = Typeface.MONOSPACE
 
     lifecycleScope.launch {
@@ -83,8 +98,18 @@ class DicewarePasswordGeneratorDialogFragment : DialogFragment() {
 
   private fun setPreferences(length: Int, separator: Char) {
     prefs.edit {
-      putInt(DICEWARE_LENGTH, length)
-      putString(DICEWARE_SEPARATOR, separator.toString())
+      putString(
+        DICEWARE_LENGTH,
+        AESEncryption.encrypt(length.toString().toCharArray(), keyType = KeyType.PERSISTENT)?.let {
+          String(it)
+        },
+      )
+      putString(
+        DICEWARE_SEPARATOR,
+        AESEncryption.encrypt(charArrayOf(separator), keyType = KeyType.PERSISTENT)?.let {
+          String(it)
+        },
+      )
     }
   }
 }

@@ -37,8 +37,8 @@ class PreferenceModule {
     return context.getSharedPreferences("${BuildConfig.APPLICATION_ID}_preferences", MODE_PRIVATE)
   }
 
-  /*  @[Provides GitPreferences Reusable]
-  fun provideGitPreferences(@ApplicationContext context: Context): SharedPreferences {
-    return createEncryptedPreferences(context, "git_operation")
-  } */
+  @[Provides PGPPassphrases Reusable]
+  fun providePGPPassphrases(@ApplicationContext context: Context): SharedPreferences {
+    return context.getSharedPreferences("${BuildConfig.APPLICATION_ID}_passphrases", MODE_PRIVATE)
+  }
 }

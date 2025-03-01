@@ -20,6 +20,7 @@ import com.github.michaelbull.result.map
 import com.github.michaelbull.result.mapBoth
 import com.github.michaelbull.result.onSuccess
 import com.github.michaelbull.result.runCatching
+import com.github.michaelbull.result.unwrap
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
@@ -49,31 +50,39 @@ constructor(
     return pgpCryptoHandler.isPassphraseProtected(keys)
   }
 
-  private suspend fun findFirstMatchingKey(
-    keys: List<PGPKey>,
-    passphrase: CharArray?,
-  ): List<PGPKey> {
-    if (passphrase == null || !(keys.size > 1)) return keys
-    keys.forEach { key ->
-      runCatching { pgpCryptoHandler.passphraseIsCorrect(key, passphrase) }
-        .onSuccess {
-          return listOf(key)
-        }
+  private suspend fun findFirstMatchingIdKeyPassphrase(
+    identities: List<PGPIdentifier>,
+    passphrases: List<CharArray?>,
+  ): Triple<List<PGPIdentifier>, List<PGPKey>, CharArray?> {
+    identities.forEach { id ->
+      val key = pgpKeyManager.getKeyById(id).unwrap()
+      passphrases.forEach { passphrase ->
+        runCatching { pgpCryptoHandler.passphraseIsCorrect(key, passphrase) }
+          .onSuccess {
+            return Triple(listOf(id), listOf(key), passphrase)
+          }
+      }
     }
-    return keys
+    val keys = identities.map { pgpKeyManager.getKeyById(it) }.filterValues()
+    return Triple(identities, keys, null)
   }
 
   suspend fun decrypt(
-    passphrase: CharArray?,
+    passphrases: List<CharArray?>,
     identities: List<PGPIdentifier>,
     message: ByteArrayInputStream,
     out: ByteArrayOutputStream,
   ) =
     withContext(dispatcherProvider.io()) {
-      val keys = identities.map { id -> pgpKeyManager.getKeyById(id) }.filterValues()
-      val matchingKey = findFirstMatchingKey(keys, passphrase)
+      val (matchingKeyId, matchingKey, matchingPassphrase) =
+        findFirstMatchingIdKeyPassphrase(identities, passphrases)
       val decryptionOptions = PGPDecryptOptions.Builder().build()
-      pgpCryptoHandler.decrypt(matchingKey, passphrase, message, out, decryptionOptions).map { out }
+      Pair(
+        matchingKeyId,
+        pgpCryptoHandler
+          .decrypt(matchingKey, matchingPassphrase, message, out, decryptionOptions)
+          .map { out },
+      )
     }
 
   suspend fun encrypt(

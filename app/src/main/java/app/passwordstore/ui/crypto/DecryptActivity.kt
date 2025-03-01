@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
@@ -17,7 +18,6 @@ import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.password.FieldItem
 import app.passwordstore.databinding.DecryptLayoutBinding
 import app.passwordstore.ui.adapters.FieldItemAdapter
-import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
@@ -57,7 +57,52 @@ class DecryptActivity : BasePGPActivity() {
         true
       }
     }
-    requireKeysExist { decrypt() }
+    requireKeysExist {
+      val gpgIdentifiers = getPGPIdentifiers(relativeParentPath) ?: return@requireKeysExist
+      filterPersistentIdsAndDecrypt(gpgIdentifiers)
+    }
+  }
+
+  override suspend fun decryptWithPassphrase(
+    passphrases: List<CharArray?>,
+    identifiers: List<PGPIdentifier>,
+    onSuccess: suspend (List<PGPIdentifier>) -> Unit,
+  ) {
+    val message = withContext(dispatcherProvider.io()) { File(fullPath).readBytes().inputStream() }
+    val outputStream = ByteArrayOutputStream()
+    val (ids, result) = repository.decrypt(passphrases, identifiers, message, outputStream)
+    if (result.isOk) {
+      val entry = passwordEntryFactory.create(result.value.toByteArray())
+      passwordEntry = entry
+      createPasswordUI(entry)
+      startAutoDismissTimer()
+      onSuccess(ids)
+    } else {
+      logcat(ERROR) { result.error.stackTraceToString() }
+      when (result.error) {
+        is IncorrectPassphraseException -> {
+          /**
+           * None of the provided passphrases worked, so remove them from temporary and persistent
+           * caches.
+           */
+          val idsToRemove = ids.map { it.toString() }
+          persistentPassphrases.edit { idsToRemove.forEach { remove(it) } }
+          idsToRemove.forEach {
+            cachedPassphrases[it]?.fill('\u0000')
+            cachedPassphrases.remove(it)
+          }
+          /* Retry */
+          decrypt(identifiers, isError = true)
+        }
+        else -> {
+          snackbar(message = result.error.toString())
+        }
+      }
+    }
+    if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {
+      cachedPassphrases.values.forEach { it.fill('\u0000') }
+      cachedPassphrases.clear()
+    }
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -115,42 +160,6 @@ class DecryptActivity : BasePGPActivity() {
     startActivity(
       Intent.createChooser(sendIntent, resources.getText(R.string.send_plaintext_password_to))
     )
-  }
-
-  private fun decrypt(isError: Boolean = false) {
-    val gpgIdentifiers = getPGPIdentifiers(relativeParentPath) ?: return
-    val passphrase = if (isError) null else AESEncryption.decrypt(cachedPassphrase)
-    lifecycleScope.launch(dispatcherProvider.main()) {
-      passphrase?.let { decryptWithPassphrase(passphrase, gpgIdentifiers) }
-        ?: askPassphrase(isError, gpgIdentifiers)
-    }
-  }
-
-  override suspend fun decryptWithPassphrase(
-    passphrase: CharArray?,
-    identifiers: List<PGPIdentifier>,
-    onSuccess: suspend () -> Unit,
-  ) {
-    val message = withContext(dispatcherProvider.io()) { File(fullPath).readBytes().inputStream() }
-    val outputStream = ByteArrayOutputStream()
-    val result = repository.decrypt(passphrase, identifiers, message, outputStream)
-    if (result.isOk) {
-      val entry = passwordEntryFactory.create(result.value.toByteArray())
-      passwordEntry = entry
-      createPasswordUI(entry)
-      startAutoDismissTimer()
-      onSuccess()
-    } else {
-      logcat(ERROR) { result.error.stackTraceToString() }
-      when (result.error) {
-        is IncorrectPassphraseException -> {
-          decrypt(isError = true)
-        }
-        else -> {
-          snackbar(message = result.error.toString())
-        }
-      }
-    }
   }
 
   private suspend fun createPasswordUI(entry: PasswordEntry) =

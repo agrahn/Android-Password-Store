@@ -5,17 +5,28 @@
 
 package app.passwordstore.ui.settings
 
+import android.content.SharedPreferences
 import android.text.InputType
+import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
+import app.passwordstore.injection.prefs.PGPPassphrases
+import app.passwordstore.util.auth.BiometricAuthenticator
+import app.passwordstore.util.crypto.AESEncryption
+import app.passwordstore.util.crypto.AESEncryption.KeyType
+import app.passwordstore.util.extensions.persistentPassphrases
 import app.passwordstore.util.settings.PreferenceKeys
 import de.Maxr1998.modernpreferences.PreferenceScreen
 import de.Maxr1998.modernpreferences.helpers.editText
+import de.Maxr1998.modernpreferences.helpers.onClick
 import de.Maxr1998.modernpreferences.helpers.singleChoice
 import de.Maxr1998.modernpreferences.helpers.switch
 import de.Maxr1998.modernpreferences.preferences.choice.SelectionItem
+import javax.inject.Inject
 
 class PasswordSettings(private val activity: FragmentActivity) : SettingsProvider {
+
+  @PGPPassphrases @Inject lateinit var persistentPassphrases: SharedPreferences
 
   override fun provideSettings(builder: PreferenceScreen.Builder) {
     builder.apply {
@@ -26,12 +37,16 @@ class PasswordSettings(private val activity: FragmentActivity) : SettingsProvide
         initialSelection = "diceware"
         titleRes = R.string.pref_password_generator_type_title
       }
-      editText(PreferenceKeys.GENERAL_SHOW_TIME) {
-        titleRes = R.string.pref_clipboard_timeout_title
-        summaryProvider = { timeout ->
-          activity.getString(R.string.pref_clipboard_timeout_summary, timeout ?: "45")
+      switch(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN) {
+        enabled = BiometricAuthenticator.canAuthenticate(activity)
+        titleRes = R.string.unlock_password_with_pin_pref_title
+        summaryRes = R.string.unlock_password_with_pin_pref_summary
+        defaultValue = false
+        onClick {
+          AESEncryption.deleteKey(keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION)
+          activity.persistentPassphrases.edit { clear() }
+          false
         }
-        textInputType = InputType.TYPE_CLASS_NUMBER
       }
       switch(PreferenceKeys.SHOW_PASSWORD) {
         titleRes = R.string.show_password_pref_title
@@ -42,6 +57,18 @@ class PasswordSettings(private val activity: FragmentActivity) : SettingsProvide
         titleRes = R.string.pref_copy_title
         summaryRes = R.string.pref_copy_summary
         defaultValue = false
+      }
+      editText(PreferenceKeys.GENERAL_SHOW_TIME) {
+        titleRes = R.string.pref_clipboard_timeout_title
+        summaryProvider = { timeout ->
+          activity.getString(R.string.pref_clipboard_timeout_summary, timeout ?: "45")
+        }
+        textInputType = InputType.TYPE_CLASS_NUMBER
+      }
+      switch(PreferenceKeys.CLEAR_CLIPBOARD_HISTORY) {
+        defaultValue = false
+        titleRes = R.string.pref_clear_clipboard_title
+        summaryRes = R.string.pref_clear_clipboard_summary
       }
     }
   }

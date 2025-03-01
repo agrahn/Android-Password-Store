@@ -50,6 +50,10 @@ val Context.keyguardManager: KeyguardManager
 val Context.sharedPrefs: SharedPreferences
   get() = getSharedPreferences("${BuildConfig.APPLICATION_ID}_preferences", 0)
 
+/** Get the persistent passphrases [SharedPreferences] instance */
+val Context.persistentPassphrases: SharedPreferences
+  get() = getSharedPreferences("${BuildConfig.APPLICATION_ID}_passphrases", 0)
+
 /** Resolve [attr] from the [Context]'s theme */
 fun Context.resolveAttribute(attr: Int): Int {
   val typedValue = TypedValue()

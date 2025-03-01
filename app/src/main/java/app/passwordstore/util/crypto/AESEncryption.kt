@@ -25,8 +25,17 @@ import javax.crypto.spec.GCMParameterSpec
 
 object AESEncryption {
 
-  private const val KEYSTORE_ALIAS = "AESKey"
-  private const val KEYSTORE_ALIAS_WITH_AUTHENTICATION = "AESKeyWithAuth"
+  enum class KeyType {
+    TEMPORARY,
+    PERSISTENT,
+    PERSISTENT_WITH_AUTHENTICATION,
+  }
+
+  private const val KEYSTORE_ALIAS = "AESKey" // valid during the lifetime of the app process
+  private const val KEYSTORE_ALIAS_NO_AUTHENTICATION =
+    "AESKeyNoAuth" // persistent, but without authentication (used for sensitive preferences)
+  private const val KEYSTORE_ALIAS_WITH_AUTHENTICATION =
+    "AESKeyWithAuth" // persistent, with authentication (used for persistent passphrase caching)
   private const val PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore"
   private const val TRANSFORMATION = "AES/GCM/NoPadding"
   private const val IV_SIZE = 12 // 12 bytes (96 bits) length of initialisation vector for GCM mode
@@ -44,9 +53,14 @@ object AESEncryption {
   }
 
   // Initialize the KeyStore and generate an AES key if it doesn't exist
-  private fun initKeyStore(requireAuthentication: Boolean) {
+  private fun initKeyStore(keyType: KeyType) {
     val keyStoreAlias =
-      if (requireAuthentication) KEYSTORE_ALIAS_WITH_AUTHENTICATION else KEYSTORE_ALIAS
+      when (keyType) {
+        KeyType.TEMPORARY -> KEYSTORE_ALIAS
+        KeyType.PERSISTENT -> KEYSTORE_ALIAS_NO_AUTHENTICATION
+        KeyType.PERSISTENT_WITH_AUTHENTICATION -> KEYSTORE_ALIAS_WITH_AUTHENTICATION
+      }
+
     if (!androidKeystore.containsAlias(keyStoreAlias)) {
       val keyGenerator =
         KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, PROVIDER_ANDROID_KEY_STORE)
@@ -59,7 +73,7 @@ object AESEncryption {
             setBlockModes(KeyProperties.BLOCK_MODE_GCM)
             setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
             setKeySize(256)
-            if (requireAuthentication) {
+            if (keyType == KeyType.PERSISTENT_WITH_AUTHENTICATION) {
               setUserAuthenticationRequired(true)
               if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 setUserAuthenticationParameters(30, KeyProperties.AUTH_DEVICE_CREDENTIAL)
@@ -78,9 +92,13 @@ object AESEncryption {
   }
 
   // Retrieve the AES key from the KeyStore
-  private fun getSecretKey(requireAuthentication: Boolean): SecretKey {
+  private fun getSecretKey(keyType: KeyType): SecretKey {
     val keyStoreAlias =
-      if (requireAuthentication) KEYSTORE_ALIAS_WITH_AUTHENTICATION else KEYSTORE_ALIAS
+      when (keyType) {
+        KeyType.TEMPORARY -> KEYSTORE_ALIAS
+        KeyType.PERSISTENT -> KEYSTORE_ALIAS_NO_AUTHENTICATION
+        KeyType.PERSISTENT_WITH_AUTHENTICATION -> KEYSTORE_ALIAS_WITH_AUTHENTICATION
+      }
     return androidKeystore.getKey(keyStoreAlias, null) as SecretKey
   }
 
@@ -111,37 +129,40 @@ object AESEncryption {
   /* Public methods */
 
   // Encrypt a CharArray using the AES key from the KeyStore and Base64-encode the result
-  fun encrypt(data: CharArray, requireAuthentication: Boolean = false): CharArray? {
-    if (!isHardwareBacked(requireAuthentication)) return null
+  fun encrypt(data: CharArray?, keyType: KeyType = KeyType.TEMPORARY): CharArray? {
+    if (data == null || !isHardwareBacked(keyType)) return null
     val cipher = Cipher.getInstance(TRANSFORMATION)
-    cipher.init(Cipher.ENCRYPT_MODE, getSecretKey(requireAuthentication))
+    cipher.init(Cipher.ENCRYPT_MODE, getSecretKey(keyType))
     return (cipher.iv + cipher.doFinal(data.toByteArray())).encodeToBase64CharArray()
   }
 
   // Decrypt Base64 encoded AES-encrypted data to CharArray
-  fun decrypt(encryptedBase64Data: CharArray?, requireAuthentication: Boolean = false): CharArray? {
-    if (encryptedBase64Data == null) return null
-    if (!isHardwareBacked(requireAuthentication)) return null
+  fun decrypt(encryptedBase64Data: CharArray?, keyType: KeyType = KeyType.TEMPORARY): CharArray? {
+    if (encryptedBase64Data == null || !isHardwareBacked(keyType)) return null
     val ivAndEncryptedData = encryptedBase64Data.decodeFromBase64ToByteArray()
     val iv = ivAndEncryptedData.copyOfRange(0, IV_SIZE)
     val encryptedBytes = ivAndEncryptedData.copyOfRange(IV_SIZE, ivAndEncryptedData.size)
     val cipher = Cipher.getInstance(TRANSFORMATION)
     val spec = GCMParameterSpec(128, iv)
-    cipher.init(Cipher.DECRYPT_MODE, getSecretKey(requireAuthentication), spec)
+    cipher.init(Cipher.DECRYPT_MODE, getSecretKey(keyType), spec)
     val decryptedBytes = cipher.doFinal(encryptedBytes)
     return decryptedBytes.toCharArray()
   }
 
-  fun deleteKey(requireAuthentication: Boolean = false) {
+  fun deleteKey(keyType: KeyType = KeyType.TEMPORARY) {
     val keyStoreAlias =
-      if (requireAuthentication) KEYSTORE_ALIAS_WITH_AUTHENTICATION else KEYSTORE_ALIAS
+      when (keyType) {
+        KeyType.TEMPORARY -> KEYSTORE_ALIAS
+        KeyType.PERSISTENT -> KEYSTORE_ALIAS_NO_AUTHENTICATION
+        KeyType.PERSISTENT_WITH_AUTHENTICATION -> KEYSTORE_ALIAS_WITH_AUTHENTICATION
+      }
     if (androidKeystore.containsAlias(keyStoreAlias)) androidKeystore.deleteEntry(keyStoreAlias)
   }
 
   // Check if the AES key is hardware-backed
-  fun isHardwareBacked(requireAuthentication: Boolean = false): Boolean {
-    initKeyStore(requireAuthentication)
-    val key = getSecretKey(requireAuthentication)
+  fun isHardwareBacked(keyType: KeyType = KeyType.TEMPORARY): Boolean {
+    initKeyStore(keyType)
+    val key = getSecretKey(keyType)
     val factory = SecretKeyFactory.getInstance(key.algorithm, PROVIDER_ANDROID_KEY_STORE)
     val keyInfo = factory.getKeySpec(key, KeyInfo::class.java) as KeyInfo
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

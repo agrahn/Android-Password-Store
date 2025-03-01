@@ -26,10 +26,14 @@ import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.injection.prefs.PGPPassphrases
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.ui.pgp.PGPKeyImportActivity
+import app.passwordstore.util.auth.BiometricAuthenticator
+import app.passwordstore.util.auth.BiometricAuthenticator.Result as BiometricResult
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.crypto.AESEncryption
+import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.clipboard
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.snackbar
@@ -72,9 +76,6 @@ open class BasePGPActivity : AppCompatActivity() {
   /** Counter for the user's decryption attempts on the current password entry */
   private var retries = 0
 
-  /** Caching the entered passphrase, user option */
-  private var cacheEnabled = false
-
   @Inject lateinit var pgpKeyManager: PGPKeyManager
 
   /** Action to invoke if [keyImportAction] succeeds. */
@@ -91,6 +92,12 @@ open class BasePGPActivity : AppCompatActivity() {
 
   /** [SharedPreferences] instance used by subclasses to persist settings */
   @SettingsPreferences @Inject lateinit var settings: SharedPreferences
+
+  /**
+   * [SharedPreferences] instance used by subclasses for persistent caching of encrypted passphrases
+   */
+  @PGPPassphrases @Inject lateinit var persistentPassphrases: SharedPreferences
+
   @Inject lateinit var repository: CryptoRepository
   @Inject lateinit var dispatcherProvider: DispatcherProvider
 
@@ -133,8 +140,9 @@ open class BasePGPActivity : AppCompatActivity() {
   protected fun copyPasswordToClipboard(
     password: CharArray?,
     isSensitive: Boolean = true,
+    showSnackbar: Boolean = true,
   ): ScheduledExecutorService? {
-    copyTextToClipboard(password, isSensitive = isSensitive, showSnackbar = false)
+    copyTextToClipboard(password, isSensitive = isSensitive, showSnackbar)
 
     val clearAfter = settings.getString(PreferenceKeys.GENERAL_SHOW_TIME)?.toIntOrNull() ?: 45
     val deepClear = settings.getBoolean(PreferenceKeys.CLEAR_CLIPBOARD_HISTORY, false)
@@ -146,11 +154,11 @@ open class BasePGPActivity : AppCompatActivity() {
         {
           logcat { "Clearing the clipboard" }
           var randomNum = (100000000000000000..999999999999999999).random().toString().toCharArray()
-          copyTextToClipboard(randomNum, isSensitive = false)
+          copyTextToClipboard(randomNum, isSensitive = false, showSnackbar = false)
           if (deepClear) {
             repeat(CLIPBOARD_CLEAR_COUNT) {
               randomNum = (100000000000000000..999999999999999999).random().toString().toCharArray()
-              copyTextToClipboard(randomNum, isSensitive = false)
+              copyTextToClipboard(randomNum, isSensitive = false, showSnackbar = false)
             }
           }
         },
@@ -220,6 +228,7 @@ open class BasePGPActivity : AppCompatActivity() {
             val id = PGPIdentifier.fromString(line)
             if (id == null || !runBlocking { repository.hasKey(id) }) {
               invalidIdCount++
+              persistentPassphrases.edit { remove(id.toString()) }
               null
             } else id
           }
@@ -290,17 +299,15 @@ open class BasePGPActivity : AppCompatActivity() {
   /** Opens the dialog for passphrase input and then forwards it to the decryption method. */
   protected suspend fun askPassphrase(isError: Boolean, identifiers: List<PGPIdentifier>) {
     if (!repository.isPasswordProtected(identifiers) && !isError) {
-      decryptWithPassphrase(passphrase = null, identifiers)
+      decryptWithPassphrase(passphrases = listOf(null), identifiers)
       return
     }
 
     if (++retries > MAX_RETRIES) finish()
 
+    var cacheEnabled = settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)
     val dialog =
-      PasswordDialog.newInstance(
-        cacheEnabled = settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false),
-        getEmailsFromIdentifiers(identifiers),
-      )
+      PasswordDialog.newInstance(cacheEnabled = cacheEnabled, getEmailsFromIdentifiers(identifiers))
     if (isError && retries > 1) {
       dialog.setError()
     }
@@ -311,17 +318,46 @@ open class BasePGPActivity : AppCompatActivity() {
           bundle.getCharArray(PasswordDialog.PASSWORD_PHRASE_KEY) ?: throw NullPointerException()
         cacheEnabled = bundle.getBoolean(PasswordDialog.PASSWORD_CACHE_KEY)
         lifecycleScope.launch(dispatcherProvider.main()) {
-          decryptWithPassphrase(passphrase, identifiers) {
+          decryptWithPassphrase(listOf(passphrase), identifiers) { ids -> // onSuccess
             runCatching {
-                cachedPassphrase =
-                  if (AESEncryption.isHardwareBacked() && cacheEnabled)
-                    AESEncryption.encrypt(passphrase)
-                  else null
+                val isHardwareBacked = AESEncryption.isHardwareBacked()
+
+                // update temporary passphrase cache
+                val encryptedPassphrase = AESEncryption.encrypt(passphrase)
+                if (isHardwareBacked && cacheEnabled && encryptedPassphrase != null)
+                  cachedPassphrases.put(ids.first().toString(), encryptedPassphrase)
                 settings.edit {
                   putBoolean(
                     PreferenceKeys.CACHE_PASSPHRASE,
-                    AESEncryption.isHardwareBacked() && cacheEnabled,
+                    isHardwareBacked && cacheEnabled && encryptedPassphrase != null,
                   )
+                }
+
+                // update persistent passphrase
+                if (
+                  settings.getBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, false) &&
+                    BiometricAuthenticator.canAuthenticate(this@BasePGPActivity) &&
+                    isHardwareBacked &&
+                    !persistentPassphrases.contains(ids.first().toString())
+                ) {
+                  BiometricAuthenticator.authenticate(
+                    this@BasePGPActivity,
+                    dialogDescriptionRes =
+                      R.string.biometric_prompt_description_persistently_cache_password,
+                  ) { result ->
+                    if (result is BiometricResult.Success) {
+                      persistentPassphrases.edit {
+                        putString(
+                          ids.first().toString(),
+                          (AESEncryption.encrypt(
+                              passphrase,
+                              keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION,
+                            ))
+                            ?.concatToString(),
+                        )
+                      }
+                    }
+                  }
                 }
               }
               .onFailure { e -> logcat { e.asLog() } }
@@ -331,10 +367,58 @@ open class BasePGPActivity : AppCompatActivity() {
     }
   }
 
+  protected fun filterPersistentIdsAndDecrypt(identifiers: List<PGPIdentifier>) {
+    val peristentIds =
+      identifiers.map { it.toString() }.filter { persistentPassphrases.contains(it) }
+    if (
+      peristentIds.size > 0 &&
+        identifiers.map { it.toString() }.filter { cachedPassphrases.containsKey(it) }.none() &&
+        settings.getBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, false) &&
+        BiometricAuthenticator.canAuthenticate(this@BasePGPActivity) &&
+        AESEncryption.isHardwareBacked()
+    ) {
+      BiometricAuthenticator.authenticate(
+        this@BasePGPActivity,
+        dialogDescriptionRes = R.string.biometric_prompt_description_unlock_entry,
+      ) { result ->
+        if (result is BiometricResult.Success) {
+          peristentIds.forEach { id ->
+            val pass =
+              AESEncryption.encrypt(
+                AESEncryption.decrypt(
+                  persistentPassphrases.getString(id, null)?.toCharArray(),
+                  keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION,
+                )
+              )
+            if (pass != null) cachedPassphrases[id] = pass
+          }
+        }
+        decrypt(identifiers)
+      }
+    } else {
+      decrypt(identifiers)
+    }
+  }
+
+  protected fun decrypt(identifiers: List<PGPIdentifier>, isError: Boolean = false) {
+    val passphrases =
+      identifiers
+        .mapNotNull { cachedPassphrases.get(it.toString()) }
+        .filter { AESEncryption.decrypt(it) != null }
+    lifecycleScope.launch(dispatcherProvider.main()) {
+      if (!isError && !passphrases.isEmpty()) {
+        decryptWithPassphrase(passphrases.map { AESEncryption.decrypt(it) }, identifiers)
+      } else {
+        askPassphrase(isError, identifiers)
+      }
+    }
+  }
+
+  /** Subclass-specific implementations */
   open suspend fun decryptWithPassphrase(
-    passphrase: CharArray?,
+    passphrases: List<CharArray?>,
     identifiers: List<PGPIdentifier>,
-    onSuccess: suspend () -> Unit = {},
+    onSuccess: suspend (List<PGPIdentifier>) -> Unit = {},
   ) {}
 
   companion object {
@@ -343,7 +427,13 @@ open class BasePGPActivity : AppCompatActivity() {
     const val EXTRA_FILE_PATH = "FILE_PATH"
     const val EXTRA_REPO_PATH = "REPO_PATH"
 
-    var cachedPassphrase: CharArray? = null
+    /**
+     * Temporary cache for PGP key passphrases, unconditionally nulled and cleared when the screen
+     * is switched off. Passphrases stored here are AES encrypted with a key that is renewed when
+     * the app is restarted.
+     */
+    val cachedPassphrases = mutableMapOf<String, CharArray>()
+
     var clearTimer: ScheduledExecutorService? = null
 
     /**
