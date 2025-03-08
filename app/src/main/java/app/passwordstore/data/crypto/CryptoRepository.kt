@@ -63,6 +63,13 @@ constructor(
           }
       }
     }
+    // Last resort if one of the keys is a "stripped" one
+    identities.forEach { id ->
+      val key = pgpKeyManager.getKeyById(id).unwrap()
+      if (!pgpCryptoHandler.isPassphraseProtected(listOf(key))) {
+        return Triple(listOf(id), listOf(key), passphrases.first())
+      }
+    }
     val keys = identities.map { pgpKeyManager.getKeyById(it) }.filterValues()
     return Triple(identities, keys, null)
   }
