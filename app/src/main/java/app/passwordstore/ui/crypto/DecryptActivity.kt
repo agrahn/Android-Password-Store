@@ -59,14 +59,14 @@ class DecryptActivity : BasePGPActivity() {
     }
     requireKeysExist {
       val gpgIdentifiers = getPGPIdentifiers(relativeParentPath) ?: return@requireKeysExist
-      filterPersistentIdsAndDecrypt(gpgIdentifiers)
+      getPersistentAndDecrypt(gpgIdentifiers)
     }
   }
 
   override suspend fun decryptWithPassphrase(
-    passphrases: List<CharArray?>,
+    passphrases: Map<String, CharArray>,
     identifiers: List<PGPIdentifier>,
-    onSuccess: suspend (List<PGPIdentifier>) -> Unit,
+    onSuccess: suspend (String) -> Unit,
   ) {
     val message = withContext(dispatcherProvider.io()) { File(fullPath).readBytes().inputStream() }
     val outputStream = ByteArrayOutputStream()
@@ -76,7 +76,7 @@ class DecryptActivity : BasePGPActivity() {
       passwordEntry = entry
       createPasswordUI(entry)
       startAutoDismissTimer()
-      onSuccess(ids)
+      onSuccess(ids.first())
     } else {
       logcat(ERROR) { result.error.stackTraceToString() }
       when (result.error) {
@@ -85,9 +85,8 @@ class DecryptActivity : BasePGPActivity() {
            * None of the provided passphrases worked, so remove them from temporary and persistent
            * caches.
            */
-          val idsToRemove = ids.map { it.toString() }
-          persistentPassphrases.edit { idsToRemove.forEach { remove(it) } }
-          idsToRemove.forEach {
+          persistentPassphrases.edit { ids.forEach { remove(it) } }
+          ids.forEach {
             cachedPassphrases[it]?.fill('\u0000')
             cachedPassphrases.remove(it)
           }

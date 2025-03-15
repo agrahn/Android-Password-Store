@@ -51,38 +51,61 @@ constructor(
   }
 
   private suspend fun findFirstMatchingIdKeyPassphrase(
+    passphrases: Map<String, CharArray>,
     identities: List<PGPIdentifier>,
-    passphrases: List<CharArray?>,
-  ): Triple<List<PGPIdentifier>, List<PGPKey>, CharArray?> {
-    identities.forEach { id ->
-      val key = pgpKeyManager.getKeyById(id).unwrap()
-      passphrases.forEach { passphrase ->
-        runCatching { pgpCryptoHandler.passphraseIsCorrect(key, passphrase) }
+  ): Triple<List<String>, List<PGPKey>, CharArray> {
+    if (passphrases.keys.first() == "") { // New passphrase from user input
+      // Test it against the PGP identities of current entry
+      identities.forEach { id ->
+        val key = pgpKeyManager.getKeyById(id).unwrap()
+        runCatching { pgpCryptoHandler.passphraseIsCorrect(key, passphrases.values.first()) }
           .onSuccess {
-            return Triple(listOf(id), listOf(key), passphrase)
+            return Triple(listOf(id.toString()), listOf(key), passphrases.values.first())
           }
       }
-    }
-    // Last resort if one of the keys is a "stripped" one
-    identities.forEach { id ->
-      val key = pgpKeyManager.getKeyById(id).unwrap()
-      if (!pgpCryptoHandler.isPassphraseProtected(listOf(key))) {
-        return Triple(listOf(id), listOf(key), passphrases.first())
+      // Last resort: A key could be a "stripped" one
+      identities.forEach { id ->
+        val key = pgpKeyManager.getKeyById(id).unwrap()
+        if (!pgpCryptoHandler.isPassphraseProtected(listOf(key))) {
+          return Triple(listOf(id.toString()), listOf(key), passphrases.values.first())
+        }
+      }
+    } else { // Get the first working cached passphrase
+      passphrases.forEach { (id, pass) ->
+        val pgpId = PGPIdentifier.fromString(id)
+        pgpId?.let {
+          val key = pgpKeyManager.getKeyById(pgpId).unwrap()
+          runCatching { pgpCryptoHandler.passphraseIsCorrect(key, pass) }
+            .onSuccess {
+              return Triple(listOf(id), listOf(key), pass)
+            }
+        }
+      }
+      // One of the keys could be a "stripped" one
+      passphrases.forEach { (id, pass) ->
+        val pgpId = PGPIdentifier.fromString(id)
+        pgpId?.let {
+          val key = pgpKeyManager.getKeyById(pgpId).unwrap()
+          if (!pgpCryptoHandler.isPassphraseProtected(listOf(key))) {
+            return Triple(listOf(id), listOf(key), pass)
+          }
+        }
       }
     }
+    // Nothing worked
     val keys = identities.map { pgpKeyManager.getKeyById(it) }.filterValues()
-    return Triple(identities, keys, null)
+    return Triple(identities.map { it.toString() }, keys, charArrayOf())
   }
 
   suspend fun decrypt(
-    passphrases: List<CharArray?>,
+    passphrases: Map<String, CharArray>,
     identities: List<PGPIdentifier>,
     message: ByteArrayInputStream,
     out: ByteArrayOutputStream,
   ) =
     withContext(dispatcherProvider.io()) {
       val (matchingKeyId, matchingKey, matchingPassphrase) =
-        findFirstMatchingIdKeyPassphrase(identities, passphrases)
+        findFirstMatchingIdKeyPassphrase(passphrases, identities)
       val decryptionOptions = PGPDecryptOptions.Builder().build()
       Pair(
         matchingKeyId,

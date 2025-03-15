@@ -68,14 +68,14 @@ class AutofillDecryptActivity : BasePGPActivity() {
     requireKeysExist {
       val gpgIdentifiers =
         getPGPIdentifiers(getParentPath(filePath, repositoryPath)) ?: return@requireKeysExist
-      filterPersistentIdsAndDecrypt(gpgIdentifiers)
+      getPersistentAndDecrypt(gpgIdentifiers)
     }
   }
 
   override suspend fun decryptWithPassphrase(
-    passphrases: List<CharArray?>,
+    passphrases: Map<String, CharArray>,
     identifiers: List<PGPIdentifier>,
-    onSuccess: suspend (List<PGPIdentifier>) -> Unit,
+    onSuccess: suspend (String) -> Unit,
   ) {
     val encryptedFile = File(filePath)
     val message = withContext(dispatcherProvider.io()) { encryptedFile.readBytes().inputStream() }
@@ -117,15 +117,14 @@ class AutofillDecryptActivity : BasePGPActivity() {
           )
         }
       }
-      onSuccess(ids)
+      onSuccess(ids.first())
       withContext(dispatcherProvider.main()) { finish() }
     } else {
       logcat(ERROR) { result.error.stackTraceToString() }
       when (result.error) {
         is IncorrectPassphraseException -> {
-          val idsToRemove = ids.map { it.toString() }
-          persistentPassphrases.edit { idsToRemove.forEach { remove(it) } }
-          idsToRemove.forEach {
+          persistentPassphrases.edit { ids.forEach { remove(it) } }
+          ids.forEach {
             cachedPassphrases[it]?.fill('\u0000')
             cachedPassphrases.remove(it)
           }
