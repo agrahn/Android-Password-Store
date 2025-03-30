@@ -19,7 +19,7 @@ object BiometricAuthenticator {
 
   private const val TAG = "BiometricAuthenticator"
   private const val VALID_AUTHENTICATORS =
-    Authenticators.DEVICE_CREDENTIAL or Authenticators.BIOMETRIC_WEAK
+    Authenticators.DEVICE_CREDENTIAL or Authenticators.BIOMETRIC_STRONG
 
   /**
    * Sealed class to wrap [BiometricPrompt]'s [Int]-based return codes into more easily-interpreted
