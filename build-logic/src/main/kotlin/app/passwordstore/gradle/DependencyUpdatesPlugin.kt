@@ -19,7 +19,7 @@ class DependencyUpdatesPlugin : Plugin<Project> {
   override fun apply(project: Project) {
     project.pluginManager.apply(VersionCatalogUpdatePlugin::class)
     project.extensions.configure<VersionCatalogUpdateExtension> {
-      keep.keepUnusedLibraries.set(true)
+      // keep.keepUnusedLibraries.set(true)
       versionSelector {
         val currentVersion = Version.tryParse(it.currentVersion).getOrNull()
         val newVersion = Version.tryParse(it.candidate.version).getOrNull()
