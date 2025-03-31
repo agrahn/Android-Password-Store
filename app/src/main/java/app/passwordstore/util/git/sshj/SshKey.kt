@@ -233,7 +233,10 @@ object SshKey {
         if (requireAuthentication) {
           setUserAuthenticationRequired(true)
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            setUserAuthenticationParameters(30, KeyProperties.AUTH_DEVICE_CREDENTIAL)
+            setUserAuthenticationParameters(
+              30,
+              KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL,
+            )
           } else {
             @Suppress("DEPRECATION") setUserAuthenticationValidityDurationSeconds(30)
           }
