@@ -196,8 +196,8 @@
   <string name="git_log">Commit-Log anzeigen</string>
   <string name="show_password_pref_title">Zeige das Passwort.</string>
   <string name="show_password_pref_summary">Soll das entschlüsselte Passwort sichtbar sein? Dies deaktiviert nicht das Kopieren.</string>
-  <string name="unlock_password_with_pin_pref_title">Passwörter mit PIN/Biometrie freigeben</string>
-  <string name="unlock_password_with_pin_pref_summary">Passwörter mit der Geräte-PIN/Biometrie freigeben. Der PGP-Kennwortsatz wird hierfür verschlüsselt auf dem Gerät abgelegt.</string>
+  <string name="unlock_password_with_pin_pref_title">Passwörter mit Biometrie freigeben</string>
+  <string name="unlock_password_with_pin_pref_summary">Geben Sie Passworteinträge mit Ihrem Fingerabdruck frei. Der PGP-Kennwortsatz wird hierfür verschlüsselt auf dem Gerät abgelegt.</string>
   <string name="pwd_generate_button">Erstellen</string>
   <string name="refresh_list">Liste aktualisieren</string>
   <string name="send_plaintext_password_to">Passwort unverschlüsselt senden an…</string>
@@ -248,7 +248,7 @@
   <string name="biometric_prompt_title">Biometrische Abfrage</string>
   <string name="biometric_auth_error_reason">Authentifizierungsfehler: %s</string>
   <string name="pref_biometric_auth_title">Biometrische Authentifizierung</string>
-  <string name="pref_biometric_auth_summary">Beim Starten der App werden Sie nach der Geräte-PIN oder Ihrem Fingerabdruck gefragt.</string>
+  <string name="pref_biometric_auth_summary">Beim Starten der App werden Sie nach Ihrem Fingerabdruck gefragt.</string>
   <string name="pref_biometric_auth_summary_error">Fingerabdrucksensor fehlt oder ist nicht ansprechbar.</string>
   <string name="pref_biometric_auth_summary_disabled_platform">Feature wegen eines Plattformbugs nicht verfügbar</string>
   <string name="pref_title_openkeystore_clear_keyid">Lösche gespeicherte OpenKeystore SSH-Schlüssel-ID.</string>

@@ -106,7 +106,7 @@
   <string name="pref_category_general_title">General</string>
   <string name="pref_category_passwords_title">Passwords</string>
   <string name="pref_clipboard_timeout_title">Password copy timeout</string>
-  <string name="pref_clipboard_timeout_summary">Set the time (in seconds) you want the password to be in clipboard. 0 means forever. Current value: %1$s</string>
+  <string name="pref_clipboard_timeout_summary">Set the time (in seconds) you want the password to stay in the clipboard. 0 means forever. Current value: %1$s</string>
   <string name="pref_copy_title">Automatically copy password</string>
   <string name="pref_copy_summary">Automatically copy the password to the clipboard after decryption was successful.</string>
   <string name="ssh_key_import_error_not_an_ssh_key_message">Selected file does not appear to be an SSH private key.</string>
@@ -197,8 +197,8 @@
   <string name="git_log">Show commit log</string>
   <string name="show_password_pref_title">Show the password</string>
   <string name="show_password_pref_summary">Control the visibility of the passwords once decrypted. This does not disable copying to clipboard.</string>
-  <string name="unlock_password_with_pin_pref_title">Unlock passwords with PIN/biometrics</string>
-  <string name="unlock_password_with_pin_pref_summary">Unlock passwords with device PIN or biometrics. The PGP passphrase will be encrypted and cached on the device.</string>
+  <string name="unlock_password_with_pin_pref_title">Unlock passwords with biometrics</string>
+  <string name="unlock_password_with_pin_pref_summary">Unlock password entries with your fingerprint. The PGP passphrase will be encrypted and cached on the device.</string>
   <string name="pwd_generate_button">Generate</string>
   <string name="refresh_list">Refresh list</string>
   <string name="send_plaintext_password_to">Send password as plaintext using…</string>
@@ -246,10 +246,10 @@
   <string name="git_head_detached">HEAD detached at %1$s</string>
   <string name="git_head_missing">Unable to locate HEAD</string>
   <string name="git_abort_and_push_title">Abort and Push</string>
-  <string name="biometric_prompt_title">Biometric Prompt</string>
+  <string name="biometric_prompt_title">Biometric Authentication</string>
   <string name="biometric_auth_error_reason">Authentication failure: %s</string>
   <string name="pref_biometric_auth_title">Enable biometric authentication</string>
-  <string name="pref_biometric_auth_summary">Password Store will prompt you for your device PIN or fingerprint when launching the app</string>
+  <string name="pref_biometric_auth_summary">Password Store will prompt you for your fingerprint when launching the app</string>
   <string name="pref_biometric_auth_summary_error">Fingerprint hardware not accessible or missing</string>
   <string name="pref_biometric_auth_summary_disabled_platform">Feature unavailable due to a platform bug</string>
   <string name="pref_title_openkeystore_clear_keyid">Clear remembered OpenKeystore SSH Key ID</string>
@@ -379,8 +379,8 @@
 
   <!-- Passphrase input -->
   <string name="cache_password_until_screen_off">Keep passphrase until screen-off</string>
-  <string name="biometric_prompt_description_persistently_cache_password">Authenticate to encrypt and cache the PGP passphrase on the device</string>
-  <string name="biometric_prompt_description_unlock_entry">Unlock entry with your device PIN or biometrics</string>
+  <string name="biometric_prompt_description_persistently_cache_password">Encrypt and cache the PGP passphrase on the device</string>
+  <string name="biometric_prompt_description_unlock_entry">Unlock entry with your fingerprint</string>
   <string name="pgp_wrong_passphrase_input">Wrong passphrase</string>
   <string name="pgp_id_label">PGP ID: </string>
   <string name="pgp_id_label_plural">PGP IDs: </string>

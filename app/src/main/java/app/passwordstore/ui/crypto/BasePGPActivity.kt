@@ -320,9 +320,8 @@ open class BasePGPActivity : AppCompatActivity() {
         lifecycleScope.launch(dispatcherProvider.main()) {
           decryptWithPassphrase(mapOf("" to passphrase), identifiers) { id -> // onSuccess
             runCatching {
-                val isHardwareBacked = AESEncryption.isHardwareBacked()
-
                 // update temporary passphrase cache
+                val isHardwareBacked = AESEncryption.isHardwareBacked()
                 val encryptedPassphrase = AESEncryption.encrypt(passphrase)
                 if (isHardwareBacked && cacheEnabled && encryptedPassphrase != null)
                   cachedPassphrases.put(id, encryptedPassphrase)
@@ -332,28 +331,32 @@ open class BasePGPActivity : AppCompatActivity() {
                     isHardwareBacked && cacheEnabled && encryptedPassphrase != null,
                   )
                 }
-
                 // update persistent passphrase
                 if (
-                  isHardwareBacked &&
+                  AESEncryption.isHardwareBacked(KeyType.PERSISTENT_WITH_AUTHENTICATION) &&
                     settings.getBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, false) &&
                     BiometricAuthenticator.canAuthenticate(this@BasePGPActivity)
                 ) {
-                  BiometricAuthenticator.authenticate(
-                    this@BasePGPActivity,
-                    dialogDescriptionRes =
-                      R.string.biometric_prompt_description_persistently_cache_password,
-                  ) { result ->
-                    if (result is BiometricResult.Success) {
-                      persistentPassphrases.edit {
-                        putString(
-                          id,
-                          (AESEncryption.encrypt(
-                              passphrase,
-                              keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION,
-                            ))
-                            ?.concatToString(),
-                        )
+                  val cipher = AESEncryption.getCipher(KeyType.PERSISTENT_WITH_AUTHENTICATION)
+                  if (cipher != null) {
+                    BiometricAuthenticator.authenticate(
+                      this@BasePGPActivity,
+                      dialogDescriptionRes =
+                        R.string.biometric_prompt_description_persistently_cache_password,
+                      cipher = cipher,
+                    ) { result ->
+                      if (result is BiometricResult.Success) {
+                        persistentPassphrases.edit {
+                          putString(
+                            id,
+                            (AESEncryption.encrypt(
+                                passphrase,
+                                keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION,
+                                cipher = result.cryptoObject?.cipher,
+                              ))
+                              ?.concatToString(),
+                          )
+                        }
                       }
                     }
                   }
@@ -366,38 +369,49 @@ open class BasePGPActivity : AppCompatActivity() {
     }
   }
 
-  /** Find persistent PGP passphrases with matching key IDs, unlock them with biometrics */
+  /* Find persistent PGP passphrases with matching key IDs, unlock the first one
+   * with biometrics */
   protected fun getPersistentAndDecrypt(identifiers: List<PGPIdentifier>) {
-    val peristentIds =
+    val persistentIds =
       identifiers.map { it.toString() }.filter { persistentPassphrases.contains(it) }
     if (
-      !peristentIds.none() &&
+      !persistentIds.none() &&
         identifiers.map { it.toString() }.filter { cachedPassphrases.containsKey(it) }.none() &&
+        AESEncryption.isHardwareBacked(KeyType.PERSISTENT_WITH_AUTHENTICATION) &&
         settings.getBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, false) &&
-        BiometricAuthenticator.canAuthenticate(this@BasePGPActivity) &&
-        AESEncryption.isHardwareBacked()
+        BiometricAuthenticator.canAuthenticate(this@BasePGPActivity)
     ) {
-      BiometricAuthenticator.authenticate(
-        this@BasePGPActivity,
-        dialogDescriptionRes = R.string.biometric_prompt_description_unlock_entry,
-      ) { result ->
-        if (result is BiometricResult.Success) {
-          peristentIds.forEach { id ->
+      val id = persistentIds[0]
+      val passEncrypted = persistentPassphrases.getString(id, null)?.toCharArray()
+      val cipher = AESEncryption.getCipher(KeyType.PERSISTENT_WITH_AUTHENTICATION, passEncrypted)
+      if (cipher != null) {
+        BiometricAuthenticator.authenticate(
+          this@BasePGPActivity,
+          dialogDescriptionRes = R.string.biometric_prompt_description_unlock_entry,
+          cipher = cipher,
+        ) { result ->
+          if (result is BiometricResult.Success) {
             val pass =
+              // re-encrypt passphrase without biometrics for use until screen-off
               AESEncryption.encrypt(
+                // decrypt persistently cached passphrase with biometrics
                 AESEncryption.decrypt(
-                  persistentPassphrases.getString(id, null)?.toCharArray(),
+                  passEncrypted,
                   keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION,
+                  cipher = result.cryptoObject?.cipher,
                 )
               )
-            cachedPassphrases.put(id, pass ?: charArrayOf())
+            if (pass != null) cachedPassphrases.put(id, pass)
           }
+          if (result !is BiometricResult.Retry) decrypt(identifiers)
         }
+      } else {
+        /* The AES key was invalidated by enrollment of a new biometric key, hence
+         * all persistent passphrases have become unusable too. */
+        persistentPassphrases.edit { clear() }
         decrypt(identifiers)
       }
-    } else {
-      decrypt(identifiers)
-    }
+    } else decrypt(identifiers)
   }
 
   protected fun decrypt(identifiers: List<PGPIdentifier>, isError: Boolean = false) {
@@ -433,7 +447,7 @@ open class BasePGPActivity : AppCompatActivity() {
      * is switched off. Passphrases stored here are AES encrypted with a key that is renewed when
      * the app is restarted.
      */
-    val cachedPassphrases = mutableMapOf<String, CharArray>()
+    val cachedPassphrases = mutableMapOf<String, CharArray>() // pgp id, passphrase
 
     var clearTimer: ScheduledExecutorService? = null
 
