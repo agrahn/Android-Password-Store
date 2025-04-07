@@ -80,9 +80,9 @@ object AESEncryption {
             if (keyType == KeyType.PERSISTENT_WITH_AUTHENTICATION) {
               setUserAuthenticationRequired(true)
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            /* if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
               setIsStrongBoxBacked(isStrongBoxSupported)
-            }
+            } */
             build()
           }
       keyGenerator.init(keyGenParameterSpec)
