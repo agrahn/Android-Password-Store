@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.14.0] - 2025-04-08
+
 ### Added
 
 - Display user ID (or user IDs in case of multi-key encrypted entries) on the passphrase input dialog
