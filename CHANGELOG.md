@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.14.0] - 2025-04-09
+
 ### Added
 
 - Display user ID (or user IDs in case of multi-key encrypted entries) on the passphrase input dialog
@@ -489,7 +491,8 @@ All notable changes to this project will be documented in this file.
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/android-password-store/Android-Password-Store/compare/v1.13.5...agrahn:Android-Password-Store:HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/agrahn/Android-Password-Store/compare/v1.13.5...v1.14.0
 [1.13.5]: https://github.com/android-password-store/Android-Password-Store/compare/v1.13.4...v1.13.5
 [1.13.4]: https://github.com/android-password-store/Android-Password-Store/compare/v1.13.3...v1.13.4
 [1.13.3]: https://github.com/android-password-store/Android-Password-Store/compare/v1.13.2...v1.13.3
