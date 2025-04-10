@@ -6,11 +6,15 @@ package app.passwordstore.ui.main
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
+import androidx.biometric.BiometricManager.Authenticators
+import app.passwordstore.R
 import app.passwordstore.ui.crypto.BasePGPActivity
 import app.passwordstore.ui.crypto.DecryptActivity
 import app.passwordstore.ui.passwords.PasswordStore
@@ -18,9 +22,16 @@ import app.passwordstore.util.auth.BiometricAuthenticator
 import app.passwordstore.util.auth.BiometricAuthenticator.Result
 import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.settings.PreferenceKeys
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 @SuppressLint("CustomSplashScreen")
 class LaunchActivity : AppCompatActivity() {
+
+  private val enrollFingerprintActivity =
+    registerForActivityResult(StartActivityForResult()) { activityResult ->
+      if (activityResult.resultCode == RESULT_OK) startTargetActivity(false)
+      else finishAndRemoveTask()
+    }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -32,15 +43,27 @@ class LaunchActivity : AppCompatActivity() {
             startTargetActivity(false)
           }
           is Result.HardwareUnavailableOrDisabled -> {
-            prefs.edit { remove(PreferenceKeys.BIOMETRIC_AUTH_2) }
-            startTargetActivity(false)
-          }
-          is Result.Failure,
-          Result.CanceledBySystem,
-          Result.CanceledByUser -> {
-            finish()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+              val enrollFingerprintIntent =
+                Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
+                  putExtra(
+                    Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
+                    Authenticators.BIOMETRIC_STRONG,
+                  )
+                }
+              enrollFingerprintActivity.launch(enrollFingerprintIntent)
+            } else {
+              MaterialAlertDialogBuilder(this)
+                .setTitle(getString(R.string.pref_biometric_auth_summary_error))
+                .setMessage(getString(R.string.check_devicelock_settings_dialog_message))
+                .setPositiveButton(getString(R.string.dialog_ok)) { _, _ -> finishAndRemoveTask() }
+                .show()
+            }
           }
           is Result.Retry -> {}
+          else -> {
+            finishAndRemoveTask()
+          }
         }
       }
     } else {

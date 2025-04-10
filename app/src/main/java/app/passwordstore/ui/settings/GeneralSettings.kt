@@ -80,8 +80,8 @@ class GeneralSettings(private val activity: FragmentActivity) : SettingsProvider
       val canAuthenticate = BiometricAuthenticator.canAuthenticate(activity)
       switch(PreferenceKeys.BIOMETRIC_AUTH_2) {
         titleRes = R.string.pref_biometric_auth_title
-        defaultValue = false
-        enabled = !disableAuth
+        defaultValue = activity.sharedPrefs.getBoolean(PreferenceKeys.BIOMETRIC_AUTH_2, false)
+        enabled = !disableAuth && canAuthenticate
         summaryRes =
           if (disableAuth) R.string.pref_biometric_auth_summary_disabled_platform
           else if (canAuthenticate) R.string.pref_biometric_auth_summary

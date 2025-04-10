@@ -170,6 +170,7 @@ abstract class GitOperation(protected val callingActivity: FragmentActivity) {
                   BiometricAuthenticator.authenticate(
                     callingActivity,
                     R.string.biometric_prompt_title_ssh_auth,
+                    allowPin = true,
                   ) { result ->
                     if (result !is Failure && result !is Retry) cont.resume(result)
                   }

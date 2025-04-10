@@ -15,6 +15,7 @@ import app.passwordstore.util.auth.BiometricAuthenticator
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.persistentPassphrases
+import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.settings.PreferenceKeys
 import de.Maxr1998.modernpreferences.PreferenceScreen
 import de.Maxr1998.modernpreferences.helpers.editText
@@ -37,11 +38,15 @@ class PasswordSettings(private val activity: FragmentActivity) : SettingsProvide
         initialSelection = "diceware"
         titleRes = R.string.pref_password_generator_type_title
       }
+      val canAuthenticate = BiometricAuthenticator.canAuthenticate(activity)
+      if (!canAuthenticate) {
+        activity.sharedPrefs.edit { putBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, false) }
+      }
       switch(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN) {
-        enabled = BiometricAuthenticator.canAuthenticate(activity)
         titleRes = R.string.unlock_password_with_pin_pref_title
-        summaryRes = R.string.unlock_password_with_pin_pref_summary
         defaultValue = false
+        enabled = canAuthenticate
+        summaryRes = R.string.unlock_password_with_pin_pref_summary
         onClick {
           AESEncryption.deleteKey(keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION)
           activity.persistentPassphrases.edit { clear() }

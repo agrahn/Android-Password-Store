@@ -49,9 +49,12 @@ object BiometricAuthenticator {
     data object CanceledBySystem : Result()
   }
 
-  fun canAuthenticate(activity: FragmentActivity): Boolean {
-    return BiometricManager.from(activity).canAuthenticate(VALID_AUTHENTICATORS) ==
-      BiometricManager.BIOMETRIC_SUCCESS
+  fun canAuthenticate(activity: FragmentActivity, allowPin: Boolean = false): Boolean {
+    return BiometricManager.from(activity)
+      .canAuthenticate(
+        if (allowPin) Authenticators.BIOMETRIC_STRONG or Authenticators.DEVICE_CREDENTIAL
+        else Authenticators.BIOMETRIC_STRONG
+      ) == BiometricManager.BIOMETRIC_SUCCESS
   }
 
   fun authenticate(
@@ -59,18 +62,23 @@ object BiometricAuthenticator {
     @StringRes dialogTitleRes: Int = R.string.biometric_prompt_title,
     @StringRes dialogSubTitleRes: Int = 0,
     @StringRes dialogDescriptionRes: Int = 0,
+    allowPin: Boolean = false,
     cipher: Cipher? = null,
     callback: (Result) -> Unit,
   ) {
     val authCallback = createPromptAuthenticationCallback(activity, callback)
     val deviceHasKeyguard = activity.getSystemService<KeyguardManager>()?.isDeviceSecure == true
-    if (canAuthenticate(activity) || deviceHasKeyguard) {
+    if (canAuthenticate(activity, allowPin = allowPin) || deviceHasKeyguard) {
       val promptInfoBuilder =
-        BiometricPrompt.PromptInfo.Builder()
-          .setTitle(activity.getString(dialogTitleRes))
-          .setNegativeButtonText(activity.getString(R.string.dialog_cancel))
-      // fallback for non-CryptoObject based authentication
-      if (cipher == null) promptInfoBuilder.setAllowedAuthenticators(VALID_AUTHENTICATORS)
+        BiometricPrompt.PromptInfo.Builder().setTitle(activity.getString(dialogTitleRes))
+      if (cipher == null) { // fallback for non-CryptoObject based authentication
+        promptInfoBuilder.setAllowedAuthenticators(
+          if (allowPin) Authenticators.BIOMETRIC_STRONG or Authenticators.DEVICE_CREDENTIAL
+          else Authenticators.BIOMETRIC_STRONG
+        )
+      }
+      if (!allowPin)
+        promptInfoBuilder.setNegativeButtonText(activity.getString(R.string.dialog_cancel))
       if (dialogSubTitleRes != 0)
         promptInfoBuilder.setSubtitle(activity.getString(dialogSubTitleRes))
       if (dialogDescriptionRes != 0)

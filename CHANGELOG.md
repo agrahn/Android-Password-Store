@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+### Fixed
+
+- Allow device PIN authentication for SSH and Git operations
+
+### Changed
+
 ## [1.14.0] - 2025-04-09
 
 ### Added
