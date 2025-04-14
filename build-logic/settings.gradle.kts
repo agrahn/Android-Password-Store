@@ -24,10 +24,6 @@ dependencyResolutionManagement {
         includeModule("me.tylerbwong.gradle.metalava", "plugin")
       }
     }
-    exclusiveContent {
-      forRepository { maven("https://storage.googleapis.com/r8-releases/raw") }
-      filter { includeModule("com.android.tools", "r8") }
-    }
     mavenCentral { mavenContent { releasesOnly() } }
   }
   versionCatalogs {

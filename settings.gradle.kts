@@ -30,10 +30,6 @@ pluginManagement {
         includeModule("org.gradle.toolchains", "foojay-resolver")
       }
     }
-    exclusiveContent {
-      forRepository { maven("https://storage.googleapis.com/r8-releases/raw") }
-      filter { includeModule("com.android.tools", "r8") }
-    }
     mavenCentral { mavenContent { releasesOnly() } }
   }
 }
@@ -65,10 +61,6 @@ dependencyResolutionManagement {
     exclusiveContent {
       forRepository { maven("https://storage.googleapis.com/r8-releases/raw") }
       filter { includeModule("com.android.tools", "r8") }
-    }
-    maven("https://androidx.dev/storage/compose-compiler/repository") {
-      name = "Compose Compiler Snapshots"
-      content { includeGroup("androidx.compose.compiler") }
     }
     mavenCentral { mavenContent { releasesOnly() } }
   }
