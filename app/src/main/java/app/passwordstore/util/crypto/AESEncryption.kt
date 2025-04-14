@@ -134,6 +134,7 @@ object AESEncryption {
     keyType: KeyType = KeyType.TEMPORARY,
     encryptedBase64Data: CharArray? = null,
   ): Cipher? {
+    initKeyStore(keyType)
     val cipher = Cipher.getInstance(TRANSFORMATION)
     return runCatching {
         if (encryptedBase64Data == null) {
@@ -145,10 +146,9 @@ object AESEncryption {
         }
         cipher
       }
-      .getOrElse {
-        deleteKey(keyType)
-        initKeyStore(keyType) // refresh AES key if invalidated
-        if (encryptedBase64Data == null) getCipher(keyType, encryptedBase64Data) else null
+      .getOrElse { e ->
+        logcat { e.asLog() }
+        null
       }
   }
 

@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Emit a warning if another fingerprint was added since last app use
+
 ### Fixed
 
 - Allow device PIN authentication for SSH and Git operations
