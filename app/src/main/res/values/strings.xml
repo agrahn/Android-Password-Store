@@ -385,4 +385,6 @@
   <string name="pgp_wrong_passphrase_input">Wrong passphrase</string>
   <string name="pgp_id_label">PGP ID: </string>
   <string name="pgp_id_label_plural">PGP IDs: </string>
+  <string name="aes_key_invalidated_dialog_title">Warning! New fingerprint added</string>
+  <string name="aes_key_invalidated_dialog_message">A new fingerprint has been registered in the device lock settings since the last use. Make sure it was added by you and not by someone else</string>
 </resources>

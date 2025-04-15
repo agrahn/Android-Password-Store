@@ -337,7 +337,12 @@ open class BasePGPActivity : AppCompatActivity() {
                     settings.getBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, false) &&
                     BiometricAuthenticator.canAuthenticate(this@BasePGPActivity)
                 ) {
-                  val cipher = AESEncryption.getCipher(KeyType.PERSISTENT_WITH_AUTHENTICATION)
+                  val cipher =
+                    AESEncryption.getCipher(KeyType.PERSISTENT_WITH_AUTHENTICATION)
+                      ?: run {
+                        AESEncryption.deleteKey(KeyType.PERSISTENT_WITH_AUTHENTICATION)
+                        AESEncryption.getCipher(KeyType.PERSISTENT_WITH_AUTHENTICATION)
+                      }
                   if (cipher != null) {
                     BiometricAuthenticator.authenticate(
                       this@BasePGPActivity,
@@ -406,10 +411,13 @@ open class BasePGPActivity : AppCompatActivity() {
           if (result !is BiometricResult.Retry) decrypt(identifiers)
         }
       } else {
-        /* The AES key was invalidated by enrollment of a new biometric key, hence
-         * all persistent passphrases have become unusable too. */
-        persistentPassphrases.edit { clear() }
-        decrypt(identifiers)
+        // The AES key was invalidated by enrollment of new biometrics; warn the user about it
+        MaterialAlertDialogBuilder(this@BasePGPActivity)
+          .setTitle(resources.getString(R.string.aes_key_invalidated_dialog_title))
+          .setMessage(resources.getString(R.string.aes_key_invalidated_dialog_message))
+          .setIcon(R.drawable.ic_warning_red_24dp)
+          .setPositiveButton(getString(R.string.dialog_ok)) { _, _ -> decrypt(identifiers) }
+          .show()
       }
     } else decrypt(identifiers)
   }

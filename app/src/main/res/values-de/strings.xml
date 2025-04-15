@@ -384,4 +384,6 @@
   <string name="pgp_wrong_passphrase_input">Falsche Eingabe</string>
   <string name="pgp_id_label">PGP-ID:</string>
   <string name="pgp_id_label_plural">PGP-IDs:</string>
+  <string name="aes_key_invalidated_dialog_title">Achtung! Neuer Fingerabdruck hinzugefügt</string>
+  <string name="aes_key_invalidated_dialog_message">Seit der letzten Verwendung wurde in den Gerätesperreinstellungen ein neuer Fingerabdruck registriert. Stellen Sie sicher, dass er von Ihnen und nicht von jemand anderem hinzugefügt wurde.</string>
 </resources>
