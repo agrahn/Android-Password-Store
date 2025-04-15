@@ -48,8 +48,18 @@ class PasswordSettings(private val activity: FragmentActivity) : SettingsProvide
         enabled = canAuthenticate
         summaryRes = R.string.unlock_password_with_pin_pref_summary
         onClick {
-          AESEncryption.deleteKey(keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION)
-          activity.persistentPassphrases.edit { clear() }
+          /* Don't allow disabling biom. authentication if AES key has been invalidated.
+           * This is to prevent a malicious user from adding their fingerprint unnoticed. */
+          if (
+            !checked &&
+              AESEncryption.getCipher(keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION) == null
+          ) {
+            checked = true
+            activity.sharedPrefs.edit { putBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, true) }
+          } else {
+            AESEncryption.deleteKey(keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION)
+            activity.persistentPassphrases.edit { clear() }
+          }
           false
         }
       }

@@ -340,6 +340,8 @@ open class BasePGPActivity : AppCompatActivity() {
                   val cipher =
                     AESEncryption.getCipher(KeyType.PERSISTENT_WITH_AUTHENTICATION)
                       ?: run {
+                        persistentPassphrases.edit { clear() }
+                        // recover from invalidated AES key
                         AESEncryption.deleteKey(KeyType.PERSISTENT_WITH_AUTHENTICATION)
                         AESEncryption.getCipher(KeyType.PERSISTENT_WITH_AUTHENTICATION)
                       }
