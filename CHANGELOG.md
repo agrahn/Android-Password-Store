@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.14.1] - 2025-04-16
+
 ### Added
 
 - Detect enrollment of a new fingerprint since last app use and inform the user about it; this counteracts the attempt of a potentially malicious user to add their fingerprint unnoticed to the device lock settings
@@ -503,7 +505,8 @@ All notable changes to this project will be documented in this file.
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.0...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.1...HEAD
+[1.14.1]: https://github.com/agrahn/Android-Password-Store/compare/agrahn:Android-Password-Store:v1.14.0...v1.14.1
 [1.14.0]: https://github.com/android-password-store/Android-Password-Store/compare/v1.13.5...agrahn:Android-Password-Store:v1.14.0
 [1.13.5]: https://github.com/android-password-store/Android-Password-Store/compare/v1.13.4...v1.13.5
 [1.13.4]: https://github.com/android-password-store/Android-Password-Store/compare/v1.13.3...v1.13.4
