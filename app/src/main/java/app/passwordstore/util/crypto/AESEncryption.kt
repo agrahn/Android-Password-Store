@@ -80,9 +80,12 @@ object AESEncryption {
             if (keyType == KeyType.PERSISTENT_WITH_AUTHENTICATION) {
               setUserAuthenticationRequired(true)
             }
-            /* if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            /* disabled do to platform or firmware bug;
+             * see https://github.com/agrahn/Android-Password-Store/issues/206#issuecomment-2783212156
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
               setIsStrongBoxBacked(isStrongBoxSupported)
-            } */
+            }
+            */
             build()
           }
       keyGenerator.init(keyGenParameterSpec)
@@ -160,10 +163,9 @@ object AESEncryption {
     cipher: Cipher? = null,
   ): CharArray? {
     if (data == null || !isHardwareBacked(keyType)) return null
-    val c = if (cipher != null) cipher else getCipher(keyType)
-    return runCatching {
-        if (c != null) (c.iv + c.doFinal(data.toByteArray())).encodeToBase64CharArray() else null
-      }
+    val c = cipher ?: getCipher(keyType)
+    if (c == null) return null
+    return runCatching { (c.iv + c.doFinal(data.toByteArray())).encodeToBase64CharArray() }
       .getOrElse { e ->
         logcat { e.asLog() }
         null
@@ -177,10 +179,11 @@ object AESEncryption {
     cipher: Cipher? = null,
   ): CharArray? {
     if (encryptedBase64Data == null || !isHardwareBacked(keyType)) return null
-    val c = if (cipher != null) cipher else getCipher(keyType, encryptedBase64Data)
     val ivAndEncryptedData = encryptedBase64Data.decodeFromBase64ToByteArray()
     val encryptedBytes = ivAndEncryptedData.copyOfRange(IV_SIZE, ivAndEncryptedData.size)
-    return runCatching { if (c != null) c.doFinal(encryptedBytes).toCharArray() else null }
+    val c = cipher ?: getCipher(keyType, encryptedBase64Data)
+    if (c == null) return null
+    return runCatching { c.doFinal(encryptedBytes).toCharArray() }
       .getOrElse { e ->
         logcat { e.asLog() }
         null
