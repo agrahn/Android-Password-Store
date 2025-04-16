@@ -18,11 +18,12 @@ jobs:
           # branch for patch releases.
           BRANCH_VERSION="${RELEASE_VERSION%.*}"
           PATCH_LEVEL="${RELEASE_VERSION##*.}"
-          if [[ "$PATCH_LEVEL" == "0" ]]; then
-            CHECKOUT_REF="develop"
-          else
-            CHECKOUT_REF="release-${BRANCH_VERSION}"
-          fi
+          #if [[ "$PATCH_LEVEL" == "0" ]]; then
+          #  CHECKOUT_REF="develop"
+          #else
+          #  CHECKOUT_REF="release-${BRANCH_VERSION}"
+          #fi
+          CHECKOUT_REF="develop"
 
           # Export variables separately so the scripting above is more legible,
           # and we can actually use them within this block. Changes to $GITHUB_ENV
