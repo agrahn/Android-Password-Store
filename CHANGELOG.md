@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Emit a warning if another fingerprint was registered since last app use; this is a measure against a malicious user trying to add their fingerprint unnoticed to the device lock settings
+- Detect enrollment of a new fingerprint since last app use and inform the user about it; this counteracts the attempt of a potentially malicious user to add their fingerprint unnoticed to the device lock settings
 
 ### Fixed
 

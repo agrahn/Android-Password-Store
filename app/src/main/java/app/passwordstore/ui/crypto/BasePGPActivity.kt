@@ -61,10 +61,14 @@ import logcat.logcat
 open class BasePGPActivity : AppCompatActivity() {
 
   /** Full path to the repository */
-  val repoPath by unsafeLazy { intent.getStringExtra("REPO_PATH") ?: throw NullPointerException() }
+  val repoPath by unsafeLazy {
+    requireNotNull(intent.getStringExtra("REPO_PATH")) { "REPO_PATH is missing" }
+  }
 
   /** Full path to the password file being worked on */
-  val fullPath by unsafeLazy { intent.getStringExtra("FILE_PATH") ?: throw NullPointerException() }
+  val fullPath by unsafeLazy {
+    requireNotNull(intent.getStringExtra("FILE_PATH")) { "FILE_PATH is missing" }
+  }
 
   /**
    * Name of the password file
@@ -315,7 +319,9 @@ open class BasePGPActivity : AppCompatActivity() {
     dialog.setFragmentResultListener(PasswordDialog.PASSWORD_RESULT_KEY) { key, bundle ->
       if (key == PasswordDialog.PASSWORD_RESULT_KEY) {
         val passphrase =
-          bundle.getCharArray(PasswordDialog.PASSWORD_PHRASE_KEY) ?: throw NullPointerException()
+          requireNotNull(bundle.getCharArray(PasswordDialog.PASSWORD_PHRASE_KEY)) {
+            "returned passphrase is null"
+          }
         cacheEnabled = bundle.getBoolean(PasswordDialog.PASSWORD_CACHE_KEY)
         lifecycleScope.launch(dispatcherProvider.main()) {
           decryptWithPassphrase(mapOf("" to passphrase), identifiers) { id -> // onSuccess
@@ -376,7 +382,7 @@ open class BasePGPActivity : AppCompatActivity() {
     }
   }
 
-  /* Find persistent PGP passphrases with matching key IDs, unlock the first one
+  /* Find persistent PGP passphrases with matching key ID, unlock the first one
    * with biometrics */
   protected fun getPersistentAndDecrypt(identifiers: List<PGPIdentifier>) {
     val persistentIds =
