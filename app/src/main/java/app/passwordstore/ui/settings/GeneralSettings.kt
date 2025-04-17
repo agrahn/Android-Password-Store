@@ -6,7 +6,6 @@
 package app.passwordstore.ui.settings
 
 import android.content.pm.ShortcutManager
-import android.os.Build
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.fragment.app.FragmentActivity
@@ -76,15 +75,13 @@ class GeneralSettings(private val activity: FragmentActivity) : SettingsProvider
       }
 
       // See https://github.com/android-password-store/Android-Password-Store/issues/2802
-      val disableAuth = Build.VERSION.SDK_INT == Build.VERSION_CODES.UPSIDE_DOWN_CAKE
       val canAuthenticate = BiometricAuthenticator.canAuthenticate(activity)
       switch(PreferenceKeys.BIOMETRIC_AUTH_2) {
         titleRes = R.string.pref_biometric_auth_title
         defaultValue = activity.sharedPrefs.getBoolean(PreferenceKeys.BIOMETRIC_AUTH_2, false)
-        enabled = !disableAuth && canAuthenticate
+        enabled = canAuthenticate
         summaryRes =
-          if (disableAuth) R.string.pref_biometric_auth_summary_disabled_platform
-          else if (canAuthenticate) R.string.pref_biometric_auth_summary
+          if (canAuthenticate) R.string.pref_biometric_auth_summary
           else R.string.pref_biometric_auth_summary_error
         onClick {
           enabled = false
