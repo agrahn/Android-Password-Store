@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Re-enable pre-launch biometric auth option on Android-14 devices (https://github.com/android-password-store/Android-Password-Store/issues/2802)
+- More reliable detection of AES key invalidation due to fingerprint enrollment 
 
 ## [1.14.1] - 2025-04-16
 
