@@ -38,27 +38,24 @@ class PasswordSettings(private val activity: FragmentActivity) : SettingsProvide
         initialSelection = "diceware"
         titleRes = R.string.pref_password_generator_type_title
       }
-      val canAuthenticate = BiometricAuthenticator.canAuthenticate(activity)
-      if (!canAuthenticate) {
-        activity.sharedPrefs.edit { putBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, false) }
-      }
       switch(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN) {
         titleRes = R.string.unlock_password_with_pin_pref_title
         defaultValue = false
-        enabled = canAuthenticate
+        enabled = BiometricAuthenticator.canAuthenticate(activity)
         summaryRes = R.string.unlock_password_with_pin_pref_summary
         onClick {
-          /* Don't allow disabling biom. authentication if AES key has been invalidated.
-           * This is to prevent a malicious user from adding their fingerprint unnoticed. */
-          if (
-            !checked &&
-              AESEncryption.getCipher(keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION) == null
-          ) {
-            checked = true
-            activity.sharedPrefs.edit { putBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, true) }
-          } else {
-            AESEncryption.deleteKey(keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION)
-            activity.persistentPassphrases.edit { clear() }
+          if (!checked) {
+            /* Don't allow disabling biom. authentication if AES key has been invalidated.
+             * This is to prevent a malicious user from adding their fingerprint unnoticed. */
+            if (AESEncryption.getCipher(keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION) == null) {
+              checked = true
+              activity.sharedPrefs.edit {
+                putBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, true)
+              }
+            } else {
+              AESEncryption.deleteKey(keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION)
+              activity.persistentPassphrases.edit { clear() }
+            }
           }
           false
         }
