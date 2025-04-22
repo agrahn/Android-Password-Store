@@ -11,6 +11,7 @@
 package app.passwordstore.gradle.psl
 
 import app.passwordstore.gradle.OkHttp
+import java.io.FileWriter
 import java.util.TreeSet
 import okhttp3.Request
 import okio.ByteString
@@ -29,11 +30,12 @@ import org.gradle.api.tasks.TaskAction
  */
 abstract class PSLUpdateTask : DefaultTask() {
   @get:OutputFile abstract val outputFile: RegularFileProperty
+  @get:OutputFile abstract val sizesFile: RegularFileProperty
 
   @TaskAction
   fun updatePSL() {
     val pslData = fetchPublicSuffixList()
-    writeListToDisk(outputFile.get(), pslData)
+    writeListToDisk(outputFile.get(), sizesFile.get(), pslData)
   }
 
   private fun fetchPublicSuffixList(): PublicSuffixListData {
@@ -87,17 +89,23 @@ abstract class PSLUpdateTask : DefaultTask() {
     }
   }
 
-  private fun writeListToDisk(destination: RegularFile, data: PublicSuffixListData) {
+  private fun writeListToDisk(
+    destination: RegularFile,
+    sizes: RegularFile,
+    data: PublicSuffixListData,
+  ) {
+    val sizesFileWriter = FileWriter(sizes.getAsFile())
+    sizesFileWriter.write(
+      "${data.totalRuleBytes.toString()}\n${data.totalExceptionRuleBytes.toString()}\n"
+    )
+    sizesFileWriter.close()
+
     val fileSink = destination.asFile.sink()
 
     fileSink.buffer().use { sink ->
-      sink.writeInt(data.totalRuleBytes)
-
       for (domain in data.sortedRules) {
         sink.write(domain).writeByte('\n'.code)
       }
-
-      sink.writeInt(data.totalExceptionRuleBytes)
 
       for (domain in data.sortedExceptionRules) {
         sink.write(domain).writeByte('\n'.code)

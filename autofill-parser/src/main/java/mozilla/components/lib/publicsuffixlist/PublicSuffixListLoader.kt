@@ -10,25 +10,36 @@ package mozilla.components.lib.publicsuffixlist
 
 import android.content.Context
 import java.io.BufferedInputStream
+import java.io.BufferedReader
 import java.io.IOException
+import java.io.InputStreamReader
 
 private const val PUBLIC_SUFFIX_LIST_FILE = "publicsuffixes"
+private const val PUBLIC_SUFFIX_SIZES_FILE = "sizes"
 
 internal object PublicSuffixListLoader {
 
-  fun load(inputStream: BufferedInputStream): PublicSuffixListData =
+  fun load(
+    inputStream: BufferedInputStream,
+    publicSuffixSize: Int,
+    exceptionSize: Int,
+  ): PublicSuffixListData =
     inputStream.use { stream ->
-      val publicSuffixSize = stream.readInt()
       val publicSuffixBytes = stream.readFully(publicSuffixSize)
-
-      val exceptionSize = stream.readInt()
       val exceptionBytes = stream.readFully(exceptionSize)
-
       PublicSuffixListData(publicSuffixBytes, exceptionBytes)
     }
 
-  fun load(context: Context): PublicSuffixListData =
-    load(context.assets.open(PUBLIC_SUFFIX_LIST_FILE).buffered())
+  fun load(context: Context): PublicSuffixListData = run {
+    val sizesReader =
+      BufferedReader(InputStreamReader(context.assets.open(PUBLIC_SUFFIX_SIZES_FILE).buffered()))
+    val publicSuffixSize =
+      sizesReader.readLine()?.toInt()
+        ?: throw IOException("Could not read publicSuffixSize from file")
+    val exceptionSize =
+      sizesReader.readLine()?.toInt() ?: throw IOException("Could not read exceptionSize from file")
+    load(context.assets.open(PUBLIC_SUFFIX_LIST_FILE).buffered(), publicSuffixSize, exceptionSize)
+  }
 }
 
 @Suppress("MagicNumber")

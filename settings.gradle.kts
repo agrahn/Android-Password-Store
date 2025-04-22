@@ -58,10 +58,6 @@ dependencyResolutionManagement {
         includeModule("com.google.android.material", "material")
       }
     }
-    exclusiveContent {
-      forRepository { maven("https://storage.googleapis.com/r8-releases/raw") }
-      filter { includeModule("com.android.tools", "r8") }
-    }
     mavenCentral { mavenContent { releasesOnly() } }
   }
 }

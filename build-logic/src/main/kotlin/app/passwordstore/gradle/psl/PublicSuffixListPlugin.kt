@@ -15,6 +15,7 @@ class PublicSuffixListPlugin : Plugin<Project> {
   override fun apply(project: Project) {
     project.tasks.register<PSLUpdateTask>("updatePSL") {
       outputFile.set(project.layout.projectDirectory.file("src/main/assets/publicsuffixes"))
+      sizesFile.set(project.layout.projectDirectory.file("src/main/assets/sizes"))
     }
   }
 }
