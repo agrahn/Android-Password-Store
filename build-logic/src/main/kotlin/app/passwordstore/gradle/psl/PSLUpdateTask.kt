@@ -91,13 +91,13 @@ abstract class PSLUpdateTask : DefaultTask() {
     val fileSink = destination.asFile.sink()
 
     fileSink.buffer().use { sink ->
-      sink.writeInt(data.totalRuleBytes)
+      "${data.totalRuleBytes.toString()}\n${data.totalExceptionRuleBytes.toString()}\n"
+        .toByteArray(Charsets.UTF_8)
+        .forEach { sink.writeByte(it.toInt()) }
 
       for (domain in data.sortedRules) {
         sink.write(domain).writeByte('\n'.code)
       }
-
-      sink.writeInt(data.totalExceptionRuleBytes)
 
       for (domain in data.sortedExceptionRules) {
         sink.write(domain).writeByte('\n'.code)

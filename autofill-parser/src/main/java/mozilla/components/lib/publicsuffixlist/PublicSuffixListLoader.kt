@@ -18,10 +18,10 @@ internal object PublicSuffixListLoader {
 
   fun load(inputStream: BufferedInputStream): PublicSuffixListData =
     inputStream.use { stream ->
-      val publicSuffixSize = stream.readInt()
-      val publicSuffixBytes = stream.readFully(publicSuffixSize)
+      val publicSuffixSize = stream.readSize()
+      val exceptionSize = stream.readSize()
 
-      val exceptionSize = stream.readInt()
+      val publicSuffixBytes = stream.readFully(publicSuffixSize)
       val exceptionBytes = stream.readFully(exceptionSize)
 
       PublicSuffixListData(publicSuffixBytes, exceptionBytes)
@@ -29,16 +29,6 @@ internal object PublicSuffixListLoader {
 
   fun load(context: Context): PublicSuffixListData =
     load(context.assets.open(PUBLIC_SUFFIX_LIST_FILE).buffered())
-}
-
-@Suppress("MagicNumber")
-private fun BufferedInputStream.readInt(): Int {
-  return (read() and
-    0xff shl
-    24 or
-    (read() and 0xff shl 16) or
-    (read() and 0xff shl 8) or
-    (read() and 0xff))
 }
 
 private fun BufferedInputStream.readFully(size: Int): ByteArray {
@@ -54,4 +44,16 @@ private fun BufferedInputStream.readFully(size: Int): ByteArray {
   }
 
   return bytes
+}
+
+private fun BufferedInputStream.readSize(): Int {
+  var read = read()
+  if (read == -1) throw IOException("Unexpected end of stream")
+  var bytes = byteArrayOf()
+  while (read != '\n'.code) {
+    bytes += read.toByte()
+    read = read()
+    if (read == -1) throw IOException("Unexpected end of stream")
+  }
+  return bytes.toString(Charsets.UTF_8).toInt()
 }
