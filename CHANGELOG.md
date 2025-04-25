@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.14.3] - 2025-04-25
+
 ### Changed
 
 - Adjust Java version to v17 in GitHub workflows to comply with F-Droid requirements
@@ -517,7 +519,8 @@ All notable changes to this project will be documented in this file.
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.2...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.3...HEAD
+[1.14.3]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.2...v1.14.3
 [1.14.2]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.1...v1.14.2
 [1.14.1]: https://github.com/agrahn/Android-Password-Store/compare/agrahn:Android-Password-Store:v1.14.0...v1.14.1
 [1.14.0]: https://github.com/android-password-store/Android-Password-Store/compare/v1.13.5...agrahn:Android-Password-Store:v1.14.0
