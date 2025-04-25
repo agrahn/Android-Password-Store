@@ -20,6 +20,8 @@ jobs:
     steps:
     - name: Setup build environment
       uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@develop
+      with:
+        java-version: 17
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@28deaeda66b76a05916b6923827895f2b14ab387 # v3.28.16
