@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-...
+### Changed
+
+- Adjust Java version to v17 in GitHub workflows to comply with F-Droid requirements
 
 ## [1.14.2] - 2025-04-24
 
