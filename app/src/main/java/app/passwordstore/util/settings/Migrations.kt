@@ -45,6 +45,7 @@ fun runMigrations(
   removePersistentCredentialCache(sharedPrefs, context, runTest)
   if (!runTest) moveToPasswordGeneratorPrefs(sharedPrefs, context)
   deleteKeystoreWrappedEd25519Key(sharedPrefs, context)
+  migrateToFastUnlockOptions(sharedPrefs)
 }
 
 private fun deleteKeystoreWrappedEd25519Key(sharedPrefs: SharedPreferences, context: Context) {
@@ -305,4 +306,12 @@ private fun createEncryptedPreferences(context: Context, fileName: String): Shar
     EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
     EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
   )
+}
+
+private fun migrateToFastUnlockOptions(sharedPrefs: SharedPreferences) {
+  sharedPrefs.edit {
+    if (sharedPrefs.getBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, false))
+      putString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "fingerprint")
+    remove(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN)
+  }
 }

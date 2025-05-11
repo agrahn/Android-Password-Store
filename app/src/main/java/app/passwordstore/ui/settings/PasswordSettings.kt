@@ -12,10 +12,7 @@ import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
 import app.passwordstore.injection.prefs.PGPPassphrases
 import app.passwordstore.util.auth.BiometricAuthenticator
-import app.passwordstore.util.crypto.AESEncryption
-import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.persistentPassphrases
-import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.settings.PreferenceKeys
 import de.Maxr1998.modernpreferences.PreferenceScreen
 import de.Maxr1998.modernpreferences.helpers.editText
@@ -38,26 +35,20 @@ class PasswordSettings(private val activity: FragmentActivity) : SettingsProvide
         initialSelection = "diceware"
         titleRes = R.string.pref_password_generator_type_title
       }
-      switch(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN) {
-        titleRes = R.string.unlock_password_with_pin_pref_title
-        defaultValue = false
-        enabled = BiometricAuthenticator.canAuthenticate(activity)
-        summaryRes = R.string.unlock_password_with_pin_pref_summary
+      val unlockValues = arrayOf("disabled", "fingerprint", "PIN")
+      val unlockLabels = activity.resources.getStringArray(R.array.fast_unlock_option_labels)
+      val unlockOpts =
+        if (BiometricAuthenticator.canAuthenticate(activity)) setOf(0, 1, 2) else setOf(0, 2)
+      val unlockItems =
+        unlockValues.slice(unlockOpts).zip(unlockLabels.slice(unlockOpts)).map {
+          SelectionItem(it.first, it.second, null)
+        }
+      singleChoice(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, unlockItems) {
+        titleRes = R.string.fast_unlock_pref_title
+        initialSelection = "disabled"
         onClick {
-          if (!checked) {
-            /* Don't allow disabling biom. authentication if AES key has been invalidated.
-             * This is to prevent a malicious user from adding their fingerprint unnoticed. */
-            if (AESEncryption.getCipher(keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION) == null) {
-              checked = true
-              activity.sharedPrefs.edit {
-                putBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, true)
-              }
-            } else {
-              AESEncryption.deleteKey(keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION)
-              activity.persistentPassphrases.edit { clear() }
-            }
-          }
-          false
+          activity.persistentPassphrases.edit { clear() }
+          true
         }
       }
       switch(PreferenceKeys.SHOW_PASSWORD) {

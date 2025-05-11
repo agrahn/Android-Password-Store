@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- An option for fast unlocking password store entries with a PIN was added. Available unlocking options can be accessed via Settings --> Passwords --> Fast unlocking of entries. The PIN is specific to the app, that is, it may differ from the device PIN.
+
 ## [1.14.3] - 2025-04-25
 
 ### Changed

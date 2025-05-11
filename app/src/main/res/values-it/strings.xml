@@ -199,7 +199,6 @@
   <string name="git_head_detached">HEAD staccata a %1$s</string>
   <string name="git_head_missing">Impossibile localizzare HEAD</string>
   <string name="git_abort_and_push_title">Interrompi e Spingi</string>
-  <string name="biometric_prompt_title">Richiesta Biometrica</string>
   <string name="biometric_auth_error_reason">Autenticazione non riuscita: %s</string>
   <string name="pref_biometric_auth_title">Abilita autenticazione biometrica</string>
   <string name="pref_biometric_auth_summary">Quando abilitata, il Password Store ti chiederà la tua impronta digitale al lancio dell\'app</string>

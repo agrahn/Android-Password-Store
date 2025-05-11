@@ -75,7 +75,7 @@ class GeneralSettings(private val activity: FragmentActivity) : SettingsProvider
       }
 
       // See https://github.com/android-password-store/Android-Password-Store/issues/2802
-      val canAuthenticate = BiometricAuthenticator.canAuthenticate(activity)
+      val canAuthenticate = BiometricAuthenticator.canAuthenticate(activity, allowPin = true)
       switch(PreferenceKeys.BIOMETRIC_AUTH_2) {
         titleRes = R.string.pref_biometric_auth_title
         defaultValue = activity.sharedPrefs.getBoolean(PreferenceKeys.BIOMETRIC_AUTH_2, false)
@@ -87,7 +87,7 @@ class GeneralSettings(private val activity: FragmentActivity) : SettingsProvider
           enabled = false
           val isChecked = checked
           activity.sharedPrefs.edit {
-            BiometricAuthenticator.authenticate(activity) { result ->
+            BiometricAuthenticator.authenticate(activity, allowPin = true) { result ->
               when (result) {
                 is Result.Success -> {
                   // Apply the changes

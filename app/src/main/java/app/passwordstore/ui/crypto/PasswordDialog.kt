@@ -91,8 +91,8 @@ class PasswordDialog : DialogFragment() {
 
   companion object {
 
-    private const val CACHE_ENABLED_EXTRA = "CACHE_ENABLED"
-    private const val USER_IDS_EXTRA = "USER_IDS"
+    private const val CACHE_ENABLED_EXTRA = "cache_enabled"
+    private const val USER_IDS_EXTRA = "user_ids"
 
     const val PASSWORD_RESULT_KEY = "password_result"
     const val PASSWORD_PHRASE_KEY = "password_phrase"

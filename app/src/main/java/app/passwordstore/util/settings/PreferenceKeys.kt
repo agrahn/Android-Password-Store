@@ -73,7 +73,12 @@ object PreferenceKeys {
   const val SHOW_HIDDEN_CONTENTS = "show_hidden_contents"
   const val SORT_ORDER = "sort_order"
   const val SHOW_PASSWORD = "show_password"
+  @Deprecated(
+    message = "Use PREF_FAST_UNLOCK_OPTION instead",
+    replaceWith = ReplaceWith("PreferenceKeys.PREF_FAST_UNLOCK_OPTION"),
+  )
   const val UNLOCK_PASSWORDS_WITH_PIN = "unlock_passwords_with_pin"
+  const val PREF_FAST_UNLOCK_OPTION = "pref_fast_unlock_option"
   const val SSH_KEY = "ssh_key"
   const val SSH_KEYGEN = "ssh_keygen"
 

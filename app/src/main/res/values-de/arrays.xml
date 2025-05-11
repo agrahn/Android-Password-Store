@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright © 2014-2025 The Android Password Store Authors. All Rights Reserved.
+  ~ SPDX-License-Identifier: GPL-3.0-only
+  -->
+
+<resources>
+  <string-array name="fast_unlock_option_labels">
+    <item>deaktiviert</item>
+    <item>mit Biometrie (Fingerabdruck)</item>
+    <item>mit PIN</item>
+  </string-array>
+</resources>

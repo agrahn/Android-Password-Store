@@ -14,6 +14,7 @@ import android.util.Base64
 import app.passwordstore.Application
 import app.passwordstore.util.extensions.unsafeLazy
 import com.github.michaelbull.result.getOrElse
+import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.runCatching
 import java.nio.ByteBuffer
 import java.nio.CharBuffer
@@ -80,7 +81,7 @@ object AESEncryption {
             if (keyType == KeyType.PERSISTENT_WITH_AUTHENTICATION) {
               setUserAuthenticationRequired(true)
             }
-            /* disabled do to platform or firmware bug;
+            /* disabled due to platform or firmware bug;
              * see https://github.com/agrahn/Android-Password-Store/issues/206#issuecomment-2783212156
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
               setIsStrongBoxBacked(isStrongBoxSupported)
@@ -202,7 +203,10 @@ object AESEncryption {
 
   // Check if the AES key is hardware-backed
   fun isHardwareBacked(keyType: KeyType = KeyType.TEMPORARY): Boolean {
-    initKeyStore(keyType)
+    runCatching { initKeyStore(keyType) }
+      .onFailure {
+        return false
+      }
     val key = getSecretKey(keyType)
     val factory = SecretKeyFactory.getInstance(key.algorithm, PROVIDER_ANDROID_KEY_STORE)
     val keyInfo = factory.getKeySpec(key, KeyInfo::class.java) as KeyInfo

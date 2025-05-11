@@ -59,9 +59,9 @@ object BiometricAuthenticator {
 
   fun authenticate(
     activity: FragmentActivity,
-    @StringRes dialogTitleRes: Int = R.string.biometric_prompt_title,
+    @StringRes dialogTitleRes: Int = R.string.app_name,
     @StringRes dialogSubTitleRes: Int = 0,
-    @StringRes dialogDescriptionRes: Int = 0,
+    @StringRes dialogDescriptionRes: Int = R.string.biometric_prompt_default_description,
     allowPin: Boolean = false,
     cipher: Cipher? = null,
     callback: (Result) -> Unit,
@@ -81,8 +81,7 @@ object BiometricAuthenticator {
         promptInfoBuilder.setNegativeButtonText(activity.getString(R.string.dialog_cancel))
       if (dialogSubTitleRes != 0)
         promptInfoBuilder.setSubtitle(activity.getString(dialogSubTitleRes))
-      if (dialogDescriptionRes != 0)
-        promptInfoBuilder.setDescription(activity.getString(dialogDescriptionRes))
+      promptInfoBuilder.setDescription(activity.getString(dialogDescriptionRes))
       val biometricPrompt =
         BiometricPrompt(
           activity,

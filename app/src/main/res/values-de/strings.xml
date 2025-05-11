@@ -196,8 +196,7 @@
   <string name="git_log">Commit-Log anzeigen</string>
   <string name="show_password_pref_title">Zeige das Passwort.</string>
   <string name="show_password_pref_summary">Soll das entschlüsselte Passwort sichtbar sein? Dies deaktiviert nicht das Kopieren.</string>
-  <string name="unlock_password_with_pin_pref_title">Passwörter mit Biometrie freigeben</string>
-  <string name="unlock_password_with_pin_pref_summary">Geben Sie Passworteinträge mit Ihrem Fingerabdruck frei. Der PGP-Kennwortsatz wird hierfür verschlüsselt auf dem Gerät abgelegt.</string>
+  <string name="fast_unlock_pref_title">Schnelles Entsperren von Einträgen</string>
   <string name="pwd_generate_button">Erstellen</string>
   <string name="refresh_list">Liste aktualisieren</string>
   <string name="send_plaintext_password_to">Passwort unverschlüsselt senden an…</string>
@@ -219,7 +218,6 @@
   <string name="oreo_autofill_warning_publisher_footer"><b>Die derzeit installierte App versucht, Ihre Anmeldeinformationen zu stehlen, indem sie vorgibt, eine vertrauenswürdige App zu sein.</b>\n\nVersuchen Sie, die App zu deinstallieren und installieren Sie sie erneut aus einer vertrauenswürdigen Quelle wie dem Play Store, Amazon Appstore, F-Droid oder dem Shop Ihres Telefonherstellers.</string>
   <string name="oreo_autofill_warning_publisher_install_time">Installiert: %1$s</string>
 
-
   <string name="oreo_autofill_warning_publisher_advanced_info_button">Erweiterte Informationen</string>
   <string name="oreo_autofill_warning_publisher_changed_disable_autofill_button">Autofill deaktiviert lassen</string>
   <string name="oreo_autofill_warning_publisher_reenable_button">Autofill erneut aktivieren</string>
@@ -235,7 +233,6 @@
   <string name="oreo_autofill_enable_dialog_instructions">Tippen Sie auf OK, um diese Funktion zu aktivieren und um zu den Autofill-Einstellungen zu gelangen. Dort wählen Sie \"Password Store\" aus der Liste und bestätigen mit \"OK\".</string>
   <string name="oreo_autofill_enable_dialog_installed_browsers">Autofill-Unterstützung mit installierten Browsern:</string>
 
-  <!-- Autofill -->
   <string name="ssh_key_does_not_exist">Der private SSH-Schlüssel konnte nicht geöffnet werden. Bitte überprüfen Sie, ob die Datei existiert.</string>
   <string name="new_password_title">Neues Passwort</string>
   <string name="git_tools">Hilfsmittel</string>
@@ -245,10 +242,10 @@
   <string name="git_head_detached">HEAD abgelöst bei %1$s</string>
   <string name="git_head_missing">Kann HEAD nicht lokalisieren</string>
   <string name="git_abort_and_push_title">Abbrechen und pushen</string>
-  <string name="biometric_prompt_title">Biometrische Abfrage</string>
+  <string name="biometric_prompt_default_description">Um fortzufahren, müssen Sie sich authentifizieren.</string>
   <string name="biometric_auth_error_reason">Authentifizierungsfehler: %s</string>
-  <string name="pref_biometric_auth_title">Biometrische Authentifizierung</string>
-  <string name="pref_biometric_auth_summary">Beim Starten der App werden Sie nach Ihrem Fingerabdruck gefragt.</string>
+  <string name="pref_biometric_auth_title">Authentifizierung beim Start</string>
+  <string name="pref_biometric_auth_summary">Beim Starten der App werden Sie nach Ihrem Fingerabdruck oder der Geräte-PIN gefragt.</string>
   <string name="pref_biometric_auth_summary_error">Fingerabdrucksensor nicht ansprechbar oder kein Fingerabdruck hinterlegt</string>
   <string name="check_devicelock_settings_dialog_message">Überprüfen Sie die Geräteeinstellungen (Gerätesperre)</string>
   <string name="pref_title_openkeystore_clear_keyid">Lösche gespeicherte OpenKeystore SSH-Schlüssel-ID.</string>
@@ -385,4 +382,12 @@
   <string name="pgp_id_label_plural">PGP-IDs:</string>
   <string name="aes_key_invalidated_dialog_title">Achtung! Neuer Fingerabdruck hinzugefügt</string>
   <string name="aes_key_invalidated_dialog_message">Seit der letzten Verwendung wurde in den Gerätesperreinstellungen ein neuer Fingerabdruck registriert. Stellen Sie sicher, dass er von Ihnen und nicht von jemand anderem hinzugefügt wurde.</string>
+
+  <!-- PIN input -->
+
+  <string name="pin_new_entry_title">PIN festlegen</string>
+  <string name="pin_new_entry_description">Ihr PIN-Code zum schnellen Entsperren muss mindestens vier Ziffern lang sein.</string>
+  <string name="pin_entry_title">PIN-Verifizierung</string>
+  <string name="pin_entry_description">Geben Sie Ihren PIN-Code ein, um den Eintrag anzuzeigen.</string>
+  <string name="pin_entry_wrong_input">Falsche Eingabe</string>
 </resources>

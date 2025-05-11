@@ -37,7 +37,7 @@ class LaunchActivity : AppCompatActivity() {
     super.onCreate(savedInstanceState)
     val prefs = sharedPrefs
     if (prefs.getBoolean(PreferenceKeys.BIOMETRIC_AUTH_2, false)) {
-      BiometricAuthenticator.authenticate(this) { result ->
+      BiometricAuthenticator.authenticate(this, allowPin = true) { result ->
         when (result) {
           is Result.Success -> {
             startTargetActivity(false)

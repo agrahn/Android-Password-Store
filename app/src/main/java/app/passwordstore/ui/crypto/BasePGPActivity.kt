@@ -77,8 +77,10 @@ open class BasePGPActivity : AppCompatActivity() {
    */
   val name: String by unsafeLazy { File(fullPath).nameWithoutExtension }
 
-  /** Counter for the user's decryption attempts on the current password entry */
+  /* Counters for the user's decryption (with passphrase) and PIN verification
+   * attempts to unlock the current password entry */
   private var retries = 0
+  private var pinRetries = 0
 
   @Inject lateinit var pgpKeyManager: PGPKeyManager
 
@@ -301,7 +303,7 @@ open class BasePGPActivity : AppCompatActivity() {
   }
 
   /** Opens the dialog for passphrase input and then forwards it to the decryption method. */
-  protected suspend fun askPassphrase(isError: Boolean, identifiers: List<PGPIdentifier>) {
+  private suspend fun askPassphrase(isError: Boolean, identifiers: List<PGPIdentifier>) {
     if (!repository.isPasswordProtected(identifiers) && !isError) {
       decryptWithPassphrase(mapOf("" to charArrayOf()), identifiers)
       return
@@ -312,9 +314,7 @@ open class BasePGPActivity : AppCompatActivity() {
     var cacheEnabled = settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)
     val dialog =
       PasswordDialog.newInstance(cacheEnabled = cacheEnabled, getEmailsFromIdentifiers(identifiers))
-    if (isError && retries > 1) {
-      dialog.setError()
-    }
+    if (isError && retries > 1) dialog.setError()
     dialog.show(supportFragmentManager, "PASSWORD_DIALOG")
     dialog.setFragmentResultListener(PasswordDialog.PASSWORD_RESULT_KEY) { key, bundle ->
       if (key == PasswordDialog.PASSWORD_RESULT_KEY) {
@@ -337,40 +337,92 @@ open class BasePGPActivity : AppCompatActivity() {
                     isHardwareBacked && cacheEnabled && encryptedPassphrase != null,
                   )
                 }
-                // update persistent passphrase
-                if (
-                  AESEncryption.isHardwareBacked(KeyType.PERSISTENT_WITH_AUTHENTICATION) &&
-                    settings.getBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, false) &&
-                    BiometricAuthenticator.canAuthenticate(this@BasePGPActivity)
-                ) {
-                  val cipher =
+
+                // update persistent passphrase cache
+                var cipher = // cipher for encrypting the passphrase with biometrics
+                  if (
+                    AESEncryption.isHardwareBacked(KeyType.PERSISTENT_WITH_AUTHENTICATION) &&
+                      BiometricAuthenticator.canAuthenticate(this@BasePGPActivity)
+                  ) {
                     AESEncryption.getCipher(KeyType.PERSISTENT_WITH_AUTHENTICATION)
                       ?: run {
-                        persistentPassphrases.edit { clear() }
+                        if (
+                          settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") ==
+                            "fingerprint"
+                        )
+                          persistentPassphrases.edit { clear() }
                         // recover from invalidated AES key
                         AESEncryption.deleteKey(KeyType.PERSISTENT_WITH_AUTHENTICATION)
                         AESEncryption.getCipher(KeyType.PERSISTENT_WITH_AUTHENTICATION)
                       }
-                  if (cipher != null) {
-                    BiometricAuthenticator.authenticate(
-                      this@BasePGPActivity,
-                      dialogDescriptionRes =
-                        R.string.biometric_prompt_description_persistently_cache_password,
-                      cipher = cipher,
-                    ) { result ->
-                      if (result is BiometricResult.Success) {
-                        persistentPassphrases.edit {
-                          putString(
-                            id,
-                            (AESEncryption.encrypt(
-                                passphrase,
-                                keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION,
-                                cipher = result.cryptoObject?.cipher,
-                              ))
-                              ?.concatToString(),
-                          )
+                  } else null
+
+                if (
+                  settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") ==
+                    "fingerprint" && cipher != null
+                ) {
+                  BiometricAuthenticator.authenticate(
+                    this@BasePGPActivity,
+                    dialogDescriptionRes =
+                      R.string.biometric_prompt_description_persistently_cache_password,
+                    cipher = cipher,
+                  ) { result ->
+                    if (result is BiometricResult.Success) {
+                      persistentPassphrases.edit {
+                        putString(
+                          id,
+                          AESEncryption.encrypt(
+                              passphrase,
+                              keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION,
+                              cipher = result.cryptoObject?.cipher,
+                            )
+                            ?.concatToString(),
+                        )
+                      }
+                    }
+                  }
+                } else if (
+                  settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") == "PIN" &&
+                    AESEncryption.isHardwareBacked(KeyType.PERSISTENT)
+                ) {
+                  /* Ask user for setting a PIN if not yet existing, encrypt and store it on the
+                   * device, then update passphrase in cache */
+                  if (persistentPassphrases.getString("unlock_pin", null) == null) {
+                    val pinDialog =
+                      PinDialog.newInstance(
+                        title = resources.getString(R.string.pin_new_entry_title),
+                        description = resources.getString(R.string.pin_new_entry_description),
+                      )
+                    pinDialog.show(supportFragmentManager, "PIN_DIALOG")
+                    pinDialog.setFragmentResultListener(PinDialog.PIN_RESULT_KEY) { key, bundle ->
+                      if (key == PinDialog.PIN_RESULT_KEY) {
+                        val pin =
+                          requireNotNull(bundle.getCharArray(PinDialog.PIN_KEY)) {
+                            "returned PIN is null"
+                          }
+                        if (pin.size >= 4) {
+                          persistentPassphrases.edit {
+                            putString(
+                              "unlock_pin",
+                              AESEncryption.encrypt(pin, keyType = KeyType.PERSISTENT)
+                                ?.concatToString(),
+                            )
+                            putString(
+                              id,
+                              AESEncryption.encrypt(passphrase, keyType = KeyType.PERSISTENT)
+                                ?.concatToString(),
+                            )
+                          }
                         }
                       }
+                    }
+                  } else {
+                    persistentPassphrases.edit {
+                      putString(
+                        id,
+                        AESEncryption.encrypt(passphrase, keyType = KeyType.PERSISTENT)
+                          ?.concatToString(),
+                      )
                     }
                   }
                 }
@@ -383,7 +435,7 @@ open class BasePGPActivity : AppCompatActivity() {
   }
 
   /* Find persistent PGP passphrases with matching key ID, unlock the first one
-   * with biometrics */
+   * with biometrics or after PIN verification */
   protected fun getPersistentAndDecrypt(identifiers: List<PGPIdentifier>) {
     // Detect AES key invalidation due to enrollment of a new fingerprint and emit warning
     if (
@@ -400,11 +452,12 @@ open class BasePGPActivity : AppCompatActivity() {
     }
     val persistentIds =
       identifiers.map { it.toString() }.filter { persistentPassphrases.contains(it) }
+    val pinEncrypted = persistentPassphrases.getString("unlock_pin", null)?.toCharArray()
     if (
       !persistentIds.none() &&
         identifiers.map { it.toString() }.filter { cachedPassphrases.containsKey(it) }.none() &&
         AESEncryption.isHardwareBacked(KeyType.PERSISTENT_WITH_AUTHENTICATION) &&
-        settings.getBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, false) &&
+        settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") == "fingerprint" &&
         BiometricAuthenticator.canAuthenticate(this@BasePGPActivity)
     ) {
       val id = persistentIds[0]
@@ -430,7 +483,53 @@ open class BasePGPActivity : AppCompatActivity() {
         }
         if (result !is BiometricResult.Retry) decrypt(identifiers)
       }
+    } else if (
+      !persistentIds.none() &&
+        identifiers.map { it.toString() }.filter { cachedPassphrases.containsKey(it) }.none() &&
+        AESEncryption.isHardwareBacked(KeyType.PERSISTENT) &&
+        settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") == "PIN" &&
+        pinEncrypted != null
+    ) {
+      val id = persistentIds[0]
+      verifyPin(pinEncrypted, id, identifiers)
     } else decrypt(identifiers)
+  }
+
+  /* Asks for and verifies the user PIN for unlocking a store entry. */
+  private fun verifyPin(
+    pinEncrypted: CharArray,
+    id: String,
+    identifiers: List<PGPIdentifier>,
+    isError: Boolean = false,
+  ) {
+    val pinDialog =
+      PinDialog.newInstance(
+        title = resources.getString(R.string.pin_entry_title),
+        description = resources.getString(R.string.pin_entry_description),
+      )
+    if (isError && pinRetries > 0) pinDialog.setError()
+    pinDialog.show(supportFragmentManager, "PIN_DIALOG")
+    pinDialog.setFragmentResultListener(PinDialog.PIN_RESULT_KEY) { key, bundle ->
+      if (key == PinDialog.PIN_RESULT_KEY) {
+        val pin = requireNotNull(bundle.getCharArray(PinDialog.PIN_KEY)) { "returned PIN is null" }
+        if (pin.contentEquals(AESEncryption.decrypt(pinEncrypted, keyType = KeyType.PERSISTENT))) {
+          val passEncrypted = persistentPassphrases.getString(id, null)?.toCharArray()
+          val pass =
+            // re-encrypt passphrase for use until screen-off
+            AESEncryption.encrypt(
+              // decrypt persistently cached passphrase
+              AESEncryption.decrypt(passEncrypted, keyType = KeyType.PERSISTENT)
+            )
+          if (pass != null) cachedPassphrases.put(id, pass)
+          decrypt(identifiers)
+        } else if (++pinRetries < MAX_RETRIES) {
+          verifyPin(pinEncrypted, id, identifiers, isError = true)
+        } else {
+          persistentPassphrases.edit { clear() } // reset PIN to prevent bruteforcing
+          decrypt(identifiers) // decrypt with passphrase verification
+        }
+      }
+    }
   }
 
   protected fun decrypt(identifiers: List<PGPIdentifier>, isError: Boolean = false) {

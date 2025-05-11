@@ -197,8 +197,7 @@
   <string name="git_log">Show commit log</string>
   <string name="show_password_pref_title">Show the password</string>
   <string name="show_password_pref_summary">Control the visibility of the passwords once decrypted. This does not disable copying to clipboard.</string>
-  <string name="unlock_password_with_pin_pref_title">Unlock passwords with biometrics</string>
-  <string name="unlock_password_with_pin_pref_summary">Unlock password entries with your fingerprint. The PGP passphrase will be encrypted and cached on the device.</string>
+  <string name="fast_unlock_pref_title">Fast unlocking of entries</string>
   <string name="pwd_generate_button">Generate</string>
   <string name="refresh_list">Refresh list</string>
   <string name="send_plaintext_password_to">Send password as plaintext using…</string>
@@ -236,7 +235,6 @@
   <string name="oreo_autofill_enable_dialog_instructions">To enable this feature, tap OK to go to Autofill settings. There, select Password Store from the list and confirm the confirmation prompt with OK.</string>
   <string name="oreo_autofill_enable_dialog_installed_browsers">Autofill support with installed browsers:</string>
 
-  <!-- Autofill -->
   <string name="ssh_key_does_not_exist">Unable to open the ssh private key, please check that the file exists</string>
   <string name="new_password_title">New password</string>
   <string name="git_tools">Utilities</string>
@@ -246,10 +244,10 @@
   <string name="git_head_detached">HEAD detached at %1$s</string>
   <string name="git_head_missing">Unable to locate HEAD</string>
   <string name="git_abort_and_push_title">Abort and Push</string>
-  <string name="biometric_prompt_title">Biometric Authentication</string>
+  <string name="biometric_prompt_default_description">Authenticate to continue</string>
   <string name="biometric_auth_error_reason">Authentication failure: %s</string>
-  <string name="pref_biometric_auth_title">Enable biometric authentication</string>
-  <string name="pref_biometric_auth_summary">Password Store will prompt you for your fingerprint when launching the app</string>
+  <string name="pref_biometric_auth_title">Enable authentication on app start</string>
+  <string name="pref_biometric_auth_summary">Password Store prompts you to verify your fingerprint or the device PIN at app start</string>
   <string name="pref_biometric_auth_summary_error">Fingerprint hardware inaccessible or no fingerprint enrolled</string>
   <string name="check_devicelock_settings_dialog_message">Check the device settings (device lock)</string>
   <string name="pref_title_openkeystore_clear_keyid">Clear remembered OpenKeystore SSH Key ID</string>
@@ -386,4 +384,12 @@
   <string name="pgp_id_label_plural">PGP IDs: </string>
   <string name="aes_key_invalidated_dialog_title">Warning! New fingerprint added</string>
   <string name="aes_key_invalidated_dialog_message">A new fingerprint has been registered in the device lock settings since the last use. Make sure it was added by you and not by someone else</string>
+
+  <!-- PIN input -->
+  <string name="pin_entry_hint" translatable="false">PIN</string>
+  <string name="pin_new_entry_title">Set PIN</string>
+  <string name="pin_new_entry_description">Your PIN code for fast unlocking must be at least 4 digits long</string>
+  <string name="pin_entry_title">PIN verification</string>
+  <string name="pin_entry_description">Enter your PIN code to show this entry</string>
+  <string name="pin_entry_wrong_input">Wrong input</string>
 </resources>

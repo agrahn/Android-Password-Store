@@ -24,6 +24,11 @@
     <item>classic</item>
     <item>diceware</item>
   </string-array>
+  <string-array name="fast_unlock_option_labels">
+    <item>disabled</item>
+    <item>with Biometrics (fingerprint)</item>
+    <item>with PIN</item>
+  </string-array>
   <string-array name="directory_structure_entries">
     <item>work/example.org(.gpg)</item>
     <item>work/example.org/john@doe.org(.gpg)</item>
