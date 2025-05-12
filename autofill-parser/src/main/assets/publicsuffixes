@@ -1,5 +1,5 @@
-132801
-171
+132726
+119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
 *.0emm.com
@@ -136,7 +136,6 @@
 *.stg.dev
 *.stgstage.dev
 *.stolos.io
-*.sub.wc.psl.hrsn.dev
 *.svc.firenet.ch
 *.sys.qcx.io
 *.telebit.xyz
@@ -161,7 +160,6 @@
 *.wadl.top
 *.wb.crm.dev
 *.wc.crm.dev
-*.wc.psl.hrsn.dev
 *.wd.crm.dev
 *.we.crm.dev
 *.webhare.dev
@@ -4879,7 +4877,6 @@ loabát.no
 loan
 loans
 localcert.net
-localhostcert.net
 localplayer.dev
 localtonet.com
 locker
@@ -8160,7 +8157,6 @@ stufftoread.com
 style
 su
 sub.jp
-sub.psl.hrsn.dev
 subsc-pay.com
 subsc-pay.net
 sucks
@@ -9763,6 +9759,4 @@ city.nagoya.jp
 city.sapporo.jp
 city.sendai.jp
 city.yokohama.jp
-ignored.sub.wc.psl.hrsn.dev
-ignored.wc.psl.hrsn.dev
 www.ck
