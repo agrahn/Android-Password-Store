@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 8.7.3" type="baseline" client="gradle" dependencies="false" name="AGP (8.7.3)" variant="all" version="8.7.3">
+<issues format="6" by="lint 8.10.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.10.0)" variant="all" version="8.10.0">
 
     <issue
         id="InvalidPackage"
         message="Invalid package reference in library; not included in Android: `javax.naming.directory`. Referenced from `org.bouncycastle.cert.dane.fetcher.JndiDANEFetcherFactory`.">
         <location
-            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.bouncycastle/bcpkix-jdk18on/1.78.1/17b3541f736df97465f87d9f5b5dfa4991b37bb3/bcpkix-jdk18on-1.78.1.jar"/>
+            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.bouncycastle/bcpkix-jdk18on/1.80/5277dfaaef2e92ce1d802499599a0ca7488f86e6/bcpkix-jdk18on-1.80.jar"/>
     </issue>
 
     <issue
         id="InvalidPackage"
         message="Invalid package reference in library; not included in Android: `javax.naming`. Referenced from `org.bouncycastle.cert.dane.fetcher.JndiDANEFetcherFactory.1`.">
         <location
-            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.bouncycastle/bcpkix-jdk18on/1.78.1/17b3541f736df97465f87d9f5b5dfa4991b37bb3/bcpkix-jdk18on-1.78.1.jar"/>
+            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.bouncycastle/bcpkix-jdk18on/1.80/5277dfaaef2e92ce1d802499599a0ca7488f86e6/bcpkix-jdk18on-1.80.jar"/>
     </issue>
 
     <issue
@@ -36,7 +36,7 @@
         errorLine2="                              ~~~~~~~~~~~">
         <location
             file="src/main/java/app/passwordstore/ui/adapters/FieldItemAdapter.kt"
-            line="69"
+            line="73"
             column="31"/>
     </issue>
 
@@ -47,7 +47,7 @@
         errorLine2="                              ~~~~~~~~~~~">
         <location
             file="src/main/java/app/passwordstore/ui/adapters/FieldItemAdapter.kt"
-            line="69"
+            line="73"
             column="31"/>
     </issue>
 
@@ -184,28 +184,6 @@
             file="src/main/res/layout/oreo_autofill_filter_row.xml"
             line="43"
             column="4"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="Number formatting does not take into account locale settings. Consider using `String.format` instead."
-        errorLine1="    binding.passwordLengthText.setText(prefs.getInt(DICEWARE_LENGTH, 5).toString())"
-        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/app/passwordstore/ui/dialogs/DicewarePasswordGeneratorDialogFragment.kt"
-            line="46"
-            column="40"/>
-    </issue>
-
-    <issue
-        id="SetTextI18n"
-        message="Number formatting does not take into account locale settings. Consider using `String.format` instead."
-        errorLine1="    binding.lengthNumber.setText(prefs.getInt(PreferenceKeys.LENGTH, 20).toString())"
-        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/app/passwordstore/ui/dialogs/PasswordGeneratorDialogFragment.kt"
-            line="54"
-            column="34"/>
     </issue>
 
 </issues>
