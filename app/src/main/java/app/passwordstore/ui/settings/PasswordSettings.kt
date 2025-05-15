@@ -13,6 +13,7 @@ import app.passwordstore.R
 import app.passwordstore.injection.prefs.PGPPassphrases
 import app.passwordstore.util.auth.BiometricAuthenticator
 import app.passwordstore.util.extensions.persistentPassphrases
+import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.settings.PreferenceKeys
 import de.Maxr1998.modernpreferences.PreferenceScreen
 import de.Maxr1998.modernpreferences.helpers.editText
@@ -39,6 +40,14 @@ class PasswordSettings(private val activity: FragmentActivity) : SettingsProvide
       val unlockLabels = activity.resources.getStringArray(R.array.fast_unlock_option_labels)
       val unlockOpts =
         if (BiometricAuthenticator.canAuthenticate(activity)) setOf(0, 1, 2) else setOf(0, 2)
+      if (
+        !unlockValues
+          .slice(unlockOpts)
+          .contains(
+            activity.sharedPrefs.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled")
+          )
+      )
+        activity.sharedPrefs.edit { putString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") }
       val unlockItems =
         unlockValues.slice(unlockOpts).zip(unlockLabels.slice(unlockOpts)).map {
           SelectionItem(it.first, it.second, null)

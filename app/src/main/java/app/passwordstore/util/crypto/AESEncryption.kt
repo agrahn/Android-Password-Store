@@ -37,10 +37,10 @@ object AESEncryption {
   }
 
   private const val KEYSTORE_ALIAS = "AESKey" // valid during the lifetime of the app process
-  private const val KEYSTORE_ALIAS_NO_AUTHENTICATION =
-    "AESKeyNoAuth" // persistent, but without authentication (used for sensitive preferences)
-  private const val KEYSTORE_ALIAS_WITH_AUTHENTICATION =
-    "AESKeyWithAuth" // persistent, with authentication (used for persistent passphrase caching)
+  // persistent, but without authentication (used for sensitive preferences and PIN caching)
+  private const val KEYSTORE_ALIAS_NO_AUTHENTICATION = "AESKeyNoAuth"
+  // persistent, with authentication (used for persistent passphrase caching)
+  private const val KEYSTORE_ALIAS_WITH_AUTHENTICATION = "AESKeyWithAuth"
   private const val PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore"
   private const val TRANSFORMATION = "AES/GCM/NoPadding"
   private const val IV_SIZE = 12 // 12 bytes (96 bits) length of initialisation vector for GCM mode
@@ -138,7 +138,10 @@ object AESEncryption {
     keyType: KeyType = KeyType.TEMPORARY,
     encryptedBase64Data: CharArray? = null,
   ): Cipher? {
-    initKeyStore(keyType)
+    runCatching { initKeyStore(keyType) }
+      .onFailure {
+        return null
+      }
     val cipher = Cipher.getInstance(TRANSFORMATION)
     return runCatching {
         if (encryptedBase64Data == null) {
