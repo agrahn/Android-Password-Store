@@ -58,7 +58,6 @@ import java.io.IOException
 import java.nio.CharBuffer
 import java.nio.charset.Charset
 import java.nio.file.Paths
-import java.util.concurrent.ScheduledExecutorService
 import javax.inject.Inject
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createDirectories
@@ -91,8 +90,6 @@ class PasswordCreationActivity : BasePGPActivity() {
   private val editing by unsafeLazy { intent.getBooleanExtra(EXTRA_EDITING, false) }
   private var oldCategory: String? = null
   private var copy: Boolean = false
-
-  private var timer: ScheduledExecutorService? = null
 
   private val otpImportAction =
     registerForActivityResult(StartActivityForResult()) { result ->
@@ -265,17 +262,6 @@ class PasswordCreationActivity : BasePGPActivity() {
       it.doAfterTextChanged { updateViewState() }
     }
     updateViewState()
-  }
-
-  override fun onResume() {
-    timer?.shutdownNow()
-    super.onResume()
-  }
-
-  override fun onPause() {
-    timer?.shutdownNow()
-    timer = startAutoDismissTimer()
-    super.onPause()
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {

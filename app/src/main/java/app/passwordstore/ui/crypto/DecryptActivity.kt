@@ -75,7 +75,6 @@ class DecryptActivity : BasePGPActivity() {
       val entry = passwordEntryFactory.create(result.value.toByteArray())
       passwordEntry = entry
       createPasswordUI(entry)
-      startAutoDismissTimer()
       onSuccess(ids.first())
     } else {
       logcat(ERROR) { result.error.stackTraceToString() }
@@ -164,7 +163,7 @@ class DecryptActivity : BasePGPActivity() {
   private suspend fun createPasswordUI(entry: PasswordEntry) =
     withContext(dispatcherProvider.main()) {
       val labelFormat = resources.getString(R.string.otp_label_format)
-      val showPassword = settings.getBoolean(PreferenceKeys.SHOW_PASSWORD, true)
+      val showPassword = settings.getBoolean(PreferenceKeys.SHOW_PASSWORD, false)
       invalidateOptionsMenu()
 
       val items = arrayListOf<FieldItem>()

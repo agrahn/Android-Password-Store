@@ -46,6 +46,7 @@ import com.github.michaelbull.result.unwrap
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
+import java.time.Instant
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -82,6 +83,9 @@ open class BasePGPActivity : AppCompatActivity() {
   private var retries = 0
   private var pinRetries = 0
 
+  var secondsOnPause = 0L // seconds since Epoch upon pause
+  var timeout = 0L
+
   @Inject lateinit var pgpKeyManager: PGPKeyManager
 
   /** Action to invoke if [keyImportAction] succeeds. */
@@ -115,6 +119,21 @@ open class BasePGPActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+  }
+
+  override fun onResume() {
+    val secondsNow = Instant.now().getEpochSecond()
+    if (timeout > 0 && (secondsNow - secondsOnPause) > timeout) finish()
+    super.onResume()
+  }
+
+  override fun onPause() {
+    timeout =
+      settings.getString(PreferenceKeys.GENERAL_SHOW_TIME)?.toLongOrNull()
+        ?: Constants.DEFAULT_DECRYPTION_TIMEOUT.toLong()
+
+    if (timeout > 0) secondsOnPause = Instant.now().getEpochSecond()
+    super.onPause()
   }
 
   /* Function to execute [onKeysExist] only if there are PGP keys imported in the app's key manager.
@@ -282,24 +301,6 @@ open class BasePGPActivity : AppCompatActivity() {
     } else {
       null
     }
-  }
-
-  /**
-   * Automatically finishes the activity after [PreferenceKeys.GENERAL_SHOW_TIME] seconds decryption
-   * succeeded to prevent information leaks from stale activities. Cancel with .shutdownNow() on
-   * returned object.
-   */
-  protected fun startAutoDismissTimer(): ScheduledExecutorService? {
-    val timeout =
-      settings.getString(PreferenceKeys.GENERAL_SHOW_TIME)?.toIntOrNull()
-        ?: Constants.DEFAULT_DECRYPTION_TIMEOUT
-    if (timeout > 0) {
-      val timer = Executors.newSingleThreadScheduledExecutor()
-      timer.schedule({ finish() }, timeout.toLong(), TimeUnit.SECONDS)
-      return timer
-    }
-
-    return null
   }
 
   /** Opens the dialog for passphrase input and then forwards it to the decryption method. */
@@ -567,13 +568,12 @@ open class BasePGPActivity : AppCompatActivity() {
      */
     val cachedPassphrases = mutableMapOf<String, CharArray>() // pgp id, passphrase
 
-    var clearTimer: ScheduledExecutorService? = null
-
     /**
      * Newest Samsung phones now feature a history of up to 30 items. To err on the side of caution,
      * push 35 fake ones.
      */
     private const val CLIPBOARD_CLEAR_COUNT = 35
+    var clearTimer: ScheduledExecutorService? = null
 
     /** Gets the relative path to the repository */
     fun getRelativePath(fullPath: String, repositoryPath: String): String =
