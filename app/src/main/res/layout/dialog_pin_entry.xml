@@ -32,8 +32,8 @@
       android:importantForAutofill="no"
       android:imeOptions="flagNoPersonalizedLearning"
       android:digits="0123456789"
-      android:inputType="numberPassword" />
-    <requestFocus />
+      android:inputType="numberPassword"/>
+    <requestFocus/>
   </com.google.android.material.textfield.TextInputLayout>
 
 </LinearLayout>

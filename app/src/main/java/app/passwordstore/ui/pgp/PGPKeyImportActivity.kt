@@ -9,17 +9,28 @@ package app.passwordstore.ui.pgp
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts.OpenDocument
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.setFragmentResultListener
+import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
+import app.passwordstore.crypto.KeyUtils.isKeyUsable
 import app.passwordstore.crypto.KeyUtils.tryGetId
 import app.passwordstore.crypto.PGPKey
 import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.crypto.errors.KeyAlreadyExistsException
+import app.passwordstore.data.crypto.CryptoRepository
+import app.passwordstore.ui.dialogs.TextInputDialog
+import app.passwordstore.util.coroutines.DispatcherProvider
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import logcat.LogPriority.ERROR
+import logcat.logcat
 
 @AndroidEntryPoint
 class PGPKeyImportActivity : AppCompatActivity() {
@@ -30,20 +41,30 @@ class PGPKeyImportActivity : AppCompatActivity() {
    */
   private var lastBytes: ByteArray? = null
   @Inject lateinit var keyManager: PGPKeyManager
+  @Inject lateinit var repository: CryptoRepository
+  @Inject lateinit var dispatcherProvider: DispatcherProvider
+
+  private val MAX_RETRIES = 3
+  private var retries = 0
 
   private val pgpKeyImportAction =
     registerForActivityResult(OpenDocument()) { uri ->
       runCatching {
-          if (uri == null) {
-            return@runCatching null
-          }
-          val keyInputStream =
-            contentResolver.openInputStream(uri)
-              ?: throw IllegalStateException("Failed to open selected file")
-          val bytes = keyInputStream.use { `is` -> `is`.readBytes() }
-          importKey(bytes, false)
+        if (uri == null) {
+          finish()
+          return@runCatching
         }
-        .run(::handleImportResult)
+        val keyInputStream =
+          contentResolver.openInputStream(uri)
+            ?: throw IllegalStateException("Failed to open selected file")
+        val bytes = keyInputStream.use { `is` -> `is`.readBytes() }
+        if (isKeyUsable(PGPKey(bytes))) {
+          runCatching { importKey(bytes, false) }.run(::handleImportResult)
+        } else {
+          // incoming key file may be encrypted
+          lifecycleScope.launch(dispatcherProvider.main()) { askBackupCode(bytes, isError = false) }
+        }
+      }
     }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,6 +85,38 @@ class PGPKeyImportActivity : AppCompatActivity() {
     }
     if (error != null) throw error
     return key
+  }
+
+  private suspend fun askBackupCode(bytes: ByteArray, isError: Boolean) {
+    if (++retries > MAX_RETRIES) finish()
+    val dialog =
+      TextInputDialog.newInstance(getString(R.string.pgp_key_import_backupcode_entry_title))
+    if (isError && retries > 1) dialog.setError()
+    dialog.show(supportFragmentManager, "BACKUPCODE_INPUT_DIALOG")
+    dialog.setFragmentResultListener(TextInputDialog.REQUEST_KEY) { key, bundle ->
+      if (key == TextInputDialog.REQUEST_KEY) {
+        val backupCode =
+          requireNotNull(bundle.getString(TextInputDialog.BUNDLE_KEY_TEXT)?.toCharArray()) {
+            "returned backup code is null"
+          }
+        lifecycleScope.launch(dispatcherProvider.main()) {
+          decryptWithBackupCode(backupCode, bytes)
+        }
+      }
+    }
+  }
+
+  suspend fun decryptWithBackupCode(backupCode: CharArray, bytes: ByteArray) {
+    val message = ByteArrayInputStream(bytes)
+    val outputStream = ByteArrayOutputStream()
+    val result = repository.decryptSym(backupCode, message, outputStream)
+    if (result.isOk) {
+      val decryptedBytes = result.value.toByteArray()
+      runCatching { importKey(decryptedBytes, false) }.run(::handleImportResult)
+    } else {
+      logcat(ERROR) { result.error.stackTraceToString() }
+      askBackupCode(bytes, isError = true) // retry
+    }
   }
 
   private fun handleImportResult(result: Result<PGPKey?, Throwable>) {

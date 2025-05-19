@@ -115,6 +115,18 @@ constructor(
       )
     }
 
+  suspend fun decryptSym(
+    passphrase: CharArray,
+    message: ByteArrayInputStream,
+    out: ByteArrayOutputStream,
+  ) =
+    withContext(dispatcherProvider.io()) {
+      val decryptionOptions = PGPDecryptOptions.Builder().build()
+      pgpCryptoHandler.decrypt(listOf<PGPKey>(), passphrase, message, out, decryptionOptions).map {
+        out
+      }
+    }
+
   suspend fun encrypt(
     identities: List<PGPIdentifier>,
     content: ByteArrayInputStream,

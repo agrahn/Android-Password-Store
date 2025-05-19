@@ -58,18 +58,24 @@ public class PGPainlessCryptoHandler @Inject constructor() :
   ): Result<Unit, CryptoHandlerException> =
     runCatching {
         if (keys.isEmpty()) {
-          throw NoKeysProvidedException
+          // ciphertextStream may be symmetrically encrypted
+          val decryptionStream =
+            PGPainless.decryptAndOrVerify()
+              .onInputStream(ciphertextStream)
+              .withOptions(ConsumerOptions().addMessagePassphrase(Passphrase(passphrase)))
+          decryptionStream.use { Streams.pipeAll(it, outputStream) }
+        } else {
+          val keyringCollection =
+            keys
+              .mapNotNull { key -> PGPainless.readKeyRing().secretKeyRing(key.contents) }
+              .run(::PGPSecretKeyRingCollection)
+          val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
+          val decryptionStream =
+            PGPainless.decryptAndOrVerify()
+              .onInputStream(ciphertextStream)
+              .withOptions(ConsumerOptions().addDecryptionKeys(keyringCollection, protector))
+          decryptionStream.use { Streams.pipeAll(it, outputStream) }
         }
-        val keyringCollection =
-          keys
-            .mapNotNull { key -> PGPainless.readKeyRing().secretKeyRing(key.contents) }
-            .run(::PGPSecretKeyRingCollection)
-        val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
-        val decryptionStream =
-          PGPainless.decryptAndOrVerify()
-            .onInputStream(ciphertextStream)
-            .withOptions(ConsumerOptions().addDecryptionKeys(keyringCollection, protector))
-        decryptionStream.use { Streams.pipeAll(it, outputStream) }
         return@runCatching
       }
       .mapError { error ->

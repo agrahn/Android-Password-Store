@@ -358,6 +358,7 @@
   <string name="otp_import_manual_hint_account">Benutzer-Konto</string>
   <string name="place_shortcut_on_home_screen">Verknüpfung auf dem Home-Screen erstellen</string>
   <string name="password_list_fab_content_description">Neues Passwort oder neuen Ordner erstellen</string>
+  <string name="pgp_key_import_backupcode_entry_title">Backup-Code</string>
   <string name="pgp_key_import_failed">Fehler beim Import des PGP-Schlüssels</string>
   <string name="pgp_key_import_failed_replace_message">Ein bestehender Schlüssel mit dieser ID wurde gefunden. Möchten Sie ihn ersetzen?</string>
   <string name="pgp_key_import_succeeded">PGP-Schlüssel erfolgreich importiert</string>

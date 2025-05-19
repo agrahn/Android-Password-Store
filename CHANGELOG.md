@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - An option for fast unlocking password store entries with a PIN was added. Available unlocking options can be accessed via Settings --> Passwords --> Fast unlocking of entries. The PIN is specific to the app, that is, it may differ from the device PIN.
+- Importing a symmetrically encrypted PGP secret key file, such as an OpenKeychain backup. This allows for more secure handling of PGP keys outside trusted environments, e. g. for key transfer between devices using e-mail or online storage services.
 
 ## [1.14.3] - 2025-04-25
 

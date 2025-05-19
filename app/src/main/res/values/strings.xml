@@ -360,6 +360,7 @@
   <string name="otp_import_manual_hint_account">Account</string>
   <string name="place_shortcut_on_home_screen">Place shortcut on home screen</string>
   <string name="password_list_fab_content_description">Create new password or folder</string>
+  <string name="pgp_key_import_backupcode_entry_title">Backup code</string>
   <string name="pgp_key_import_failed">Failed to import PGP key</string>
   <string name="pgp_key_import_failed_replace_message">An existing key with this ID was found, do you want to replace it?</string>
   <string name="pgp_key_import_succeeded">Successfully imported PGP key</string>
