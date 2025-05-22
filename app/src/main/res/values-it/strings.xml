@@ -250,7 +250,6 @@
   <string name="add_otp">Aggiungi OTP</string>
   <string name="otp_import_success">Configurazione TOTP importata correttamente</string>
   <string name="otp_import_failure_generic">Impossibile importare la configurazione di TOTP</string>
-  <string name="exporting_passwords">Esportando le password…</string>
   <string name="invalid_filename_text">Il nome del file non deve contenere \'/0, imposta la directory sopra</string>
   <string name="directory_hint">Directory</string>
   <string name="new_folder_set_gpg_key">Imposta la chiave PGP per la directory</string>

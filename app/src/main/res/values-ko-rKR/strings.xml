@@ -263,7 +263,6 @@ username@example.com:…</string>
   <string name="otp_import_success">TOTP 구성을 성공적으로 가져왔습니다</string>
   <string name="otp_import_failure_generic">TOTP 구성을 가져오지 못했습니다.</string>
   <string name="otp_import_failure_no_selection">선택한 이미지 파일이 없습니다</string>
-  <string name="exporting_passwords">비밀번호 내보내는 중…</string>
   <string name="short_gpg_id">.gpg-id를 찾았지만, 지원되지 않는 짧은 16진수 ID가 포함되어 있습니다.</string>
   <string name="invalid_filename_text">파일 이름에 \'/\'가 포함되어서는 안됩니다. 위의 디렉터리를 설정하세요</string>
   <string name="directory_hint">디렉토리</string>

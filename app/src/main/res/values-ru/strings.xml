@@ -260,7 +260,6 @@
   <string name="otp_import_success">Конфигурация TOTP успешно импортирована</string>
   <string name="otp_import_failure_generic">Не удалось импортировать конфигурацию TOTP</string>
   <string name="otp_import_failure_no_selection">Не выбран файл изображения</string>
-  <string name="exporting_passwords">Экспорт паролей…</string>
   <string name="invalid_gpg_id">Файл .gpg-id найден, но содержит неверный или неизвестный идентификатор ключа.</string>
   <string name="invalid_filename_text">Имя файла не должно содержать \'/\', укажите директорию выше</string>
   <string name="directory_hint">Директория</string>

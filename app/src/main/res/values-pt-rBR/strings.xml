@@ -262,7 +262,6 @@
   <string name="otp_import_success">Configuração TOTP importada com sucesso</string>
   <string name="otp_import_failure_generic">Falha ao importar a configuração TOTP</string>
   <string name="otp_import_failure_no_selection">Nenhum arquivo de imagem foi selecionado</string>
-  <string name="exporting_passwords">Exportando senhas…</string>
   <string name="invalid_gpg_id">O arquivo .gpg-id foi encontrado, mas contém um ID de chave inválido ou desconhecido.</string>
   <string name="short_gpg_id">O arquivo .gpg-id foi encontrado, mas contém uma ID hexadecimal curta, que não é suportada.</string>
   <string name="invalid_filename_text">Nome do arquivo não deve conter \'/\', defina o diretório acima</string>

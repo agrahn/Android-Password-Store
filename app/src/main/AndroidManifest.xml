@@ -102,11 +102,6 @@
       android:windowSoftInputMode="adjustResize" />
 
     <service
-      android:name=".util.services.PasswordExportService"
-      android:exported="false"
-      android:foregroundServiceType="shortService"
-      android:process=":password_export_service_process" />
-    <service
       android:name=".util.services.OreoAutofillService"
       android:exported="true"
       android:permission="android.permission.BIND_AUTOFILL_SERVICE">

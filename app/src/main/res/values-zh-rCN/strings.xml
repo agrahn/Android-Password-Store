@@ -266,7 +266,6 @@ personal.com</string>
   <string name="otp_import_success">导入TOTP配置成功</string>
   <string name="otp_import_failure_generic">导入TOTP配置失败</string>
   <string name="otp_import_failure_no_selection">没有选择镜像文件</string>
-  <string name="exporting_passwords">正在导出密码…</string>
   <string name="short_gpg_id">找到 .gpg-id 但它包含一个不受支持的短十六进制ID。</string>
   <string name="invalid_filename_text">文件名不能包含\'/\'</string>
   <string name="directory_hint">目录</string>

@@ -256,7 +256,6 @@
   <string name="password_creation_duplicate_error">Plik o tej nazwie już istnieje, użyj innej nazwy</string>
   <string name="add_otp">Dodaj OTP</string>
   <string name="otp_import_success">Pomyślnie zaimportowano konfigurację TOTP</string>
-  <string name="exporting_passwords">Eksportowanie haseł…</string>
   <string name="invalid_gpg_id">Znaleziono plik .gpg-id, ale zawiera on nieprawidłowy lub nieznany identyfikator klucza.</string>
   <string name="short_gpg_id">Znaleziono .gpg-id, ale zawarty w nim skrócony identyfikator nie jest obsługiwany</string>
   <string name="invalid_filename_text">Nazwa pliku nie może zawierać \'/\', ustaw katalog powyżej</string>

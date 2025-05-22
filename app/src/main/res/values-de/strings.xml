@@ -297,7 +297,6 @@
   <string name="otp_import_success">TOTP-Konfiguration erfolgreich importiert</string>
   <string name="otp_import_failure_generic">Import der TOTP-Konfiguration fehlgeschlagen</string>
   <string name="otp_import_failure_no_selection">Keine Bilddatei ausgewählt</string>
-  <string name="exporting_passwords">Passwörter werden exportiert.</string>
   <string name="invalid_gpg_id">.gpg-id wurde gefunden, enthält jedoch ungültige oder unbekannte Schlüssel-ID.</string>
   <string name="empty_gpg_id">.gpg-id wurde gefunden, ist jedoch leer.</string>
   <string name="missing_gpg_id">.gpg-id wurde nicht gefunden.</string>

@@ -29,7 +29,6 @@ import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.git.sshj.SshKey
-import app.passwordstore.util.services.PasswordExportService
 import app.passwordstore.util.settings.GitSettings
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.onFailure
@@ -44,6 +43,18 @@ import de.Maxr1998.modernpreferences.PreferenceScreen
 import de.Maxr1998.modernpreferences.helpers.onClick
 import de.Maxr1998.modernpreferences.helpers.pref
 import de.Maxr1998.modernpreferences.helpers.switch
+import java.io.IOException
+import java.nio.file.FileVisitResult
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import logcat.LogPriority.ERROR
+import logcat.asLog
+import logcat.logcat
 
 class RepositorySettings(private val activity: FragmentActivity) : SettingsProvider {
 
@@ -74,17 +85,21 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
       }
     ) { uri: Uri? ->
       if (uri == null) return@registerForActivityResult
+
       val targetDirectory = DocumentFile.fromTreeUri(activity.applicationContext, uri)
+      val dateString = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
+      val passDir = targetDirectory?.createDirectory("password_store_$dateString")
+      if (passDir == null) return@registerForActivityResult
 
-      if (targetDirectory != null) {
-        val service =
-          Intent(activity.applicationContext, PasswordExportService::class.java).apply {
-            action = PasswordExportService.ACTION_EXPORT_PASSWORD
-            putExtra("uri", uri)
-          }
+      val repositoryDirectory = PasswordRepository.getRepositoryDirectory()
+      val internalRepository = DocumentFile.fromFile(repositoryDirectory)
 
-        activity.startForegroundService(service)
-      }
+      runCatching {
+          logcat { "Copying ${repositoryDirectory.path} to $targetDirectory" }
+          copyDirToDir(internalRepository, passDir)
+          logcat { "Done with importing ${repositoryDirectory.path} to $targetDirectory" }
+        }
+        .onFailure { e -> logcat(ERROR) { e.asLog() } }
     }
 
   private val storeImportAction =
@@ -103,15 +118,29 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
     ) { uri: Uri? ->
       if (uri == null) return@registerForActivityResult
       val sourceDirectory = DocumentFile.fromTreeUri(activity.applicationContext, uri)
+      if (sourceDirectory == null) return@registerForActivityResult
 
       // Minimal check to see if the source directory is a git repo
-      if (sourceDirectory?.findFile(".git")?.isDirectory() ?: false) {
-        val service =
-          Intent(activity.applicationContext, PasswordExportService::class.java).apply {
-            action = PasswordExportService.ACTION_IMPORT_PASSWORD
-            putExtra("uri", uri)
+      if (sourceDirectory.findFile(".git")?.isDirectory() ?: false) {
+        val repositoryDirectory =
+          requireNotNull(PasswordRepository.getRepositoryDirectory()) {
+            "Password target directory must be set for import"
           }
-        activity.startForegroundService(service)
+        if (!repositoryDirectory.exists()) repositoryDirectory.mkdirs()
+        val internalRepository = DocumentFile.fromFile(repositoryDirectory)
+
+        runCatching {
+            logcat { "Copying $sourceDirectory to ${repositoryDirectory.path}" }
+            copyDirToDir(sourceDirectory, internalRepository)
+            /**
+             * When importing an external repo, the .bin extension is appended to the files copied;
+             * we walk through the internal repo directory once more and remove the .bin ending from
+             * all files we find.
+             */
+            renameFilesInDirectoryTree(repositoryDirectory.getAbsolutePath(), ".bin", "")
+            logcat { "Done with importing $sourceDirectory to ${repositoryDirectory.path}" }
+          }
+          .onFailure { e -> logcat(ERROR) { e.asLog() } }
       }
     }
 
@@ -246,6 +275,76 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
         }
       }
     }
+  }
+
+  /**
+   * Copies a password file to a given directory.
+   *
+   * Note: this does not preserve last modified time.
+   *
+   * @param passwordFile password file to copy.
+   * @param targetDirectory target directory to copy password.
+   */
+  private fun copyFileToDir(passwordFile: DocumentFile, targetDirectory: DocumentFile) {
+    val sourceInputStream =
+      activity.applicationContext.contentResolver.openInputStream(passwordFile.uri)
+    val name = passwordFile.name
+    val targetPasswordFile =
+      targetDirectory.createFile("application/octet-stream", name ?: throw NullPointerException())
+    if (targetPasswordFile?.exists() == true) {
+      val destOutputStream =
+        activity.applicationContext.contentResolver.openOutputStream(targetPasswordFile.uri)
+
+      if (destOutputStream != null && sourceInputStream != null) {
+        sourceInputStream.use { source -> destOutputStream.use { dest -> source.copyTo(dest) } }
+      }
+    }
+  }
+
+  /**
+   * Recursively copies a directory to a destination.
+   *
+   * @param sourceDirectory directory to copy from.
+   * @param targetDirectory directory to copy to.
+   */
+  private fun copyDirToDir(sourceDirectory: DocumentFile, targetDirectory: DocumentFile) {
+    sourceDirectory.listFiles().forEach { file ->
+      if (file.isDirectory()) {
+        // Create new directory and recurse
+        val newDir = targetDirectory.createDirectory(file.name ?: throw NullPointerException())
+        copyDirToDir(file, newDir ?: throw NullPointerException())
+      } else {
+        copyFileToDir(file, targetDirectory)
+      }
+    }
+  }
+
+  private fun renameFilesInDirectoryTree(
+    rootDir: String,
+    oldExtension: String,
+    newExtension: String,
+  ) {
+    val startPath = Paths.get(rootDir)
+    Files.walkFileTree(
+      startPath,
+      object : SimpleFileVisitor<Path>() {
+        override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+          val fileName = file.fileName.toString()
+          if (fileName.endsWith(oldExtension)) {
+            val newFileName = fileName.replace(oldExtension, newExtension)
+            val newFile = file.resolveSibling(newFileName)
+            Files.move(file, newFile)
+          }
+          return FileVisitResult.CONTINUE
+        }
+
+        override fun visitFileFailed(file: Path, exc: IOException): FileVisitResult {
+          logcat { "Failed to access file: $file" }
+          exc.printStackTrace()
+          return FileVisitResult.CONTINUE
+        }
+      },
+    )
   }
 
   @EntryPoint
