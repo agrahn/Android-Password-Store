@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- The PIN verification attempt counter was reset to zero upon cancelling the dialog. It is now persistently cached. This prevents brute force attempts, even after restarting the app.
+- Password repo export to and import from an external directory happened to be incomplete if the user returned to the password list too quickly while the operation was still running in the background.
+
 ## [1.14.4] - 2025-05-21
 
 ### Added
