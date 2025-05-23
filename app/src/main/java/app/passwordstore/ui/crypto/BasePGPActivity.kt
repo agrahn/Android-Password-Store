@@ -81,7 +81,6 @@ open class BasePGPActivity : AppCompatActivity() {
   /* Counters for the user's decryption (with passphrase) and PIN verification
    * attempts to unlock the current password entry */
   private var retries = 0
-  private var pinRetries = 0
 
   var secondsOnPause = 0L // seconds since Epoch upon pause
   var timeout = 0L
@@ -404,8 +403,11 @@ open class BasePGPActivity : AppCompatActivity() {
                         if (pin.size >= 4) {
                           persistentPassphrases.edit {
                             putString(
-                              "unlock_pin",
-                              AESEncryption.encrypt(pin, keyType = KeyType.PERSISTENT)
+                              "unlock_pin", // reset and prepend PIN attempt counter
+                              AESEncryption.encrypt(
+                                  charArrayOf('0', ':') + pin,
+                                  keyType = KeyType.PERSISTENT,
+                                )
                                 ?.concatToString(),
                             )
                             putString(
@@ -508,12 +510,38 @@ open class BasePGPActivity : AppCompatActivity() {
         title = resources.getString(R.string.pin_entry_title),
         description = resources.getString(R.string.pin_entry_description),
       )
-    if (isError && pinRetries > 0) pinDialog.setError()
+    if (isError) pinDialog.setError()
     pinDialog.show(supportFragmentManager, "PIN_DIALOG")
     pinDialog.setFragmentResultListener(PinDialog.PIN_RESULT_KEY) { key, bundle ->
       if (key == PinDialog.PIN_RESULT_KEY) {
         val pin = requireNotNull(bundle.getCharArray(PinDialog.PIN_KEY)) { "returned PIN is null" }
-        if (pin.contentEquals(AESEncryption.decrypt(pinEncrypted, keyType = KeyType.PERSISTENT))) {
+        var (pinRetries, cachedPin) =
+          AESEncryption.decrypt(pinEncrypted, keyType = KeyType.PERSISTENT)?.let { cached ->
+            if (cached[1] == ':') {
+              Pair(cached[0].digitToInt(), cached.filterIndexed { i, _ -> i > 1 }.toCharArray())
+            } else {
+              // fix PIN cache that does not have an attempt count prepended (old app version)
+              persistentPassphrases.edit {
+                putString(
+                  "unlock_pin",
+                  AESEncryption.encrypt(
+                      charArrayOf('0', ':') + cached,
+                      keyType = KeyType.PERSISTENT,
+                    )
+                    ?.concatToString(),
+                )
+              }
+              Pair(0, cached)
+            }
+          } ?: Pair(MAX_RETRIES, null)
+        if (cachedPin?.let { it.contentEquals(pin) } ?: false) { // PIN verifies successfully
+          persistentPassphrases.edit {
+            putString(
+              "unlock_pin", // reset to zero and prepend attempt counter
+              AESEncryption.encrypt(charArrayOf('0', ':') + pin, keyType = KeyType.PERSISTENT)
+                ?.concatToString(),
+            )
+          }
           val passEncrypted = persistentPassphrases.getString(id, null)?.toCharArray()
           val pass =
             // re-encrypt passphrase for use until screen-off
@@ -521,11 +549,23 @@ open class BasePGPActivity : AppCompatActivity() {
               // decrypt persistently cached passphrase
               AESEncryption.decrypt(passEncrypted, keyType = KeyType.PERSISTENT)
             )
-          if (pass != null) cachedPassphrases.put(id, pass)
+          pass?.let { cachedPassphrases.put(id, it) }
           decrypt(identifiers)
-        } else if (++pinRetries < MAX_RETRIES) {
-          verifyPin(pinEncrypted, id, identifiers, isError = true)
-        } else {
+        } else if (
+          cachedPin != null && ++pinRetries < MAX_RETRIES
+        ) { // PIN verification failed, try again
+          val pinEncryptedUpdate =
+            AESEncryption.encrypt(
+              charArrayOf(pinRetries.digitToChar(), ':') + cachedPin,
+              keyType = KeyType.PERSISTENT,
+            )
+          pinEncryptedUpdate?.let { // update PIN cache with incremented attempt counter
+            persistentPassphrases.edit {
+              putString("unlock_pin", pinEncryptedUpdate.concatToString())
+            }
+            verifyPin(pinEncryptedUpdate, id, identifiers, isError = true)
+          } ?: throw NullPointerException()
+        } else { // PIN verification failed, do not try again
           persistentPassphrases.edit { clear() } // reset PIN to prevent bruteforcing
           decrypt(identifiers) // decrypt with passphrase verification
         }
