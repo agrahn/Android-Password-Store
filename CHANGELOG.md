@@ -4,11 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.14.5] - 2025-05-27
+
 ### Fixed
 
 - Password repo export to and import from an external directory happened to be incomplete if the user returned to the password list too quickly while the operation was still running in the background
-- The PIN verification attempt counter was reset to zero upon cancelling the dialog or app restart. It is now persistently cached to prevent brute force attempts
-- Decryption may fail in a multi-key setup, where some PGP keys listed in the`.gpg-id` are public-only keys
+- Fast unlocking of password items: The PIN verification attempt counter was reset to zero upon cancelling the dialog or app restart. It is now persistently cached to prevent brute force attempts on the PIN
+- Decryption may fail in a multi-key setup, where some PGP keys listed in `.gpg-id` are public-only keys
 
 ## [1.14.4] - 2025-05-21
 
@@ -532,7 +534,8 @@ All notable changes to this project will be documented in this file.
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.4...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.5...HEAD
+[1.14.5]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.4...v1.14.5
 [1.14.4]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.3...v1.14.4
 [1.14.3]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.2...v1.14.3
 [1.14.2]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.1...v1.14.2

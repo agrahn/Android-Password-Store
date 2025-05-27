@@ -1,0 +1,5 @@
+### Fixes
+
+- Password repo export to and import from an external directory happened to be incomplete if the user returned to the password list too quickly while the operation was still running in the background
+- Fast unlocking of password items: The PIN verification attempt counter was reset to zero upon cancelling the dialog or app restart. It is now persistently cached to prevent brute force attempts on the PIN
+- Decryption may fail in a multi-key setup, where some PGP keys listed in .gpg-id are public-only keys
