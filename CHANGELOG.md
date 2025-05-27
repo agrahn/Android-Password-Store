@@ -6,15 +6,16 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- The PIN verification attempt counter was reset to zero upon cancelling the dialog. It is now persistently cached. This prevents brute force attempts, even after restarting the app.
-- Password repo export to and import from an external directory happened to be incomplete if the user returned to the password list too quickly while the operation was still running in the background.
+- Password repo export to and import from an external directory happened to be incomplete if the user returned to the password list too quickly while the operation was still running in the background
+- The PIN verification attempt counter was reset to zero upon cancelling the dialog or app restart. It is now persistently cached to prevent brute force attempts
+- Decryption may fail in a multi-key setup, where some PGP keys listed in the`.gpg-id` are public-only keys
 
 ## [1.14.4] - 2025-05-21
 
 ### Added
 
-- An option for fast unlocking password store entries with a PIN was added. Available unlocking options can be accessed via Settings --> Passwords --> Fast unlocking of entries. The PIN is specific to the app, that is, it may differ from the device PIN.
-- Importing a symmetrically encrypted PGP secret key file, such as an OpenKeychain backup. This allows for more secure handling of PGP keys outside trusted environments, e. g. for key transfer between devices using e-mail or online storage services.
+- An option for fast unlocking password store entries with a PIN was added. Available unlocking options can be accessed via Settings --> Passwords --> Fast unlocking of entries. The PIN is specific to the app, that is, it may differ from the device PIN
+- Importing a symmetrically encrypted PGP secret key file, such as an OpenKeychain backup. This allows for more secure handling of PGP keys outside trusted environments, e. g. for key transfer between devices using e-mail or online storage services
 
 ## [1.14.3] - 2025-04-25
 
@@ -51,10 +52,10 @@ All notable changes to this project will be documented in this file.
 - Display user ID (or user IDs in case of multi-key encrypted entries) on the passphrase input dialog
 - Allow setting a subdirectory PGP key when creating folders (restored feature from v1.11.0)
 - External repository import. An external "pass" repository or a repository previously exported from the app can now be imported via Settings --> Repository --> Import repository
-- Copy OTP to the clipboard during autofill: If the pass entry contains an OTP, it is copied to the clipboard to facilitate autofill. The OTP in the clipboard is refreshed once when the first copy expires. This is to handle the situation when the first OTP was calculated just before its expiry.
+- Copy OTP to the clipboard during autofill: If the pass entry contains an OTP, it is copied to the clipboard to facilitate autofill. The OTP in the clipboard is refreshed once when the first copy expires. This is to handle the situation when the first OTP was calculated just before its expiry
 
   [Original repo](https://github.com/android-password-store/Android-Password-Store) up to archiving:
-- On Android 11, Autofill will use the new [inline autofill](https://developer.android.com/guide/topics/text/ime-autofill#configure-provider) UI that integrates Autofill results into your keyboard app.
+- On Android 11, Autofill will use the new [inline autofill](https://developer.android.com/guide/topics/text/ime-autofill#configure-provider) UI that integrates Autofill results into your keyboard app
 - Allow doing a merge instead of a rebase when pulling or syncing
 - Add support for manually providing TOTP parameters
 - Parse extra content as individual fields

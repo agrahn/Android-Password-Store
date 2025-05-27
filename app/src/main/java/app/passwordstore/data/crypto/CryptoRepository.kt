@@ -18,8 +18,6 @@ import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.filterValues
 import com.github.michaelbull.result.map
 import com.github.michaelbull.result.mapBoth
-import com.github.michaelbull.result.onSuccess
-import com.github.michaelbull.result.runCatching
 import com.github.michaelbull.result.unwrap
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -58,10 +56,8 @@ constructor(
       // Test it against the PGP identities of current entry
       identities.forEach { id ->
         val key = pgpKeyManager.getKeyById(id).unwrap()
-        runCatching { pgpCryptoHandler.passphraseIsCorrect(key, passphrases.values.first()) }
-          .onSuccess {
-            return Triple(listOf(id.toString()), listOf(key), passphrases.values.first())
-          }
+        if (pgpCryptoHandler.passphraseIsCorrect(key, passphrases.values.first()))
+          return Triple(listOf(id.toString()), listOf(key), passphrases.values.first())
       }
       // Last resort: A key could be a "stripped" one
       identities.forEach { id ->
@@ -75,10 +71,8 @@ constructor(
         val pgpId = PGPIdentifier.fromString(id)
         pgpId?.let {
           val key = pgpKeyManager.getKeyById(pgpId).unwrap()
-          runCatching { pgpCryptoHandler.passphraseIsCorrect(key, pass) }
-            .onSuccess {
-              return Triple(listOf(id), listOf(key), pass)
-            }
+          if (pgpCryptoHandler.passphraseIsCorrect(key, pass))
+            return Triple(listOf(id), listOf(key), pass)
         }
       }
       // One of the keys could be a "stripped" one
