@@ -6,8 +6,8 @@
   ],
   branchConcurrentLimit: 15,
   'github-actions': {
-    fileMatch: [
-      '.github/reusable-workflows/.+\\.ya?ml$',
+    managerFilePatterns: [
+      '/.github/reusable-workflows/.+\\.ya?ml$/',
     ],
   },
   packageRules: [
@@ -48,8 +48,6 @@
       ],
       enabled: false,
       matchPackageNames: [
-        //'^com.android.tools:desugar_jdk_libs',
-        // Later versions require newer JDKs
         '^org.eclipse.jgit',
         '^com.squareup.logcat',
       ],
@@ -58,8 +56,8 @@
   customManagers: [
     {
       customType: 'regex',
-      fileMatch: [
-        'gradle/libs.versions.toml',
+      managerFilePatterns: [
+        '/gradle/libs.versions.toml/',
       ],
       matchStrings: [
         'composeCompiler = "(?<currentValue>.*)"',
@@ -70,8 +68,8 @@
     },
     {
       customType: 'regex',
-      fileMatch: [
-        'build-logic/src/main/kotlin/app/passwordstore/gradle/SpotlessPlugin.kt',
+      managerFilePatterns: [
+        '/build-logic/src/main/kotlin/app/passwordstore/gradle/SpotlessPlugin.kt/',
       ],
       matchStrings: [
         'KTFMT_VERSION = "(?<currentValue>.*)"',
