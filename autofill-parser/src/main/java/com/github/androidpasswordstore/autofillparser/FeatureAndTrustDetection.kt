@@ -89,6 +89,7 @@ private val TRUSTED_BROWSER_CERTIFICATE_HASH =
       ),
     "com.vivaldi.browser" to arrayOf("6KeFRGVbqMCYF/cydo9WibFmLsSyvFoLwOwTjTPKPR4="),
     "app.vanadium.browser" to arrayOf("xq24uDxtTBfSkq/eVv1IilHTFv+PLBHFQQIjv/in27M="),
+    "org.ironfoxoss.ironfox" to arrayOf("xeKRtaVx+cjNmpeZwslOAuyXA5SIk/LKdW1nuUIE+QQ="),
   )
 
 private fun isTrustedBrowser(context: Context, appPackage: String): Boolean {
@@ -131,6 +132,7 @@ private val BROWSER_MULTI_ORIGIN_METHOD =
     "org.mozilla.klar" to BrowserMultiOriginMethod.Field,
     "org.torproject.torbrowser" to BrowserMultiOriginMethod.WebView,
     "us.spotco.fennec_dos" to BrowserMultiOriginMethod.Field,
+    "org.ironfoxoss.ironfox" to BrowserMultiOriginMethod.Field,
   )
 
 private fun getBrowserMultiOriginMethod(appPackage: String): BrowserMultiOriginMethod =
