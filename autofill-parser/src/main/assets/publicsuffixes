@@ -1,4 +1,4 @@
-133093
+133192
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -119,6 +119,8 @@
 *.privatelink.snowflake.app
 *.quipelements.com
 *.r.appspot.com
+*.raw.icp0.io
+*.raw.icp1.io
 *.run.app
 *.s.brave.app
 *.s.brave.io
@@ -1191,6 +1193,8 @@ caa.aero
 cab
 cable-modem.org
 cafe
+caffeine.ai
+caffeine.site
 cafjs.com
 cagliari.it
 cahcesuolo.no
@@ -3727,9 +3731,13 @@ ichinohe.iwate.jp
 ichinomiya.aichi.jp
 ichinomiya.chiba.jp
 ichinoseki.iwate.jp
+icp-api.io
+icp0.io
+icp1.io
 icu
 icurus.jp
 id
+id.ai
 id.au
 id.cv
 id.firewalledreplit.co
@@ -3833,7 +3841,6 @@ ind.br
 ind.gt
 ind.in
 ind.kw
-ind.mom
 ind.tn
 independent-commission.uk
 independent-inquest.uk
@@ -4563,6 +4570,7 @@ kontum.vn
 konyvelo.hu
 koobin.events
 koori.fukushima.jp
+kop.id
 kopervik.no
 koriyama.fukushima.jp
 koryo.nara.jp
@@ -7679,6 +7687,7 @@ school.nz
 school.za
 schoolbus.jp
 schools.nsw.edu.au
+schuldock.de
 schule
 schulplattform.de
 schulserver.de
