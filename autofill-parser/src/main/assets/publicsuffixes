@@ -1,4 +1,4 @@
-133192
+133273
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -89,12 +89,14 @@
 *.lclstage.dev
 *.linodeobjects.com
 *.localto.net
+*.lutrausercontent.com
 *.magentosite.cloud
 *.me-central-1.airflow.amazonaws.com
 *.me-south-1.airflow.amazonaws.com
 *.migration.run
 *.mm
 *.moonscale.io
+*.mtls.run.app
 *.nagoya.jp
 *.nodebalancer.linode.com
 *.nom.br
@@ -3658,6 +3660,7 @@ hosting
 hosting-cluster.nl
 hostyhosting.io
 hot
+hotel
 hotel.hu
 hotel.lk
 hotel.tz
@@ -8410,6 +8413,7 @@ taxi.br
 tayninh.vn
 tc
 tc.br
+tche.br
 tci
 tcp4.me
 td
@@ -9012,6 +9016,7 @@ ventures
 verbania.it
 vercel.app
 vercel.dev
+vercel.run
 vercelli.it
 verdal.no
 verisign
@@ -9214,6 +9219,7 @@ website
 website.yandexcloud.net
 websitebuilder.online
 websozai.jp
+webspace-host.com
 webspace.rocks
 webspaceconfig.de
 webthings.io
