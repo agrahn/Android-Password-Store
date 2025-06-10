@@ -151,6 +151,7 @@
       android:theme="@style/NoBackgroundThemeM3" />
     <activity
       android:name=".ui.pgp.PGPKeyListActivity"
+      android:theme="@style/NoBackgroundThemeM3"
       android:exported="false"
       android:label="@string/activity_label_pgp_key_manager"
       android:parentActivityName=".ui.settings.SettingsActivity" />

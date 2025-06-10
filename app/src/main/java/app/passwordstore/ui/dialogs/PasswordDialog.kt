@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-package app.passwordstore.ui.crypto
+package app.passwordstore.ui.dialogs
 
 import android.app.Dialog
 import android.content.DialogInterface
@@ -19,7 +19,9 @@ import app.passwordstore.R
 import app.passwordstore.databinding.DialogPasswordEntryBinding
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.finish
+import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.extensions.unsafeLazy
+import app.passwordstore.util.settings.PreferenceKeys
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /** [DialogFragment] to request a password from the user and forward it along. */
@@ -29,6 +31,8 @@ class PasswordDialog : DialogFragment() {
   private var isError: Boolean = false
   private var cacheEnabledChecked: Boolean = false
   private var userIds: String? = null
+  // dismiss calling activity after cancelling the dialog
+  private var onCancelFinish: Boolean = true
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val builder = MaterialAlertDialogBuilder(requireContext())
@@ -41,8 +45,10 @@ class PasswordDialog : DialogFragment() {
       binding.userIdList.setVisibility(View.VISIBLE)
     }
 
-    if (AESEncryption.isHardwareBacked()) binding.cacheEnabled.setVisibility(View.VISIBLE)
-    cacheEnabledChecked = requireArguments().getBoolean(CACHE_ENABLED_EXTRA)
+    if (requireArguments().getBoolean(CACHE_OPTION_EXTRA) && AESEncryption.isHardwareBacked())
+      binding.cacheEnabled.setVisibility(View.VISIBLE)
+    cacheEnabledChecked =
+      requireContext().sharedPrefs.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)
     binding.cacheEnabled.isChecked = cacheEnabledChecked
     binding.cacheEnabled.setOnCheckedChangeListener { _, isChecked ->
       cacheEnabledChecked = isChecked
@@ -77,7 +83,7 @@ class PasswordDialog : DialogFragment() {
 
   override fun onCancel(dialog: DialogInterface) {
     super.onCancel(dialog)
-    finish()
+    if (requireArguments().getBoolean(ON_CANCEL_FINISH)) finish()
   }
 
   private fun setPasswordAndDismiss() {
@@ -91,15 +97,25 @@ class PasswordDialog : DialogFragment() {
 
   companion object {
 
-    private const val CACHE_ENABLED_EXTRA = "cache_enabled"
     private const val USER_IDS_EXTRA = "user_ids"
+    private const val CACHE_OPTION_EXTRA = "cache_option"
+    private const val ON_CANCEL_FINISH = "finish_option"
 
     const val PASSWORD_RESULT_KEY = "password_result"
     const val PASSWORD_PHRASE_KEY = "password_phrase"
     const val PASSWORD_CACHE_KEY = "password_cache"
 
-    fun newInstance(cacheEnabled: Boolean, userIds: String? = null): PasswordDialog {
-      val extras = bundleOf(CACHE_ENABLED_EXTRA to cacheEnabled, USER_IDS_EXTRA to userIds)
+    fun newInstance(
+      userIds: String? = null,
+      cacheOptionVisible: Boolean = false,
+      onCancelFinish: Boolean = true,
+    ): PasswordDialog {
+      val extras =
+        bundleOf(
+          USER_IDS_EXTRA to userIds,
+          CACHE_OPTION_EXTRA to cacheOptionVisible,
+          ON_CANCEL_FINISH to onCancelFinish,
+        )
       val fragment = PasswordDialog()
       fragment.arguments = extras
       return fragment

@@ -89,8 +89,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
 
   private suspend fun askBackupCode(bytes: ByteArray, isError: Boolean) {
     if (++retries > MAX_RETRIES) finish()
-    val dialog =
-      TextInputDialog.newInstance(getString(R.string.pgp_key_import_backupcode_entry_title))
+    val dialog = TextInputDialog.newInstance(getString(R.string.pgp_key_backupcode_title))
     if (isError && retries > 1) dialog.setError()
     dialog.show(supportFragmentManager, "BACKUPCODE_INPUT_DIALOG")
     dialog.setFragmentResultListener(TextInputDialog.REQUEST_KEY) { key, bundle ->

@@ -23,6 +23,7 @@ import com.github.michaelbull.result.unwrap
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import logcat.asLog
 import logcat.logcat
@@ -59,13 +60,25 @@ constructor(
   suspend fun hasSecretKey(id: PGPIdentifier): Boolean {
     return withContext(dispatcherProvider.io()) {
       val result = pgpKeyManager.getKeyById(id)
-      result.isOk && KeyUtils.isKeyUsableForDecryption(result.value)
+      result.isOk && KeyUtils.hasSecretKey(result.value)
     }
   }
 
   suspend fun isPasswordProtected(identifiers: List<PGPIdentifier>): Boolean {
     val keys = identifiers.map { pgpKeyManager.getKeyById(it) }.filterValues()
     return pgpCryptoHandler.isPassphraseProtected(keys)
+  }
+
+  suspend fun isPasswordCorrect(identifier: PGPIdentifier, passphrase: CharArray): Boolean {
+    val key = pgpKeyManager.getKeyById(identifier).unwrap()
+    return pgpCryptoHandler.passphraseIsCorrect(key, passphrase)
+  }
+
+  fun getEmailFromKeyId(identifier: PGPIdentifier): String? {
+    val key = runBlocking { pgpKeyManager.getKeyById(identifier).unwrap() }
+    val userId = KeyUtils.tryGetEmail(key)
+    if (userId == null) return null
+    return PGPIdentifier.splitUserId(userId.email)
   }
 
   suspend fun decrypt(
@@ -147,12 +160,10 @@ constructor(
     passphrase: CharArray,
     message: ByteArrayInputStream,
     encryptedMessage: ByteArrayOutputStream,
+    withArmor: Boolean = false,
   ) =
     withContext(dispatcherProvider.io()) {
-      val encryptionOptions =
-        PGPEncryptOptions.Builder()
-          .withAsciiArmor(settings.getBoolean(PreferenceKeys.ASCII_ARMOR, false))
-          .build()
+      val encryptionOptions = PGPEncryptOptions.Builder().withAsciiArmor(withArmor).build()
       pgpCryptoHandler
         .encrypt(listOf<PGPKey>(), passphrase, message, encryptedMessage, encryptionOptions)
         .map { encryptedMessage }

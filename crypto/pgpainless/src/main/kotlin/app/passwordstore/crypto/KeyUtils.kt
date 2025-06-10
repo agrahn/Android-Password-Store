@@ -12,6 +12,7 @@ import com.github.michaelbull.result.runCatching
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.pgpainless.PGPainless
 import org.pgpainless.key.parsing.KeyRingReader
+import org.pgpainless.key.util.KeyRingUtils
 
 /** Utility methods to deal with [PGPKey]s. */
 public object KeyUtils {
@@ -50,8 +51,13 @@ public object KeyUtils {
       .get() != null
   }
 
-  /** Tests if the given [key] provides a secret key and can thus be used for decryption */
-  public fun isKeyUsableForDecryption(key: PGPKey): Boolean {
+  /** Tests if the given [key] provides a secret key */
+  public fun hasSecretKey(key: PGPKey): Boolean {
     return runCatching { PGPainless.readKeyRing().secretKeyRing(key.contents) }.get() != null
+  }
+
+  public fun extractPublicKeyData(key: PGPKey): ByteArray? {
+    val keyRing = tryParseKeyring(key) ?: return null
+    return PGPainless.asciiArmor(KeyRingUtils.publicKeys(keyRing)).toByteArray()
   }
 }

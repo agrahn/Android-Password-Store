@@ -171,8 +171,6 @@ public class PGPainlessCryptoHandler @Inject constructor() :
 
   public override fun isPassphraseProtected(keys: List<PGPKey>): Boolean =
     keys
-      .map { key ->
-        KeyUtils.isKeyUsableForDecryption(key) && !passphraseIsCorrect(key, charArrayOf())
-      }
+      .map { key -> KeyUtils.hasSecretKey(key) && !passphraseIsCorrect(key, charArrayOf()) }
       .all { it }
 }

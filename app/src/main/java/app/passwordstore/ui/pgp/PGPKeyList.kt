@@ -17,7 +17,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +42,7 @@ import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.ui.compose.theme.APSTheme
 import app.passwordstore.ui.compose.theme.SpacingLarge
+import app.passwordstore.ui.compose.theme.SpacingSmall
 import app.passwordstore.util.extensions.conditional
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -46,7 +51,9 @@ import kotlinx.collections.immutable.toPersistentList
 @Composable
 fun KeyList(
   identifiers: ImmutableList<PGPIdentifier>,
-  onItemClick: (identifier: PGPIdentifier) -> Unit,
+  onDeleteItemClick: (identifier: PGPIdentifier) -> Unit,
+  onExportItemClick: (identifier: PGPIdentifier) -> Unit,
+  onExportPublicClick: (identifier: PGPIdentifier) -> Unit,
   modifier: Modifier = Modifier,
   onKeySelected: ((identifier: PGPIdentifier) -> Unit)? = null,
 ) {
@@ -65,7 +72,13 @@ fun KeyList(
   } else {
     LazyColumn(modifier = modifier) {
       items(identifiers) { identifier ->
-        KeyItem(identifier = identifier, onItemClick = onItemClick, onKeySelected = onKeySelected)
+        KeyItem(
+          identifier = identifier,
+          onDeleteItemClick = onDeleteItemClick,
+          onExportItemClick = onExportItemClick,
+          onExportPublicClick = onExportPublicClick,
+          onKeySelected = onKeySelected,
+        )
       }
     }
   }
@@ -74,7 +87,9 @@ fun KeyList(
 @Composable
 private fun KeyItem(
   identifier: PGPIdentifier,
-  onItemClick: (identifier: PGPIdentifier) -> Unit,
+  onDeleteItemClick: (identifier: PGPIdentifier) -> Unit,
+  onExportItemClick: (identifier: PGPIdentifier) -> Unit,
+  onExportPublicClick: (identifier: PGPIdentifier) -> Unit,
   modifier: Modifier = Modifier,
   onKeySelected: ((identifier: PGPIdentifier) -> Unit)? = null,
 ) {
@@ -83,7 +98,7 @@ private fun KeyItem(
     isDeleting = isDeleting,
     onDismiss = { isDeleting = false },
     onConfirm = {
-      onItemClick(identifier)
+      onDeleteItemClick(identifier)
       isDeleting = false
     },
   )
@@ -94,9 +109,10 @@ private fun KeyItem(
     }
   Row(
     modifier =
-      modifier.padding(SpacingLarge).fillMaxWidth().conditional(onKeySelected != null) {
-        clickable { onKeySelected?.invoke(identifier) }
-      },
+      modifier
+        .padding(horizontal = SpacingLarge, vertical = SpacingSmall)
+        .fillMaxWidth()
+        .conditional(onKeySelected != null) { clickable { onKeySelected?.invoke(identifier) } },
     horizontalArrangement = Arrangement.SpaceBetween,
     verticalAlignment = Alignment.CenterVertically,
   ) {
@@ -107,11 +123,42 @@ private fun KeyItem(
       maxLines = 1,
     )
     if (onKeySelected == null) {
-      IconButton(onClick = { isDeleting = true }) {
-        Icon(
-          painter = painterResource(R.drawable.ic_delete_24dp),
-          stringResource(id = R.string.delete),
-        )
+      Box() {
+        var isMenuExpanded by remember { mutableStateOf(false) }
+
+        IconButton(onClick = { isMenuExpanded = true }) {
+          Icon(Icons.Default.MoreVert, contentDescription = "PGP key actions")
+        }
+
+        DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
+          DropdownMenuItem(
+            text = { Text(stringResource(id = R.string.pref_pgp_key_manager_export)) },
+            onClick = {
+              isMenuExpanded = false
+              onExportItemClick(identifier)
+            },
+          )
+          DropdownMenuItem(
+            text = { Text(stringResource(id = R.string.pref_pgp_key_manager_export_public)) },
+            onClick = {
+              isMenuExpanded = false
+              onExportPublicClick(identifier)
+            },
+          )
+          DropdownMenuItem(
+            text = {
+              Text(stringResource(id = R.string.delete))
+              /* Icon(
+                painter = painterResource(R.drawable.ic_delete_24dp),
+                stringResource(id = R.string.delete),
+              ) */
+            },
+            onClick = {
+              isMenuExpanded = false
+              isDeleting = true
+            },
+          )
+        }
       }
     }
   }
@@ -152,7 +199,9 @@ private fun KeyListPreview() {
               PGPIdentifier.fromString("0xB950AE2813841585"),
             )
             .toPersistentList(),
-        onItemClick = {},
+        onDeleteItemClick = {},
+        onExportItemClick = {},
+        onExportPublicClick = {},
       )
     }
   }
@@ -163,7 +212,12 @@ private fun KeyListPreview() {
 private fun EmptyKeyListPreview() {
   APSTheme {
     Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
-      KeyList(identifiers = persistentListOf(), onItemClick = {})
+      KeyList(
+        identifiers = persistentListOf(),
+        onDeleteItemClick = {},
+        onExportItemClick = {},
+        onExportPublicClick = {},
+      )
     }
   }
 }

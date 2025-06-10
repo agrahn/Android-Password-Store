@@ -16,8 +16,9 @@
 
   <style name="NoBackgroundThemeM3" parent="@style/AppThemeM3">
     <item name="android:background">@android:color/transparent</item>
-    <item name="android:backgroundDimEnabled">true</item>
-    <item name="android:navigationBarColor">@android:color/transparent</item>
+    <!-- <item name="android:backgroundDimEnabled">true</item> -->
+    <item name="android:backgroundDimEnabled">false</item>
+    <!-- <item name="android:navigationBarColor">@android:color/transparent</item> -->
     <item name="android:statusBarColor">@android:color/transparent</item>
     <item name="android:windowIsTranslucent">true</item>
     <item name="android:windowContentOverlay">@null</item>

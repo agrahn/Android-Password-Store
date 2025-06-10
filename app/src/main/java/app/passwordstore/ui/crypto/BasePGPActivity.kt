@@ -21,13 +21,13 @@ import androidx.core.content.edit
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
-import app.passwordstore.crypto.KeyUtils.tryGetEmail
 import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.prefs.PGPPassphrases
 import app.passwordstore.injection.prefs.SettingsPreferences
+import app.passwordstore.ui.dialogs.PasswordDialog
 import app.passwordstore.ui.pgp.PGPKeyImportActivity
 import app.passwordstore.util.auth.BiometricAuthenticator
 import app.passwordstore.util.auth.BiometricAuthenticator.Result as BiometricResult
@@ -42,7 +42,6 @@ import app.passwordstore.util.settings.Constants
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.runCatching
-import com.github.michaelbull.result.unwrap
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
@@ -136,7 +135,7 @@ open class BasePGPActivity : AppCompatActivity() {
 
   /* Function to execute [onKeysExist] only if there are PGP keys imported in the app's key manager.
    */
-  fun requireKeysExist(onKeysExist: () -> Unit) {
+  protected fun requireKeysExist(onKeysExist: () -> Unit) {
     lifecycleScope.launch {
       val hasKeys = repository.hasKeys()
       if (!hasKeys) {
@@ -198,7 +197,7 @@ open class BasePGPActivity : AppCompatActivity() {
    * Copies provided [text] to the clipboard. Shows a [Snackbar] which can be disabled by passing
    * [showSnackbar] as false.
    */
-  fun copyTextToClipboard(
+  protected fun copyTextToClipboard(
     text: CharArray?,
     isSensitive: Boolean = true,
     showSnackbar: Boolean = true,
@@ -224,7 +223,7 @@ open class BasePGPActivity : AppCompatActivity() {
    * an invalid identifier was encountered and further execution must stop to let the user correct
    * the problem.
    */
-  fun getPGPIdentifiers(subDir: String): List<PGPIdentifier>? {
+  protected fun getPGPIdentifiers(subDir: String): List<PGPIdentifier>? {
     PasswordRepository.gpgidChecked = false
     var shortIdCount = 0
     var invalidIdCount = 0
@@ -271,15 +270,8 @@ open class BasePGPActivity : AppCompatActivity() {
     return gpgIdentifiers
   }
 
-  private fun getEmailFromKeyId(identifier: PGPIdentifier): String? {
-    val key = runBlocking { pgpKeyManager.getKeyById(identifier).unwrap() }
-    val userId = tryGetEmail(key)
-    if (userId == null) return null
-    return PGPIdentifier.splitUserId(userId.email)
-  }
-
   private fun getEmailsFromIdentifiers(identifiers: List<PGPIdentifier>): String? {
-    val emails = identifiers.map { getEmailFromKeyId(it) }.filter { it != null }
+    val emails = identifiers.map { repository.getEmailFromKeyId(it) }.filter { it != null }
     if (emails.isEmpty()) return null
     val label = if (emails.size > 1) R.string.pgp_id_label_plural else R.string.pgp_id_label
     return "${resources.getString(label)} ${emails.joinToString(", ")}"
@@ -305,10 +297,9 @@ open class BasePGPActivity : AppCompatActivity() {
   private suspend fun askPassphrase(isError: Boolean, identifiers: List<PGPIdentifier>) {
     if (++retries > MAX_RETRIES) finish()
 
-    var cacheEnabled = settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)
     val dialog =
-      PasswordDialog.newInstance(cacheEnabled = cacheEnabled, getEmailsFromIdentifiers(identifiers))
-    if (isError && retries > 1) dialog.setError()
+      PasswordDialog.newInstance(getEmailsFromIdentifiers(identifiers), cacheOptionVisible = true)
+    if (isError) dialog.setError()
     dialog.show(supportFragmentManager, "PASSWORD_DIALOG")
     dialog.setFragmentResultListener(PasswordDialog.PASSWORD_RESULT_KEY) { key, bundle ->
       if (key == PasswordDialog.PASSWORD_RESULT_KEY) {
@@ -316,7 +307,7 @@ open class BasePGPActivity : AppCompatActivity() {
           requireNotNull(bundle.getCharArray(PasswordDialog.PASSWORD_PHRASE_KEY)) {
             "returned passphrase is null"
           }
-        cacheEnabled = bundle.getBoolean(PasswordDialog.PASSWORD_CACHE_KEY)
+        var cacheEnabled = bundle.getBoolean(PasswordDialog.PASSWORD_CACHE_KEY)
         lifecycleScope.launch(dispatcherProvider.main()) {
           decryptWithPassphrase(mapOf("" to passphrase), identifiers) { id -> // onSuccess
             runCatching {

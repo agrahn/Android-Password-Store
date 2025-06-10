@@ -4,9 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Export and backup options for PGP keys in the PGP key manager
+
 ### Fixed
 
-- Navigation icon colour adaption to current app theme (light/dark)
+- Navigation icon colour adapting to current app theme (light/dark)
 
 ## [1.14.5] - 2025-05-27
 
