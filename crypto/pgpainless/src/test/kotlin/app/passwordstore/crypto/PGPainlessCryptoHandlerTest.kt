@@ -221,7 +221,14 @@ class PGPainlessCryptoHandlerTest {
     // impossible to generate a key without a passphrase and I can't care to find a magical
     // incantation to convince it I am smarter than whatever they are protecting against.
     assertFalse(
-      cryptoHandler.keyringHasPassphrase(PGPainless.generateKeyRing().modernKeyRing("John Doe"))
+      cryptoHandler.isPassphraseProtected(
+        listOf(
+          PGPKey(
+            PGPainless.asciiArmor(PGPainless.generateKeyRing().modernKeyRing("John Doe"))
+              .encodeToByteArray()
+          )
+        )
+      )
     )
   }
 

@@ -24,6 +24,16 @@ import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 import kotlinx.coroutines.withContext
 
+inline fun <T, R> List<T>.mapUntil(predicate: (R) -> Boolean, transform: (T) -> R): List<R> {
+  val result = ArrayList<R>()
+  for (element in this) {
+    val mapped = transform(element)
+    result.add(mapped)
+    if (predicate(mapped)) break
+  }
+  return result
+}
+
 class CryptoRepository
 @Inject
 constructor(
@@ -48,49 +58,6 @@ constructor(
     return pgpCryptoHandler.isPassphraseProtected(keys)
   }
 
-  private suspend fun findFirstMatchingIdKeyPassphrase(
-    passphrases: Map<String, CharArray>,
-    identities: List<PGPIdentifier>,
-  ): Triple<List<String>, List<PGPKey>, CharArray> {
-    if (passphrases.keys.first() == "") { // New passphrase from user input
-      // Test it against the PGP identities of current entry
-      identities.forEach { id ->
-        val key = pgpKeyManager.getKeyById(id).unwrap()
-        if (pgpCryptoHandler.passphraseIsCorrect(key, passphrases.values.first()))
-          return Triple(listOf(id.toString()), listOf(key), passphrases.values.first())
-      }
-      // Last resort: A key could be a "stripped" one
-      identities.forEach { id ->
-        val key = pgpKeyManager.getKeyById(id).unwrap()
-        if (!pgpCryptoHandler.isPassphraseProtected(listOf(key))) {
-          return Triple(listOf(id.toString()), listOf(key), passphrases.values.first())
-        }
-      }
-    } else { // Get the first working cached passphrase
-      passphrases.forEach { (id, pass) ->
-        val pgpId = PGPIdentifier.fromString(id)
-        pgpId?.let {
-          val key = pgpKeyManager.getKeyById(pgpId).unwrap()
-          if (pgpCryptoHandler.passphraseIsCorrect(key, pass))
-            return Triple(listOf(id), listOf(key), pass)
-        }
-      }
-      // One of the keys could be a "stripped" one
-      passphrases.forEach { (id, pass) ->
-        val pgpId = PGPIdentifier.fromString(id)
-        pgpId?.let {
-          val key = pgpKeyManager.getKeyById(pgpId).unwrap()
-          if (!pgpCryptoHandler.isPassphraseProtected(listOf(key))) {
-            return Triple(listOf(id), listOf(key), pass)
-          }
-        }
-      }
-    }
-    // Nothing worked
-    val keys = identities.map { pgpKeyManager.getKeyById(it) }.filterValues()
-    return Triple(identities.map { it.toString() }, keys, charArrayOf())
-  }
-
   suspend fun decrypt(
     passphrases: Map<String, CharArray>,
     identities: List<PGPIdentifier>,
@@ -98,15 +65,41 @@ constructor(
     out: ByteArrayOutputStream,
   ) =
     withContext(dispatcherProvider.io()) {
-      val (matchingKeyId, matchingKey, matchingPassphrase) =
-        findFirstMatchingIdKeyPassphrase(passphrases, identities)
-      val decryptionOptions = PGPDecryptOptions.Builder().build()
-      Pair(
-        matchingKeyId,
-        pgpCryptoHandler
-          .decrypt(matchingKey, matchingPassphrase, message, out, decryptionOptions)
-          .map { out },
-      )
+      if (passphrases.keys.first() == "") { // New passphrase from user input
+        // Test it against the PGP identities of current entry
+        identities
+          .mapUntil({ it.second.isOk }) { id ->
+            message.reset()
+            out.reset()
+            val key = pgpKeyManager.getKeyById(id).unwrap()
+            val decryptionOptions = PGPDecryptOptions.Builder().build()
+            val result =
+              pgpCryptoHandler.decrypt(
+                listOf(key),
+                passphrases.values.first(),
+                message,
+                out,
+                decryptionOptions,
+              )
+            Pair(listOf(id.toString()), result.map { out })
+          }
+          .last()
+      } else { // Get the first working cached passphrase
+        passphrases.keys
+          .toList()
+          .mapUntil({ it.second.isOk }) { id ->
+            message.reset()
+            out.reset()
+            val pgpId = PGPIdentifier.fromString(id)
+            val keys =
+              pgpId?.let { listOf(pgpKeyManager.getKeyById(pgpId).unwrap()) } ?: listOf<PGPKey>()
+            val decryptionOptions = PGPDecryptOptions.Builder().build()
+            val result =
+              pgpCryptoHandler.decrypt(keys, passphrases[id], message, out, decryptionOptions)
+            Pair(listOf(id), result.map { out })
+          }
+          .last()
+      }
     }
 
   suspend fun decryptSym(

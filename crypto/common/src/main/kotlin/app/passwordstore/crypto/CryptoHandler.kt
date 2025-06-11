@@ -13,7 +13,7 @@ import java.io.OutputStream
 /** Generic interface to implement cryptographic operations on top of. */
 public interface CryptoHandler<Key, EncOpts : CryptoOptions, DecryptOpts : CryptoOptions> {
 
-  public fun passphraseIsCorrect(key: Key, passphrase: CharArray?): Boolean
+  public fun passphraseIsCorrect(key: Key, passphrase: CharArray): Boolean
 
   /**
    * Decrypt the given [ciphertextStream] using a set of potential [keys] and [passphrase], and

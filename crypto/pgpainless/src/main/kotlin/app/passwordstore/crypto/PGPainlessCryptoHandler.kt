@@ -10,13 +10,12 @@ import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.crypto.errors.NoKeysProvidedException
 import app.passwordstore.crypto.errors.UnknownError
 import com.github.michaelbull.result.Result
-import com.github.michaelbull.result.mapBoth
 import com.github.michaelbull.result.mapError
 import com.github.michaelbull.result.runCatching
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Inject
-import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -28,21 +27,33 @@ import org.pgpainless.encryption_signing.EncryptionOptions
 import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.protection.SecretKeyRingProtector
-import org.pgpainless.key.protection.UnlockSecretKey
 import org.pgpainless.util.Passphrase
 
 public class PGPainlessCryptoHandler @Inject constructor() :
   CryptoHandler<PGPKey, PGPEncryptOptions, PGPDecryptOptions> {
 
-  public override fun passphraseIsCorrect(key: PGPKey, passphrase: CharArray?): Boolean {
-    runCatching {
-      val secretKey =
-        PGPainless.readKeyRing().secretKeyRing(key.contents)?.getSecretKey() ?: return false
-      val pass = passphrase ?: charArrayOf()
-      val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(pass))
-      return (UnlockSecretKey.unlockSecretKey(secretKey, protector) as? PGPPrivateKey) != null
-    }
-    return false
+  public override fun passphraseIsCorrect(key: PGPKey, passphrase: CharArray): Boolean {
+    val ciphertextStream = ByteArrayOutputStream()
+    val encryptRes =
+      encrypt(
+        listOf(key),
+        null,
+        "passwordstore".byteInputStream(Charsets.UTF_8),
+        ciphertextStream,
+        PGPEncryptOptions.Builder().build(),
+      )
+    if (!encryptRes.isOk) return false
+    val plaintextStream = ByteArrayOutputStream()
+    val decryptRes =
+      decrypt(
+        listOf(key),
+        passphrase,
+        ciphertextStream.toByteArray().inputStream(),
+        plaintextStream,
+        PGPDecryptOptions.Builder().build(),
+      )
+    if (!decryptRes.isOk) return false
+    return "passwordstore" == plaintextStream.toString(Charsets.UTF_8)
   }
 
   /**
@@ -107,7 +118,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
     runCatching {
         if (keys.isEmpty() && passphrase == null) throw NoKeysProvidedException
         val (publicKeyRingCollection, encryptionOptions) =
-          if (passphrase == null) {
+          if (passphrase == null) { // asymmetric (public key) encryption
             val publicKeyRings =
               keys.mapNotNull(KeyUtils::tryParseKeyring).mapNotNull { keyRing ->
                 when (keyRing) {
@@ -125,7 +136,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
             val publicKeyRingCollection = PGPPublicKeyRingCollection(publicKeyRings)
             val encryptionOptions = EncryptionOptions().addRecipients(publicKeyRingCollection)
             Pair(publicKeyRingCollection, encryptionOptions)
-          } else {
+          } else { // symmetric (with password) encryption
             val encryptionOptions = EncryptionOptions().addMessagePassphrase(Passphrase(passphrase))
             Pair(listOf<PGPPublicKeyRing>(), encryptionOptions)
           }
@@ -156,11 +167,9 @@ public class PGPainlessCryptoHandler @Inject constructor() :
 
   public override fun isPassphraseProtected(keys: List<PGPKey>): Boolean =
     keys
-      .mapNotNull { key -> PGPainless.readKeyRing().secretKeyRing(key.contents) }
-      .map(::keyringHasPassphrase)
+      .map { key ->
+        PGPainless.readKeyRing().secretKeyRing(key.contents) != null &&
+          !passphraseIsCorrect(key, charArrayOf())
+      }
       .all { it }
-
-  internal fun keyringHasPassphrase(keyRing: PGPSecretKeyRing) =
-    runCatching { keyRing.secretKey.extractPrivateKey(null) }
-      .mapBoth(success = { false }, failure = { true })
 }
