@@ -307,6 +307,10 @@
   <string name="directory_hint">Directory</string>
   <string name="new_folder_set_gpg_key">Set PGP key for directory</string>
 
+  <!-- Password decryption failure -->
+  <string name="password_decryption_no_decryption_key">Decryption failed: No secret key available</string>
+  <string name="password_decryption_unknown_error">Unknown decryption error</string>
+
   <!-- GitException messages -->
   <string name="git_unknown_error">Unknown error</string>
   <string name="git_pull_rebase_fail_error">Pull has failed, you\'re in a detached head. Using "settings > git utils", save your changes to the remote in a new branch and resolve the conflict on your computer.</string>

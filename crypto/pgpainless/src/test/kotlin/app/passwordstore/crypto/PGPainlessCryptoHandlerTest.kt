@@ -11,6 +11,7 @@ import app.passwordstore.crypto.CryptoConstants.AEAD_KEY_PASSPHRASE
 import app.passwordstore.crypto.CryptoConstants.KEY_PASSPHRASE
 import app.passwordstore.crypto.CryptoConstants.PLAIN_TEXT
 import app.passwordstore.crypto.errors.IncorrectPassphraseException
+import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
 import com.github.michaelbull.result.getError
 import com.google.testing.junit.testparameterinjector.TestParameter
 import com.google.testing.junit.testparameterinjector.TestParameterInjector
@@ -86,6 +87,31 @@ class PGPainlessCryptoHandlerTest {
       )
     assertTrue(decryptRes.isOk)
     assertEquals(PLAIN_TEXT, plaintextStream.toString(Charsets.UTF_8))
+  }
+
+  @Test
+  fun decryptSymmtericallyWithWrongPassphrase() {
+    val ciphertextStream = ByteArrayOutputStream()
+    val encryptRes =
+      cryptoHandler.encrypt(
+        listOf<PGPKey>(),
+        KEY_PASSPHRASE.toCharArray(),
+        PLAIN_TEXT.byteInputStream(Charsets.UTF_8),
+        ciphertextStream,
+        PGPEncryptOptions.Builder().build(),
+      )
+    assertTrue(encryptRes.isOk)
+    val plaintextStream = ByteArrayOutputStream()
+    val decryptRes =
+      cryptoHandler.decrypt(
+        listOf<PGPKey>(),
+        "wrong passphrase".toCharArray(),
+        ciphertextStream.toByteArray().inputStream(),
+        plaintextStream,
+        PGPDecryptOptions.Builder().build(),
+      )
+    assertTrue(decryptRes.isErr)
+    assertIs<NoDecryptionKeyAvailableException>(decryptRes.getError())
   }
 
   @Test

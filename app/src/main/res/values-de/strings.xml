@@ -305,6 +305,10 @@
   <string name="directory_hint">Ordner</string>
   <string name="new_folder_set_gpg_key">PGP-Schlüssel für Ordner festlegen</string>
 
+  <!-- Password decryption failure -->
+  <string name="password_decryption_no_decryption_key">Entschlüsseln fehlgeschlagen: Kein geheimer Schlüssel vorhanden</string>
+  <string name="password_decryption_unknown_error">Unbekannter Fehler beim Entschlüsseln</string>
+
   <!-- GitException messages -->
   <string name="git_unknown_error">Unbekannter Fehler</string>
   <string name="git_pull_rebase_fail_error">Pull fehlgeschlagen. Sie befinden sich in einem abgelösten Head. Speichern Sie die Änderungen in \"Einstellungen &gt; Lokale Git-Konfiguration &amp; Dienstprogramme\" auf das Remote-Repository in einem neuen Branch und lösen Sie den Konflikt auf Ihrem Computer auf.</string>

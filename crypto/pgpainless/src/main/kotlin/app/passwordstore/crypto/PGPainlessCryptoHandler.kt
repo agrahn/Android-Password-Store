@@ -97,7 +97,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
       .mapError { error ->
         when (error) {
           is MissingDecryptionMethodException ->
-            NoDecryptionKeyAvailableException(KeyUtils.tryGetId(keys.first())?.toString(), error)
+            NoDecryptionKeyAvailableException(error.message, error)
           is WrongPassphraseException -> IncorrectPassphraseException(error)
           is CryptoHandlerException -> error
           else -> UnknownError(error.message, error)

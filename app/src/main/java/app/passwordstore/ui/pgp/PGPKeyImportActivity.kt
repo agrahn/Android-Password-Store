@@ -29,7 +29,7 @@ import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import logcat.LogPriority.ERROR
+import logcat.asLog
 import logcat.logcat
 
 @AndroidEntryPoint
@@ -114,7 +114,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
       val decryptedBytes = result.value.toByteArray()
       runCatching { importKey(decryptedBytes, false) }.run(::handleImportResult)
     } else {
-      logcat(ERROR) { result.error.stackTraceToString() }
+      logcat { result.error.asLog() }
       askBackupCode(bytes, isError = true) // retry
     }
   }

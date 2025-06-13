@@ -36,7 +36,7 @@ public data object UnusableKeyException :
 
 /** No key matching `keyId` could be found. */
 public class KeyNotFoundException(keyId: String) :
-  KeyManagerException("No key found for id: $keyId")
+  KeyManagerException("No key found for ID: $keyId")
 
 /** Attempting to add another key for `keyId` without requesting a replace. */
 public class KeyAlreadyExistsException(keyId: String) :
@@ -50,8 +50,8 @@ public sealed class CryptoHandlerException(message: String? = null, cause: Throw
 public class IncorrectPassphraseException(cause: Throwable) : CryptoHandlerException(null, cause)
 
 /** Store contains no keys. */
-public class NoDecryptionKeyAvailableException(keyId: String? = null, cause: Throwable? = null) :
-  CryptoHandlerException("No decryption key was found for id: $keyId", cause)
+public class NoDecryptionKeyAvailableException(message: String? = null, cause: Throwable? = null) :
+  CryptoHandlerException(message, cause)
 
 /** No keys were passed to the encrypt/decrypt operation. */
 public data object NoKeysProvidedException : CryptoHandlerException(null, null)

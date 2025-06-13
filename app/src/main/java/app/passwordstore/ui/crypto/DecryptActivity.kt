@@ -31,8 +31,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import logcat.LogPriority.ERROR
-import logcat.logcat
 
 @AndroidEntryPoint
 class DecryptActivity : BasePGPActivity() {
@@ -71,34 +69,33 @@ class DecryptActivity : BasePGPActivity() {
   ) {
     val message = withContext(dispatcherProvider.io()) { File(fullPath).readBytes().inputStream() }
     val outputStream = ByteArrayOutputStream()
-    val (ids, result) = repository.decrypt(passphrases, identifiers, message, outputStream)
-    if (result.isOk) {
-      val entry = passwordEntryFactory.create(result.value.toByteArray())
+    val results = repository.decrypt(passphrases, identifiers, message, outputStream)
+    val lastResult = results.last()
+    if (lastResult.second.isOk) {
+      val entry = passwordEntryFactory.create(lastResult.second.value.toByteArray())
       passwordEntry = entry
       createPasswordUI(entry)
-      onSuccess(ids.first())
+      onSuccess(lastResult.first) // pass ID for which the entry was successfully decrypted
     } else {
-      logcat(ERROR) { result.error.stackTraceToString() }
-      when (result.error) {
-        is IncorrectPassphraseException -> {
-          /**
-           * None of the provided passphrases worked, so remove them from temporary and persistent
-           * caches.
-           */
-          persistentPassphrases.edit { ids.forEach { remove(it) } }
-          ids.forEach {
-            cachedPassphrases[it]?.fill('\u0000')
-            cachedPassphrases.remove(it)
+      if (
+        results
+          .filter { result ->
+            if (result.second.error is IncorrectPassphraseException) {
+              /* Remove wrong passphrases from temporary and persistent caches */
+              persistentPassphrases.edit { remove(result.first) }
+              cachedPassphrases[result.first]?.fill('\u0000')
+              cachedPassphrases.remove(result.first)
+              true
+            } else false
           }
-          /* Retry */
-          decrypt(identifiers, isError = true)
-        }
-        is NoDecryptionKeyAvailableException -> {
-          snackbar(message = result.error.message.toString())
-        }
-        else -> {
-          snackbar(message = result.error.toString())
-        }
+          .any()
+      ) {
+        /* Retry */
+        decrypt(identifiers, isError = true)
+      } else if (results.filter { it.second.error is NoDecryptionKeyAvailableException }.any()) {
+        snackbar(message = resources.getString(R.string.password_decryption_no_decryption_key))
+      } else {
+        snackbar(message = resources.getString(R.string.password_decryption_unknown_error))
       }
     }
     if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {

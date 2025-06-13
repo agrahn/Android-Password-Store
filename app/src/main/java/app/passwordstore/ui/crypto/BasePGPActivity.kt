@@ -12,7 +12,6 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
-import android.util.Log
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.annotation.CallSuper
@@ -304,12 +303,6 @@ open class BasePGPActivity : AppCompatActivity() {
 
   /** Opens the dialog for passphrase input and then forwards it to the decryption method. */
   private suspend fun askPassphrase(isError: Boolean, identifiers: List<PGPIdentifier>) {
-    val identifiersWithSecretKey = identifiers.filter{repository.hasSecretKey(it)}
-    if (!repository.isPasswordProtected(identifiersWithSecretKey) && !isError) {
-      decryptWithPassphrase(mapOf("" to charArrayOf()), identifiersWithSecretKey)
-      return
-    }
-
     if (++retries > MAX_RETRIES) finish()
 
     var cacheEnabled = settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)
@@ -494,15 +487,14 @@ open class BasePGPActivity : AppCompatActivity() {
         settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") == "PIN" &&
         pinEncrypted != null
     ) {
-      val id = persistentIds[0]
-      verifyPin(pinEncrypted, id, identifiers)
+      verifyPin(pinEncrypted, persistentIds, identifiers)
     } else decrypt(identifiers)
   }
 
   /* Asks for and verifies the user PIN for unlocking a store entry. */
   private fun verifyPin(
     pinEncrypted: CharArray,
-    id: String,
+    ids: List<String>,
     identifiers: List<PGPIdentifier>,
     isError: Boolean = false,
   ) {
@@ -543,14 +535,16 @@ open class BasePGPActivity : AppCompatActivity() {
                 ?.concatToString(),
             )
           }
-          val passEncrypted = persistentPassphrases.getString(id, null)?.toCharArray()
-          val pass =
-            // re-encrypt passphrase for use until screen-off
-            AESEncryption.encrypt(
-              // decrypt persistently cached passphrase
-              AESEncryption.decrypt(passEncrypted, keyType = KeyType.PERSISTENT)
-            )
-          pass?.let { cachedPassphrases.put(id, it) }
+          ids.forEach { id ->
+            val passEncrypted = persistentPassphrases.getString(id, null)?.toCharArray()
+            val pass =
+              // re-encrypt passphrase for use until screen-off
+              AESEncryption.encrypt(
+                // decrypt persistently cached passphrase
+                AESEncryption.decrypt(passEncrypted, keyType = KeyType.PERSISTENT)
+              )
+            pass?.let { cachedPassphrases.put(id, it) }
+          }
           decrypt(identifiers)
         } else if (
           cachedPin != null && ++pinRetries < MAX_RETRIES
@@ -564,7 +558,7 @@ open class BasePGPActivity : AppCompatActivity() {
             persistentPassphrases.edit {
               putString("unlock_pin", pinEncryptedUpdate.concatToString())
             }
-            verifyPin(pinEncryptedUpdate, id, identifiers, isError = true)
+            verifyPin(pinEncryptedUpdate, ids, identifiers, isError = true)
           } ?: throw NullPointerException()
         } else { // PIN verification failed, do not try again
           persistentPassphrases.edit { clear() } // reset PIN to prevent bruteforcing
@@ -578,7 +572,12 @@ open class BasePGPActivity : AppCompatActivity() {
     val passphrases =
       cachedPassphrases.filterKeys { identifiers.map { it.toString() }.contains(it) }
     lifecycleScope.launch(dispatcherProvider.main()) {
-      if (!isError && !passphrases.isEmpty()) {
+      val identifiersWithSecretKey = identifiers.filter { repository.hasSecretKey(it) }
+      if (!repository.isPasswordProtected(identifiersWithSecretKey) && !isError) {
+        // try passphraseless decryption first
+        decryptWithPassphrase(mapOf("" to charArrayOf()), identifiersWithSecretKey)
+      } else if (!isError && !passphrases.isEmpty()) {
+        // try cached passphrases
         decryptWithPassphrase(
           passphrases.mapValues { AESEncryption.decrypt(it.value) ?: charArrayOf() },
           identifiers,

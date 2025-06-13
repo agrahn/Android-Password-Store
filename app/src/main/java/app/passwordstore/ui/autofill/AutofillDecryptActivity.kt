@@ -12,8 +12,10 @@ import android.os.Build
 import android.os.Bundle
 import android.view.autofill.AutofillManager
 import androidx.core.content.edit
+import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.errors.IncorrectPassphraseException
+import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.ui.crypto.BasePGPActivity
@@ -80,9 +82,10 @@ class AutofillDecryptActivity : BasePGPActivity() {
     val encryptedFile = File(filePath)
     val message = withContext(dispatcherProvider.io()) { encryptedFile.readBytes().inputStream() }
     val outputStream = ByteArrayOutputStream()
-    val (ids, result) = repository.decrypt(passphrases, identifiers, message, outputStream)
-    if (result.isOk) {
-      val entry = passwordEntryFactory.create(result.value.toByteArray())
+    val results = repository.decrypt(passphrases, identifiers, message, outputStream)
+    val lastResult = results.last()
+    if (lastResult.second.isOk) {
+      val entry = passwordEntryFactory.create(lastResult.second.value.toByteArray())
       val directoryStructure = AutofillPreferences.directoryStructure(this)
       val credentials =
         AutofillPreferences.credentialsFromStoreEntry(
@@ -117,24 +120,32 @@ class AutofillDecryptActivity : BasePGPActivity() {
           )
         }
       }
-      onSuccess(ids.first())
+      onSuccess(lastResult.first) // pass ID
       withContext(dispatcherProvider.main()) { finish() }
     } else {
-      logcat(ERROR) { result.error.stackTraceToString() }
-      when (result.error) {
-        is IncorrectPassphraseException -> {
-          persistentPassphrases.edit { ids.forEach { remove(it) } }
-          ids.forEach {
-            cachedPassphrases[it]?.fill('\u0000')
-            cachedPassphrases.remove(it)
+      if (
+        results
+          .filter { result ->
+            if (result.second.error is IncorrectPassphraseException) {
+              /* Remove wrong passphrases from temporary and persistent caches */
+              persistentPassphrases.edit { remove(result.first) }
+              cachedPassphrases[result.first]?.fill('\u0000')
+              cachedPassphrases.remove(result.first)
+              true
+            } else false
           }
-          decrypt(identifiers, isError = true)
-        }
-        else -> {
-          snackbar(message = result.error.toString())
-          val timer = Executors.newSingleThreadScheduledExecutor()
-          timer.schedule({ finish() }, 4.toLong(), TimeUnit.SECONDS)
-        }
+          .any()
+      ) {
+        /* Retry */
+        decrypt(identifiers, isError = true)
+      } else if (results.filter { it.second.error is NoDecryptionKeyAvailableException }.any()) {
+        snackbar(message = resources.getString(R.string.password_decryption_no_decryption_key))
+        val timer = Executors.newSingleThreadScheduledExecutor()
+        timer.schedule({ finish() }, 4.toLong(), TimeUnit.SECONDS)
+      } else {
+        snackbar(message = resources.getString(R.string.password_decryption_unknown_error))
+        val timer = Executors.newSingleThreadScheduledExecutor()
+        timer.schedule({ finish() }, 4.toLong(), TimeUnit.SECONDS)
       }
     }
     if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {
