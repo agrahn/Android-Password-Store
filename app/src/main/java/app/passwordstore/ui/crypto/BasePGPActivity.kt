@@ -12,6 +12,7 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
+import android.util.Log
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.annotation.CallSuper
@@ -303,8 +304,9 @@ open class BasePGPActivity : AppCompatActivity() {
 
   /** Opens the dialog for passphrase input and then forwards it to the decryption method. */
   private suspend fun askPassphrase(isError: Boolean, identifiers: List<PGPIdentifier>) {
-    if (!repository.isPasswordProtected(identifiers) && !isError) {
-      decryptWithPassphrase(mapOf("" to charArrayOf()), identifiers)
+    val identifiersWithSecretKey = identifiers.filter{repository.hasSecretKey(it)}
+    if (!repository.isPasswordProtected(identifiersWithSecretKey) && !isError) {
+      decryptWithPassphrase(mapOf("" to charArrayOf()), identifiersWithSecretKey)
       return
     }
 

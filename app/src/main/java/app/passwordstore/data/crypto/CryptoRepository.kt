@@ -6,6 +6,7 @@
 package app.passwordstore.data.crypto
 
 import android.content.SharedPreferences
+import app.passwordstore.crypto.KeyUtils
 import app.passwordstore.crypto.PGPDecryptOptions
 import app.passwordstore.crypto.PGPEncryptOptions
 import app.passwordstore.crypto.PGPIdentifier
@@ -51,6 +52,13 @@ constructor(
 
   suspend fun hasKey(id: PGPIdentifier): Boolean {
     return withContext(dispatcherProvider.io()) { pgpKeyManager.getKeyById(id).isOk }
+  }
+
+  suspend fun hasSecretKey(id: PGPIdentifier): Boolean {
+    return withContext(dispatcherProvider.io()) {
+      val result = pgpKeyManager.getKeyById(id)
+      result.isOk && KeyUtils.isKeyUsableForDecryption(result.value)
+    }
   }
 
   suspend fun isPasswordProtected(identifiers: List<PGPIdentifier>): Boolean {

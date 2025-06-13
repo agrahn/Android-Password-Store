@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.errors.IncorrectPassphraseException
+import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.password.FieldItem
 import app.passwordstore.databinding.DecryptLayoutBinding
@@ -91,6 +92,9 @@ class DecryptActivity : BasePGPActivity() {
           }
           /* Retry */
           decrypt(identifiers, isError = true)
+        }
+        is NoDecryptionKeyAvailableException -> {
+          snackbar(message = result.error.message.toString())
         }
         else -> {
           snackbar(message = result.error.toString())

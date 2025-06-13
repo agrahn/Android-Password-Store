@@ -49,4 +49,9 @@ public object KeyUtils {
       }
       .get() != null
   }
+
+  /** Tests if the given [key] provides a secret key and can thus be used for decryption */
+  public fun isKeyUsableForDecryption(key: PGPKey): Boolean {
+    return runCatching { PGPainless.readKeyRing().secretKeyRing(key.contents) }.get() != null
+  }
 }

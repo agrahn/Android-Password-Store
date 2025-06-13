@@ -132,7 +132,7 @@ class PGPKeyManagerTest {
       // Check returned key
       val error = keyManager.getKeyById(keyId).unwrapError()
       assertIs<KeyNotFoundException>(error)
-      assertEquals("No key found with id: $keyId", error.message)
+      assertEquals("No key found for id: $keyId", error.message)
     }
 
   @Test

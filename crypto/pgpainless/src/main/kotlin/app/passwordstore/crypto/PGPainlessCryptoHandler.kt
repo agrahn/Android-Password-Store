@@ -7,6 +7,7 @@ package app.passwordstore.crypto
 
 import app.passwordstore.crypto.errors.CryptoHandlerException
 import app.passwordstore.crypto.errors.IncorrectPassphraseException
+import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
 import app.passwordstore.crypto.errors.NoKeysProvidedException
 import app.passwordstore.crypto.errors.UnknownError
 import com.github.michaelbull.result.Result
@@ -25,6 +26,7 @@ import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.ConsumerOptions
 import org.pgpainless.encryption_signing.EncryptionOptions
 import org.pgpainless.encryption_signing.ProducerOptions
+import org.pgpainless.exception.MissingDecryptionMethodException
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
@@ -94,9 +96,11 @@ public class PGPainlessCryptoHandler @Inject constructor() :
       }
       .mapError { error ->
         when (error) {
+          is MissingDecryptionMethodException ->
+            NoDecryptionKeyAvailableException(KeyUtils.tryGetId(keys.first())?.toString(), error)
           is WrongPassphraseException -> IncorrectPassphraseException(error)
           is CryptoHandlerException -> error
-          else -> UnknownError(error, error.message)
+          else -> UnknownError(error.message, error)
         }
       }
 
@@ -156,7 +160,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
       .mapError { error ->
         when (error) {
           is CryptoHandlerException -> error
-          else -> UnknownError(error)
+          else -> UnknownError(error.message, error)
         }
       }
 
@@ -168,8 +172,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
   public override fun isPassphraseProtected(keys: List<PGPKey>): Boolean =
     keys
       .map { key ->
-        PGPainless.readKeyRing().secretKeyRing(key.contents) != null &&
-          !passphraseIsCorrect(key, charArrayOf())
+        KeyUtils.isKeyUsableForDecryption(key) && !passphraseIsCorrect(key, charArrayOf())
       }
       .all { it }
 }
