@@ -132,6 +132,21 @@ constructor(
           .withAsciiArmor(settings.getBoolean(PreferenceKeys.ASCII_ARMOR, false))
           .build()
       val keys = identities.map { id -> pgpKeyManager.getKeyById(id) }.filterValues()
-      pgpCryptoHandler.encrypt(keys, content, out, encryptionOptions).map { out }
+      pgpCryptoHandler.encrypt(keys, null, content, out, encryptionOptions).map { out }
+    }
+
+  suspend fun encryptSym(
+    passphrase: CharArray,
+    content: ByteArrayInputStream,
+    out: ByteArrayOutputStream,
+  ) =
+    withContext(dispatcherProvider.io()) {
+      val encryptionOptions =
+        PGPEncryptOptions.Builder()
+          .withAsciiArmor(settings.getBoolean(PreferenceKeys.ASCII_ARMOR, false))
+          .build()
+      pgpCryptoHandler.encrypt(listOf<PGPKey>(), passphrase, content, out, encryptionOptions).map {
+        out
+      }
     }
 }

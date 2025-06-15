@@ -32,10 +32,13 @@ public interface CryptoHandler<Key, EncOpts : CryptoOptions, DecryptOpts : Crypt
   /**
    * Encrypt the given [plaintextStream] to the provided [keys], and writes the encrypted ciphertext
    * to [outputStream]. The returned [Result] should be checked to ensure it is **not** an instance
-   * of [com.github.michaelbull.result.Err] before the contents of [outputStream] are used.
+   * of [com.github.michaelbull.result.Err] before the contents of [outputStream] are used. If a
+   * [passphrase] is provided, [keys] are ignored and [plaintextStream] is symmetrically encrypted
+   * to [outputStream].
    */
   public fun encrypt(
     keys: List<Key>,
+    passphrase: CharArray?,
     plaintextStream: InputStream,
     outputStream: OutputStream,
     options: EncOpts,

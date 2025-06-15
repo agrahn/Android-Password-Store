@@ -78,8 +78,7 @@ open class BasePGPActivity : AppCompatActivity() {
    */
   val name: String by unsafeLazy { File(fullPath).nameWithoutExtension }
 
-  /* Counters for the user's decryption (with passphrase) and PIN verification
-   * attempts to unlock the current password entry */
+  /* Counter for the user's decryption (with passphrase) attempts */
   private var retries = 0
 
   var secondsOnPause = 0L // seconds since Epoch upon pause

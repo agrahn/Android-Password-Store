@@ -90,37 +90,45 @@ public class PGPainlessCryptoHandler @Inject constructor() :
       }
 
   /**
-   * Encrypts the provided [plaintextStream] and writes the encrypted output to [outputStream]. The
-   * [keys] argument is defensively checked to contain at least one key.
+   * Encrypts the provided [plaintextStream] and writes the encrypted output to [outputStream]. If a
+   * [passphrase] is provided, [keys] are ignored and [plaintextStream] is symmetrically encrypted.
+   * For asymmetric encryption the [keys] argument is defensively checked to contain at least one
+   * key.
    *
    * @see CryptoHandler.encrypt
    */
   public override fun encrypt(
     keys: List<PGPKey>,
+    passphrase: CharArray?,
     plaintextStream: InputStream,
     outputStream: OutputStream,
     options: PGPEncryptOptions,
   ): Result<Unit, CryptoHandlerException> =
     runCatching {
-        if (keys.isEmpty()) {
-          throw NoKeysProvidedException
-        }
-        val publicKeyRings =
-          keys.mapNotNull(KeyUtils::tryParseKeyring).mapNotNull { keyRing ->
-            when (keyRing) {
-              is PGPPublicKeyRing -> keyRing
-              is PGPSecretKeyRing -> PGPainless.extractCertificate(keyRing)
-              else -> null
+        if (keys.isEmpty() && passphrase == null) throw NoKeysProvidedException
+        val (publicKeyRingCollection, encryptionOptions) =
+          if (passphrase == null) {
+            val publicKeyRings =
+              keys.mapNotNull(KeyUtils::tryParseKeyring).mapNotNull { keyRing ->
+                when (keyRing) {
+                  is PGPPublicKeyRing -> keyRing
+                  is PGPSecretKeyRing -> PGPainless.extractCertificate(keyRing)
+                  else -> null
+                }
+              }
+            require(keys.size == publicKeyRings.size) {
+              "Failed to parse all keys: ${keys.size} keys were provided but only ${publicKeyRings.size} were valid"
             }
+            if (publicKeyRings.isEmpty()) {
+              throw NoKeysProvidedException
+            }
+            val publicKeyRingCollection = PGPPublicKeyRingCollection(publicKeyRings)
+            val encryptionOptions = EncryptionOptions().addRecipients(publicKeyRingCollection)
+            Pair(publicKeyRingCollection, encryptionOptions)
+          } else {
+            val encryptionOptions = EncryptionOptions().addMessagePassphrase(Passphrase(passphrase))
+            Pair(listOf<PGPPublicKeyRing>(), encryptionOptions)
           }
-        require(keys.size == publicKeyRings.size) {
-          "Failed to parse all keys: ${keys.size} keys were provided but only ${publicKeyRings.size} were valid"
-        }
-        if (publicKeyRings.isEmpty()) {
-          throw NoKeysProvidedException
-        }
-        val publicKeyRingCollection = PGPPublicKeyRingCollection(publicKeyRings)
-        val encryptionOptions = EncryptionOptions().addRecipients(publicKeyRingCollection)
         val producerOptions =
           ProducerOptions.encrypt(encryptionOptions)
             .setAsciiArmor(options.isOptionEnabled(PGPEncryptOptions.ASCII_ARMOR))
