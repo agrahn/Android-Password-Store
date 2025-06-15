@@ -19,13 +19,13 @@ The original documentation can be found [here](https://docs.passwordstore.app) a
 gpg --armor --gen-random 1 24 # generate a strong random password; use it in the next step
 gpg --armor --export-secret-keys <ID of key used for pass> | gpg --armor --symmetric --output myKeyForPass.sec.asc
 ````
-File `myKeyForPass.sec.asc` can be directly imported into Password Store; enter the password from above when asked for the backup code.
+File `myKeyForPass.sec.asc` can be directly imported into Password Store; enter the password from the first step when asked for the backup code.
 
 ### From OpenKeychain
-1. Only the PGP key used for `pass`/Password Store should remain in "My Keys." If needed, create a backup ("Full backup") of your entire keyring and make a note of the backup key. Then, remove all other keys from OpenKeychain.
-2. Make another full backup (again, note the backup key) of the remaining PGP key—the one used by `pass`/Password Store.
-3. Import this backup file into Password Store and enter the backup key when requested.
-4. Restore the previous keyring state in OpenKeychain from the first backup.
+1. You can only import one PGP key at a time. In the main app window, select the key that you use for `pass`/Password Store from the "My Keys" list.
+2. In the window that appears, tap the three-dot menu in the top right corner and select "Backup key".
+3. Write down the backup code, then save the backup file to your phone.
+4. Import this backup file into Password Store by navigating to Settings → PGP Settings → Key Manager → <kbd>+</kbd>, and enter the backup code when prompted.
 
 ## Contributing
 
