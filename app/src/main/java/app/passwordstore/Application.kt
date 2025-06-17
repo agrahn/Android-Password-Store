@@ -4,13 +4,19 @@
  */
 package app.passwordstore
 
+// import androidx.appcompat.app.AppCompatDelegate
+import android.app.Activity
+import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.os.Build
+import android.os.Bundle
 import android.os.StrictMode
+import android.view.View
+import android.view.WindowInsetsController
 import androidx.appcompat.app.AppCompatDelegate.*
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.context.FilesDirPath
@@ -70,6 +76,71 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
      * cached in memory.
      */
     AESEncryption.deleteKey()
+
+    // adjust navigation icons according to current dark/light mode
+    registerActivityLifecycleCallbacks(
+      object : ActivityLifecycleCallbacks {
+        override fun onActivityResumed(activity: Activity) {
+          // Determine the desired navigation bar color and icon style
+          /* val isNightMode = when (AppCompatDelegate.getDefaultNightMode()) {
+              AppCompatDelegate.MODE_NIGHT_YES -> true
+              AppCompatDelegate.MODE_NIGHT_NO -> false
+              else -> {
+                  // Fallback to current configuration if mode is FOLLOW_SYSTEM or UNSPECIFIED
+                  val nightModeFlags = activity.resources.configuration.uiMode and
+                          android.content.res.Configuration.UI_MODE_NIGHT_MASK
+                  nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES
+              }
+          } */
+
+          val nightModeFlags =
+            activity.resources.configuration.uiMode and
+              android.content.res.Configuration.UI_MODE_NIGHT_MASK
+          val isNightMode = nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES
+
+          val useDarkIcons = !isNightMode
+
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            activity.window.insetsController?.let { controller ->
+              if (useDarkIcons) {
+                controller.setSystemBarsAppearance(
+                  WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                  WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                )
+              } else {
+                controller.setSystemBarsAppearance(
+                  0,
+                  WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                )
+              }
+            }
+          } else {
+            @Suppress("DEPRECATION")
+            activity.window.decorView.systemUiVisibility =
+              if (useDarkIcons) {
+                activity.window.decorView.systemUiVisibility or
+                  View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+              } else {
+                activity.window.decorView.systemUiVisibility and
+                  View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
+              }
+          }
+        }
+
+        // Required overrides with empty implementations:
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+
+        override fun onActivityStarted(activity: Activity) {}
+
+        override fun onActivityPaused(activity: Activity) {}
+
+        override fun onActivityStopped(activity: Activity) {}
+
+        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+
+        override fun onActivityDestroyed(activity: Activity) {}
+      }
+    )
   }
 
   private fun setupScreenOffHandler() {

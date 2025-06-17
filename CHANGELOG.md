@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- Navigation icon colour adaption to current app theme (light/dark)
+
 ## [1.14.5] - 2025-05-27
 
 ### Fixed
