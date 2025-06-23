@@ -1,0 +1,15 @@
+<!--
+  ~ Copyright © 2014-2025 The Android Password Store Authors. All Rights Reserved.
+  ~ SPDX-License-Identifier: GPL-3.0-only
+  -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:pwstore="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  tools:context=".ui.pgp.PGPKeyCreationActivity">
+  <item
+    android:id="@+id/save_key"
+    android:icon="@drawable/ic_save_24dp"
+    android:title="@string/crypto_save"
+    pwstore:showAsAction="ifRoom" />
+</menu>

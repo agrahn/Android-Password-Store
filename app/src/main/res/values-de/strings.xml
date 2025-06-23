@@ -164,6 +164,7 @@
 
   <!-- ssh keygen fragment -->
   <string name="ssh_keygen_passphrase">Kennwortsatz</string>
+  <string name="ssh_keygen_repeat_passphrase">Kennwortsatz wiederholen</string>
   <string name="ssh_keygen_generate">Erstellen</string>
   <string name="ssh_keygen_share">Teilen</string>
   <string name="ssh_keygen_later">Später</string>
