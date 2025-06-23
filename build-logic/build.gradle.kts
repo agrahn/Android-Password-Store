@@ -71,7 +71,6 @@ dependencies {
   implementation(libs.build.download)
   implementation(libs.build.javapoet)
   implementation(libs.build.kotlin)
-  implementation(libs.build.mavenpublish)
   implementation(libs.build.metalava)
   implementation(libs.build.moshi)
   implementation(libs.build.moshi.kotlin)
