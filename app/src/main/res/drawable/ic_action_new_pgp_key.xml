@@ -1,0 +1,18 @@
+<!--
+  ~ Copyright © 2014-2025 The Android Password Store Authors. All Rights Reserved.
+  ~ SPDX-License-Identifier: GPL-3.0-only
+  ~
+  ~ Original graphic: https://github.com/ModernPGP/icons
+  ~ SPDX-License-Identifier: CCO-1.0
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
+    android:viewportWidth="100"
+    android:viewportHeight="100"
+    android:width="24dp"
+    android:height="24dp">
+    <path
+        android:pathData="M95.053 43.711L46.435 43.711C43.412 34.064 34.404 26 23.76 26C10.638 26 0 36.638 0 49.761C0 62.884 10.638 73.52 23.76 73.52C34.805 73.52 44.087 64.918 46.751 54.709L63.875 54.709L63.877 64.651L70.098 64.651L70.123 54.709L74.783 54.709L74.786 64.641L81.006 64.641L81.03 54.709L85.167 54.709L85.167 64.641L91.392 64.641L91.392 54.709L95.057 54.709C98.581 54.709 100.001 52.734 100.001 49.209C99.997 45.689 98.58 43.711 95.053 43.711L95.053 43.711ZM23.596 62.794C16.399 62.794 10.563 56.958 10.563 49.76C10.563 42.562 16.399 36.727 23.596 36.727C30.794 36.727 36.629 42.562 36.629 49.76C36.629 56.958 30.794 62.794 23.596 62.794L23.596 62.794Z"
+        android:fillType="evenOdd"
+        android:fillColor="#000000" />
+</vector>

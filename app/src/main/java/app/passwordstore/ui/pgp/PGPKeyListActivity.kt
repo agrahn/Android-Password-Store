@@ -5,6 +5,7 @@
 
 package app.passwordstore.ui.pgp
 
+import android.util.Log
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -52,6 +53,7 @@ import kotlinx.coroutines.runBlocking
 import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
+import app.passwordstore.ui.dialogs.AddPgpKeyBottomSheet
 
 @AndroidEntryPoint
 class PGPKeyListActivity : AppCompatActivity() {
@@ -84,6 +86,13 @@ class PGPKeyListActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     val isSelecting = intent.extras?.getBoolean(EXTRA_KEY_SELECTION) ?: false
+    supportFragmentManager.setFragmentResultListener(PGP_KEY_ADD_REQUEST_KEY, this) { _, bundle ->
+      when (bundle.getString(ACTION_KEY)) {
+        ACTION_IMPORT_FILE -> keyImportAction.launch(Intent(this, PGPKeyImportActivity::class.java))
+        ACTION_NEW_PGP_KEY -> 
+             Log.d ("++++++++++++++++++++++++++++++++++++++++", "???")
+      }
+	}
     setContent {
       APSTheme {
         Scaffold(
@@ -99,7 +108,10 @@ class PGPKeyListActivity : AppCompatActivity() {
           },
           floatingActionButton = {
             FloatingActionButton(
-              onClick = { keyImportAction.launch(Intent(this, PGPKeyImportActivity::class.java)) }
+              onClick = {
+			    //keyImportAction.launch(Intent(this, PGPKeyImportActivity::class.java))
+				AddPgpKeyBottomSheet().show(supportFragmentManager, "ADD_PGP_KEY_BOTTOM_SHEET")
+			  }
             ) {
               Icon(
                 painter = painterResource(R.drawable.ic_add_48dp),
@@ -255,6 +267,11 @@ class PGPKeyListActivity : AppCompatActivity() {
 
     const val EXTRA_SELECTED_KEY = "SELECTED_KEY"
     const val EXTRA_KEY_SELECTION = "KEY_SELECTION_MODE"
+
+    const val PGP_KEY_ADD_REQUEST_KEY = "add_pgp_key"
+    const val ACTION_KEY = "action"
+    const val ACTION_IMPORT_FILE = "from_file"
+    const val ACTION_NEW_PGP_KEY = "generate_new"
 
     fun newSelectionActivity(context: Context): Intent {
       val intent = Intent(context, PGPKeyListActivity::class.java)
