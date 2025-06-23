@@ -3,7 +3,11 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
-plugins { `kotlin-dsl` }
+plugins {
+  `kotlin-dsl`
+  // added this line to fix failed checks after updating kotlin and compose to v2.2.0 (PR #340)
+  kotlin("jvm") version libs.versions.kotlin.get()
+}
 
 kotlin.jvmToolchain(17)
 
