@@ -9,7 +9,7 @@ plugins {
 
 android {
   namespace = "app.passwordstore.passgen.diceware"
-  buildFeatures { androidResources = true }
+  buildFeatures { android.androidResources.enable = true }
   sourceSets { getByName("test") { resources.srcDir("src/main/res/raw") } }
 }
 

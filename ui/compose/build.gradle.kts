@@ -11,7 +11,7 @@ plugins {
 android {
   buildFeatures {
     compose = true
-    androidResources = true
+    android.androidResources.enable = true
   }
   namespace = "app.passwordstore.ui.compose"
 }
