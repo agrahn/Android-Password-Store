@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright © 2014-2025 The Android Password Store Authors. All Rights Reserved.
+  ~ SPDX-License-Identifier: GPL-3.0-only
+  -->
+
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+  <plurals name="delete_title">
+    <item quantity="one">%d öğe seçildi</item>
+    <item quantity="other">%d öğe seçildi</item>
+  </plurals>
+
+  <!-- Activity names -->
+
+
+  <string name="action_settings">Ayarlar</string>
+  <string name="dialog_delete_title">Dizin zaten mevcut</string>
+  <string name="dialog_delete_msg">Hedef dizin zaten mevcut. Mevcut sürüm yalnızca tek bir depoyu desteklemektedir. Mevcut şifre deposu dizinini silmek istiyor musunuz?\n(%1$s)</string>
+  <string name="dialog_delete">Dizini sil</string>
+  <string name="dialog_do_not_delete">İptal</string>
+  <string name="title_activity_git_clone">Depo bilgileri</string>
+  <string name="title_activity_git_config">Git yapılandırması</string>
+  <string name="title_activity_git_log">Commit günlüğü</string>
+
+  <!-- Password Store -->
+  <string name="creation_dialog_text">Lütfen bir şifre eklemeden veya herhangi bir senkronizasyon işlemi çalıştırmadan önce aşağıda yeni bir depo oluşturun veya klonlayın.</string>
+  <plurals name="delete_dialog_text">
+    <item quantity="one">Şifreyi silmek istediğinizden emin misiniz?</item>
+    <item quantity="other">%d adet şifreyi silmek istediğinizden emin misiniz?</item>
+  </plurals>
+  <string name="delete_directory_progress_text">Siliniyor…</string>
+  <string name="move">Taşı</string>
+  <string name="edit">Düzenle</string>
+  <string name="delete">Sil</string>
+  <string name="password_exists_title">Şifre zaten mevcut!</string>
+  <string name="password_exists_message">Bu işlem, %1$s üzerine %2$s yazacaktır.</string>
+  <string name="password_move_error_title">Şifreleri taşırken hata oluştu</string>
+  <string name="password_move_error_message">%1$s, %2$s konumuna taşınamadı</string>
+
+  <!-- git commits -->
+  <string name="git_commit_add_text">%1$s için oluşturulan şifre Android Password Store kullanılarak eklendi.</string>
+  <string name="git_commit_edit_text">%1$s için şifre Android Password Store kullanılarak düzenlendi.</string>
+  <string name="git_commit_remove_text">%1$s depodan kaldırıldı.</string>
+  <string name="git_commit_move_text">%1$s, %2$s olarak yeniden adlandırıldı.</string>
+  <string name="git_commit_move_multiple_text">Birden çok şifre %1$s konumuna taşındı.</string>
+  <string name="git_commit_gpg_id">%1$s içinde PGP kimlikleri başlatıldı.</string>
+
+  <!-- PGPHandler -->
+  <string name="clipboard_copied_text">Panoya kopyalandı</string>
+  <string name="file_toast_text">Lütfen bir dosya adı belirtin</string>
+  <string name="path_toast_text">Lütfen bir dosya yolu belirtin</string>
+  <string name="empty_toast_text">Boş bir şifre veya boş ekstra içerik kullanamazsınız</string>
+
+  <!-- Git Async Task -->
+  <string name="jgit_error_dialog_title">Bir Git işlemi sırasında hata oluştu</string>
+
+  <!-- Git Handler -->
+  <string name="ssh_preferences_dialog_text">Lütfen ayarlardan SSH anahtar dosyanızı içe aktarın veya oluşturun</string>
+  <string name="ssh_preferences_dialog_title">SSH anahtarı yok</string>
+  <string name="button_label_import">İçe Aktar</string>
+  <string name="ssh_preferences_dialog_generate">Oluştur</string>
+  <string name="passphrase_dialog_title">Kimliği Doğrula</string>
+  <string name="passphrase_dialog_text">Lütfen SSH anahtarınız için parolayı girin</string>
+  <string name="password_dialog_text">Lütfen bu depo için şifreyi girin</string>
+
+  <!-- Clone fragment -->
+
+  <string name="server_url">Depo URL\'si</string>
+
+  <string name="connection_mode">Kimlik Doğrulama Yöntemi</string>
+
+  <!-- Git Config fragment -->
+  <string name="git_user_name_hint">Kullanıcı adı</string>
+  <string name="git_user_email">E-posta</string>
+  <string name="invalid_email_dialog_text">Lütfen geçerli bir e-posta adresi girin</string>
+  <string name="clone_button">Klonla</string>
+
+  <!-- PGP Handler -->
+  <string name="crypto_name_hint">Ad</string>
+  <string name="crypto_username_hint">Kullanıcı adı</string>
+  <string name="crypto_pass_label">Şifre</string>
+  <string name="crypto_extra_label">Ekstra içerik</string>
+  <string name="crypto_encrypt_username_label">Kullanıcı adını şifrele</string>
+  <string name="crypto_select">Seç</string>
+  <string name="crypto_save">Kaydet</string>
+  <string name="crypto_save_and_copy">Kaydet ve Kopyala</string>
+
+  <!-- DECRYPT Layout -->
+  <string name="action_search">Ara</string>
+  <string name="password">Şifre</string>
+  <string name="username">Kullanıcı Adı</string>
+  <string name="otp_label_format">OTP (%ds içinde süresi dolacak)</string>
+  <string name="edit_password">Şifreyi düzenle</string>
+  <string name="copy_password">Şifreyi kopyala</string>
+  <string name="share_as_plaintext">Düz metin olarak paylaş</string>
+
+  <!-- Preferences -->
+  <string name="pref_category_repository_title">Depo</string>
+  <string name="pref_edit_git_server_settings">Git sunucu ayarlarını düzenle</string>
+  <string name="pref_edit_git_config">Yerel Git yapılandırması ve araçlar</string>
+  <string name="pref_import_ssh_key_title">SSH anahtarını içe aktar</string>
+  <string name="pref_ssh_keygen_title">SSH anahtar çifti oluştur</string>
+  <string name="pref_ssh_see_key_title">Oluşturulan açık SSH anahtarını görüntüle</string>
+  <string name="pref_git_delete_repo_title">Depoyu sil</string>
+  <string name="pref_dialog_delete_title">Depoyu temizle</string>
+  <string name="pref_category_general_title">Genel</string>
+  <string name="pref_category_passwords_title">Şifreler</string>
+  <string name="pref_clipboard_timeout_title">Şifre kopyalama zaman aşımı</string>
+  <string name="pref_clipboard_timeout_summary">Şifrenin panoda ne kadar süre (saniye cinsinden) kalacağını ayarlayın. 0, süresiz anlamına gelir. Mevcut değer: %1$s</string>
+  <string name="pref_copy_title">Şifreyi otomatik kopyala</string>
+  <string name="pref_copy_summary">Şifre çözme başarılı olduktan sonra şifreyi otomatik olarak panoya kopyalar.</string>
+  <string name="ssh_key_import_error_not_an_ssh_key_message">Seçilen dosya bir SSH özel anahtarı gibi görünmüyor.</string>
+  <string name="ssh_key_success_dialog_title">SSH anahtarı içe aktarıldı</string>
+  <string name="ssh_key_error_dialog_title">Anahtar içe aktarma hatası</string>
+  <string name="ssh_key_error_dialog_text">Mesaj: \n</string>
+  <string name="pref_recursive_filter_title">Yinelemeli filtreleme</string>
+  <string name="pref_recursive_filter_summary">Mevcut dizindeki şifreleri yinelemeli olarak bulur.</string>
+  <string name="pref_directory_structure">Şifre dosyası organizasyonu</string>
+  <string name="pref_sort_order_title">Şifre sıralama düzeni</string>
+  <string name="pref_folder_first_sort_order">Önce klasörler</string>
+  <string name="pref_file_first_sort_order">Önce dosyalar</string>
+  <string name="pref_type_independent_sort_order">Türe göre bağımsız</string>
+  <string name="pref_recently_used_sort_order">Son kullanılanlar</string>
+  <string name="pref_category_autofill_title">Otomatik Doldurma</string>
+  <string name="pref_autofill_enable_title">Otomatik Doldurmayı Etkinleştir</string>
+  <string name="pref_category_misc_title">Çeşitli</string>
+  <string name="pref_clear_clipboard_title">Pano geçmişi özelliği için geçici çözüm</string>
+  <string name="pref_clear_clipboard_summary">Pano geçmişini (Samsung cihazları, Gboard) rastgele sayılarla doldurarak tüm şifreleri siler.</string>
+  <string name="pref_git_delete_repo_summary">Yerel (gizli) depoyu siler</string>
+  <string name="prefs_export_passwords_title">Depoyu dışa aktar</string>
+  <string name="prefs_export_passwords_summary">Şifre deposunu harici bir dizine aktarır</string>
+  <string name="prefs_import_passwords_title">Depoyu içe aktar</string>
+  <string name="prefs_import_passwords_summary">Harici bir dizinden bir şifre deposunu içe aktarır</string>
+  <string name="prefs_repo_not_empty_dialog_title">Yerel depo boş değil</string>
+  <string name="prefs_repo_not_empty_dialog_summary">Yerel şifre deposu önce silinmelidir</string>
+  <string name="pref_rebase_on_pull_title">Pull işleminde rebase yap</string>
+  <string name="pref_rebase_on_pull_summary">Pull veya senkronizasyon yaparken, yukarı akış değişiklikleriyle bir birleştirme (merge) commiti oluştur</string>
+  <string name="pref_rebase_on_pull_summary_on">Pull veya senkronizasyon yaparken, uzak depoda bulunmayan commitleri rebase yap</string>
+  <string name="pref_disable_sync_on_pull_title">Pull to sync eylemini devre dışı bırak</string>
+  <string name="pref_disable_sync_on_pull_summary">Şifre listesini aşağı çekmenin bir Git senkronizasyonunu tetiklemesini önle</string>
+  <string name="pref_import_pgp_key_title">PGP anahtarını içe aktar</string>
+  <string name="pref_pgp_key_manager_title">Anahtar yöneticisi</string>
+  <string name="pref_pgp_ascii_armor_title">ASCII armor modunda şifrele</string>
+  <string name="pref_pgp_key_manager_export">Yedekle/Dışa Aktar</string>
+  <string name="pref_pgp_key_manager_export_public">Açık anahtarı dışa aktar</string>
+
+  <!-- PasswordGenerator fragment -->
+  <string name="pwgen_title">Şifre Oluştur</string>
+  <string name="pwgen_generate">Oluştur</string>
+  <string name="pwgen_include">Dahil Et</string>
+  <string name="pwgen_length">Uzunluk</string>
+  <string name="pwgen_numerals">Rakamlar</string>
+  <string name="pwgen_symbols">Semboller</string>
+  <string name="pwgen_uppercase">Büyük Harf</string>
+  <string name="pwgen_lowercase">Küçük Harf</string>
+  <string name="pwgen_ambiguous">Belirsiz</string>
+  <string name="pwgen_pronounceable">Telaffuz Edilebilir</string>
+  <string name="pwgen_no_chars_error">Hiçbir karakter dahil edilmedi</string>
+  <string name="pwgen_length_too_short_error">Seçilen kriterler için uzunluk çok kısa</string>
+  <string name="pwgen_max_iterations_exceeded">Kısıtlamaları karşılayan bir şifre oluşturulamadı. Uzunluğu artırmayı deneyin.</string>
+  <string name="pwgen_separator">Ayırıcı</string>
+
+  <!-- Password generator prefs -->
+  <string name="pref_password_generator_type_title">Şifre oluşturucu türü</string>
+
+  <!-- ssh keygen fragment -->
+  <string name="ssh_keygen_passphrase">Parola</string>
+  <string name="ssh_keygen_generate">Oluştur</string>
+  <string name="ssh_keygen_share">Paylaş</string>
+  <string name="ssh_keygen_later">Daha Sonra</string>
+  <string name="ssh_keygen_message">%1$s\n\nBu açık anahtarı Git sunucunuza sağlayın.</string>
+  <string name="ssh_key_gen_generating_progress">Anahtarlar oluşturuluyor…</string>
+  <string name="ssh_keygen_require_authentication">Ekran kilidi kimlik bilgisiyle koru</string>
+  <string name="ssh_keygen_label_rsa">RSA</string>
+  <string name="ssh_keygen_label_ecdsa">ECDSA</string>
+  <string name="ssh_keygen_explanation_rsa"><b>RSA (3072 bit)</b>\nTüm sunucular tarafından desteklenir, ancak kimlik doğrulama nispeten yavaştır.</string>
+  <string name="ssh_keygen_explanation_ecdsa"><b>ECDSA (NIST P-256)</b>\nHızlı kimlik doğrulama ve hala güncelleme alan çoğu sunucu tarafından desteklenir.</string>
+  <string name="ssh_keygen_existing_title">SSH anahtarı</string>
+  <string name="ssh_keygen_existing_message">Mevcut SSH anahtarı değiştirilsin mi? Sunucunuza erişimi kaybedebilirsiniz.</string>
+  <string name="ssh_keygen_existing_replace">Değiştir</string>
+  <string name="ssh_keygen_existing_keep">Koru</string>
+
+  <!-- SSH Android Keystore auth -->
+  <string name="biometric_auth_generic_failure">Ekran kilidi kimlik doğrulaması başarısız oldu</string>
+  <string name="biometric_prompt_title_ssh_auth">SSH anahtarının kilidini aç</string>
+  <string name="biometric_prompt_title_ssh_keygen">SSH anahtarı oluştur</string>
+
+  <!-- Misc -->
+  <string name="dialog_ok">Tamam</string>
+  <string name="dialog_yes">Evet</string>
+  <string name="dialog_no">Hayır</string>
+  <string name="dialog_cancel">İptal</string>
+  <string name="dialog_skip">Atla</string>
+  <string name="git_sync">Depoyu senkronize et</string>
+  <string name="git_pull">Uzak depodan çek (pull)</string>
+  <string name="git_push">Uzak depoya gönder (push)</string>
+  <string name="git_push_up_to_date">Her şey güncel</string>
+  <string name="git_log">Commit günlüğünü göster</string>
+  <string name="show_password_pref_title">Şifreyi göster</string>
+  <string name="show_password_pref_summary">Şifreler çözüldükten sonra görünürlüğünü kontrol edin. Bu, panoya kopyalamayı devre dışı bırakmaz.</string>
+  <string name="fast_unlock_pref_title">Girdilerin hızlı kilidini açma</string>
+  <string name="pwd_generate_button">Oluştur</string>
+  <string name="refresh_list">Listeyi yenile</string>
+  <string name="send_plaintext_password_to">Şifreyi düz metin olarak şununla gönder…</string>
+  <string name="app_icon_hint">Uygulama simgesi</string>
+
+  <!-- Oreo Autofill -->
+  <string name="oreo_autofill_select_and_fill_into">Doldurulacak girdiyi seç</string>
+  <string name="oreo_autofill_strict_domain_search">Kimlik avına dayanıklı arama</string>
+  <string name="oreo_autofill_match_with">%1$s ile eşleştir</string>
+  <string name="oreo_autofill_matches_clear_existing">Mevcut eşleşmeleri temizle</string>
+  <string name="oreo_autofill_filter_no_results">Sonuç yok.</string>
+  <string name="oreo_autofill_search_in_store">Girdi ara</string>
+  <string name="oreo_autofill_save_internal_error">Dahili bir hata nedeniyle kaydetme başarısız oldu</string>
+  <string name="oreo_autofill_save_app_not_supported">Bu uygulama şu anda desteklenmiyor</string>
+  <string name="oreo_autofill_save_passwords_dont_match">Şifreler eşleşmiyor</string>
+  <string name="oreo_autofill_generate_password">Girdi oluştur</string>
+  <string name="oreo_autofill_max_matches_reached">Maksimum eşleşme sayısına (%1$d) ulaşıldı; yeni eşleşmeler eklemeden önce mevcutları temizleyin.</string>
+  <string name="oreo_autofill_warning_publisher_header">Bu uygulamanın yayıncısı, bir Password Store girdisini onunla ilk ilişkilendirdiğinizden beri değişti:</string>
+  <string name="oreo_autofill_warning_publisher_footer"><b>Şu anda yüklü olan uygulama, güvenilir bir uygulama gibi davranarak kimlik bilgilerinizi çalmaya çalışıyor olabilir.</b>\n\nPlay Store, Amazon Appstore, F-Droid veya telefon üreticinizin mağazası gibi güvenilir bir kaynaktan uygulamayı kaldırıp yeniden yüklemeyi deneyin.</string>
+  <string name="oreo_autofill_warning_publisher_install_time">Yüklenme tarihi: %1$s</string>
+
+  <string name="oreo_autofill_warning_publisher_advanced_info_template">Paket:\n%1$s\n\nHash:\n%2$s</string>
+  <string name="oreo_autofill_warning_publisher_advanced_info_button">Gelişmiş bilgiler</string>
+  <string name="oreo_autofill_warning_publisher_changed_disable_autofill_button">Otomatik Doldurmayı devre dışı bırak</string>
+  <string name="oreo_autofill_warning_publisher_reenable_button">Otomatik Doldurmayı yeniden etkinleştir</string>
+  <string name="oreo_autofill_warning_publisher_warning_sign_description">Uyarı</string>
+  <string name="oreo_autofill_warning_publisher_dataset_summary">Ayrıntılar için dokunun</string>
+  <string name="oreo_autofill_warning_publisher_dataset_title">Olası kimlik avı girişimi</string>
+  <string name="oreo_autofill_general_fill_and_save_support">Kimlik bilgilerini doldur ve kaydet</string>
+  <string name="oreo_autofill_general_fill_support">Kimlik bilgilerini doldur</string>
+  <string name="oreo_autofill_password_fill_support">Şifreleri doldur</string>
+  <string name="oreo_autofill_flaky_fill_support" tools:ignore="Typos">Şifreleri doldur (zaman zaman tarayıcıyı yeniden başlatmayı gerektirebilir)</string>
+  <string name="oreo_autofill_no_support">Destek yok</string>
+  <string name="oreo_autofill_enable_dialog_description">Password Store, giriş formlarını doldurmayı ve hatta uygulamalara veya web sitelerine girdiğiniz kimlik bilgilerini kaydetmeyi teklif edebilir.</string>
+  <string name="oreo_autofill_enable_dialog_instructions">Bu özelliği etkinleştirmek için, Otomatik Doldurma ayarlarına gitmek üzere Tamam\'a dokunun. Orada, listeden Password Store\'u seçin ve onay istemini Tamam ile onaylayın.</string>
+  <string name="oreo_autofill_enable_dialog_installed_browsers">Yüklü tarayıcılarla Otomatik Doldurma desteği:</string>
+
+  <string name="ssh_key_does_not_exist">SSH özel anahtarı açılamıyor, lütfen dosyanın mevcut olduğunu kontrol edin</string>
+  <string name="new_password_title">Yeni şifre</string>
+  <string name="git_tools">Araçlar</string>
+  <string name="abort_rebase">Rebase işlemini iptal et ve yeni dalı push\'la</string>
+  <string name="reset_to_remote">Uzak dala hard reset yap</string>
+  <string name="git_head_on_branch">%1$s dalında</string>
+  <string name="git_head_detached">HEAD %1$s konumunda ayrık</string>
+  <string name="git_head_missing">HEAD bulunamıyor</string>
+  <string name="git_abort_and_push_title">İptal Et ve Push\'la</string>
+  <string name="biometric_prompt_default_description">Devam etmek için kimliğinizi doğrulayın</string>
+  <string name="biometric_auth_error_reason">Kimlik doğrulama hatası: %s</string>
+  <string name="pref_biometric_auth_title">Uygulama başlangıcında kimlik doğrulamayı etkinleştir</string>
+  <string name="pref_biometric_auth_summary">Password Store, başlangıçta parmak izinizi veya cihaz PIN\'inizi doğrulamanızı ister</string>
+  <string name="pref_biometric_auth_summary_error">Güvenli ekran kilidi yapılandırılmamış</string>
+  <string name="check_devicelock_settings_dialog_message">Cihaz ayarlarını kontrol edin (cihaz kilidi)</string>
+  <string name="pref_title_openkeystore_clear_keyid">Hatırlanan OpenKeystore SSH Anahtar Kimliğini Temizle</string>
+  <string name="your_public_key">Açık anahtarınız</string>
+  <string name="error_generate_ssh_key">SSH anahtarı oluşturulurken hata oluştu</string>
+  <string name="pref_show_hidden_title">Tüm dosyaları ve klasörleri göster</string>
+  <string name="pref_show_hidden_summary">Şifre olmayan dosyaları ve dizinleri şifre listesine dahil et</string>
+  <string name="title_create_folder">Klasör oluştur</string>
+  <string name="title_rename_folder">Klasörü yeniden adlandır</string>
+  <string name="message_category_error_empty_field">Kategori adı boş bırakılamaz</string>
+  <string name="message_category_error_category_exists">Kategori adı zaten mevcut</string>
+  <string name="message_error_destination_outside_repo">Hedef, depo içinde olmalıdır</string>
+  <string name="message_rename_folder">%1$s için hedefi girin</string>
+  <string name="button_create">Oluştur</string>
+  <string name="pref_search_on_start_title">Başlangıçta aramayı aç</string>
+  <string name="pref_search_on_start_summary">Uygulama başlatıldığında arama çubuğunu aç</string>
+  <string name="clone_git_repo">Değişiklikleri senkronize etmeden önce depo klonlanmalıdır.</string>
+  <string name="pref_app_theme_title">Uygulama teması</string>
+  <string name="pref_app_theme_value_light">Açık</string>
+  <string name="pref_app_theme_value_dark">Koyu</string>
+  <string name="pref_app_theme_value_battery_saver">Pil Tasarrufuna Göre Ayarla</string>
+  <string name="pref_app_theme_value_follow_system">Sistem varsayılanı</string>
+  <string name="connection_mode_ssh_key">SSH anahtarı</string>
+  <string name="connection_mode_basic_authentication">Şifre</string>
+  <string name="git_server_config_save_success">Yapılandırma başarıyla kaydedildi</string>
+  <string name="git_server_config_save_error">Sağlanan depo URL\'si geçerli değil</string>
+  <string name="git_server_config_save_missing_username_https">Lütfen HTTPS kullanıcı adını https://kullaniciadi@example.com/… biçiminde belirtin</string>
+  <string name="git_server_config_save_missing_username_ssh">Lütfen SSH kullanıcı adını kullaniciadi@example.com:… biçiminde belirtin</string>
+  <string name="git_server_config_save_auth_mode_mismatch">%1$s için geçerli kimlik doğrulama yöntemleri: %2$s</string>
+  <string name="git_operation_wrong_passphrase">Yanlış parola</string>
+  <string name="git_operation_wrong_password">Yanlış şifre</string>
+  <string name="bottom_sheet_create_new_folder">Yeni klasör oluştur</string>
+  <string name="bottom_sheet_create_new_password">Yeni şifre oluştur</string>
+  <string name="pref_debug_logging_summary">Hata ayıklama günlüğünü etkinleştir (uygulamanın yeniden başlatılmasını gerektirir)</string>
+  <string name="pref_debug_logging_title">Hata ayıklama günlüğü</string>
+  <string name="preference_default_username_summary">Otomatik Doldurma, şifre dosyanızdan veya dizin yapınızdan bir kullanıcı adı belirleyemezse, burada belirtilen değeri kullanacaktır</string>
+  <string name="preference_default_username_title">Varsayılan kullanıcı adı</string>
+  <string name="git_operation_hint_password">Şifre</string>
+  <string name="preference_custom_public_suffixes_title">Özel alan adları</string>
+  <string name="preference_custom_public_suffixes_summary">Otomatik Doldurma, bu alan adlarının alt alan adlarını ayırt edecektir</string>
+  <string name="preference_custom_public_suffixes_hint">sirketim.com\nkisisel.com</string>
+
+  <!-- Password creation failure -->
+  <string name="password_creation_file_fail_title">Hata</string>
+  <string name="password_creation_file_write_fail_message">Şifre dosyası depoya yazılamadı, lütfen tekrar deneyin.</string>
+  <string name="password_creation_file_delete_fail_message">%1$s şifre dosyası depodan silinemedi, lütfen manuel olarak silin.</string>
+  <string name="password_creation_duplicate_error">Dosya zaten mevcut, lütfen farklı bir ad kullanın</string>
+  <string name="add_otp">OTP ekle</string>
+  <string name="otp_import_success">TOTP yapılandırması başarıyla içe aktarıldı</string>
+  <string name="otp_import_failure_generic">TOTP yapılandırması içe aktarılamadı</string>
+  <string name="otp_import_failure_no_selection">Hiçbir resim dosyası seçilmedi</string>
+  <string name="invalid_gpg_id">.gpg-id bulundu, ancak geçersiz veya bilinmeyen bir anahtar kimliği içeriyor.</string>
+  <string name="empty_gpg_id">.gpg-id bulundu, ancak boş.</string>
+  <string name="missing_gpg_id">Hiç .gpg-id bulunamadı.</string>
+  <string name="short_gpg_id">.gpg-id bulundu, ancak desteklenmeyen kısa bir onaltılık kimlik içeriyor.</string>
+  <string name="invalid_filename_text">Dosya adı \'/\' içeremez, dizini yukarıda ayarlayın.</string>
+  <string name="directory_hint">Dizin</string>
+  <string name="new_folder_set_gpg_key">Dizin için PGP anahtarı ayarla</string>
+
+  <!-- Password decryption failure -->
+  <string name="password_decryption_no_decryption_key">Şifre çözme başarısız: Kullanılabilir gizli anahtar yok</string>
+  <string name="password_decryption_unknown_error">Bilinmeyen şifre çözme hatası</string>
+
+  <!-- GitException messages -->
+  <string name="git_unknown_error">Bilinmeyen hata</string>
+  <string name="git_pull_rebase_fail_error">Pull işlemi başarısız oldu, ayrık bir HEAD durumundasınız. "Ayarlar > Git araçları"nı kullanarak değişikliklerinizi uzak depodaki yeni bir dala push\'layın ve çakışmayı bilgisayarınızda çözün.</string>
+  <string name="git_pull_merge_fail_error">Merge işlemi başarısız oldu, çakışma durumundasınız. TODO: Bir kurtarma yöntemi ekleyin.</string>
+
+  <string name="git_push_nff_error">Push işlemi uzak depo tarafından reddedildi, tekrar push\'lamadan önce pull yapın. Her ikisini de uyguladığı için pull/push yerine Senkronize Et kullanabilirsiniz</string>
+  <string name="git_push_generic_error">Push işlemi uzak depo tarafından reddedildi, neden: %1$s</string>
+  <string name="git_push_other_error">Uzak depo, hızlı ileri olmayan (non-fast-forward) push işlemini reddetti. Hedef deponun yapılandırma dosyasındaki receive.denyNonFastForwards değişkenini kontrol edin.</string>
+  <string name="git_unknown_host">Bilinmeyen ana makine: %1$s</string>
+  <string name="git_operation_running">Git işlemi yürütülüyor…</string>
+  <string name="git_break_out_of_detached_success">Rebase yapmaya çalışırken bir çakışma oldu. Yerel %1$s dalınız, %2$s adında başka bir dala push\'landı\n Çakışmayı bilgisayarınızda çözmek için bu dalı kullanın</string>
+  <string name="git_break_out_of_detached_unneeded">Depo rebase yapmıyor, başka bir dala push\'lamaya gerek yok</string>
+
+  <!-- PGP key selection in folder creation -->
+  <string name="gpg_key_select_mandatory">Devam etmek için bir PGP anahtarı seçmek gereklidir</string>
+  <string name="folder_creation_err_file_exists">Bu adda bir dosya zaten mevcut</string>
+  <string name="folder_creation_err_folder_exists">Bu adda bir klasör zaten mevcut</string>
+
+  <!-- Onboarding flow -->
+  <string name="let_s_go">Hadi Başlayalım</string>
+  <string name="select_n_repository_type">Depo \nTürü Seçin</string>
+  <string name="select_repo_type_text">Yerel bir depo oluşturmak mı yoksa uzak bir depoyu klonlamak mı istediğinizi seçin.</string>
+  <string name="clone_remote_repo">Uzak Depoyu Klonla</string>
+  <string name="create_local_repo">Yerel Depo Oluştur</string>
+  <string name="select_gpg_key_title">PGP \nAnahtarı Seçin</string>
+  <string name="select_gpg_key_message">Deponuzu başlatmak için bir PGP anahtarı seçin</string>
+  <string name="gpg_key_select">Anahtar seç</string>
+
+  <!-- SSH port validation -->
+  <string name="ssh_scheme_needed_title">Potansiyel olarak yanlış URL</string>
+  <string name="ssh_scheme_needed_message">URL\'niz özel bir port içeriyor gibi görünüyor, ancak ssh:// şemasını belirtmiyor.\nBu, portun yolunuzun bir parçası olarak kabul edilmesine neden olabilir. URL\'yi düzeltmek için Tamam\'a basın.</string>
+  <string name="https_scheme_with_port_title">Özel portlu HTTPS URL\'si</string>
+  <string name="https_scheme_with_port_message">Özel portlu bir HTTPS URL\'si kullanıyor gibi görünüyorsunuz. Bu desteklenmiyor ve ileride sorunlara neden olacaktır. Portu URL\'nizden kaldırmak için Tamam\'a basın.</string>
+  <string name="git_scheme_disallowed_title">git:// protokolünün kullanılması önerilmez</string>
+  <string name="git_scheme_disallowed_message">git-daemon tarafından sağlanan git protokolü, taşıma şifrelemesi yapmaz ve güvenli işlemler için uygun değildir.</string>
+
+  <!-- Proxy configuration activity -->
+  <string name="activity_proxy_label">Proxy ayarları</string>
+  <string name="proxy_hostname">Proxy ana makine adı</string>
+  <string name="port">Port</string>
+  <string name="pref_edit_proxy_settings">HTTP(S) proxy ayarları</string>
+  <string name="invalid_proxy_url">Geçersiz URL</string>
+  <string name="oreo_autofill_password_fill_and_conditional_save_support">Şifreleri doldur ve kaydet (kaydetme, hiçbir erişilebilirlik hizmetinin etkinleştirilmemesini gerektirir)</string>
+  <string name="clear_saved_host_key">Kaydedilmiş ana makine anahtarını temizle</string>
+  <string name="clear_saved_host_key_success">Kaydedilmiş ana makine anahtarı başarıyla temizlendi!</string>
+  <string name="otp_import_qr_code">QR kodunu tara</string>
+  <string name="otp_import_from_file">Bir resim seçin</string>
+  <string name="otp_import_manual_entry">Manuel olarak gir</string>
+  <string name="otp_import_manual_hint_secret">Gizli Anahtar</string>
+  <string name="otp_import_manual_hint_account">Hesap</string>
+  <string name="place_shortcut_on_home_screen">Ana ekrana kısayol yerleştir</string>
+  <string name="password_list_fab_content_description">Yeni şifre veya klasör oluştur</string>
+  <string name="pgp_key_backupcode_title">Yedekleme kodu</string>
+  <string name="pgp_key_backupcode_confirmation">Yedekleme kodunu not aldım ve güvenli bir yerde sakladım.</string>
+  <string name="pgp_key_import_failed">PGP anahtarı içe aktarılamadı</string>
+  <string name="pgp_key_import_failed_replace_message">Bu kimliğe sahip mevcut bir anahtar bulundu, değiştirmek istiyor musunuz?</string>
+  <string name="pgp_key_import_succeeded">PGP anahtarı başarıyla içe aktarıldı</string>
+  <string name="pgp_key_import_succeeded_message">İçe aktarılan anahtarın kimliği aşağıda verilmiştir, lütfen doğruluğunu kontrol edin:\n%1$s</string>
+  <string name="pgp_key_export_failed">PGP anahtarı dışa aktarılamadı</string>
+  <string name="pgp_key_export_succeeded">PGP anahtarı başarıyla dışa aktarıldı</string>
+  <string name="pref_category_pgp_title">PGP ayarları</string>
+  <string name="pwgen_some_error_occurred">Bir hata oluştu</string>
+  <string name="git_run_gc_job">Çöp toplama işini çalıştır</string>
+  <string name="activity_label_pgp_key_manager">PGP Anahtar Yöneticisi</string>
+  <string name="activity_label_pgp_key_select">PGP Anahtarı Seç</string>
+  <string name="pgp_key_manager_delete_confirmation_dialog_title">Anahtar silinsin mi?</string>
+  <string name="git_utils_reset_remote_branch_title">Uzak dal adı</string>
+  <string name="pgp_key_manager_no_keys_guidance">Aşağıdaki ekle düğmesini kullanarak bir anahtar içe aktarın</string>
+  <string name="no_keys_imported_dialog_title">İçe aktarılmış anahtar yok</string>
+  <string name="no_keys_imported_dialog_message">Uygulamada henüz içe aktarılmış PGP anahtarı yok, bir anahtar dosyası seçmek için aşağıdaki düğmeye basın</string>
+
+  <!-- Passphrase input -->
+  <string name="cache_password_until_screen_off">Parolayı ekran kapanana kadar önbellekte tut</string>
+  <string name="biometric_prompt_description_persistently_cache_password">PGP parolasını şifrele ve cihazda önbelleğe al</string>
+  <string name="biometric_prompt_description_unlock_entry">Parmağınızla girdinin kilidini açın</string>
+  <string name="pgp_wrong_passphrase_input">Yanlış parola</string>
+  <string name="pgp_id_label">PGP Kimliği: </string>
+  <string name="pgp_id_label_plural">PGP Kimlikleri: </string>
+  <string name="aes_key_invalidated_dialog_title">Uyarı! Yeni parmak izi eklendi</string>
+  <string name="aes_key_invalidated_dialog_message">Son kullanımdan bu yana cihaz kilit ayarlarına yeni bir parmak izi kaydedildi. Başka biri tarafından değil, sizin tarafınızdan eklendiğinden emin olun</string>
+
+  <!-- PIN input -->
+
+  <string name="pin_new_entry_title">PIN Ayarla</string>
+  <string name="pin_new_entry_description">Hızlı kilit açma için PIN kodunuz en az 4 haneli olmalıdır</string>
+  <string name="pin_entry_title">PIN doğrulaması</string>
+  <string name="pin_entry_description">Bu girdiyi göstermek için PIN kodunuzu girin</string>
+  <string name="pin_entry_wrong_input">Yanlış giriş</string>
+</resources>
