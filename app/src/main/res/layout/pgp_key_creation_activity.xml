@@ -61,7 +61,8 @@
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:layout_margin="8dp"
-      android:hint="@string/pgp_passphrase_hint"
+      android:hint="@string/ssh_keygen_passphrase"
+      app:endIconMode="password_toggle"
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintTop_toBottomOf="@id/email_input_layout">
 
@@ -70,7 +71,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:imeOptions="actionNext"
-        android:inputType="textNoSuggestions"
+        android:inputType="textPassword"
         android:nextFocusForward="@id/repeat_passphrase" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -79,8 +80,8 @@
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:layout_margin="8dp"
-      android:hint="@string/pgp_repeat_passphrase_hint"
-      app:endIconMode="passphrase_toggle"
+      android:hint="@string/ssh_keygen_repeat_passphrase"
+      app:endIconMode="password_toggle"
       app:layout_constraintStart_toStartOf="parent"
       app:layout_constraintTop_toBottomOf="@id/passphrase_input_layout">
 

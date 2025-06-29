@@ -155,6 +155,12 @@
       android:exported="false"
       android:label="@string/activity_label_pgp_key_manager"
       android:parentActivityName=".ui.settings.SettingsActivity" />
+    <activity
+      android:name=".ui.pgp.PGPKeyCreationActivity"
+      android:exported="false"
+      android:label="@string/pgp_new_pgp_key_title"
+      android:windowSoftInputMode="adjustResize" />
+
   </application>
 
   <queries>

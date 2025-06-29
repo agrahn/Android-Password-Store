@@ -5,7 +5,6 @@
 
 package app.passwordstore.ui.pgp
 
-import android.util.Log
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -35,6 +34,7 @@ import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.ui.APSAppBar
 import app.passwordstore.ui.compose.theme.APSTheme
+import app.passwordstore.ui.dialogs.AddPgpKeyBottomSheet
 import app.passwordstore.ui.dialogs.PasswordDialog
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.viewmodel.PGPKeyListViewModel
@@ -53,7 +53,6 @@ import kotlinx.coroutines.runBlocking
 import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
-import app.passwordstore.ui.dialogs.AddPgpKeyBottomSheet
 
 @AndroidEntryPoint
 class PGPKeyListActivity : AppCompatActivity() {
@@ -65,7 +64,15 @@ class PGPKeyListActivity : AppCompatActivity() {
   private var retries = 0
 
   private val viewModel: PGPKeyListViewModel by viewModels()
+
   private val keyImportAction =
+    registerForActivityResult(StartActivityForResult()) {
+      if (it.resultCode == RESULT_OK) {
+        viewModel.updateKeySet()
+      }
+    }
+
+  private val keyAddAction =
     registerForActivityResult(StartActivityForResult()) {
       if (it.resultCode == RESULT_OK) {
         viewModel.updateKeySet()
@@ -88,11 +95,10 @@ class PGPKeyListActivity : AppCompatActivity() {
     val isSelecting = intent.extras?.getBoolean(EXTRA_KEY_SELECTION) ?: false
     supportFragmentManager.setFragmentResultListener(PGP_KEY_ADD_REQUEST_KEY, this) { _, bundle ->
       when (bundle.getString(ACTION_KEY)) {
-        ACTION_IMPORT_FILE -> keyImportAction.launch(Intent(this, PGPKeyImportActivity::class.java))
-        ACTION_NEW_PGP_KEY -> 
-             Log.d ("++++++++++++++++++++++++++++++++++++++++", "???")
+        ACTION_IMPORT_FILE -> keyAddAction.launch(Intent(this, PGPKeyImportActivity::class.java))
+        ACTION_NEW_PGP_KEY -> keyAddAction.launch(Intent(this, PGPKeyCreationActivity::class.java))
       }
-	}
+    }
     setContent {
       APSTheme {
         Scaffold(
@@ -109,9 +115,9 @@ class PGPKeyListActivity : AppCompatActivity() {
           floatingActionButton = {
             FloatingActionButton(
               onClick = {
-			    //keyImportAction.launch(Intent(this, PGPKeyImportActivity::class.java))
-				AddPgpKeyBottomSheet().show(supportFragmentManager, "ADD_PGP_KEY_BOTTOM_SHEET")
-			  }
+                // keyImportAction.launch(Intent(this, PGPKeyImportActivity::class.java))
+                AddPgpKeyBottomSheet().show(supportFragmentManager, "ADD_PGP_KEY_BOTTOM_SHEET")
+              }
             ) {
               Icon(
                 painter = painterResource(R.drawable.ic_add_48dp),

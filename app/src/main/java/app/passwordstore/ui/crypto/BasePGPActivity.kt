@@ -28,7 +28,7 @@ import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.prefs.PGPPassphrases
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.ui.dialogs.PasswordDialog
-import app.passwordstore.ui.pgp.PGPKeyImportActivity
+import app.passwordstore.ui.pgp.PGPKeyListActivity
 import app.passwordstore.util.auth.BiometricAuthenticator
 import app.passwordstore.util.auth.BiometricAuthenticator.Result as BiometricResult
 import app.passwordstore.util.coroutines.DispatcherProvider
@@ -143,9 +143,11 @@ open class BasePGPActivity : AppCompatActivity() {
           MaterialAlertDialogBuilder(this@BasePGPActivity)
             .setTitle(resources.getString(R.string.no_keys_imported_dialog_title))
             .setMessage(resources.getString(R.string.no_keys_imported_dialog_message))
-            .setPositiveButton(resources.getString(R.string.button_label_import)) { _, _ ->
+            .setPositiveButton(
+              resources.getString(R.string.no_keys_imported_dialog_open_key_manager)
+            ) { _, _ ->
               onKeyImport = onKeysExist
-              keyImportAction.launch(Intent(this@BasePGPActivity, PGPKeyImportActivity::class.java))
+              keyImportAction.launch(Intent(this@BasePGPActivity, PGPKeyListActivity::class.java))
             }
             .show()
         }
