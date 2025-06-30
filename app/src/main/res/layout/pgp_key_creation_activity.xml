@@ -52,7 +52,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:imeOptions="actionNext"
-        android:inputType="textNoSuggestions"
+        android:inputType="textEmailAddress"
         android:nextFocusForward="@id/passphrase" />
     </com.google.android.material.textfield.TextInputLayout>
 

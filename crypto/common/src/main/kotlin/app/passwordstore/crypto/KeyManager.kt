@@ -20,6 +20,12 @@ public interface KeyManager<Key, KeyIdentifier> {
    */
   public suspend fun addKey(key: Key, replace: Boolean = false): Result<Key, Throwable>
 
+  /**
+   * Creates a new EC-based OpenPGP key and inserts it into the store. [userId] is used as
+   * primary user-id, the generated secret key is encrypted with [passphrase]
+   */
+  public suspend fun generateKey(userId: String, passphrase: CharArray?): Result<Key, Throwable>
+
   /** Finds a key for [identifier] in the store and deletes it. */
   public suspend fun removeKey(identifier: KeyIdentifier): Result<Unit, Throwable>
 

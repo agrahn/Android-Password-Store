@@ -16,11 +16,17 @@ import app.passwordstore.util.extensions.viewBinding
 import dagger.hilt.android.AndroidEntryPoint
 import java.nio.CharBuffer
 import java.nio.charset.Charset
+import app.passwordstore.crypto.PGPKey
+import app.passwordstore.crypto.PGPKeyManager
+import javax.inject.Inject
+import kotlinx.coroutines.runBlocking
+import androidx.core.widget.doOnTextChanged
 
 @AndroidEntryPoint
 class PGPKeyCreationActivity : AppCompatActivity() {
 
   private val binding by viewBinding(PgpKeyCreationActivityBinding::inflate)
+  @Inject lateinit var keyManager: PGPKeyManager
 
   //  private val suggestedName by unsafeLazy { intent.getStringExtra(EXTRA_FILE_NAME) }
   //  private val suggestedUsername by unsafeLazy { intent.getStringExtra(EXTRA_USERNAME) }
@@ -36,7 +42,12 @@ class PGPKeyCreationActivity : AppCompatActivity() {
     super.onCreate(savedInstanceState)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     title = getString(R.string.pgp_new_pgp_key_title)
-    with(binding) { setContentView(root) }
+    with(binding) {
+        setContentView(root)
+        repeatPassphrase.doOnTextChanged { _, _, _, _ ->
+          repeatPassphraseInputLayout.error = null
+        }
+    }
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -51,6 +62,7 @@ class PGPKeyCreationActivity : AppCompatActivity() {
         onBackPressedDispatcher.onBackPressed()
       }
       R.id.save_key -> {
+        binding.repeatPassphraseInputLayout.error = "don't match"  
         // TODO create key
         encrypt()
       }
@@ -64,6 +76,12 @@ class PGPKeyCreationActivity : AppCompatActivity() {
     val byteArray = ByteArray(byteBuffer.remaining())
     byteBuffer.get(byteArray)
     return byteArray
+  }
+
+  private fun newKey(userId: String, passphrase: CharArray?): PGPKey? {
+    val (key, error) = runBlocking { keyManager.generateKey(userId, passphrase) }
+    if (error != null) throw error
+    return key
   }
 
   /** Encrypts the password and the extra content */
