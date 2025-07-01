@@ -47,6 +47,7 @@ import app.passwordstore.util.viewmodel.SearchableRepositoryViewModel
 import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.runCatching
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import javax.inject.Inject
@@ -331,8 +332,10 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
               } else {
                 if (requireArguments().getBoolean("matchWith", false)) {
                   requireStore().matchPasswordWithApp(item)
-                } else {
+                } else if (item.type == PasswordItem.TYPE_PASSWORD) {
                   requireStore().decryptPassword(item)
+                } else if (item.type == PasswordItem.TYPE_GPG_ID) {
+                  showGpgIds(item.file)
                 }
               }
             }
@@ -341,6 +344,18 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
       .onFailure {
         throw ClassCastException("$context must implement OnFragmentInteractionListener")
       }
+  }
+
+  private fun showGpgIds(file: File) {
+    val gpgIds = file.readLines().filter { it.isNotBlank() }
+    val title =
+      if (gpgIds.size > 1) resources.getString(R.string.pgp_id_label_plural)
+      else resources.getString(R.string.pgp_id_label)
+    MaterialAlertDialogBuilder(requireContext())
+      .setTitle(title.substringBefore(':'))
+      .setMessage(gpgIds.joinToString("\n"))
+      .setPositiveButton(resources.getString(R.string.dialog_ok)) { dialog, _ -> dialog.dismiss() }
+      .show()
   }
 
   private fun requireStore() = requireActivity() as PasswordStore
