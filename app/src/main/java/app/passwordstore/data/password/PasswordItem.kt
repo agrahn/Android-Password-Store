@@ -42,7 +42,7 @@ data class PasswordItem(
   /** Creates an [Intent] to launch this [PasswordItem] through the authentication process. */
   fun createAuthEnabledIntent(context: Context): Intent {
     val intent = Intent(context, LaunchActivity::class.java)
-    intent.putExtra("NAME", toString())
+    intent.putExtra("NAME", toString()) // this.toString
     intent.putExtra("FILE_PATH", file.absolutePath)
     intent.putExtra("REPO_PATH", PasswordRepository.getRepositoryDirectory().absolutePath)
     intent.action = LaunchActivity.ACTION_DECRYPT_PASS
@@ -53,6 +53,8 @@ data class PasswordItem(
 
     const val TYPE_CATEGORY = 'c'
     const val TYPE_PASSWORD = 'p'
+    const val TYPE_GPG_ID = 'g'
+    const val TYPE_OTHER = 'o' // unknown type, no effort is made to decrypt or display contents
 
     @JvmStatic
     fun newCategory(name: String, file: File, parent: PasswordItem, rootDir: File): PasswordItem {
@@ -72,6 +74,26 @@ data class PasswordItem(
     @JvmStatic
     fun newPassword(name: String, file: File, rootDir: File): PasswordItem {
       return PasswordItem(name, null, TYPE_PASSWORD, file, rootDir)
+    }
+
+    @JvmStatic
+    fun newGpgIdItem(name: String, file: File, parent: PasswordItem, rootDir: File): PasswordItem {
+      return PasswordItem(name, parent, TYPE_GPG_ID, file, rootDir)
+    }
+
+    @JvmStatic
+    fun newGpgIdItem(name: String, file: File, rootDir: File): PasswordItem {
+      return PasswordItem(name, null, TYPE_GPG_ID, file, rootDir)
+    }
+
+    @JvmStatic
+    fun newOtherItem(name: String, file: File, parent: PasswordItem, rootDir: File): PasswordItem {
+      return PasswordItem(name, parent, TYPE_OTHER, file, rootDir)
+    }
+
+    @JvmStatic
+    fun newOtherItem(name: String, file: File, rootDir: File): PasswordItem {
+      return PasswordItem(name, null, TYPE_OTHER, file, rootDir)
     }
   }
 }

@@ -195,7 +195,9 @@ object PasswordRepository {
     passList.forEach { file ->
       passwordList.add(
         if (file.isFile) {
-          PasswordItem.newPassword(file.name, file, rootDir)
+          if (file.name == ".gpg-id") PasswordItem.newGpgIdItem(file.name, file, rootDir)
+          else if (file.extension == "gpg") PasswordItem.newPassword(file.name, file, rootDir)
+          else PasswordItem.newOtherItem(file.name, file, rootDir)
         } else {
           PasswordItem.newCategory(file.name, file, rootDir)
         }

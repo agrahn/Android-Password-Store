@@ -55,8 +55,13 @@ import kotlinx.coroutines.yield
 import me.zhanghai.android.fastscroll.PopupTextProvider
 
 private fun File.toPasswordItem() =
-  if (isFile) PasswordItem.newPassword(name, this, PasswordRepository.getRepositoryDirectory())
-  else PasswordItem.newCategory(name, this, PasswordRepository.getRepositoryDirectory())
+  if (isFile) {
+    if (name == ".gpg-id")
+      PasswordItem.newGpgIdItem(name, this, PasswordRepository.getRepositoryDirectory())
+    else if (extension == "gpg")
+      PasswordItem.newPassword(name, this, PasswordRepository.getRepositoryDirectory())
+    else PasswordItem.newOtherItem(name, this, PasswordRepository.getRepositoryDirectory())
+  } else PasswordItem.newCategory(name, this, PasswordRepository.getRepositoryDirectory())
 
 private fun PasswordItem.fuzzyMatch(filter: String): Int {
   val (_, score) = Fuzzy.fuzzyMatch(filter, longName)
