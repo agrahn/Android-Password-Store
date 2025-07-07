@@ -5,7 +5,6 @@
 package app.passwordstore.ui.dialogs
 
 import android.app.Dialog
-import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
@@ -40,9 +39,9 @@ class FolderCreationDialogFragment : DialogFragment() {
         val selectedKeyId =
           data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
+        val gpgIdentifierFile = File(newFolder, ".gpg-id")
+        gpgIdentifierFile.writeText(selectedKeyId)
         runBlocking {
-          val gpgIdentifierFile = File(newFolder, ".gpg-id")
-          gpgIdentifierFile.writeText(selectedKeyId)
           requireActivity()
             .commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))
         }
@@ -84,8 +83,7 @@ class FolderCreationDialogFragment : DialogFragment() {
     if (folderNameViewContainer.error != null) return
     newFolder.mkdirs()
     if (dialog.findViewById<MaterialCheckBox>(R.id.set_gpg_key).isChecked) {
-      val intent = Intent(requireContext(), PGPKeyListActivity::class.java)
-      intent.putExtra(PGPKeyListActivity.EXTRA_KEY_SELECTION, true)
+      val intent = PGPKeyListActivity.newSelectionActivity(requireContext())
       gpgKeySelectAction.launch(intent)
       return
     }

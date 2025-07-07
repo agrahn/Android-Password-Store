@@ -6,7 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Export and backup options for PGP keys in the PGP key manager
+- Generating new keys in the PGP key manager
+- Menu option for changing PGP key passphrase
+- Menu options for PGP key export and backup
 
 ### Fixed
 

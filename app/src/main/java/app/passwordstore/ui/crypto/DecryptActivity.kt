@@ -17,6 +17,7 @@ import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.password.FieldItem
+import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.DecryptLayoutBinding
 import app.passwordstore.ui.adapters.FieldItemAdapter
 import app.passwordstore.util.extensions.getString
@@ -93,6 +94,7 @@ class DecryptActivity : BasePGPActivity() {
         /* Retry */
         decrypt(identifiers, isError = true)
       } else if (results.filter { it.second.error is NoDecryptionKeyAvailableException }.any()) {
+        PasswordRepository.gpgidChecked = false
         snackbar(message = resources.getString(R.string.password_decryption_no_decryption_key))
       } else {
         snackbar(message = resources.getString(R.string.password_decryption_unknown_error))

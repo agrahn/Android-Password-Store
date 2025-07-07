@@ -34,7 +34,6 @@ object PasswordRepository {
     get() = repository != null
 
   var gpgidChecked: Boolean = false
-  var gpgidCurPath: File? = null
 
   fun isGitRepo(): Boolean {
     return repository?.objectDatabase?.exists() ?: false

@@ -6,6 +6,8 @@
 package app.passwordstore.crypto
 
 // import app.passwordstore.crypto.errors.UnusableKeyException
+import app.passwordstore.crypto.CryptoConstants.KEY_PASSPHRASE
+import app.passwordstore.crypto.CryptoConstants.PLAIN_TEXT
 import app.passwordstore.crypto.KeyUtils.tryGetId
 import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPIdentifier.UserId
@@ -14,6 +16,7 @@ import app.passwordstore.crypto.errors.KeyNotFoundException
 import app.passwordstore.crypto.errors.NoKeysAvailableException
 import com.github.michaelbull.result.unwrap
 import com.github.michaelbull.result.unwrapError
+import java.io.ByteArrayOutputStream
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -36,6 +39,7 @@ class PGPKeyManagerTest {
   private val keyManager by unsafeLazy { PGPKeyManager(filesDir.absolutePath, dispatcher) }
   private val secretKey = PGPKey(TestUtils.getArmoredSecretKey())
   private val publicKey = PGPKey(TestUtils.getArmoredPublicKey())
+  private val cryptoHandler = PGPainlessCryptoHandler()
 
   private fun <T> unsafeLazy(initializer: () -> T) =
     lazy(LazyThreadSafetyMode.NONE) { initializer.invoke() }
@@ -73,25 +77,6 @@ class PGPKeyManagerTest {
       assertEquals(KeyId(CryptoConstants.KEY_ID), keyId)
     }
 
-  /*  @Test
-  fun addKeyWithUnusableKey() =
-    runTest(dispatcher) {
-      val error = keyManager.addKey(PGPKey(TestUtils.getAEADSecretKey())).unwrapError()
-      assertEquals(UnusableKeyException, error)
-    } */
-
-  @Test
-  fun removeKey() =
-    runTest(dispatcher) {
-      // Add key using KeyManager
-      keyManager.addKey(secretKey).unwrap()
-      // Remove key
-      keyManager.removeKey(tryGetId(secretKey)!!).unwrap()
-      // Check that no keys remain
-      val keys = keyManager.getAllKeys().unwrap()
-      assertEquals(0, keys.size)
-    }
-
   @Test
   fun getKeyById() =
     runTest(dispatcher) {
@@ -103,6 +88,64 @@ class PGPKeyManagerTest {
       // Check returned key id matches the expected id and the created key id
       val returnedKey = keyManager.getKeyById(keyId).unwrap()
       assertEquals(keyManager.getKeyId(secretKey), keyManager.getKeyId(returnedKey))
+    }
+
+  @Test
+  fun generateKey() =
+    runTest(dispatcher) {
+      val key =
+        keyManager.generateKey("John Doe <j.doe@example.org", KEY_PASSPHRASE.toCharArray()).unwrap()
+      assertNotNull(key)
+      val keyId = keyManager.getKeyId(key)
+      assertNotNull(keyId)
+      val returnedKey = keyManager.getKeyById(keyId).unwrap()
+      val ciphertextStream = ByteArrayOutputStream()
+      val encryptRes =
+        cryptoHandler.encrypt(
+          listOf(key),
+          null,
+          PLAIN_TEXT.byteInputStream(Charsets.UTF_8),
+          ciphertextStream,
+          PGPEncryptOptions.Builder().build(),
+        )
+      assertTrue(encryptRes.isOk)
+      val plaintextStream = ByteArrayOutputStream()
+      val decryptRes =
+        cryptoHandler.decrypt(
+          listOf(returnedKey),
+          KEY_PASSPHRASE.toCharArray(),
+          ciphertextStream.toByteArray().inputStream(),
+          plaintextStream,
+          PGPDecryptOptions.Builder().build(),
+        )
+      assertTrue(decryptRes.isOk)
+      assertEquals(PLAIN_TEXT, plaintextStream.toString(Charsets.UTF_8))
+    }
+
+  @Test
+  fun changeKeyPassphrase() =
+    runTest(dispatcher) {
+      val key = keyManager.addKey(secretKey).unwrap()
+      assertEquals(1, filesDir.list()?.size)
+      val keyId = keyManager.getKeyId(key)
+      assertNotNull(keyId)
+      keyManager
+        .changeKeyPassphrase(keyId, KEY_PASSPHRASE.toCharArray(), "pa55w0rD".toCharArray())
+        .unwrap()
+      val returnedKey = keyManager.getKeyById(keyId).unwrap()
+      assertTrue(cryptoHandler.passphraseIsCorrect(returnedKey, "pa55w0rD".toCharArray()))
+    }
+
+  @Test
+  fun removeKey() =
+    runTest(dispatcher) {
+      // Add key using KeyManager
+      keyManager.addKey(secretKey).unwrap()
+      // Remove key
+      keyManager.removeKey(tryGetId(secretKey)!!).unwrap()
+      // Check that no keys remain
+      val keys = keyManager.getAllKeys().unwrap()
+      assertEquals(0, keys.size)
     }
 
   @Test

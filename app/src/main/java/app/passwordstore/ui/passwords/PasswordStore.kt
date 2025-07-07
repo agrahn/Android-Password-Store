@@ -83,9 +83,9 @@ class PasswordStore : BaseGitActivity() {
         val selectedKeyId =
           data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
+        val gpgIdentifierFile = File(currentDir.absolutePath, ".gpg-id")
+        gpgIdentifierFile.writeText(selectedKeyId)
         runBlocking {
-          val gpgIdentifierFile = File(PasswordRepository.gpgidCurPath, ".gpg-id")
-          gpgIdentifierFile.writeText(selectedKeyId)
           commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))
         }
         refreshPasswordList()
@@ -370,8 +370,7 @@ class PasswordStore : BaseGitActivity() {
   private fun checkLocalRepository(localDir: File?) {
     if (localDir != null && settings.getBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, false)) {
       if (!PasswordRepository.gpgidChecked) {
-        val intent = Intent(this, PGPKeyListActivity::class.java)
-        intent.putExtra(PGPKeyListActivity.EXTRA_KEY_SELECTION, true)
+        val intent = PGPKeyListActivity.newSelectionActivity(this)
         gpgKeySelectAction.launch(intent)
         PasswordRepository.gpgidChecked = true
       } else {

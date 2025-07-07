@@ -28,7 +28,6 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import logcat.asLog
 import logcat.logcat
 
@@ -79,7 +78,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
 
   private fun importKey(bytes: ByteArray, replace: Boolean): PGPKey? {
     lastBytes = bytes
-    val (key, error) = runBlocking { keyManager.addKey(PGPKey(bytes), replace = replace) }
+    val (key, error) = keyManager.addKey(PGPKey(bytes), replace = replace)
     if (replace) {
       lastBytes = null
     }

@@ -18,24 +18,36 @@ public interface KeyManager<Key, KeyIdentifier> {
    * Inserts a [key] into the store. If the key already exists, this method will return
    * [app.passwordstore.crypto.errors.KeyAlreadyExistsException] unless [replace] is `true`.
    */
-  public suspend fun addKey(key: Key, replace: Boolean = false): Result<Key, Throwable>
+  public fun addKey(key: Key, replace: Boolean = false): Result<Key, Throwable>
+
+  /**
+   * Creates a new EC-based OpenPGP key and inserts it into the store. [userId] is used as primary
+   * user-id, the generated secret key is encrypted with [passphrase]
+   */
+  public fun generateKey(userId: String, passphrase: CharArray?): Result<Key, Throwable>
 
   /** Finds a key for [identifier] in the store and deletes it. */
-  public suspend fun removeKey(identifier: KeyIdentifier): Result<Unit, Throwable>
+  public fun removeKey(identifier: KeyIdentifier): Result<Unit, Throwable>
 
   /**
    * Get a [Key] for the given [id]. The actual semantics of what [id] is are left to individual
    * implementations to figure out for themselves. For example, in GPG this can be a full
    * hexadecimal key ID, an email, a short hex key ID, and probably a few more things.
    */
-  public suspend fun getKeyById(id: KeyIdentifier): Result<Key, Throwable>
+  public fun getKeyById(id: KeyIdentifier): Result<Key, Throwable>
 
   /** Returns all keys currently in the store as a [List]. */
-  public suspend fun getAllKeys(): Result<List<Key>, Throwable>
+  public fun getAllKeys(): Result<List<Key>, Throwable>
 
   /**
    * Get a stable identifier for the given [key]. The returned key ID should be suitable to be used
    * as an identifier for the cryptographic identity tied to this key.
    */
-  public suspend fun getKeyId(key: Key): KeyIdentifier?
+  public fun getKeyId(key: Key): KeyIdentifier?
+
+  public fun changeKeyPassphrase(
+    identifier: KeyIdentifier,
+    oldPassphrase: CharArray?,
+    newPassphrase: CharArray?,
+  ): Result<Key, Throwable>
 }

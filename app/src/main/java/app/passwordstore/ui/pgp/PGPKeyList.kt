@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,6 +55,8 @@ import kotlinx.collections.immutable.toPersistentList
 @Composable
 fun KeyList(
   identifiers: ImmutableList<PGPIdentifier>,
+  hasSecretKey: (identifier: PGPIdentifier) -> Boolean,
+  onChangePassphraseClick: (identifier: PGPIdentifier) -> Unit,
   onDeleteItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportPublicClick: (identifier: PGPIdentifier) -> Unit,
@@ -74,6 +80,8 @@ fun KeyList(
       items(identifiers) { identifier ->
         KeyItem(
           identifier = identifier,
+          hasSecretKey = hasSecretKey,
+          onChangePassphraseClick = onChangePassphraseClick,
           onDeleteItemClick = onDeleteItemClick,
           onExportItemClick = onExportItemClick,
           onExportPublicClick = onExportPublicClick,
@@ -87,6 +95,8 @@ fun KeyList(
 @Composable
 private fun KeyItem(
   identifier: PGPIdentifier,
+  hasSecretKey: (identifier: PGPIdentifier) -> Boolean,
+  onChangePassphraseClick: (identifier: PGPIdentifier) -> Unit,
   onDeleteItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportPublicClick: (identifier: PGPIdentifier) -> Unit,
@@ -131,13 +141,23 @@ private fun KeyItem(
         }
 
         DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
-          DropdownMenuItem(
-            text = { Text(stringResource(id = R.string.pref_pgp_key_manager_export)) },
-            onClick = {
-              isMenuExpanded = false
-              onExportItemClick(identifier)
-            },
-          )
+          if (hasSecretKey(identifier)) {
+            DropdownMenuItem(
+              text = { Text(stringResource(id = R.string.pref_pgp_key_manager_change_passphrase)) },
+              onClick = {
+                isMenuExpanded = false
+                onChangePassphraseClick(identifier)
+              },
+            )
+            DropdownMenuItem(
+              text = { Text(stringResource(id = R.string.pref_pgp_key_manager_export)) },
+              onClick = {
+                isMenuExpanded = false
+                onExportItemClick(identifier)
+              },
+            )
+            Spacer(modifier = Modifier)
+          }
           DropdownMenuItem(
             text = { Text(stringResource(id = R.string.pref_pgp_key_manager_export_public)) },
             onClick = {
@@ -145,6 +165,7 @@ private fun KeyItem(
               onExportPublicClick(identifier)
             },
           )
+          HorizontalDivider(modifier = Modifier.padding(top = SpacingLarge))
           DropdownMenuItem(
             text = {
               Text(stringResource(id = R.string.delete))
@@ -175,13 +196,26 @@ private inline fun DeleteConfirmationDialog(
     AlertDialog(
       onDismissRequest = onDismiss,
       title = {
-        Text(text = stringResource(R.string.pgp_key_manager_delete_confirmation_dialog_title))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Icon(
+            painter = painterResource(id = R.drawable.ic_warning_red_24dp),
+            contentDescription = null,
+            tint = Color.Unspecified,
+          )
+          Spacer(modifier = Modifier.width(SpacingLarge))
+          Text(text = stringResource(R.string.pgp_key_manager_delete_confirmation_dialog_title))
+        }
+      },
+      text = {
+        Text(text = stringResource(R.string.pgp_key_manager_delete_confirmation_dialog_message))
       },
       confirmButton = {
-        TextButton(onClick = onConfirm) { Text(text = stringResource(R.string.dialog_yes)) }
+        TextButton(onClick = onConfirm) { Text(text = stringResource(R.string.delete)) }
       },
       dismissButton = {
-        TextButton(onClick = onDismiss) { Text(text = stringResource(R.string.dialog_no)) }
+        TextButton(onClick = onDismiss) {
+          Text(text = stringResource(R.string.dialog_do_not_delete))
+        }
       },
     )
   }
@@ -199,6 +233,8 @@ private fun KeyListPreview() {
               PGPIdentifier.fromString("0xB950AE2813841585"),
             )
             .toPersistentList(),
+        hasSecretKey = { _ -> true },
+        onChangePassphraseClick = {},
         onDeleteItemClick = {},
         onExportItemClick = {},
         onExportPublicClick = {},
@@ -214,6 +250,8 @@ private fun EmptyKeyListPreview() {
     Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
       KeyList(
         identifiers = persistentListOf(),
+        hasSecretKey = { _ -> true },
+        onChangePassphraseClick = {},
         onDeleteItemClick = {},
         onExportItemClick = {},
         onExportPublicClick = {},

@@ -18,16 +18,16 @@ import app.passwordstore.crypto.errors.KeyNotFoundException
 import app.passwordstore.crypto.errors.NoKeysAvailableException
 import app.passwordstore.crypto.errors.UnusableKeyException
 import com.github.michaelbull.result.Result
-import com.github.michaelbull.result.coroutines.runSuspendCatching
+import com.github.michaelbull.result.runCatching
 import com.github.michaelbull.result.unwrap
 import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.withContext
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.PGPainless
 import org.pgpainless.key.util.KeyRingUtils
+import org.pgpainless.util.Passphrase
 
 public class PGPKeyManager
 @Inject
@@ -37,110 +37,118 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
   private val keyDir = File(filesDir, KEY_DIR_NAME)
 
   /** @see KeyManager.addKey */
-  override suspend fun addKey(key: PGPKey, replace: Boolean): Result<PGPKey, Throwable> =
-    withContext(dispatcher) {
-      runSuspendCatching {
-        if (!keyDirExists()) throw KeyDirectoryUnavailableException
-        val incomingKeyRing = tryParseKeyring(key) ?: throw InvalidKeyException
-        if (!isKeyUsable(key)) throw UnusableKeyException
-        val keyFile = File(keyDir, "${tryGetId(key)}.$KEY_EXTENSION")
-        if (keyFile.exists()) {
-          val existingKeyBytes = keyFile.readBytes()
-          val existingKeyRing =
-            tryParseKeyring(PGPKey(existingKeyBytes)) ?: throw InvalidKeyException
-          when {
-            existingKeyRing is PGPPublicKeyRing && incomingKeyRing is PGPSecretKeyRing -> {
-              keyFile.writeBytes(key.contents)
-              return@runSuspendCatching key
-            }
-            existingKeyRing is PGPPublicKeyRing && incomingKeyRing is PGPPublicKeyRing -> {
-              val updatedPublicKey = PGPainless.mergeCertificate(existingKeyRing, incomingKeyRing)
-              val keyBytes = PGPainless.asciiArmor(updatedPublicKey).encodeToByteArray()
-              keyFile.writeBytes(keyBytes)
-              return@runSuspendCatching key
-            }
-          }
-          // Check for replace flag first and if it is false, throw an error
-          if (!replace)
-            throw KeyAlreadyExistsException(
-              tryGetId(key)?.toString() ?: "Failed to retrieve key ID"
-            )
-          if (!keyFile.delete()) throw KeyDeletionFailedException
+  override fun addKey(key: PGPKey, replace: Boolean): Result<PGPKey, Throwable> = runCatching {
+    if (!keyDirExists()) throw KeyDirectoryUnavailableException
+    val incomingKeyRing = tryParseKeyring(key) ?: throw InvalidKeyException
+    if (!isKeyUsable(key)) throw UnusableKeyException
+    val keyFile = File(keyDir, "${tryGetId(key)}.$KEY_EXTENSION")
+    if (keyFile.exists()) {
+      val existingKeyBytes = keyFile.readBytes()
+      val existingKeyRing = tryParseKeyring(PGPKey(existingKeyBytes)) ?: throw InvalidKeyException
+      when {
+        existingKeyRing is PGPPublicKeyRing && incomingKeyRing is PGPSecretKeyRing -> {
+          keyFile.writeBytes(key.contents)
+          return@runCatching key
         }
-
-        keyFile.writeBytes(key.contents)
-
-        key
+        existingKeyRing is PGPPublicKeyRing && incomingKeyRing is PGPPublicKeyRing -> {
+          val updatedPublicKey = PGPainless.mergeCertificate(existingKeyRing, incomingKeyRing)
+          val keyBytes = PGPainless.asciiArmor(updatedPublicKey).encodeToByteArray()
+          keyFile.writeBytes(keyBytes)
+          return@runCatching key
+        }
       }
+      // Check for replace flag first and if it is false, throw an error
+      if (!replace)
+        throw KeyAlreadyExistsException(tryGetId(key)?.toString() ?: "Failed to retrieve key ID")
+      if (!keyFile.delete()) throw KeyDeletionFailedException
+    }
+
+    keyFile.writeBytes(key.contents)
+
+    key
+  }
+
+  /** @see KeyManager.generateKey */
+  override fun generateKey(userId: String, passphrase: CharArray?): Result<PGPKey, Throwable> =
+    runCatching {
+      val key =
+        PGPainless.generateKeyRing().modernKeyRing(userId, Passphrase(passphrase)).getEncoded()
+      addKey(PGPKey(key), false).unwrap()
     }
 
   /** @see KeyManager.removeKey */
-  override suspend fun removeKey(identifier: PGPIdentifier): Result<Unit, Throwable> =
-    withContext(dispatcher) {
-      runSuspendCatching {
-        if (!keyDirExists()) throw KeyDirectoryUnavailableException
-        val key = getKeyById(identifier).unwrap()
-        val keyFile = File(keyDir, "${tryGetId(key)}.$KEY_EXTENSION")
-        if (keyFile.exists()) {
-          if (!keyFile.delete()) throw KeyDeletionFailedException
-        }
-      }
+  override fun removeKey(identifier: PGPIdentifier): Result<Unit, Throwable> = runCatching {
+    if (!keyDirExists()) throw KeyDirectoryUnavailableException
+    val key = getKeyById(identifier).unwrap()
+    val keyFile = File(keyDir, "${tryGetId(key)}.$KEY_EXTENSION")
+    if (keyFile.exists()) {
+      if (!keyFile.delete()) throw KeyDeletionFailedException
     }
+  }
+
+  override fun changeKeyPassphrase(
+    identifier: PGPIdentifier,
+    oldPassphrase: CharArray?,
+    newPassphrase: CharArray?,
+  ): Result<PGPKey, Throwable> = runCatching {
+    val key = getKeyById(identifier).unwrap()
+    val keyRing = tryParseKeyring(key) ?: throw InvalidKeyException
+    if (keyRing !is PGPSecretKeyRing) throw InvalidKeyException
+    val modifiedKeyRing =
+      PGPainless.modifyKeyRing(keyRing)
+        .changePassphraseFromOldPassphrase(Passphrase(oldPassphrase))
+        .withSecureDefaultSettings()
+        .toNewPassphrase(Passphrase(newPassphrase))
+        .done()
+        .getEncoded()
+    addKey(PGPKey(modifiedKeyRing), true).unwrap()
+  }
 
   /** @see KeyManager.getKeyById */
-  override suspend fun getKeyById(id: PGPIdentifier): Result<PGPKey, Throwable> =
-    withContext(dispatcher) {
-      runSuspendCatching {
-        if (!keyDirExists()) throw KeyDirectoryUnavailableException
-        val keyFiles = keyDir.listFiles()
-        if (keyFiles.isNullOrEmpty()) throw NoKeysAvailableException
-        val keys = keyFiles.map { file -> PGPKey(file.readBytes()) }
+  override fun getKeyById(id: PGPIdentifier): Result<PGPKey, Throwable> = runCatching {
+    if (!keyDirExists()) throw KeyDirectoryUnavailableException
+    val keyFiles = keyDir.listFiles()
+    if (keyFiles.isNullOrEmpty()) throw NoKeysAvailableException
+    val keys = keyFiles.map { file -> PGPKey(file.readBytes()) }
 
-        when (id) {
-          is PGPIdentifier.KeyId -> {
-            for (key in keys) {
-              val keyRing = tryParseKeyring(key) ?: continue
-              if (
-                KeyRingUtils.keyRingContainsKeyWithId(
-                  KeyRingUtils.publicKeys(keyRing),
-                  id.id.toLong(),
-                )
-              ) {
-                return@runSuspendCatching key
-              }
-            }
-          }
-          is PGPIdentifier.UserId -> {
-            for (key in keys) {
-              val keyRing = tryParseKeyring(key) ?: continue
-              if (
-                PGPainless.inspectKeyRing(keyRing).userIds.any {
-                  id.email == it || id.email == PGPIdentifier.splitUserId(it)
-                }
-              ) {
-                return@runSuspendCatching key
-              }
-            }
+    when (id) {
+      is PGPIdentifier.KeyId -> {
+        for (key in keys) {
+          val keyRing = tryParseKeyring(key) ?: continue
+          if (
+            KeyRingUtils.keyRingContainsKeyWithId(KeyRingUtils.publicKeys(keyRing), id.id.toLong())
+          ) {
+            return@runCatching key
           }
         }
-
-        throw KeyNotFoundException("$id")
+      }
+      is PGPIdentifier.UserId -> {
+        for (key in keys) {
+          val keyRing = tryParseKeyring(key) ?: continue
+          if (
+            PGPainless.inspectKeyRing(keyRing).userIds.any {
+              id.email == it || id.email == PGPIdentifier.splitUserId(it)
+            }
+          ) {
+            return@runCatching key
+          }
+        }
       }
     }
+
+    throw KeyNotFoundException("$id")
+  }
 
   /** @see KeyManager.getAllKeys */
-  override suspend fun getAllKeys(): Result<List<PGPKey>, Throwable> =
-    withContext(dispatcher) {
-      runSuspendCatching {
-        if (!keyDirExists()) throw KeyDirectoryUnavailableException
-        val keyFiles = keyDir.listFiles()
-        if (keyFiles.isNullOrEmpty()) return@runSuspendCatching emptyList()
-        keyFiles.map { keyFile -> PGPKey(keyFile.readBytes()) }.toList()
-      }
-    }
+  override fun getAllKeys(): Result<List<PGPKey>, Throwable> = runCatching {
+    if (!keyDirExists()) throw KeyDirectoryUnavailableException
+    val keyFiles = keyDir.listFiles()
+    if (keyFiles.isNullOrEmpty()) return@runCatching emptyList()
+    keyFiles.map { keyFile -> PGPKey(keyFile.readBytes()) }.toList()
+  }
 
   /** @see KeyManager.getKeyId */
-  override suspend fun getKeyId(key: PGPKey): PGPIdentifier? = tryGetId(key)
+  override fun getKeyId(key: PGPKey): PGPIdentifier? = tryGetId(key)
 
   /** Checks if [keyDir] exists and attempts to create it if not. */
   private fun keyDirExists(): Boolean {

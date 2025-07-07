@@ -28,7 +28,7 @@ import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.prefs.PGPPassphrases
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.ui.dialogs.PasswordDialog
-import app.passwordstore.ui.pgp.PGPKeyImportActivity
+import app.passwordstore.ui.pgp.PGPKeyListActivity
 import app.passwordstore.util.auth.BiometricAuthenticator
 import app.passwordstore.util.auth.BiometricAuthenticator.Result as BiometricResult
 import app.passwordstore.util.coroutines.DispatcherProvider
@@ -51,7 +51,6 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import logcat.asLog
 import logcat.logcat
@@ -143,9 +142,11 @@ open class BasePGPActivity : AppCompatActivity() {
           MaterialAlertDialogBuilder(this@BasePGPActivity)
             .setTitle(resources.getString(R.string.no_keys_imported_dialog_title))
             .setMessage(resources.getString(R.string.no_keys_imported_dialog_message))
-            .setPositiveButton(resources.getString(R.string.button_label_import)) { _, _ ->
+            .setPositiveButton(
+              resources.getString(R.string.no_keys_imported_dialog_open_key_manager)
+            ) { _, _ ->
               onKeyImport = onKeysExist
-              keyImportAction.launch(Intent(this@BasePGPActivity, PGPKeyImportActivity::class.java))
+              keyImportAction.launch(Intent(this@BasePGPActivity, PGPKeyListActivity::class.java))
             }
             .show()
         }
@@ -231,10 +232,8 @@ open class BasePGPActivity : AppCompatActivity() {
     val gpgIdentifierFile = File(repoRoot, subDir).findTillRoot(".gpg-id", repoRoot)
     if (gpgIdentifierFile == null) { // no file found
       snackbar(message = resources.getString(R.string.missing_gpg_id))
-      PasswordRepository.gpgidCurPath = repoRoot
       return null
     }
-    PasswordRepository.gpgidCurPath = gpgIdentifierFile.getParentFile()
     val gpgIdentifiers =
       gpgIdentifierFile
         .readLines()
@@ -248,7 +247,7 @@ open class BasePGPActivity : AppCompatActivity() {
             null
           } else {
             val id = PGPIdentifier.fromString(line)
-            if (id == null || !runBlocking { repository.hasKey(id) }) {
+            if (id == null || !repository.hasKey(id)) {
               invalidIdCount++
               persistentPassphrases.edit { remove(id.toString()) }
               null

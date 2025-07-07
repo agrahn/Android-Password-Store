@@ -69,7 +69,6 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
     proxyUtils.setDefaultProxy()
     DynamicColors.applyToActivitiesIfAvailable(this)
     setupScreenOffHandler()
-    PasswordRepository.gpgidCurPath = PasswordRepository.getRepositoryDirectory()
     PasswordRepository.gpgidChecked = true
     /**
      * This way, when the app is restarted, a new AES key is generated to encrypt the passphrase

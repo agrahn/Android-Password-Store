@@ -42,7 +42,7 @@ class KeySelectionFragment : Fragment(R.layout.fragment_key_selection) {
           data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
         lifecycleScope.launch {
-          val gpgIdentifierFile = File(PasswordRepository.gpgidCurPath, ".gpg-id")
+          val gpgIdentifierFile = File(PasswordRepository.getRepositoryDirectory(), ".gpg-id")
           gpgIdentifierFile.writeText(selectedKeyId)
           settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
           requireActivity()

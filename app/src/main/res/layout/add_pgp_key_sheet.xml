@@ -9,12 +9,12 @@
   android:layout_height="match_parent">
 
   <com.google.android.material.button.MaterialButton
-    android:id="@+id/create_folder"
+    android:id="@+id/import_key"
     style="@style/Widget.MaterialComponents.Button.TextButton"
     android:layout_width="match_parent"
     android:layout_height="@dimen/bottom_sheet_item_height"
     android:layout_margin="@dimen/normal_margin"
-    android:text="@string/bottom_sheet_create_new_folder"
+    android:text="@string/bottom_sheet_import_pgp_key"
     android:textAlignment="viewStart"
     android:textColor="?attr/colorOnSurface"
     android:textAllCaps="false"
@@ -26,19 +26,19 @@
     app:rippleColor="?attr/colorSecondary" />
 
   <com.google.android.material.button.MaterialButton
-    android:id="@+id/create_password"
+    android:id="@+id/create_key"
     style="@style/Widget.MaterialComponents.Button.TextButton"
     android:layout_width="match_parent"
     android:layout_height="@dimen/bottom_sheet_item_height"
     android:layout_margin="@dimen/normal_margin"
-    android:text="@string/bottom_sheet_create_new_password"
+    android:text="@string/bottom_sheet_create_pgp_key"
     android:textAlignment="viewStart"
     android:textColor="?attr/colorOnSurface"
     android:textAllCaps="false"
-    app:icon="@drawable/ic_action_new_password"
+    app:icon="@drawable/ic_action_new_pgp_key"
     app:iconPadding="@dimen/normal_margin"
     app:iconTint="?attr/colorSecondary"
-    app:layout_constraintTop_toBottomOf="@id/create_folder"
+    app:layout_constraintTop_toBottomOf="@id/import_key"
     app:rippleColor="?attr/colorSecondary" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
