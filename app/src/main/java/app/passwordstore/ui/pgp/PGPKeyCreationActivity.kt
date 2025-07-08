@@ -140,9 +140,7 @@ class PGPKeyCreationActivity : AppCompatActivity() {
       MaterialAlertDialogBuilder(this)
         .setTitle(getString(R.string.pgp_key_creation_error))
         .setIcon(R.drawable.ic_crossmark_red_24dp)
-        .setMessage(
-          getString(R.string.pgp_key_creation_error_message, error?.message ?: "unknown error")
-        )
+        .setMessage(error?.toString() ?: "unknown error")
         .setPositiveButton(android.R.string.ok) { _, _ ->
           setResult(RESULT_CANCELED)
           finish()

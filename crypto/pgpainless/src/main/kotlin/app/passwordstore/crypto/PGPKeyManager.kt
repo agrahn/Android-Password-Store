@@ -26,6 +26,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.PGPainless
+import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.util.Passphrase
 
@@ -71,8 +72,10 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
   /** @see KeyManager.generateKey */
   override fun generateKey(userId: String, passphrase: CharArray?): Result<PGPKey, Throwable> =
     runCatching {
+      val keyRing = PGPainless.generateKeyRing().modernKeyRing(userId, Passphrase(passphrase))
+      val protector = SecretKeyRingProtector.unlockEachKeyWith(Passphrase(passphrase), keyRing)
       val key =
-        PGPainless.generateKeyRing().modernKeyRing(userId, Passphrase(passphrase)).getEncoded()
+        PGPainless.modifyKeyRing(keyRing).setExpirationDate(null, protector).done().getEncoded()
       addKey(PGPKey(key), false).unwrap()
     }
 
@@ -92,8 +95,7 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
     newPassphrase: CharArray?,
   ): Result<PGPKey, Throwable> = runCatching {
     val key = getKeyById(identifier).unwrap()
-    val keyRing = tryParseKeyring(key) ?: throw InvalidKeyException
-    if (keyRing !is PGPSecretKeyRing) throw InvalidKeyException
+    val keyRing = PGPainless.readKeyRing().secretKeyRing(key.contents) ?: throw InvalidKeyException
     val modifiedKeyRing =
       PGPainless.modifyKeyRing(keyRing)
         .changePassphraseFromOldPassphrase(Passphrase(oldPassphrase))

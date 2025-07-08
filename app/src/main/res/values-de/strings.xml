@@ -385,11 +385,9 @@
   <string name="pgp_key_creation_succeeded">Erfolgreiche PGP-Schlüsselerstellung</string>
   <string name="pgp_key_creation_succeeded_message">Die ID des neuen Schlüssels lautet:\n%1$s</string>
   <string name="pgp_key_creation_error">Fehler bei der PGP-Schlüsselerstellung</string>
-  <string name="pgp_key_creation_error_message">Beim Erstellen eines neuen PGP-Schlüssels ist ein Fehler aufgetreten:\n%1$s</string>
   <string name="pgp_key_change_passphrase_succeeded">Kennwortsatz geändert</string>
   <string name="pgp_key_change_passphrase_succeeded_message">Der Kennwortsatz des Schlüssels mit der ID %1$s wurde erfolgreich geändert.</string>
   <string name="pgp_key_change_passphrase_error">Fehler beim Setzen des Kennwortsatzes</string>
-  <string name="pgp_key_change_passphrase_error_message">Beim Setzen des neuen Kennwortsatzes ist ein Fehler aufgetreten:\n%1$s</string>
   <string name="pgp_key_empty_passphrase_warning">Leerer Kennwortsatz</string>
   <string name="pgp_key_empty_passphrase_warning_message">Mit leerem Kennwortsatz ist der PGP-Schlüssel völlig ungeschützt. Davon wird grundsätzlich abgeraten.</string>
   <string name="pgp_key_short_passphrase_warning">Unsicherer Kennwortsatz</string>

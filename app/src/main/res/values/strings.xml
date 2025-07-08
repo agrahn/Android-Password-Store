@@ -386,11 +386,9 @@
   <string name="pgp_key_creation_succeeded">Successfully created PGP key</string>
   <string name="pgp_key_creation_succeeded_message">The ID of the new key is:\n%1$s</string>
   <string name="pgp_key_creation_error">PGP key creation failure</string>
-  <string name="pgp_key_creation_error_message">An error occurred while generating a new PGP key:\n%1$s</string>
   <string name="pgp_key_change_passphrase_succeeded">Passphrase changed</string>
   <string name="pgp_key_change_passphrase_succeeded_message">The passphrase of the key with the ID %1$s was successfully changed.</string>
   <string name="pgp_key_change_passphrase_error">Error while setting the passphrase</string>
-  <string name="pgp_key_change_passphrase_error_message">Error while setting a new passphrase:\n%1$s</string>
   <string name="pgp_key_empty_passphrase_warning">Empty passphrase</string>
   <string name="pgp_key_empty_passphrase_warning_message">With an empty passphrase, the PGP key is completely unprotected. This is generally discouraged.</string>
   <string name="pgp_key_short_passphrase_warning">Insecure passhrase</string>
