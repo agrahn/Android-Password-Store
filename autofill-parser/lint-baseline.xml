@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 8.6.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.6.0)" variant="all" version="8.6.0">
+<issues format="6" by="lint 8.11.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.11.0)" variant="all" version="8.11.0">
 
     <issue
         id="RawDispatchersUse"
@@ -10,6 +10,116 @@
             file="src/main/java/mozilla/components/lib/publicsuffixlist/PublicSuffixList.kt"
             line="31"
             column="37"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`addAll` is defined both as a member in class `kotlin.collections.MutableList` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="            currentPassword.addAll("
+        errorLine2="            ^">
+        <location
+            file="src/main/java/com/github/androidpasswordstore/autofillparser/AutofillScenario.kt"
+            line="67"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`addAll` is defined both as a member in class `kotlin.collections.MutableList` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="            newPassword.addAll("
+        errorLine2="            ^">
+        <location
+            file="src/main/java/com/github/androidpasswordstore/autofillparser/AutofillScenario.kt"
+            line="74"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`addAll` is defined both as a member in class `kotlin.collections.MutableList` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="            genericPassword.addAll("
+        errorLine2="            ^">
+        <location
+            file="src/main/java/com/github/androidpasswordstore/autofillparser/AutofillScenario.kt"
+            line="81"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`addAll` is defined both as a member in class `kotlin.collections.MutableList` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="      builder.currentPassword.addAll(currentPassword.map(transform))"
+        errorLine2="      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/github/androidpasswordstore/autofillparser/AutofillScenario.kt"
+            line="282"
+            column="7"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`addAll` is defined both as a member in class `kotlin.collections.MutableList` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="      builder.newPassword.addAll(newPassword.map(transform))"
+        errorLine2="      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/github/androidpasswordstore/autofillparser/AutofillScenario.kt"
+            line="283"
+            column="7"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`addAll` is defined both as a member in class `kotlin.collections.MutableList` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="      builder.genericPassword.addAll(genericPassword.map(transform))"
+        errorLine2="      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/github/androidpasswordstore/autofillparser/AutofillScenario.kt"
+            line="286"
+            column="7"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`addAll` is defined both as a member in class `kotlin.collections.MutableList` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="        FillableFieldType.CurrentPassword -> scenarioBuilder.currentPassword.addAll(matchResult)"
+        errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/github/androidpasswordstore/autofillparser/AutofillStrategyDsl.kt"
+            line="373"
+            column="46"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`addAll` is defined both as a member in class `kotlin.collections.MutableList` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="        FillableFieldType.NewPassword -> scenarioBuilder.newPassword.addAll(matchResult)"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/github/androidpasswordstore/autofillparser/AutofillStrategyDsl.kt"
+            line="374"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`addAll` is defined both as a member in class `kotlin.collections.MutableList` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="        FillableFieldType.GenericPassword -> scenarioBuilder.genericPassword.addAll(matchResult)"
+        errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/github/androidpasswordstore/autofillparser/AutofillStrategyDsl.kt"
+            line="375"
+            column="46"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`addAll` is defined both as a member in class `kotlin.collections.MutableList` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="      alreadyMatched.addAll(matchResult)"
+        errorLine2="      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/github/androidpasswordstore/autofillparser/AutofillStrategyDsl.kt"
+            line="377"
+            column="7"/>
     </issue>
 
 </issues>

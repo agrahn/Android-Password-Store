@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 8.10.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.10.0)" variant="all" version="8.10.0">
+<issues format="6" by="lint 8.11.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.11.0)" variant="all" version="8.11.0">
 
     <issue
         id="InvalidPackage"
@@ -49,6 +49,127 @@
             file="src/main/java/app/passwordstore/ui/adapters/FieldItemAdapter.kt"
             line="73"
             column="31"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`remove` is defined both as a member in class `kotlin.collections.MutableMap` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="              cachedPassphrases.remove(result.first)"
+        errorLine2="              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/app/passwordstore/ui/autofill/AutofillDecryptActivity.kt"
+            line="133"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`clipboard` is defined both as a member in class `&lt;unknown>` and an extension in package `app.passwordstore.util.extensions`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="    if (isSensitive &amp;&amp; clearAfter != 0 &amp;&amp; clipboard != null) {"
+        errorLine2="                                          ~~~~~~~~~">
+        <location
+            file="src/main/java/app/passwordstore/ui/crypto/BasePGPActivity.kt"
+            line="174"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`clipboard` is defined both as a member in class `&lt;unknown>` and an extension in package `app.passwordstore.util.extensions`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="    clipboard.setPrimaryClip(clip)"
+        errorLine2="    ~~~~~~~~~">
+        <location
+            file="src/main/java/app/passwordstore/ui/crypto/BasePGPActivity.kt"
+            line="215"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`containsKey` is defined both as a member in class `kotlin.collections.MutableMap` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="        identifiers.map { it.toString() }.filter { cachedPassphrases.containsKey(it) }.none() &amp;&amp;"
+        errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/app/passwordstore/ui/crypto/BasePGPActivity.kt"
+            line="445"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`containsKey` is defined both as a member in class `kotlin.collections.MutableMap` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="        identifiers.map { it.toString() }.filter { cachedPassphrases.containsKey(it) }.none() &amp;&amp;"
+        errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/app/passwordstore/ui/crypto/BasePGPActivity.kt"
+            line="475"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`contains` is defined both as a member in class `kotlin.collections.List` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="      cachedPassphrases.filterKeys { identifiers.map { it.toString() }.contains(it) }"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/app/passwordstore/ui/crypto/BasePGPActivity.kt"
+            line="563"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`remove` is defined both as a member in class `kotlin.collections.MutableMap` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="              cachedPassphrases.remove(result.first)"
+        errorLine2="              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/app/passwordstore/ui/crypto/DecryptActivity.kt"
+            line="88"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`contains` is defined both as a member in class `kotlin.collections.MutableSet` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="    if (!remotes.contains(name)) {"
+        errorLine2="         ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/app/passwordstore/data/repo/PasswordRepository.kt"
+            line="66"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`addAll` is defined both as a member in class `java.util.ArrayList` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="    items.addAll(files)"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/app/passwordstore/data/repo/PasswordRepository.kt"
+            line="170"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`compareTo` is defined both as a member in class `kotlin.String` and an extension in package `kotlin`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="        timeP1 != null &amp;&amp; timeP2 != null -> timeP2.compareTo(timeP1)"
+        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/app/passwordstore/util/settings/PasswordSortOrder.kt"
+            line="33"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="MemberExtensionConflict"
+        message="`addAll` is defined both as a member in class `java.util.ArrayList` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
+        errorLine1="          if (item.file.isDirectory) filesToDelete.addAll(item.file.listFilesRecursively())"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/app/passwordstore/ui/passwords/PasswordStore.kt"
+            line="465"
+            column="38"/>
     </issue>
 
     <issue
@@ -184,6 +305,17 @@
             file="src/main/res/layout/oreo_autofill_filter_row.xml"
             line="43"
             column="4"/>
+    </issue>
+
+    <issue
+        id="SetTextI18n"
+        message="Number formatting does not take into account locale settings. Consider using `String.format` instead."
+        errorLine1="    binding.lengthNumber.setText(prefs.getInt(PreferenceKeys.LENGTH, 20).toString())"
+        errorLine2="                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/app/passwordstore/ui/dialogs/PasswordGeneratorDialogFragment.kt"
+            line="54"
+            column="34"/>
     </issue>
 
 </issues>
