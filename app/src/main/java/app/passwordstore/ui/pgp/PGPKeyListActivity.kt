@@ -240,7 +240,16 @@ class PGPKeyListActivity : AppCompatActivity() {
               keyContents,
               withArmor = true,
             )
-          if (result.isOk) result.value.toByteArray() else null
+          if (result.isOk) {
+            val encrypted = result.value.toByteArray()
+            val firstNewline = encrypted.indexOf('\n'.code.toByte())
+            val firstLine = encrypted.copyOfRange(0, firstNewline + 1)
+            val remainingLines = encrypted.copyOfRange(firstNewline + 1, encrypted.size)
+            // OpenKeychain backup format
+            firstLine +
+              "Passphrase-Format: numeric9x4\n".toByteArray(Charsets.UTF_8) +
+              remainingLines
+          } else null
         } else {
           KeyUtils.extractPublicKeyData(key)
         }
