@@ -106,6 +106,7 @@ private fun KeyItem(
   var isDeleting by remember { mutableStateOf(false) }
   DeleteConfirmationDialog(
     isDeleting = isDeleting,
+    isSecretKey = hasSecretKey(identifier),
     onDismiss = { isDeleting = false },
     onConfirm = {
       onDeleteItemClick(identifier)
@@ -189,6 +190,7 @@ private fun KeyItem(
 @Composable
 private inline fun DeleteConfirmationDialog(
   isDeleting: Boolean,
+  isSecretKey: Boolean,
   noinline onDismiss: () -> Unit,
   noinline onConfirm: () -> Unit,
 ) {
@@ -197,17 +199,26 @@ private inline fun DeleteConfirmationDialog(
       onDismissRequest = onDismiss,
       title = {
         Row(verticalAlignment = Alignment.CenterVertically) {
-          Icon(
-            painter = painterResource(id = R.drawable.ic_warning_red_24dp),
-            contentDescription = null,
-            tint = Color.Unspecified,
-          )
-          Spacer(modifier = Modifier.width(SpacingLarge))
-          Text(text = stringResource(R.string.pgp_key_manager_delete_confirmation_dialog_title))
+          if (isSecretKey) {
+            Icon(
+              painter = painterResource(id = R.drawable.ic_warning_red_24dp),
+              contentDescription = null,
+              tint = Color.Unspecified,
+            )
+            Spacer(modifier = Modifier.width(SpacingLarge))
+            Text(
+              text =
+                stringResource(R.string.pgp_key_manager_delete_secret_key_confirmation_dialog_title)
+            )
+          } else
+            Text(
+              text = stringResource(R.string.pgp_key_manager_delete_key_confirmation_dialog_title)
+            )
         }
       },
       text = {
-        Text(text = stringResource(R.string.pgp_key_manager_delete_confirmation_dialog_message))
+        if (isSecretKey)
+          Text(text = stringResource(R.string.pgp_key_manager_delete_confirmation_dialog_message))
       },
       confirmButton = {
         TextButton(onClick = onConfirm) { Text(text = stringResource(R.string.delete)) }

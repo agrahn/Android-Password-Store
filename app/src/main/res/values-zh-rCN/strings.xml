@@ -327,7 +327,7 @@ personal.com</string>
   <string name="git_run_gc_job">运行垃圾收集作业</string>
   <string name="activity_label_pgp_key_manager">PGP 密钥管理器</string>
   <string name="activity_label_pgp_key_select">选择 PGP 密钥</string>
-  <string name="pgp_key_manager_delete_confirmation_dialog_title">删除密钥？</string>
+  <string name="pgp_key_manager_delete_key_confirmation_dialog_title">删除密钥？</string>
   <string name="git_utils_reset_remote_branch_title">远程分支名称</string>
   <string name="pgp_key_manager_no_keys_guidance">使用下面的添加按钮导入密钥</string>
   <string name="no_keys_imported_dialog_title">未导入密钥</string>

@@ -377,7 +377,7 @@
   <string name="git_run_gc_job">Çöp toplama işini çalıştır</string>
   <string name="activity_label_pgp_key_manager">PGP Anahtar Yöneticisi</string>
   <string name="activity_label_pgp_key_select">PGP Anahtarı Seç</string>
-  <string name="pgp_key_manager_delete_confirmation_dialog_title">Anahtar silinsin mi?</string>
+  <string name="pgp_key_manager_delete_key_confirmation_dialog_title">Anahtar silinsin mi?</string>
   <string name="git_utils_reset_remote_branch_title">Uzak dal adı</string>
   <string name="pgp_key_manager_no_keys_guidance">Aşağıdaki ekle düğmesini kullanarak bir anahtar içe aktarın</string>
   <string name="no_keys_imported_dialog_title">İçe aktarılmış anahtar yok</string>

@@ -6,8 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Generating new keys in the PGP key manager
-- Menu options for PGP key export/backup and for changing PGP key passphrase
+- In-app creation of PGP keys in the key manager
+- Menu options for PGP key export/backup and for changing the PGP key passphrase
 
 ### Fixed
 

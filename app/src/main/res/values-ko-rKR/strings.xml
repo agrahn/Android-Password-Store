@@ -323,7 +323,7 @@ username@example.com:…</string>
   <string name="git_run_gc_job">메모리 정리 작업 수행</string>
   <string name="activity_label_pgp_key_manager">PGP 키 관리자</string>
   <string name="activity_label_pgp_key_select">PGP 키 선택</string>
-  <string name="pgp_key_manager_delete_confirmation_dialog_title">키를 삭제하시겠습니까?</string>
+  <string name="pgp_key_manager_delete_key_confirmation_dialog_title">키를 삭제하시겠습니까?</string>
   <string name="git_utils_reset_remote_branch_title">원격 브랜치명</string>
   <string name="pgp_key_manager_no_keys_guidance">아래의 추가 버튼을 사용하여 키를 가져옵니다</string>
   <string name="no_keys_imported_dialog_title">가져온 키 없음</string>
