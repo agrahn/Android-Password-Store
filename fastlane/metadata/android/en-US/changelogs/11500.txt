@@ -1,0 +1,8 @@
+Added:
+
+- In-app creation of PGP keys in the key manager
+- Menu options for PGP key export/backup and for changing the PGP key passphrase
+
+Fixed:
+
+- Navigation icon colour adapting to current app theme (light/dark)
