@@ -1,4 +1,4 @@
-133785
+133806
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -103,6 +103,7 @@
 *.northflank.app
 *.np
 *.nxa.eu
+*.oaiusercontent.com
 *.oci.customer-oci.com
 *.ocp.customer-oci.com
 *.ocs.customer-oci.com
