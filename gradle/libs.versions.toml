@@ -7,7 +7,7 @@ flowbinding = "1.2.0"
 hilt = "2.56.2"
 kotlin = "2.2.0"
 kotlinResult = "2.0.1"
-lifecycle = "2.9.1"
+lifecycle = "2.9.2"
 moshi = "1.15.2"
 
 [libraries]
@@ -48,7 +48,7 @@ build-r8 = "com.android.tools:r8:8.9.35"
 build-semver = "com.github.zafarkhaja:java-semver:0.10.2"
 build-spotless = "com.diffplug.spotless:spotless-plugin-gradle:7.1.0"
 build-vcu = "nl.littlerobots.version-catalog-update:nl.littlerobots.version-catalog-update.gradle.plugin:1.0.0"
-compose-bom = "androidx.compose:compose-bom:2025.06.01"
+compose-bom = "androidx.compose:compose-bom:2025.07.00"
 compose-foundation-core = { module = "androidx.compose.foundation:foundation" }
 compose-foundation-layout = { module = "androidx.compose.foundation:foundation-layout" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
