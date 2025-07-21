@@ -59,9 +59,11 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
       BuildConfig.ENABLE_DEBUG_FEATURES ||
         prefs.getBoolean(PreferenceKeys.ENABLE_DEBUG_LOGGING, false)
     ) {
-      LogcatLogger.install(AndroidLogcatLogger(DEBUG))
+      LogcatLogger.install()
+      LogcatLogger.loggers += AndroidLogcatLogger(DEBUG)
       setVmPolicy()
     }
+    logcat { "Debug logging enabled." }
     prefs.registerOnSharedPreferenceChangeListener(this)
     setNightMode()
     setUpBouncyCastleForSshj()
