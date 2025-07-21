@@ -13,6 +13,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.MenuItem.OnActionExpandListener
 import android.view.WindowManager
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -220,6 +221,18 @@ class PasswordStore : BaseGitActivity() {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_pwdstore)
 
+    onBackPressedDispatcher.addCallback(
+      this,
+      object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+          if (getPasswordFragment()?.onBackPressedInActivity() != true) {
+            // Default back behavior
+            finish()
+          }
+        }
+      },
+    )
+
     lifecycleScope.launch {
       model.currentDir.flowWithLifecycle(lifecycle).collect { dir ->
         val basePath = PasswordRepository.getRepositoryDirectory().absoluteFile
@@ -335,17 +348,11 @@ class PasswordStore : BaseGitActivity() {
       }
       R.id.refresh -> refreshPasswordList()
       android.R.id.home -> {
-        @Suppress("DEPRECATION") onBackPressed()
+        onBackPressedDispatcher.onBackPressed()
       }
       else -> return super.onOptionsItemSelected(item)
     }
     return true
-  }
-
-  @Deprecated("Deprecated in Java")
-  @Suppress("DEPRECATION")
-  override fun onBackPressed() {
-    if (getPasswordFragment()?.onBackPressedInActivity() != true) super.onBackPressed()
   }
 
   private fun getPasswordFragment(): PasswordFragment? {
