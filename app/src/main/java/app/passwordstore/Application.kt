@@ -12,6 +12,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
@@ -52,16 +53,21 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
   @Inject lateinit var proxyUtils: ProxyUtils
   @Inject lateinit var features: Features
 
+  private val isDebuggableApp: Boolean
+    get() = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+
   override fun onCreate() {
     super.onCreate()
     instance = this
     if (
-      BuildConfig.ENABLE_DEBUG_FEATURES ||
-        prefs.getBoolean(PreferenceKeys.ENABLE_DEBUG_LOGGING, false)
+      !LogcatLogger.isInstalled &&
+        (this.isDebuggableApp || prefs.getBoolean(PreferenceKeys.ENABLE_DEBUG_LOGGING, false))
     ) {
-      LogcatLogger.install(AndroidLogcatLogger(DEBUG))
+      LogcatLogger.install()
+      LogcatLogger.loggers += AndroidLogcatLogger(DEBUG)
       setVmPolicy()
     }
+    logcat { "Debug logging enabled." }
     prefs.registerOnSharedPreferenceChangeListener(this)
     setNightMode()
     setUpBouncyCastleForSshj()
