@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- support for chacha20-poly1305@openssh.com SSH cipher
+
 ## [1.15.0] - 2025-07-11
 
 ### Added
