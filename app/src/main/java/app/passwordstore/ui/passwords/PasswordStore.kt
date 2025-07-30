@@ -307,7 +307,10 @@ class PasswordStore : BaseGitActivity() {
         }
       }
     )
-    if (settings.getBoolean(PreferenceKeys.SEARCH_ON_START, false)) {
+    if (
+      settings.getBoolean(PreferenceKeys.SEARCH_ON_START, false) ||
+        intent.action == Intent.ACTION_SEARCH
+    ) {
       searchItem.expandActionView()
     }
     return super.onPrepareOptionsMenu(menu)

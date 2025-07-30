@@ -6,7 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- support for chacha20-poly1305@openssh.com SSH cipher
+- Support for chacha20-poly1305@openssh.com SSH cipher
+- Quick Settings tile for starting APS in search mode
 
 ## [1.15.0] - 2025-07-11
 

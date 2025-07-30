@@ -7,6 +7,7 @@
   xmlns:aapt="http://schemas.android.com/aapt"
   android:width="108dp"
   android:height="108dp"
+  android:tint="?attr/colorControlNormal"
   android:viewportWidth="432"
   android:viewportHeight="432">
   <path android:pathData="M128.18,195.79C126.46,181.89 137.12,169.6 150.91,169.6H281.09C294.91,169.6 305.59,181.95 303.8,195.88L292.58,283.72C291.09,295.32 281.37,304 269.86,304H161.8C150.26,304 140.51,295.27 139.07,283.63L128.18,195.79Z">
