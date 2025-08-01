@@ -9,12 +9,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
-import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MenuItem.OnActionExpandListener
-import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
@@ -23,10 +20,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SearchView.OnQueryTextListener
 import androidx.core.content.edit
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.lifecycle.flowWithLifecycle
@@ -34,6 +27,7 @@ import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.data.password.PasswordItem
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.databinding.ActivityPwdstoreBinding
 import app.passwordstore.ui.crypto.BasePGPActivity
 import app.passwordstore.ui.crypto.BasePGPActivity.Companion.getLongName
 import app.passwordstore.ui.crypto.DecryptActivity
@@ -48,11 +42,13 @@ import app.passwordstore.util.autofill.AutofillMatcher
 import app.passwordstore.util.extensions.base64
 import app.passwordstore.util.extensions.commitChange
 import app.passwordstore.util.extensions.contains
+import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.extensions.launchActivity
 import app.passwordstore.util.extensions.listFilesRecursively
 import app.passwordstore.util.extensions.sharedPrefs
+import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.settings.AuthMode
 import app.passwordstore.util.settings.PreferenceKeys
 import app.passwordstore.util.shortcuts.ShortcutHandler
@@ -82,6 +78,7 @@ class PasswordStore : BaseGitActivity() {
   private lateinit var searchItem: MenuItem
   private val settings by lazy { sharedPrefs }
 
+  private val binding by viewBinding(ActivityPwdstoreBinding::inflate)
   private val model: SearchableRepositoryViewModel by viewModels()
 
   private val gpgKeySelectAction =
@@ -226,22 +223,9 @@ class PasswordStore : BaseGitActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    WindowCompat.enableEdgeToEdge(window)
 
-    val view = LayoutInflater.from(this).inflate(R.layout.activity_pwdstore, null)
-
-    ViewCompat.setOnApplyWindowInsetsListener(view) { v, windowInsets ->
-      val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-      v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-        topMargin = insets.top
-        leftMargin = insets.left
-        bottomMargin = insets.bottom
-        rightMargin = insets.right
-      }
-
-      WindowInsetsCompat.CONSUMED
-    }
-    setContentView(view)
+    enableEdgeToEdgeView(binding.root)
+    setContentView(binding.root)
 
     onBackPressedDispatcher.addCallback(
       this,

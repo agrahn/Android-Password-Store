@@ -13,18 +13,14 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Patterns
 import android.view.MenuItem
-import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.core.os.postDelayed
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
 import androidx.core.widget.doOnTextChanged
 import app.passwordstore.R
 import app.passwordstore.databinding.ActivityProxySelectorBinding
 import app.passwordstore.injection.prefs.SettingsPreferences
+import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.proxy.ProxyUtils
@@ -43,18 +39,7 @@ class ProxySelectorActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    WindowCompat.enableEdgeToEdge(window)
-    ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
-      val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-      v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-        topMargin = insets.top
-        leftMargin = insets.left
-        bottomMargin = insets.bottom
-        rightMargin = insets.right
-      }
-
-      WindowInsetsCompat.CONSUMED
-    }
+    enableEdgeToEdgeView(binding.root)
     setContentView(binding.root)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     with(binding) {

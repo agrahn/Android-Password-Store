@@ -7,15 +7,11 @@ package app.passwordstore.ui.git.log
 
 import android.os.Bundle
 import android.view.MenuItem
-import android.view.ViewGroup
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import app.passwordstore.databinding.ActivityGitLogBinding
 import app.passwordstore.ui.git.base.BaseGitActivity
+import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.viewBinding
 
 /**
@@ -29,18 +25,7 @@ class GitLogActivity : BaseGitActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    WindowCompat.enableEdgeToEdge(window)
-    ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
-      val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-      v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-        topMargin = insets.top
-        leftMargin = insets.left
-        bottomMargin = insets.bottom
-        rightMargin = insets.right
-      }
-
-      WindowInsetsCompat.CONSUMED
-    }
+    enableEdgeToEdgeView(binding.root)
     setContentView(binding.root)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     createRecyclerView()

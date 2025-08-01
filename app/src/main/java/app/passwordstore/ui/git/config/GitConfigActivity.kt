@@ -9,12 +9,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Patterns
 import android.view.MenuItem
-import android.view.ViewGroup
 import androidx.core.os.postDelayed
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
@@ -24,6 +19,7 @@ import app.passwordstore.ui.dialogs.TextInputDialog
 import app.passwordstore.ui.git.base.BaseGitActivity
 import app.passwordstore.ui.git.log.GitLogActivity
 import app.passwordstore.util.extensions.asLog
+import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.launchActivity
 import app.passwordstore.util.extensions.viewBinding
 import com.github.michaelbull.result.fold
@@ -45,18 +41,7 @@ class GitConfigActivity : BaseGitActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    WindowCompat.enableEdgeToEdge(window)
-    ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
-      val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-      v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-        topMargin = insets.top
-        leftMargin = insets.left
-        bottomMargin = insets.bottom
-        rightMargin = insets.right
-      }
-
-      WindowInsetsCompat.CONSUMED
-    }
+    enableEdgeToEdgeView(binding.root)
     setContentView(binding.root)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 

@@ -11,7 +11,6 @@ import android.content.IntentSender
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import android.view.autofill.AutofillManager
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
@@ -20,10 +19,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
 import androidx.core.text.underline
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -33,6 +28,7 @@ import app.passwordstore.databinding.ActivityOreoAutofillFilterBinding
 import app.passwordstore.util.autofill.AutofillMatcher
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.coroutines.DispatcherProvider
+import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.settings.DirectoryStructure
 import app.passwordstore.util.viewmodel.FilterMode
@@ -105,18 +101,7 @@ class AutofillFilterView : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    WindowCompat.enableEdgeToEdge(window)
-    ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
-      val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-      v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-        topMargin = insets.top
-        leftMargin = insets.left
-        bottomMargin = insets.bottom
-        rightMargin = insets.right
-      }
-
-      WindowInsetsCompat.CONSUMED
-    }
+    enableEdgeToEdgeView(binding.root)
     setContentView(binding.root)
     setFinishOnTouchOutside(true)
 

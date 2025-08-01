@@ -7,16 +7,12 @@ package app.passwordstore.ui.settings
 
 import android.os.Bundle
 import android.view.MenuItem
-import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.BundleCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
 import app.passwordstore.R
 import app.passwordstore.databinding.ActivityPreferenceRecyclerviewBinding
+import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.viewBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -41,18 +37,7 @@ class SettingsActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    WindowCompat.enableEdgeToEdge(window)
-    ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
-      val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-      v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-        topMargin = insets.top
-        leftMargin = insets.left
-        bottomMargin = insets.bottom
-        rightMargin = insets.right
-      }
-
-      WindowInsetsCompat.CONSUMED
-    }
+    enableEdgeToEdgeView(binding.root)
     setContentView(binding.root)
     Preference.Config.dialogBuilderFactory = { context -> MaterialAlertDialogBuilder(context) }
     pgpSettings = PGPSettings(this)

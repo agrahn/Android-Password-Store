@@ -14,19 +14,15 @@ import android.os.Bundle
 import android.service.autofill.FillResponse
 import android.text.format.DateUtils
 import android.view.View
-import android.view.ViewGroup
 import android.view.autofill.AutofillManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.IntentCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updateLayoutParams
 import app.passwordstore.R
 import app.passwordstore.databinding.ActivityOreoAutofillPublisherChangedBinding
 import app.passwordstore.util.autofill.AutofillMatcher
 import app.passwordstore.util.autofill.AutofillPublisherChangedException
 import app.passwordstore.util.extensions.asLog
+import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.getApplicationInfoCompat
 import app.passwordstore.util.extensions.getPackageInfoCompat
 import app.passwordstore.util.extensions.viewBinding
@@ -75,18 +71,7 @@ class AutofillPublisherChangedActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    WindowCompat.enableEdgeToEdge(window)
-    ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, windowInsets ->
-      val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-      v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-        topMargin = insets.top
-        leftMargin = insets.left
-        bottomMargin = insets.bottom
-        rightMargin = insets.right
-      }
-
-      WindowInsetsCompat.CONSUMED
-    }
+    enableEdgeToEdgeView(binding.root)
     setContentView(binding.root)
     setFinishOnTouchOutside(true)
 
