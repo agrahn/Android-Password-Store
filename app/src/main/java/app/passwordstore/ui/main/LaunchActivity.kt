@@ -88,6 +88,8 @@ class LaunchActivity : AppCompatActivity() {
             intent.getStringExtra(BasePGPActivity.EXTRA_REPO_PATH),
           )
         }
+      else if (intent.action == Intent.ACTION_SEARCH)
+        Intent(this, PasswordStore::class.java).setAction(Intent.ACTION_SEARCH)
       else Intent(this, PasswordStore::class.java).setAction(Intent.ACTION_VIEW)
     startActivity(intentToStart)
 

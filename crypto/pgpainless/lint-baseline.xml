@@ -1,26 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 8.11.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.11.0)" variant="all" version="8.11.0">
-
-    <issue
-        id="MemberExtensionConflict"
-        message="`getOrDefault` is defined both as a member in class `kotlin.collections.Map` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
-        errorLine1="    return values.getOrDefault(option, false)"
-        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/app/passwordstore/crypto/PGPDecryptOptions.kt"
-            line="13"
-            column="12"/>
-    </issue>
-
-    <issue
-        id="MemberExtensionConflict"
-        message="`getOrDefault` is defined both as a member in class `kotlin.collections.Map` and an extension in package `kotlin.collections`. The defined behavior for this is to use the member, but since the extension is explicitly imported into this file, there&apos;s a chance that this was not expected. (One common way this happens is for members to be added to a class after code was already written to use an extension)."
-        errorLine1="    return values.getOrDefault(option, false)"
-        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/app/passwordstore/crypto/PGPEncryptOptions.kt"
-            line="17"
-            column="12"/>
-    </issue>
+<issues format="6" by="lint 8.12.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.12.0)" variant="all" version="8.12.0">
 
 </issues>
