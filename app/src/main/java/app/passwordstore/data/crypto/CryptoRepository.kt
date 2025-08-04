@@ -17,6 +17,8 @@ import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.filterValues
+import com.github.michaelbull.result.get
+import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.map
 import com.github.michaelbull.result.mapBoth
 import com.github.michaelbull.result.unwrap
@@ -51,8 +53,8 @@ constructor(
   fun hasKey(id: PGPIdentifier): Boolean = pgpKeyManager.getKeyById(id).isOk
 
   fun hasSecretKey(id: PGPIdentifier): Boolean {
-    val result = pgpKeyManager.getKeyById(id)
-    return result.isOk && KeyUtils.hasSecretKey(result.value)
+    val key = pgpKeyManager.getKeyById(id).get()
+    return key != null && KeyUtils.hasSecretKey(key)
   }
 
   fun isPasswordProtected(identifiers: List<PGPIdentifier>): Boolean {
@@ -98,7 +100,7 @@ constructor(
             message,
             decryptionOptions,
           )
-        if (!result.isOk) logcat { result.error.asLog() }
+        result.getError()?.let { logcat { it.asLog() } }
         Pair(id.toString(), result.map { message })
       }
     } else { // Get the first working cached passphrase
@@ -117,7 +119,7 @@ constructor(
             message,
             decryptionOptions,
           )
-        if (!result.isOk) logcat { result.error.asLog() }
+        result.getError()?.let { logcat { it.asLog() } }
         Pair(id, result.map { message })
       }
     }

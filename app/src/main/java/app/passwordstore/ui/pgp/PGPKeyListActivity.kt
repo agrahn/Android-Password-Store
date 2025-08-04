@@ -38,6 +38,7 @@ import app.passwordstore.ui.dialogs.AddPgpKeyBottomSheet
 import app.passwordstore.ui.dialogs.PasswordDialog
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.viewmodel.PGPKeyListViewModel
+import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.onSuccess
 import com.github.michaelbull.result.runCatching
@@ -241,7 +242,7 @@ class PGPKeyListActivity : AppCompatActivity() {
               withArmor = true,
             )
           if (result.isOk) {
-            val encrypted = result.value.toByteArray()
+            val encrypted = result.getOrThrow().toByteArray()
             val firstNewline = encrypted.indexOf('\n'.code.toByte())
             val firstLine = encrypted.copyOfRange(0, firstNewline + 1)
             val remainingLines = encrypted.copyOfRange(firstNewline + 1, encrypted.size)

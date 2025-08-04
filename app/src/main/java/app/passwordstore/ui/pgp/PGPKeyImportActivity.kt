@@ -21,6 +21,9 @@ import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.ui.dialogs.TextInputDialog
 import app.passwordstore.util.coroutines.DispatcherProvider
 import com.github.michaelbull.result.Result
+import com.github.michaelbull.result.get
+import com.github.michaelbull.result.getError
+import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -109,17 +112,17 @@ class PGPKeyImportActivity : AppCompatActivity() {
     val outputStream = ByteArrayOutputStream()
     val result = repository.decryptSym(backupCode, message, outputStream)
     if (result.isOk) {
-      val decryptedBytes = result.value.toByteArray()
+      val decryptedBytes = result.getOrThrow().toByteArray()
       runCatching { importKey(decryptedBytes, false) }.run(::handleImportResult)
     } else {
-      logcat { result.error.asLog() }
+      result.getError()?.let { logcat { it.asLog() } }
       askBackupCode(bytes, isError = true) // retry
     }
   }
 
   private fun handleImportResult(result: Result<PGPKey?, Throwable>) {
     if (result.isOk) {
-      val key = result.value
+      val key = result.get()
       if (key == null) {
         setResult(RESULT_CANCELED)
         finish()
@@ -137,7 +140,8 @@ class PGPKeyImportActivity : AppCompatActivity() {
         .setCancelable(false)
         .show()
     } else {
-      if (result.error is KeyAlreadyExistsException && lastBytes != null) {
+      val error = result.getError()
+      if (error != null && error is KeyAlreadyExistsException && lastBytes != null) {
         MaterialAlertDialogBuilder(this)
           .setTitle(getString(R.string.pgp_key_import_failed))
           .setMessage(getString(R.string.pgp_key_import_failed_replace_message))
@@ -152,7 +156,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
       } else {
         MaterialAlertDialogBuilder(this)
           .setTitle(getString(R.string.pgp_key_import_failed))
-          .setMessage(result.error.message)
+          .setMessage(error?.message)
           .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
           .setCancelable(false)
           .show()

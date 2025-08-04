@@ -24,6 +24,8 @@ import app.passwordstore.util.autofill.AutofillResponseBuilder
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.androidpasswordstore.autofillparser.AutofillAction
+import com.github.michaelbull.result.getError
+import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onSuccess
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
@@ -85,7 +87,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
     val results = repository.decrypt(passphrases, identifiers, message, outputStream)
     val lastResult = results.last()
     if (lastResult.second.isOk) {
-      val entry = passwordEntryFactory.create(lastResult.second.value.toByteArray())
+      val entry = passwordEntryFactory.create(lastResult.second.getOrThrow().toByteArray())
       val directoryStructure = AutofillPreferences.directoryStructure(this)
       val credentials =
         AutofillPreferences.credentialsFromStoreEntry(
@@ -126,7 +128,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
       if (
         results
           .filter { result ->
-            if (result.second.error is IncorrectPassphraseException) {
+            if (result.second.getError() is IncorrectPassphraseException) {
               /* Remove wrong passphrases from temporary and persistent caches */
               persistentPassphrases.edit { remove(result.first) }
               cachedPassphrases[result.first]?.fill('\u0000')
@@ -138,7 +140,9 @@ class AutofillDecryptActivity : BasePGPActivity() {
       ) {
         /* Retry */
         decrypt(identifiers, isError = true)
-      } else if (results.filter { it.second.error is NoDecryptionKeyAvailableException }.any()) {
+      } else if (
+        results.filter { it.second.getError() is NoDecryptionKeyAvailableException }.any()
+      ) {
         snackbar(message = resources.getString(R.string.password_decryption_no_decryption_key))
         val timer = Executors.newSingleThreadScheduledExecutor()
         timer.schedule({ finish() }, 4.toLong(), TimeUnit.SECONDS)

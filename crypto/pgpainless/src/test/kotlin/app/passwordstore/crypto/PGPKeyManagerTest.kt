@@ -14,6 +14,7 @@ import app.passwordstore.crypto.PGPIdentifier.UserId
 import app.passwordstore.crypto.errors.KeyAlreadyExistsException
 import app.passwordstore.crypto.errors.KeyNotFoundException
 import app.passwordstore.crypto.errors.NoKeysAvailableException
+import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.unwrap
 import com.github.michaelbull.result.unwrapError
 import java.io.ByteArrayOutputStream
@@ -233,8 +234,8 @@ class PGPKeyManagerTest {
       assertTrue(keyManager.addKey(publicKey).isOk)
       val allKeys = keyManager.getAllKeys()
       assertTrue(allKeys.isOk)
-      assertEquals(1, allKeys.value.size)
-      val key = allKeys.value[0]
+      assertEquals(1, allKeys.getOrThrow().size)
+      val key = allKeys.getOrThrow()[0]
       assertContentEquals(publicKey.contents, key.contents)
     }
 
@@ -257,7 +258,7 @@ class PGPKeyManagerTest {
 
       keyManager.getAllKeys().apply {
         assertTrue(this.isOk)
-        assertEquals(2, this.value.size)
+        assertEquals(2, this.getOrThrow().size)
       }
       val longKeyIds =
         arrayOf(
@@ -272,7 +273,7 @@ class PGPKeyManagerTest {
         val bobby1 = keyManager.getKeyById(idCollection[1])
         assertTrue(alice1.isOk)
         assertTrue(bobby1.isOk)
-        assertNotEquals(alice1.value.contents, bobby1.value.contents)
+        assertNotEquals(alice1.getOrThrow().contents, bobby1.getOrThrow().contents)
       }
     }
 }
