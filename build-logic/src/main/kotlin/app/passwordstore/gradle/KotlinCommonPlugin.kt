@@ -30,6 +30,8 @@ class KotlinCommonPlugin : Plugin<Project> {
           if (!this@task.name.contains("test", ignoreCase = true) && !isAppModule) {
             freeCompilerArgs.add("-Xexplicit-api=strict")
           }
+          optIn.add("com.github.michaelbull.result.annotation.UnsafeResultValueAccess")
+          optIn.add("com.github.michaelbull.result.annotation.UnsafeResultErrorAccess")
         }
       }
       withType<Test>().configureEach {
