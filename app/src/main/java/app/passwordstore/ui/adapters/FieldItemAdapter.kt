@@ -9,7 +9,6 @@ import android.text.method.PasswordTransformationMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import app.passwordstore.R
@@ -69,16 +68,15 @@ class FieldItemAdapter(
         when (fieldItem.action) {
           FieldItem.ActionType.COPY -> {
             itemTextContainer.apply {
-              endIconDrawable =
-                ContextCompat.getDrawable(itemView.context, R.drawable.ic_content_copy)
-              endIconMode = TextInputLayout.END_ICON_CUSTOM
+              setEndIconMode(TextInputLayout.END_ICON_CUSTOM)
+              setEndIconDrawable(R.drawable.ic_content_copy)
               setEndIconOnClickListener { copyToClipboard(itemText.text.toString(), false) }
             }
             itemText.transformationMethod = null
           }
           FieldItem.ActionType.HIDE -> {
             itemTextContainer.apply {
-              endIconMode = TextInputLayout.END_ICON_PASSWORD_TOGGLE
+              setEndIconMode(TextInputLayout.END_ICON_PASSWORD_TOGGLE)
               setOnClickListener { copyToClipboard(itemText.text.toString(), true) }
             }
             itemText.apply {

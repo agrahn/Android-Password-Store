@@ -30,28 +30,6 @@
     </issue>
 
     <issue
-        id="DenyListedApi"
-        message="Use Context#getDrawableCompat() instead"
-        errorLine1="                ContextCompat.getDrawable(itemView.context, R.drawable.ic_content_copy)"
-        errorLine2="                              ~~~~~~~~~~~">
-        <location
-            file="src/main/java/app/passwordstore/ui/adapters/FieldItemAdapter.kt"
-            line="73"
-            column="31"/>
-    </issue>
-
-    <issue
-        id="DenyListedApi"
-        message="Use Context#getDrawableCompat() instead"
-        errorLine1="                ContextCompat.getDrawable(itemView.context, R.drawable.ic_content_copy)"
-        errorLine2="                              ~~~~~~~~~~~">
-        <location
-            file="src/main/java/app/passwordstore/ui/adapters/FieldItemAdapter.kt"
-            line="73"
-            column="31"/>
-    </issue>
-
-    <issue
         id="MissingQuantity"
         message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
         errorLine1="  &lt;plurals name=&quot;delete_title&quot;>"
