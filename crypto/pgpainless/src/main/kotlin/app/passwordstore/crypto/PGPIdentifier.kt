@@ -24,10 +24,11 @@ public sealed class PGPIdentifier {
 
     /**
      * Converts [keyId] to an unsigned [Long] then uses [java.lang.Long.toHexString] to convert it
-     * to a lowercase hex ID.
+     * to an uppercase hex ID. ZX2C4's `pass' command does not like lowercase when re-encrypting
+     * item after editing (`pass edit path/to/pass-item')
      */
     private fun convertKeyIdToHex32bit(keyId: Long): String {
-      var hexString = java.lang.Long.toHexString(keyId and HEX_32_BITMASK).lowercase(Locale.ENGLISH)
+      var hexString = java.lang.Long.toHexString(keyId and HEX_32_BITMASK).uppercase(Locale.ENGLISH)
       while (hexString.length < HEX_32_STRING_LENGTH) {
         hexString = "0$hexString"
       }
