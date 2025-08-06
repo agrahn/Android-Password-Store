@@ -19,6 +19,7 @@ import com.github.michaelbull.result.unwrap
 import com.github.michaelbull.result.unwrapError
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.Locale
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -55,7 +56,10 @@ class PGPKeyManagerTest {
       assertEquals(1, filesDir.list()?.size)
       // Check if the file name is correct
       val keyFile = keysDir.listFiles()?.first()
-      assertEquals(keyFile?.name, "$keyId.${PGPKeyManager.KEY_EXTENSION}")
+      assertEquals(
+        keyFile?.name,
+        "$keyId".lowercase(Locale.ENGLISH) + ".${PGPKeyManager.KEY_EXTENSION}",
+      )
     }
 
   @Test
