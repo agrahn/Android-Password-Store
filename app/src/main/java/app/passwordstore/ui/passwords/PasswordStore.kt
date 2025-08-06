@@ -89,7 +89,7 @@ class PasswordStore : BaseGitActivity() {
           data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
         val gpgIdentifierFile = File(currentDir.absolutePath, ".gpg-id")
-        gpgIdentifierFile.writeText(selectedKeyId)
+        gpgIdentifierFile.writeText(selectedKeyId + "\n")
         runBlocking {
           commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))
         }

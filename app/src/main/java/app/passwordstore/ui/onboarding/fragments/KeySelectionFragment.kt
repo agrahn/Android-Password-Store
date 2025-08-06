@@ -43,7 +43,7 @@ class KeySelectionFragment : Fragment(R.layout.fragment_key_selection) {
             ?: return@registerForActivityResult
         lifecycleScope.launch {
           val gpgIdentifierFile = File(PasswordRepository.getRepositoryDirectory(), ".gpg-id")
-          gpgIdentifierFile.writeText(selectedKeyId)
+          gpgIdentifierFile.writeText(selectedKeyId + "\n")
           settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
           requireActivity()
             .commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))
