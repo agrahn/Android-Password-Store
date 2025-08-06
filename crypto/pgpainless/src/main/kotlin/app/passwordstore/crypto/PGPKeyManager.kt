@@ -21,6 +21,7 @@ import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.runCatching
 import com.github.michaelbull.result.unwrap
 import java.io.File
+import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import org.bouncycastle.openpgp.PGPPublicKeyRing
@@ -42,7 +43,7 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
     if (!keyDirExists()) throw KeyDirectoryUnavailableException
     val incomingKeyRing = tryParseKeyring(key) ?: throw InvalidKeyException
     if (!isKeyUsable(key)) throw UnusableKeyException
-    val keyFile = File(keyDir, "${tryGetId(key)}.$KEY_EXTENSION")
+    val keyFile = File(keyDir, "${tryGetId(key)}".lowercase(Locale.ENGLISH) + "$KEY_EXTENSION")
     if (keyFile.exists()) {
       val existingKeyBytes = keyFile.readBytes()
       val existingKeyRing = tryParseKeyring(PGPKey(existingKeyBytes)) ?: throw InvalidKeyException
@@ -83,7 +84,7 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
   override fun removeKey(identifier: PGPIdentifier): Result<Unit, Throwable> = runCatching {
     if (!keyDirExists()) throw KeyDirectoryUnavailableException
     val key = getKeyById(identifier).unwrap()
-    val keyFile = File(keyDir, "${tryGetId(key)}.$KEY_EXTENSION")
+    val keyFile = File(keyDir, "${tryGetId(key)}".lowercase(Locale.ENGLISH) + "$KEY_EXTENSION")
     if (keyFile.exists()) {
       if (!keyFile.delete()) throw KeyDeletionFailedException
     }
