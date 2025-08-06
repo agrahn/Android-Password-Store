@@ -5,10 +5,10 @@
 
 package app.passwordstore.crypto
 
-// import·app.passwordstore.crypto.KeyUtils.isKeyUsable
-// import·app.passwordstore.crypto.TestUtils.AllKeys
+import app.passwordstore.crypto.KeyUtils.isKeyUsable
 import app.passwordstore.crypto.KeyUtils.tryGetId
 import app.passwordstore.crypto.KeyUtils.tryParseKeyring
+import app.passwordstore.crypto.TestUtils.AllKeys
 import app.passwordstore.crypto.TestUtils.getArmoredSecretKeyWithMultipleIdentities
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -29,12 +29,12 @@ class KeyUtilsTest {
     assertEquals("b950ae2813841585", keyId.toString())
   }
 
-  /*  @Test
+  @Test
   fun isKeyUsable() {
-    val params = AllKeys.entries.map { it to (it != AllKeys.AEAD_PUB && it != AllKeys.AEAD_SEC) }
+    val params = AllKeys.entries.map { it to true } // all test keys should be usable
     params.forEach { (allKeys, isUsable) ->
       val key = PGPKey(allKeys.keyMaterial)
       assertEquals(isUsable, isKeyUsable(key), "${allKeys.name} failed expectation:")
     }
-  } */
+  }
 }
