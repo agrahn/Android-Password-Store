@@ -340,8 +340,8 @@
   <string name="select_repo_type_text">Wählen Sie aus, ob Sie ein lokales Repository anlegen, oder ein Remote-Repository klonen möchten.</string>
   <string name="clone_remote_repo">Remote-Repository klonen</string>
   <string name="create_local_repo">Lokales Repository anlegen</string>
-  <string name="select_gpg_key_title">Wählen Sie einen\nPGP-Schlüssel.</string>
-  <string name="select_gpg_key_message">Wählen Sie einen PGP-Schlüssel, mit dem der Store initialisiert werden soll.</string>
+  <string name="select_gpg_key_title">PGP-Schlüssel wählen</string>
+  <string name="select_gpg_key_message">Wählen Sie einen oder mehrere PGP-Schlüssel, mit denen der Store initialisiert werden soll.</string>
   <string name="gpg_key_select">Schlüssel auswählen</string>
 
   <!-- SSH port validation -->
@@ -397,7 +397,7 @@
   <string name="pwgen_some_error_occurred">Ein Fehler ist aufgetreten.</string>
   <string name="git_run_gc_job">Garbage Collection ausführen</string>
   <string name="activity_label_pgp_key_manager">PGP-Schlüsselmanager</string>
-  <string name="activity_label_pgp_key_select">Wählen Sie einen PGP-Schlüssel</string>
+  <string name="activity_label_pgp_key_select">Wählen Sie einen oder mehrere PGP-Schlüssel</string>
   <string name="pgp_key_manager_delete_secret_key_confirmation_dialog_title">Geheimen Schlüssel löschen?</string>
   <string name="pgp_key_manager_delete_key_confirmation_dialog_title">Schlüssel löschen?</string>
   <string name="pgp_key_manager_delete_confirmation_dialog_message">Stellen Sie sicher, dass Sie eine Sicherungskopie des PGP-Schlüssels haben. Andernfalls gehen alle mit diesem Schlüssel verschlüsselten Passworteinträge verloren.</string>

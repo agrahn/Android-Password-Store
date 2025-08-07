@@ -86,6 +86,7 @@ class PGPKeyListActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     val isSelecting = intent.extras?.getBoolean(EXTRA_KEY_SELECTION) ?: false
+    val selectedKeyIds = mutableSetOf<String>()
     supportFragmentManager.setFragmentResultListener(PGP_KEY_ADD_REQUEST_KEY, this) { _, bundle ->
       when (bundle.getString(ACTION_KEY)) {
         ACTION_IMPORT_FILE -> keyAction.launch(Intent(this, PGPKeyImportActivity::class.java))
@@ -101,7 +102,14 @@ class PGPKeyListActivity : AppCompatActivity() {
                 if (isSelecting) stringResource(R.string.activity_label_pgp_key_select)
                 else stringResource(R.string.activity_label_pgp_key_manager),
               navigationIcon = painterResource(R.drawable.ic_arrow_back_black_24dp),
-              onNavigationIconClick = { finish() },
+              onNavigationIconClick = {
+                if (selectedKeyIds.isNotEmpty()) {
+                  val result = Intent()
+                  result.putExtra(EXTRA_SELECTED_KEY, selectedKeyIds.joinToString(separator = "\n"))
+                  setResult(RESULT_OK, result)
+                }
+                finish()
+              },
               backgroundColor = MaterialTheme.colorScheme.surface,
             )
           },
@@ -128,15 +136,13 @@ class PGPKeyListActivity : AppCompatActivity() {
             modifier = Modifier.padding(paddingValues),
             onKeySelected =
               if (isSelecting) {
-                { identifier ->
+                { identifier, isSelected ->
                   val keyId = run { // ensure numeric key ID
                     val key = pgpKeyManager.getKeyById(identifier).unwrap()
                     pgpKeyManager.getKeyId(key) ?: throw NullPointerException()
                   }
-                  val result = Intent()
-                  result.putExtra(EXTRA_SELECTED_KEY, keyId.toString())
-                  setResult(RESULT_OK, result)
-                  finish()
+                  if (isSelected) selectedKeyIds.add(keyId.toString())
+                  else selectedKeyIds.remove(keyId.toString())
                 }
               } else null,
           )

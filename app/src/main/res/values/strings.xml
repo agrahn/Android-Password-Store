@@ -341,9 +341,9 @@
   <string name="select_repo_type_text">Select if you want to create a local repo or clone a remote repo.</string>
   <string name="clone_remote_repo">Clone Remote Repo</string>
   <string name="create_local_repo">Create Local Repo</string>
-  <string name="select_gpg_key_title">Select\nPGP key</string>
-  <string name="select_gpg_key_message">Select a PGP key to initialize your store with</string>
-  <string name="gpg_key_select">Select key</string>
+  <string name="select_gpg_key_title">Select\nPGP key(s)</string>
+  <string name="select_gpg_key_message">Select one or multiple PGP keys that you want to initialize the store with.</string>
+  <string name="gpg_key_select">Select key(s)</string>
 
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">Potentially incorrect URL</string>
@@ -398,7 +398,7 @@
   <string name="pwgen_some_error_occurred">Some error occurred</string>
   <string name="git_run_gc_job">Run garbage collection job</string>
   <string name="activity_label_pgp_key_manager">PGP Key Manager</string>
-  <string name="activity_label_pgp_key_select">Select PGP key</string>
+  <string name="activity_label_pgp_key_select">Select one or more PGP keys</string>
   <string name="pgp_key_manager_delete_secret_key_confirmation_dialog_title">Delete secret key?</string>
   <string name="pgp_key_manager_delete_key_confirmation_dialog_title">Delete key?</string>
   <string name="pgp_key_manager_delete_confirmation_dialog_message">Be sure to keep a backup of the PGP key. Without it, you will lose access to any password items encrypted with that key.</string>

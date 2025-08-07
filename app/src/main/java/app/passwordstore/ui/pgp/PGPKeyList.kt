@@ -7,7 +7,6 @@ package app.passwordstore.ui.pgp
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
@@ -61,7 +61,7 @@ fun KeyList(
   onExportItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportPublicClick: (identifier: PGPIdentifier) -> Unit,
   modifier: Modifier = Modifier,
-  onKeySelected: ((identifier: PGPIdentifier) -> Unit)? = null,
+  onKeySelected: ((identifier: PGPIdentifier, isSelected: Boolean) -> Unit)? = null,
 ) {
   if (identifiers.isEmpty()) {
     Column(
@@ -101,7 +101,7 @@ private fun KeyItem(
   onExportItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportPublicClick: (identifier: PGPIdentifier) -> Unit,
   modifier: Modifier = Modifier,
-  onKeySelected: ((identifier: PGPIdentifier) -> Unit)? = null,
+  onKeySelected: ((identifier: PGPIdentifier, isSelected: Boolean) -> Unit)? = null,
 ) {
   var isDeleting by remember { mutableStateOf(false) }
   DeleteConfirmationDialog(
@@ -118,12 +118,21 @@ private fun KeyItem(
       is PGPIdentifier.KeyId -> identifier.id.toString()
       is PGPIdentifier.UserId -> identifier.email
     }
+  var checked by remember { mutableStateOf(false) }
   Row(
     modifier =
       modifier
         .padding(horizontal = SpacingLarge, vertical = SpacingSmall)
         .fillMaxWidth()
-        .conditional(onKeySelected != null) { clickable { onKeySelected?.invoke(identifier) } },
+        .conditional(onKeySelected != null) {
+          toggleable(
+            value = checked,
+            onValueChange = {
+              checked = it
+              onKeySelected?.invoke(identifier, it)
+            },
+          )
+        },
     horizontalArrangement = Arrangement.SpaceBetween,
     verticalAlignment = Alignment.CenterVertically,
   ) {
@@ -181,6 +190,17 @@ private fun KeyItem(
             },
           )
         }
+      }
+    } else {
+      Box() {
+        Text(
+          text =
+            if (checked) {
+              "\u2713"
+            } else {
+              ""
+            }
+        )
       }
     }
   }

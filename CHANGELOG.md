@@ -6,8 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Support for chacha20-poly1305@openssh.com SSH cipher
+- Password store and new folders can be initialised with multiple PGP keys, if desired
 - Quick Settings tile for starting APS in search mode
+- Support for chacha20-poly1305@openssh.com SSH cipher
 
 ### Fixed
 
