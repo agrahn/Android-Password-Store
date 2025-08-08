@@ -45,19 +45,21 @@ class PinDialog : DialogFragment() {
         binding.pinField.error = getString(R.string.pin_entry_wrong_input)
       }
       dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
-      binding.pinEditText.doOnTextChanged { s, _, _, _ ->
-        s?.let {
-          dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = (it.length >= 4)
-          pinLength = it.length
+      binding.pinEditText.apply {
+        doOnTextChanged { s, _, _, _ ->
+          s?.let {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = it.length >= 4
+            pinLength = it.length
+          }
+          binding.pinField.error = null
         }
-        binding.pinField.error = null
-      }
-      binding.pinEditText.setOnKeyListener { _, keyCode, _ ->
-        if (keyCode == KeyEvent.KEYCODE_ENTER && pinLength >= 4) {
-          setPinAndDismiss()
-          return@setOnKeyListener true
+        setOnKeyListener { _, keyCode, _ ->
+          if (keyCode == KeyEvent.KEYCODE_ENTER && pinLength >= 4) {
+            setPinAndDismiss()
+            return@setOnKeyListener true
+          }
+          false
         }
-        false
       }
     }
     dialog.window?.setFlags(

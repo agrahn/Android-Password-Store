@@ -49,11 +49,10 @@ class PasswordDialog : DialogFragment() {
       binding.cacheEnabled.setVisibility(View.VISIBLE)
     cacheEnabledChecked =
       requireContext().sharedPrefs.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)
-    binding.cacheEnabled.isChecked = cacheEnabledChecked
-    binding.cacheEnabled.setOnCheckedChangeListener { _, isChecked ->
-      cacheEnabledChecked = isChecked
+    binding.cacheEnabled.apply {
+      isChecked = cacheEnabledChecked
+      setOnCheckedChangeListener { _, isChecked -> cacheEnabledChecked = isChecked }
     }
-
     builder.setPositiveButton(android.R.string.ok) { _, _ -> setPasswordAndDismiss() }
     val dialog = builder.create()
     dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
@@ -61,13 +60,15 @@ class PasswordDialog : DialogFragment() {
       if (isError) {
         binding.passwordField.error = getString(R.string.pgp_wrong_passphrase_input)
       }
-      binding.passwordEditText.doOnTextChanged { _, _, _, _ -> binding.passwordField.error = null }
-      binding.passwordEditText.setOnKeyListener { _, keyCode, _ ->
-        if (keyCode == KeyEvent.KEYCODE_ENTER) {
-          setPasswordAndDismiss()
-          return@setOnKeyListener true
+      binding.passwordEditText.apply {
+        doOnTextChanged { _, _, _, _ -> binding.passwordField.error = null }
+        setOnKeyListener { _, keyCode, _ ->
+          if (keyCode == KeyEvent.KEYCODE_ENTER) {
+            setPasswordAndDismiss()
+            return@setOnKeyListener true
+          }
+          false
         }
-        false
       }
     }
     dialog.window?.setFlags(

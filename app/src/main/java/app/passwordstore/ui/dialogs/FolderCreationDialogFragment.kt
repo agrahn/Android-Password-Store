@@ -12,6 +12,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import app.passwordstore.R
 import app.passwordstore.databinding.FolderDialogFragmentBinding
@@ -51,19 +52,25 @@ class FolderCreationDialogFragment : DialogFragment() {
     }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    val alertDialogBuilder = MaterialAlertDialogBuilder(requireContext())
-    alertDialogBuilder.setTitle(R.string.title_create_folder)
-    alertDialogBuilder.setView(binding.root)
-    alertDialogBuilder.setPositiveButton(getString(R.string.button_create), null)
-    alertDialogBuilder.setNegativeButton(getString(android.R.string.cancel)) { _, _ -> dismiss() }
+    val builder = MaterialAlertDialogBuilder(requireContext())
+    builder.setTitle(R.string.title_create_folder)
+    builder.setView(binding.root)
+    builder.setPositiveButton(getString(R.string.button_create), null)
+    builder.setNegativeButton(getString(android.R.string.cancel)) { _, _ -> dismiss() }
     binding.setGpgKey.isVisible = requireArguments().getBoolean(SET_GPG_KEY_EXTRA)
-    val dialog = alertDialogBuilder.create()
+    val dialog = builder.create()
     dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
     dialog.setOnShowListener {
-      dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-        createDirectory(
-          requireArguments().getString(CURRENT_DIR_EXTRA) ?: throw NullPointerException()
-        )
+      dialog.getButton(AlertDialog.BUTTON_POSITIVE).apply {
+        isEnabled = false
+        setOnClickListener {
+          createDirectory(
+            requireArguments().getString(CURRENT_DIR_EXTRA) ?: throw NullPointerException()
+          )
+        }
+      }
+      binding.folderNameText.doOnTextChanged { s, _, _, _ ->
+        s?.let { dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = it.length > 0 }
       }
     }
     return dialog
