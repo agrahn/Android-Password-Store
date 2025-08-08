@@ -257,7 +257,7 @@ constructor(
         // If both key and value are not empty, we can form a pair with this so add it to
         // the map.
         // key = "ABC", value = "DEF:GHI"
-        items[key] = value
+        items.putOrAppend(key, value)
       } else {
         // If either key or value is empty, we were not able to form proper key-value pair.
         // So append the original line into an "EXTRA CONTENT" map entry
