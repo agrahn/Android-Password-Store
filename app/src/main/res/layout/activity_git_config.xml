@@ -3,11 +3,17 @@
   ~ SPDX-License-Identifier: GPL-3.0-only
   -->
 
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  xmlns:app="http://schemas.android.com/apk/res-auto"
-  xmlns:tools="http://schemas.android.com/tools"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+<androidx.constraintlayout.widget.ConstraintLayout
   android:layout_width="match_parent"
-  android:layout_height="match_parent"
+  android:layout_height="wrap_content"
   android:padding="@dimen/activity_horizontal_margin"
   tools:context="app.passwordstore.ui.git.config.GitConfigActivity"
   tools:layout_editor_absoluteX="0dp"
@@ -111,3 +117,5 @@
     android:layout_height="wrap_content" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>
