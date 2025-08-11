@@ -192,7 +192,6 @@
   <string name="dialog_yes">Ja</string>
   <string name="dialog_no">Nein</string>
   <string name="dialog_cancel">Abbruch</string>
-  <string name="dialog_skip">Überspringen</string>
   <string name="git_sync">Synchronisiere Repository</string>
   <string name="git_pull">Git Pull</string>
   <string name="git_push">Git Push</string>

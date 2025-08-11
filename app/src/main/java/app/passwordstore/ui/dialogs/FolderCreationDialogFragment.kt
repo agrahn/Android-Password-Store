@@ -19,6 +19,7 @@ import app.passwordstore.databinding.FolderDialogFragmentBinding
 import app.passwordstore.ui.passwords.PasswordStore
 import app.passwordstore.ui.pgp.PGPKeyListActivity
 import app.passwordstore.util.extensions.commitChange
+import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.extensions.unsafeLazy
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -83,6 +84,8 @@ class FolderCreationDialogFragment : DialogFragment() {
     newFolder = File("$currentDir/${folderNameView.text}")
     folderNameViewContainer.error =
       when {
+        !newFolder.isInsideRepository() ->
+          getString(R.string.message_error_destination_outside_repo)
         newFolder.isFile -> getString(R.string.folder_creation_err_file_exists)
         newFolder.isDirectory -> getString(R.string.folder_creation_err_folder_exists)
         else -> null

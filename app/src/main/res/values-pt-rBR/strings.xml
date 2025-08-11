@@ -159,7 +159,6 @@
   <string name="dialog_yes">Sim</string>
   <string name="dialog_no">Não</string>
   <string name="dialog_cancel">Cancelar</string>
-  <string name="dialog_skip">Pular</string>
   <string name="git_sync">Sincronizar repositório</string>
   <string name="git_pull">Pull do remoto</string>
   <string name="git_push">Push do remoto</string>

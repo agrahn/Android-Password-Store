@@ -66,7 +66,7 @@
       android:layout_height="wrap_content"
       android:autofillHints=""
       android:importantForAutofill="no"
-      android:inputType="text"
+      android:inputType="textNoSuggestions"
       android:maxLength="1" />
   </com.google.android.material.textfield.TextInputLayout>
 

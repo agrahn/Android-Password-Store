@@ -5,8 +5,6 @@
 package app.passwordstore.util.extensions
 
 import app.passwordstore.data.repo.PasswordRepository
-import com.github.michaelbull.result.getOrElse
-import com.github.michaelbull.result.runCatching
 import java.io.File
 import java.time.Instant
 import logcat.asLog
@@ -18,17 +16,12 @@ infix fun Int.hasFlag(flag: Int): Boolean {
   return this and flag == flag
 }
 
-/** Checks whether this [File] is a directory that contains [other]. */
+/** Checks whether this [File] is a directory that contains [other] as a direct child. */
 fun File.contains(other: File): Boolean {
   if (!isDirectory) return false
-  if (!other.exists()) return false
-  val relativePath =
-    runCatching { other.relativeTo(this) }
-      .getOrElse {
-        return false
-      }
-  // Direct containment is equivalent to the relative path being equal to the filename.
-  return relativePath.path == other.name
+  if (File(getCanonicalPath(), other.getName()).getCanonicalPath() != other.getCanonicalPath())
+    return false
+  return other.exists()
 }
 
 /**

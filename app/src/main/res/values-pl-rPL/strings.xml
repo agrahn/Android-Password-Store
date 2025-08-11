@@ -158,7 +158,6 @@
   <string name="dialog_yes">Tak</string>
   <string name="dialog_no">Nie</string>
   <string name="dialog_cancel">Anuluj</string>
-  <string name="dialog_skip">Pomiń</string>
   <string name="git_sync">Synchronizuj repozytorium</string>
   <string name="git_pull">Pobierz ze zdalnego repozytorium</string>
   <string name="git_push">Wypchnij do zdalnego repozytorium</string>

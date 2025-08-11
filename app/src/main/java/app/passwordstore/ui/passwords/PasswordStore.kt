@@ -58,6 +58,7 @@ import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.lang.Character.UnicodeBlock
@@ -527,9 +528,10 @@ class PasswordStore : BaseGitActivity() {
   ) {
     val view = layoutInflater.inflate(R.layout.folder_dialog_fragment, null)
     val newCategoryEditText = view.findViewById<TextInputEditText>(R.id.folder_name_text)
+    val folderNameViewContainer = view.findViewById<TextInputLayout>(R.id.folder_name_container)
 
     if (error != CategoryRenameError.None) {
-      newCategoryEditText.error = getString(error.resource)
+      folderNameViewContainer.error = getString(error.resource)
     }
 
     val dialog =
@@ -540,11 +542,11 @@ class PasswordStore : BaseGitActivity() {
         .setPositiveButton(R.string.dialog_ok) { _, _ ->
           val newCategory = File("${oldCategory.file.parent}/${newCategoryEditText.text}")
           when {
+            !newCategory.isInsideRepository() ->
+              renameCategory(oldCategory, CategoryRenameError.DestinationOutsideRepo)
             newCategoryEditText.text.isNullOrBlank() ->
               renameCategory(oldCategory, CategoryRenameError.EmptyField)
             newCategory.exists() -> renameCategory(oldCategory, CategoryRenameError.CategoryExists)
-            !newCategory.isInsideRepository() ->
-              renameCategory(oldCategory, CategoryRenameError.DestinationOutsideRepo)
             else ->
               lifecycleScope.launch(dispatcherProvider.io()) {
                 moveFile(oldCategory.file, newCategory)
@@ -570,10 +572,12 @@ class PasswordStore : BaseGitActivity() {
                     )
                   )
                 }
+
+                refreshPasswordList()
               }
           }
         }
-        .setNegativeButton(R.string.dialog_skip, null)
+        .setNegativeButton(R.string.dialog_cancel, null)
         .create()
 
     dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
@@ -594,6 +598,9 @@ class PasswordStore : BaseGitActivity() {
    * directory).
    */
   fun refreshPasswordList(target: File? = null) {
+    target?.let {
+      require(it.isInsideRepository()) { "Trying to access target outside the repository" }
+    }
     val plist = getPasswordFragment()
     if (target?.isDirectory == true && model.currentDir.value.contains(target)) {
       plist?.navigateTo(target)

@@ -190,7 +190,6 @@
   <string name="dialog_yes">Evet</string>
   <string name="dialog_no">Hayır</string>
   <string name="dialog_cancel">İptal</string>
-  <string name="dialog_skip">Atla</string>
   <string name="git_sync">Depoyu senkronize et</string>
   <string name="git_pull">Uzak depodan çek (pull)</string>
   <string name="git_push">Uzak depoya gönder (push)</string>

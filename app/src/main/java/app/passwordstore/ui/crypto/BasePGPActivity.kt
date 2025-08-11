@@ -36,6 +36,7 @@ import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.clipboard
 import app.passwordstore.util.extensions.getString
+import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.settings.Constants
@@ -279,12 +280,16 @@ open class BasePGPActivity : AppCompatActivity() {
   @Suppress("ReturnCount")
   private fun File.findTillRoot(fileName: String, rootPath: File): File? {
     val gpgFile = File(this, fileName)
+    require(gpgFile.isInsideRepository()) { "Trying to access target outside the repository" }
     if (gpgFile.exists()) return gpgFile
 
     if (this.absolutePath == rootPath.absolutePath) {
       return null
     }
     val parent = parentFile
+    parent?.let {
+      require(it.isInsideRepository()) { "Trying to access target outside the repository" }
+    }
     return if (parent != null && parent.exists()) {
       parent.findTillRoot(fileName, rootPath)
     } else {

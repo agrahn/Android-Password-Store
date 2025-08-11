@@ -153,7 +153,6 @@
   <string name="dialog_yes">Oui</string>
   <string name="dialog_no">Non</string>
   <string name="dialog_cancel">Annuler</string>
-  <string name="dialog_skip">Ignorer</string>
   <string name="git_sync">Synchronisation du dépôt</string>
   <string name="git_pull">Importer du serveur</string>
   <string name="git_push">Pousser sur le serveur</string>

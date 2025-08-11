@@ -27,6 +27,7 @@ import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.checkMainThread
 import app.passwordstore.util.coroutines.DispatcherProvider
+import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.settings.DirectoryStructure
 import app.passwordstore.util.settings.PasswordSortOrder
 import app.passwordstore.util.settings.PreferenceKeys
@@ -317,6 +318,7 @@ constructor(
     recyclerViewState: Parcelable? = null,
     pushPreviousLocation: Boolean = true,
   ) {
+    require(newDirectory.isInsideRepository()) { "Trying to access target outside the repository" }
     if (!newDirectory.exists()) return
     require(newDirectory.isDirectory) { "Can only navigate to a directory" }
     if (pushPreviousLocation) {

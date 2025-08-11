@@ -157,7 +157,6 @@
   <string name="dialog_yes">Да</string>
   <string name="dialog_no">Нет</string>
   <string name="dialog_cancel">Отмена</string>
-  <string name="dialog_skip">Пропустить</string>
   <string name="git_sync">Синхронизировать репозиторий</string>
   <string name="git_pull">Пулл с удаленного сервера</string>
   <string name="git_push">Пуш на удаленный сервер</string>

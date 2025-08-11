@@ -158,7 +158,6 @@
   <string name="dialog_yes">예</string>
   <string name="dialog_no">아니오</string>
   <string name="dialog_cancel">취소</string>
-  <string name="dialog_skip">건너뛰기</string>
   <string name="git_sync">저장소 동기화</string>
   <string name="git_pull">원격에서 pull</string>
   <string name="git_push">원격으로 푸시</string>
