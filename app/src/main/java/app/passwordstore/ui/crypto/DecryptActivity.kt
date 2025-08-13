@@ -203,7 +203,12 @@ class DecryptActivity : BasePGPActivity() {
       }
 
       entry.extraContent.forEach { (key, value) ->
-        items.add(FieldItem.createFreeformField(key, value))
+        if (key != PasswordEntry.EXTRA_CONTENT) items.add(FieldItem.createFreeformField(key, value))
+      }
+
+      entry.extraContent.forEach { (key, value) ->
+        if (key == PasswordEntry.EXTRA_CONTENT)
+          items.add(FieldItem.createFreeformField(getString(R.string.crypto_extra_label), value))
       }
 
       val adapter =

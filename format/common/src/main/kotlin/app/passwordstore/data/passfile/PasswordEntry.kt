@@ -230,7 +230,6 @@ constructor(
 
   private fun generateExtraContentPairs(passContent: List<CharArray>): Map<String, String> {
     fun MutableMap<String, String>.putOrAppend(key: String, value: String) {
-      if (value.isEmpty()) return
       val existing = this[key]
       this[key] =
         if (existing == null) {
@@ -242,26 +241,24 @@ constructor(
 
     val items = mutableMapOf<String, String>()
     passContent.forEach { line ->
-      // Split the line on ':' and save all the parts into an array
-      // "ABC : DEF:GHI" --> ["ABC", "DEF", "GHI"]
-      val splitArray = String(line).split(":")
-      // Take the first element of the array. This will be the key for the key-value pair.
-      // ["ABC ", " DEF", "GHI"] -> key = "ABC"
-      val key = splitArray.first().trimEnd()
-      // Remove the first element from the array and join the rest of the string again with
-      // ':' as separator.
-      // ["ABC ", " DEF", "GHI"] -> value = "DEF:GHI"
-      val value = splitArray.drop(1).joinToString(":").trimStart()
+      // Split the line at the first ':' into key and value
+      // "ABC : DEF:GHI" --> key = "ABC" value = " DEF:GHI"]
+      val (key, value) =
+        if (String(line).contains(':')) {
+          val keyval = String(line).split(":", limit = 2)
+          if (keyval.first().trim().isEmpty() && keyval.last().isEmpty()) "" to String(line)
+          else keyval.first().trim() to keyval.last()
+        } else {
+          "" to String(line)
+        }
 
-      if (key.isNotEmpty() && value.isNotEmpty()) {
-        // If both key and value are not empty, we can form a pair with this so add it to
-        // the map.
-        // key = "ABC", value = "DEF:GHI"
+      if (key.isNotEmpty()) {
+        // If key is not empty, we can form a pair with this so add it to the map.
         items.putOrAppend(key, value)
       } else {
-        // If either key or value is empty, we were not able to form proper key-value pair.
-        // So append the original line into an "EXTRA CONTENT" map entry
-        items.putOrAppend(EXTRA_CONTENT, String(line))
+        // If key is empty, we were not able to form proper key-value pair.
+        // So append the original line to an "EXTRA CONTENT" map entry
+        if (value.isNotEmpty()) items.putOrAppend(EXTRA_CONTENT, String(line))
       }
     }
 
@@ -292,7 +289,8 @@ constructor(
 
   public companion object {
 
-    private const val EXTRA_CONTENT = "Extra Content"
+    public val EXTRA_CONTENT: String = "EXTRA_CONTENT"
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public val USERNAME_FIELDS: Array<String> =
       arrayOf(
