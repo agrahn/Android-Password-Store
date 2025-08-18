@@ -1,4 +1,4 @@
-135915
+136043
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -104,6 +104,7 @@
 *.hosted.app
 *.hosting.myjino.ru
 *.hosting.ovh.net
+*.icp.net
 *.id.pub
 *.il-central-1.airflow.amazonaws.com
 *.in.futurecms.at
@@ -154,6 +155,8 @@
 *.platformsh.site
 *.private.repost.aws
 *.privatelink.snowflake.app
+*.qualyhqpartner.com
+*.qualyhqportal.com
 *.quipelements.com
 *.r.appspot.com
 *.raw.icp0.io
@@ -2534,6 +2537,7 @@ erimo.hokkaido.jp
 erni
 erotica.hu
 erotika.hu
+erp.dev
 es
 es-1.axarnet.cloud
 es.eu.org
@@ -3213,6 +3217,7 @@ gov.cn
 gov.co
 gov.cx
 gov.cy
+gov.cz
 gov.dm
 gov.do
 gov.dz
@@ -6386,7 +6391,9 @@ omura.nagasaki.jp
 omuta.fukuoka.jp
 on-aptible.com
 on-fleek.app
+on-forge.com
 on-the-web.tv
+on-vapor.com
 on-web.fr
 on.biz.ng
 on.ca
@@ -8967,6 +8974,7 @@ uol
 uonuma.niigata.jp
 uozu.toyama.jp
 up.in
+up.railway.app
 upow.gov.pl
 upper.jp
 uppo.gov.pl
@@ -9282,6 +9290,7 @@ weatherchannel
 web.app
 web.bo
 web.do
+web.erp.dev
 web.gu
 web.id
 web.in
@@ -9589,6 +9598,7 @@ za.bz
 za.com
 za.net
 za.org
+zabc.net
 zachpomor.pl
 zagan.pl
 zakarpattia.ua
