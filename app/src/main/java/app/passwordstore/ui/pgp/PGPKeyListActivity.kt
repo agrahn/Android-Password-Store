@@ -236,7 +236,7 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   private fun writeBackupFile(identifier: PGPIdentifier, code: String? = null) {
     val keyIdAndContent = run {
-      val key = pgpKeyManager.getKeyById(identifier).unwrap()
+      val key = pgpKeyManager.getKeyById(identifier, withArmor = true).unwrap()
       val contents =
         if (code != null) { // encrypt secret keys symmetrically
           val keyContents = ByteArrayOutputStream()

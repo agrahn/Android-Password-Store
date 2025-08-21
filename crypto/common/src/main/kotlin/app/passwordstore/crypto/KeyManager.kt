@@ -34,7 +34,7 @@ public interface KeyManager<Key, KeyIdentifier> {
    * implementations to figure out for themselves. For example, in GPG this can be a full
    * hexadecimal key ID, an email, a short hex key ID, and probably a few more things.
    */
-  public fun getKeyById(id: KeyIdentifier): Result<Key, Throwable>
+  public fun getKeyById(id: KeyIdentifier, withArmor: Boolean = false): Result<Key, Throwable>
 
   /** Returns all keys currently in the store as a [List]. */
   public fun getAllKeys(): Result<List<Key>, Throwable>

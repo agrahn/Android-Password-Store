@@ -28,6 +28,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.util.KeyRingUtils
+import org.pgpainless.util.ArmorUtils
 import org.pgpainless.util.Passphrase
 
 public class PGPKeyManager
@@ -107,39 +108,61 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
   }
 
   /** @see KeyManager.getKeyById */
-  override fun getKeyById(id: PGPIdentifier): Result<PGPKey, Throwable> = runCatching {
-    if (!keyDirExists()) throw KeyDirectoryUnavailableException
-    val keyFiles = keyDir.listFiles()
-    if (keyFiles.isNullOrEmpty()) throw NoKeysAvailableException
-    val keys = keyFiles.map { file -> PGPKey(file.readBytes()) }
+  override fun getKeyById(id: PGPIdentifier, withArmor: Boolean): Result<PGPKey, Throwable> =
+    runCatching {
+      if (!keyDirExists()) throw KeyDirectoryUnavailableException
+      val keyFiles = keyDir.listFiles()
+      if (keyFiles.isNullOrEmpty()) throw NoKeysAvailableException
+      val keys = keyFiles.map { file -> PGPKey(file.readBytes()) }
 
-    when (id) {
-      is PGPIdentifier.KeyId -> {
-        for (key in keys) {
-          val keyRing = tryParseKeyring(key) ?: continue
-          if (
-            KeyRingUtils.keyRingContainsKeyWithId(KeyRingUtils.publicKeys(keyRing), id.id.toLong())
-          ) {
-            return@runCatching key
-          }
-        }
-      }
-      is PGPIdentifier.UserId -> {
-        for (key in keys) {
-          val keyRing = tryParseKeyring(key) ?: continue
-          if (
-            PGPainless.inspectKeyRing(keyRing).userIds.any {
-              id.email == it || id.email == PGPIdentifier.splitUserId(it)
+      when (id) {
+        is PGPIdentifier.KeyId -> {
+          for (key in keys) {
+            val keyRing = tryParseKeyring(key) ?: continue
+            if (
+              KeyRingUtils.keyRingContainsKeyWithId(
+                KeyRingUtils.publicKeys(keyRing),
+                id.id.toLong(),
+              )
+            ) {
+              if (withArmor) {
+                if (keyRing is PGPSecretKeyRing)
+                  return@runCatching PGPKey(
+                    ArmorUtils.toAsciiArmoredString(keyRing as PGPSecretKeyRing).toByteArray()
+                  )
+                else
+                  return@runCatching PGPKey(
+                    ArmorUtils.toAsciiArmoredString(keyRing as PGPPublicKeyRing).toByteArray()
+                  )
+              } else return@runCatching key
             }
-          ) {
-            return@runCatching key
+          }
+        }
+        is PGPIdentifier.UserId -> {
+          for (key in keys) {
+            val keyRing = tryParseKeyring(key) ?: continue
+            if (
+              PGPainless.inspectKeyRing(keyRing).userIds.any {
+                id.email == it || id.email == PGPIdentifier.splitUserId(it)
+              }
+            ) {
+              if (withArmor) {
+                if (keyRing is PGPSecretKeyRing)
+                  return@runCatching PGPKey(
+                    ArmorUtils.toAsciiArmoredString(keyRing as PGPSecretKeyRing).toByteArray()
+                  )
+                else
+                  return@runCatching PGPKey(
+                    ArmorUtils.toAsciiArmoredString(keyRing as PGPPublicKeyRing).toByteArray()
+                  )
+              } else return@runCatching key
+            }
           }
         }
       }
-    }
 
-    throw KeyNotFoundException("$id")
-  }
+      throw KeyNotFoundException("$id")
+    }
 
   /** @see KeyManager.getAllKeys */
   override fun getAllKeys(): Result<List<PGPKey>, Throwable> = runCatching {
