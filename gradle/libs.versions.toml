@@ -9,8 +9,11 @@ kotlin = "2.2.20"
 kotlinResult = "2.1.0"
 lifecycle = "2.9.4"
 moshi = "1.15.2"
+yubikit = "2.8.2"
 
 [libraries]
+yubikit-android = { module = "com.yubico.yubikit:android", version.ref = "yubikit" }
+yubikit-openpgp = { module = "com.yubico.yubikit:openpgp", version.ref = "yubikit" }
 # noinspection GradleDependency
 android-desugarJdkLibs = "com.android.tools:desugar_jdk_libs:2.1.5"
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidxActivity" }
