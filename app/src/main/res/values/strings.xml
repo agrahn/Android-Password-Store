@@ -289,6 +289,7 @@
   <string name="bottom_sheet_create_new_folder">Create new folder</string>
   <string name="bottom_sheet_create_new_password">Create new password</string>
   <string name="bottom_sheet_import_pgp_key">Restore backup/import from file</string>
+  <string name="bottom_sheet_import_pgp_hw">Import from YubiKey</string>
   <string name="bottom_sheet_create_pgp_key">Create new key</string>
   <string name="pref_debug_logging_summary">Enable debug logging (requires app restart)</string>
   <string name="pref_debug_logging_title">Debug logging</string>

@@ -286,6 +286,7 @@
   <string name="bottom_sheet_create_new_folder">Neuen Ordner erstellen</string>
   <string name="bottom_sheet_create_new_password">Neues Passwort erstellen</string>
   <string name="bottom_sheet_import_pgp_key">Aus Datei/Backup importieren</string>
+  <string name="bottom_sheet_import_pgp_hw">Aus einem YubiKey importieren</string>
   <string name="bottom_sheet_create_pgp_key">Neuen Schlüssel erstellen</string>
   <string name="pref_debug_logging_summary">Debug-Ausgaben aktivieren (Erfordert Neustart der App)</string>
   <string name="pref_debug_logging_title">Debug-Logging</string>

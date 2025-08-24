@@ -15,4 +15,5 @@ dependencies {
   testImplementation(libs.bundles.testDependencies)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.testing.testparameterinjector)
+  implementation(libs.thirdparty.logcat)
 }

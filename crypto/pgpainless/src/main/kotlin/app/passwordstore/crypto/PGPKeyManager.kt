@@ -22,6 +22,7 @@ import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.runCatching
 import com.github.michaelbull.result.unwrap
 import java.io.File
+import java.security.PublicKey
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import org.bouncycastle.openpgp.PGPPublicKeyRing
@@ -31,6 +32,8 @@ import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.util.ArmorUtils
 import org.pgpainless.util.Passphrase
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
+import logcat.logcat
 
 public class PGPKeyManager
 @Inject
@@ -168,6 +171,26 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
       }
 
       throw KeyNotFoundException("$id")
+    }
+
+  /** @see KeyManager.getPGPPublicKeyByPublicKey */
+  override fun getPGPPublicKeyByPublicKey(publicKey: PublicKey): Result<PGPKey, Throwable> =
+    runCatching {
+      if (!keyDirExists()) throw KeyDirectoryUnavailableException
+      val keyFiles = keyDir.listFiles()
+      if (keyFiles.isNullOrEmpty()) throw NoKeysAvailableException
+      val keys = keyFiles.map { file -> PGPKey(file.readBytes()) }
+
+      for (key in keys) {
+        val keyRing = tryParseKeyring(key) ?: continue
+		val pgpPublicKeys = keyRing.getPublicKeys()
+		while(pgpPublicKeys.hasNext()) {
+          val pubkey = JcaPGPKeyConverter().getPublicKey(pgpPublicKeys.next())
+		  if(pubkey.getEncoded() contentEquals publicKey.getEncoded())
+		    return@runCatching PGPKey(KeyRingUtils.publicKeys(keyRing).getEncoded())
+		}
+      }
+      throw KeyNotFoundException("")
     }
 
   /** @see KeyManager.getAllKeys */

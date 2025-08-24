@@ -88,8 +88,13 @@ class PGPKeyListActivity : AppCompatActivity() {
     val isSelecting = intent.extras?.getBoolean(EXTRA_KEY_SELECTION) ?: false
     val selectedKeyIds = mutableSetOf<String>()
     supportFragmentManager.setFragmentResultListener(PGP_KEY_ADD_REQUEST_KEY, this) { _, bundle ->
+	  val importIntent = Intent(this, PGPKeyImportActivity::class.java)
       when (bundle.getString(ACTION_KEY)) {
-        ACTION_IMPORT_FILE -> keyAction.launch(Intent(this, PGPKeyImportActivity::class.java))
+        ACTION_IMPORT_FILE -> keyAction.launch(importIntent)
+        ACTION_IMPORT_HW   -> {
+		  importIntent.putExtra(ACTION_KEY, ACTION_IMPORT_HW)
+		  keyAction.launch(importIntent)
+		}  
         ACTION_NEW_PGP_KEY -> keyAction.launch(Intent(this, PGPKeyCreationActivity::class.java))
       }
     }
@@ -297,6 +302,7 @@ class PGPKeyListActivity : AppCompatActivity() {
     const val PGP_KEY_ADD_REQUEST_KEY = "add_pgp_key"
     const val ACTION_KEY = "action"
     const val ACTION_IMPORT_FILE = "from_file"
+    const val ACTION_IMPORT_HW = "from_hw"
     const val ACTION_NEW_PGP_KEY = "generate_new"
 
     fun newSelectionActivity(context: Context): Intent {

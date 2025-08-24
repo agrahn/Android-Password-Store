@@ -6,6 +6,7 @@
 package app.passwordstore.crypto
 
 import com.github.michaelbull.result.Result
+import java.security.PublicKey
 
 /**
  * [KeyManager] defines a contract for implementing a management system for [Key]s as they would be
@@ -35,6 +36,11 @@ public interface KeyManager<Key, KeyIdentifier> {
    * hexadecimal key ID, an email, a short hex key ID, and probably a few more things.
    */
   public fun getKeyById(id: KeyIdentifier, withArmor: Boolean = false): Result<Key, Throwable>
+
+  /**
+   * Get a [Key] that corresponds to the given java.security.PublicKey [publicKey].
+   */
+  public fun getPGPPublicKeyByPublicKey(publicKey: PublicKey): Result<Key, Throwable>
 
   /** Returns all keys currently in the store as a [List]. */
   public fun getAllKeys(): Result<List<Key>, Throwable>
