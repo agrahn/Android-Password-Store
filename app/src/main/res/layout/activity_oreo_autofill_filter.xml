@@ -26,6 +26,7 @@
 
   <TextView
     android:id="@+id/origin"
+    android:textIsSelectable="false"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:singleLine="false"
@@ -79,6 +80,7 @@
 
     <TextView
       android:id="@+id/rvPasswordEmpty"
+      android:textIsSelectable="false"
       android:layout_width="match_parent"
       android:layout_height="match_parent"
       android:layout_marginStart="@dimen/activity_horizontal_margin"

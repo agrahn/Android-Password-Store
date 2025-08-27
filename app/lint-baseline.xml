@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 8.12.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.12.0)" variant="all" version="8.12.0">
+<issues format="6" by="lint 8.12.1" type="baseline" client="gradle" dependencies="false" name="AGP (8.12.1)" variant="all" version="8.12.1">
 
     <issue
         id="InvalidPackage"
@@ -30,6 +30,17 @@
     </issue>
 
     <issue
+        id="DenyListedApi"
+        message="Use Context#getDrawableCompat() instead"
+        errorLine1="      val icon = ContextCompat.getDrawable(this, R.drawable.ic_warning_red_24dp)"
+        errorLine2="                               ~~~~~~~~~~~">
+        <location
+            file="src/main/java/app/passwordstore/ui/pgp/PGPKeyListActivity.kt"
+            line="219"
+            column="32"/>
+    </issue>
+
+    <issue
         id="MissingQuantity"
         message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
         errorLine1="  &lt;plurals name=&quot;delete_title&quot;>"
@@ -71,6 +82,28 @@
             file="src/main/res/values-pt-rBR/strings.xml"
             line="21"
             column="3"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.dimen.activity_horizontal_wide_margin` appears to be unused"
+        errorLine1="  &lt;dimen name=&quot;activity_horizontal_wide_margin&quot;>24dp&lt;/dimen>"
+        errorLine2="         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/dimens.xml"
+            line="8"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.ic_action_new_pgp_hw` appears to be unused"
+        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; xmlns:aapt=&quot;http://schemas.android.com/aapt&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/ic_action_new_pgp_hw.xml"
+            line="1"
+            column="1"/>
     </issue>
 
     <issue
@@ -85,83 +118,6 @@
         message="One or more images in this project can be converted to the WebP format which typically results in smaller file sizes, even for lossless conversion">
         <location
             file="src/main/res/mipmap-xxxhdpi/ic_launcher.png"/>
-    </issue>
-
-    <issue
-        id="SelectableText"
-        message="Consider making the text value selectable by specifying `android:textIsSelectable=&quot;true&quot;`"
-        errorLine1="  &lt;TextView"
-        errorLine2="   ~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_oreo_autofill_filter.xml"
-            line="27"
-            column="4"/>
-    </issue>
-
-    <issue
-        id="SelectableText"
-        message="Consider making the text value selectable by specifying `android:textIsSelectable=&quot;true&quot;`"
-        errorLine1="  &lt;TextView"
-        errorLine2="   ~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_oreo_autofill_publisher_changed.xml"
-            line="66"
-            column="4"/>
-    </issue>
-
-    <issue
-        id="SelectableText"
-        message="Consider making the text value selectable by specifying `android:textIsSelectable=&quot;true&quot;`"
-        errorLine1="  &lt;TextView"
-        errorLine2="   ~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_oreo_autofill_publisher_changed.xml"
-            line="81"
-            column="4"/>
-    </issue>
-
-    <issue
-        id="SelectableText"
-        message="Consider making the text value selectable by specifying `android:textIsSelectable=&quot;true&quot;`"
-        errorLine1="    &lt;TextView"
-        errorLine2="     ~~~~~~~~">
-        <location
-            file="src/main/res/layout/oreo_autofill_dataset.xml"
-            line="37"
-            column="6"/>
-    </issue>
-
-    <issue
-        id="SelectableText"
-        message="Consider making the text value selectable by specifying `android:textIsSelectable=&quot;true&quot;`"
-        errorLine1="    &lt;TextView"
-        errorLine2="     ~~~~~~~~">
-        <location
-            file="src/main/res/layout/oreo_autofill_dataset.xml"
-            line="46"
-            column="6"/>
-    </issue>
-
-    <issue
-        id="SelectableText"
-        message="Consider making the text value selectable by specifying `android:textIsSelectable=&quot;true&quot;`"
-        errorLine1="  &lt;TextView"
-        errorLine2="   ~~~~~~~~">
-        <location
-            file="src/main/res/layout/oreo_autofill_filter_row.xml"
-            line="29"
-            column="4"/>
-    </issue>
-
-    <issue
-        id="SelectableText"
-        message="Consider making the text value selectable by specifying `android:textIsSelectable=&quot;true&quot;`"
-        errorLine1="  &lt;TextView"
-        errorLine2="   ~~~~~~~~">
-        <location
-            file="src/main/res/layout/oreo_autofill_filter_row.xml"
-            line="43"
-            column="4"/>
     </issue>
 
     <issue

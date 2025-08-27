@@ -19,7 +19,7 @@ android {
   namespace = "app.passwordstore"
 
   defaultConfig {
-    applicationId = "app.passwordstore2.agrahn"
+    applicationId = "app.passwordstore.agrahn"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 

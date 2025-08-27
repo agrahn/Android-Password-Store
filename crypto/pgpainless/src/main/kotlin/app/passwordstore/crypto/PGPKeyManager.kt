@@ -17,6 +17,7 @@ import app.passwordstore.crypto.errors.KeyDeletionFailedException
 import app.passwordstore.crypto.errors.KeyDirectoryUnavailableException
 import app.passwordstore.crypto.errors.KeyNotFoundException
 import app.passwordstore.crypto.errors.NoKeysAvailableException
+import app.passwordstore.crypto.errors.NoMatchingKeyException
 import app.passwordstore.crypto.errors.UnusableKeyException
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.runCatching
@@ -27,13 +28,12 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.util.KeyRingUtils
 import org.pgpainless.util.ArmorUtils
 import org.pgpainless.util.Passphrase
-import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
-import logcat.logcat
 
 public class PGPKeyManager
 @Inject
@@ -173,8 +173,8 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
       throw KeyNotFoundException("$id")
     }
 
-  /** @see KeyManager.getPGPPublicKeyByPublicKey */
-  override fun getPGPPublicKeyByPublicKey(publicKey: PublicKey): Result<PGPKey, Throwable> =
+  /** @see KeyManager.getPublicKeyByJCAPublicKey */
+  override fun getPublicKeyByJCAPublicKey(publicKey: PublicKey): Result<PGPKey, Throwable> =
     runCatching {
       if (!keyDirExists()) throw KeyDirectoryUnavailableException
       val keyFiles = keyDir.listFiles()
@@ -183,14 +183,17 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
 
       for (key in keys) {
         val keyRing = tryParseKeyring(key) ?: continue
-		val pgpPublicKeys = keyRing.getPublicKeys()
-		while(pgpPublicKeys.hasNext()) {
-          val pubkey = JcaPGPKeyConverter().getPublicKey(pgpPublicKeys.next())
-		  if(pubkey.getEncoded() contentEquals publicKey.getEncoded())
-		    return@runCatching PGPKey(KeyRingUtils.publicKeys(keyRing).getEncoded())
-		}
+        val pgpPublicKeys = keyRing.getPublicKeys()
+        while (pgpPublicKeys.hasNext()) {
+          val pgpPublicKey = pgpPublicKeys.next()
+          val jcaPublicKey = JcaPGPKeyConverter().getPublicKey(pgpPublicKey)
+          if (jcaPublicKey.getEncoded() contentEquals publicKey.getEncoded()) {
+            val pgpPublicKeyRing = PGPPublicKeyRing(keyRing.getPublicKeys().asSequence().toList())
+            return@runCatching PGPKey(pgpPublicKeyRing.getEncoded())
+          }
+        }
       }
-      throw KeyNotFoundException("")
+      throw NoMatchingKeyException
     }
 
   /** @see KeyManager.getAllKeys */

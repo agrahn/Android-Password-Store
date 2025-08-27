@@ -10,9 +10,9 @@ import app.passwordstore.crypto.PGPIdentifier.UserId
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.runCatching
 import org.bouncycastle.openpgp.PGPKeyRing
+import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.pgpainless.PGPainless
 import org.pgpainless.key.parsing.KeyRingReader
-import org.pgpainless.key.util.KeyRingUtils
 
 /** Utility methods to deal with [PGPKey]s. */
 public object KeyUtils {
@@ -58,6 +58,7 @@ public object KeyUtils {
 
   public fun extractPublicKeyData(key: PGPKey): ByteArray? {
     val keyRing = tryParseKeyring(key) ?: return null
-    return PGPainless.asciiArmor(KeyRingUtils.publicKeys(keyRing)).toByteArray()
+    val publicKeyRing = PGPPublicKeyRing(keyRing.getPublicKeys().asSequence().toList())
+    return PGPainless.asciiArmor(publicKeyRing).toByteArray()
   }
 }

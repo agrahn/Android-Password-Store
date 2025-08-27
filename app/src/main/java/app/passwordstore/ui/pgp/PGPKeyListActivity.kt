@@ -5,11 +5,18 @@
 
 package app.passwordstore.ui.pgp
 
+import com.yubico.yubikit.core.application.ApplicationNotAvailableException
+import com.yubico.yubikit.openpgp.OpenPgpSession
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ImageSpan
+import android.view.View
 import android.widget.CheckBox
+import android.widget.TextView
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
@@ -25,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
@@ -44,6 +52,11 @@ import com.github.michaelbull.result.onSuccess
 import com.github.michaelbull.result.runCatching
 import com.github.michaelbull.result.unwrap
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.yubico.yubikit.android.YubiKitManager
+import com.yubico.yubikit.android.transport.nfc.NfcConfiguration
+import com.yubico.yubikit.android.transport.usb.UsbConfiguration
+import com.yubico.yubikit.core.YubiKeyDevice
+import com.yubico.yubikit.core.smartcard.SmartCardConnection
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -59,6 +72,7 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   @Inject lateinit var cryptoRepository: CryptoRepository
   @Inject lateinit var pgpKeyManager: PGPKeyManager
+  lateinit var yubikit: YubiKitManager
 
   /* Counter for the user's passphrase attempts */
   private var retries = 0
@@ -88,13 +102,8 @@ class PGPKeyListActivity : AppCompatActivity() {
     val isSelecting = intent.extras?.getBoolean(EXTRA_KEY_SELECTION) ?: false
     val selectedKeyIds = mutableSetOf<String>()
     supportFragmentManager.setFragmentResultListener(PGP_KEY_ADD_REQUEST_KEY, this) { _, bundle ->
-	  val importIntent = Intent(this, PGPKeyImportActivity::class.java)
       when (bundle.getString(ACTION_KEY)) {
-        ACTION_IMPORT_FILE -> keyAction.launch(importIntent)
-        ACTION_IMPORT_HW   -> {
-		  importIntent.putExtra(ACTION_KEY, ACTION_IMPORT_HW)
-		  keyAction.launch(importIntent)
-		}  
+        ACTION_IMPORT_FILE -> keyAction.launch(Intent(this, PGPKeyImportActivity::class.java))
         ACTION_NEW_PGP_KEY -> keyAction.launch(Intent(this, PGPKeyCreationActivity::class.java))
       }
     }
@@ -138,14 +147,16 @@ class PGPKeyListActivity : AppCompatActivity() {
             onDeleteItemClick = viewModel::deleteKey,
             onExportItemClick = ::exportKey,
             onExportPublicClick = ::exportPublicKey,
+            onLinkHwClick = ::onLinkHwClick,
             modifier = Modifier.padding(paddingValues),
             onKeySelected =
               if (isSelecting) {
                 { identifier, isSelected ->
-                  val keyId = run { // ensure numeric key ID
-                    val key = pgpKeyManager.getKeyById(identifier).unwrap()
-                    pgpKeyManager.getKeyId(key) ?: throw NullPointerException()
-                  }
+                  val keyId =
+                    KeyUtils.tryGetId(
+                      pgpKeyManager.getKeyById(identifier).unwrap()
+                    ) // ensure numeric key ID
+                    ?: throw NullPointerException()
                   if (isSelected) selectedKeyIds.add(keyId.toString())
                   else selectedKeyIds.remove(keyId.toString())
                 }
@@ -154,6 +165,16 @@ class PGPKeyListActivity : AppCompatActivity() {
         }
       }
     }
+  }
+
+  override fun onPause() {
+    yubikit.stopNfcDiscovery(this)
+    super.onPause()
+  }
+
+  override fun onDestroy() {
+    yubikit.stopUsbDiscovery()
+    super.onDestroy()
   }
 
   private fun hasSecretKey(identifier: PGPIdentifier): Boolean =
@@ -171,7 +192,7 @@ class PGPKeyListActivity : AppCompatActivity() {
       if (cryptoRepository.isPasswordProtected(listOf(identifier))) {
         // export as symmetrically encrypted file after passphrase verification
         askPassphrase(identifier)
-      } else if (cryptoRepository.hasSecretKey(identifier)) {
+      } else if (hasSecretKey(identifier)) {
         // a secret key without passphrase is encrypted and exported without verification
         confirmBackupCode(identifier, generateBackupCode())
       } else {
@@ -183,6 +204,129 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   private fun exportPublicKey(identifier: PGPIdentifier) {
     lifecycleScope.launch { writeBackupFile(identifier) }
+  }
+
+  private fun onLinkHwClick(identifier: PGPIdentifier) {
+    yubikit = YubiKitManager(this)
+    val nfcConfiguration = NfcConfiguration().timeout(15000)
+
+    val dialogView = layoutInflater.inflate(R.layout.dialog_message, null)
+
+    dialogView.findViewById<TextView>(R.id.dialog_message).text =
+      resources.getString(R.string.pgp_key_manager_link_token_message)
+
+    if (hasSecretKey(identifier)) {
+      val warningMessage = resources.getString(R.string.pgp_key_manager_link_token_warning_message)
+      val spannable = SpannableString("! $warningMessage")
+      val icon = ContextCompat.getDrawable(this, R.drawable.ic_warning_red_24dp)
+      icon?.setBounds(0, 0, icon.intrinsicWidth, icon.intrinsicHeight)
+      icon?.let {
+        val imageSpan = ImageSpan(it, ImageSpan.ALIGN_BOTTOM)
+        spannable.setSpan(imageSpan, 0, 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+      }
+      val warningMessageView = dialogView.findViewById<TextView>(R.id.dialog_extended_message)
+      warningMessageView.text = spannable
+      warningMessageView.visibility = View.VISIBLE
+    }
+
+    val dialog =
+      MaterialAlertDialogBuilder(this)
+        .setTitle(R.string.pgp_key_manager_connect_token_dialog_title)
+        .setView(dialogView)
+        .setNegativeButton(R.string.dialog_cancel) { dialog, _ -> 
+            yubikit.stopNfcDiscovery(this)
+            yubikit.stopUsbDiscovery()
+            dialog.dismiss()
+        }
+        .create()
+
+    dialog.setOnShowListener {
+      yubikit.startUsbDiscovery(UsbConfiguration()) { device -> linkToken(identifier, device) }
+      runCatching {
+        yubikit.startNfcDiscovery(nfcConfiguration, this) { device ->
+          linkToken(identifier, device)
+        }
+      }
+    }
+
+    dialog.show()
+  }
+
+  //// Listen for YubiKey via NFC
+  //// yubikitManager.startUsbDiscovery(UsbConfiguration()) { device ->
+  // yubikitManager.startNfcDiscovery(nfcConfiguration, this) { device ->
+  //  val connection = device.openConnection(SmartCardConnection::class.java)
+  //  if (connection is SmartCardConnection) {
+  //    val openPgpSession = OpenPgpSession(connection)
+  //	  //val bytes = openPgpSession.getPublicKey(KeyRef.DEC).getEncoded()
+  //	  val jcaPublicKey = openPgpSession.getPublicKey(KeyRef.SIG).toPublicKey()
+  //    logcat{ "++++++++++++++++" +
+  // KeyUtils.isKeyUsable(pgpKeyManager.getPublicKeyByJCAPublicKey(jcaPublicKey).unwrap()).toString() + "+++++++++++"}
+  //  }
+  // }
+  //
+  //      ////////////////////////////////////////////////////////////////////////////
+  //    //lifecycleScope.launch {
+  //    //    linkKeyToHwToken(identifier)
+  //    //}
+
+  //       }
+
+  private fun linkToken(identifier: PGPIdentifier, device: YubiKeyDevice) {
+    device.requestConnection(SmartCardConnection::class.java) { result ->
+      if (result.isSuccess) {
+          val connection=result.getValue()
+          val openpgpsession = runCatching {
+             //val openpgp = OpenPgpSession(connection);
+             OpenPgpSession(connection);
+          }
+          if(openpgpsession.isOk){
+          }
+          else {
+            val dialog = MaterialAlertDialogBuilder(this)
+              .setTitle(R.string.aes_key_invalidated_dialog_title)
+              .setMessage(R.string.aes_key_invalidated_dialog_message)
+              .setIcon(R.drawable.ic_warning_red_24dp)
+              .setPositiveButton(R.string.dialog_ok) { _, _ -> }
+              .create()
+
+              dialog.show()
+          }
+          //.onFailure { e ->
+          //    if(e is ApplicationNotAvailableException){
+          //      logcat{"++++++++++++++++++++++++++++++++++++++++++++++++++"}
+          //      val dialog = MaterialAlertDialogBuilder(this)
+          //        .setTitle(R.string.aes_key_invalidated_dialog_title)
+          //        .setMessage(R.string.aes_key_invalidated_dialog_message)
+          //        .setIcon(R.drawable.ic_warning_red_24dp)
+          //        .setPositiveButton(R.string.dialog_ok) { _, _ -> }
+          //        .create()
+
+          //        dialog.show()
+          //    }
+          //    logcat { e.asLog() }
+          //}
+      }
+    }
+    //      // The result is a Result<SmartCardConnection, IOException>, which represents either a
+    // successful connection, or an error.
+    //      try {
+    //        SmartCardConnection connection = result.getValue();  // This may throw an IOException
+    //        // The SmartCardProtocol offers a the ability of sending APDU-based smartcard commands
+    //        SmartCardProtocol protocol = new SmartCardProtocol(connection);
+    //        byte[] aid = new byte[] {0xA0, 0x00, 0x00, 0x03, 0x08};
+    //        protocol.select(aid);  // Select a smartcard application (this may throw an
+    // ApplicationNotAvailableException)
+    //        protocol.sendAndReceive(new Apdu(0x00, 0xA4, 0x00, 0x00)));
+    //      } catch(ApplicationNotAvailableException | IOException e) {
+    //        // Handle errors
+    //      }
+    //    });
+    //
+    //    val keyId = KeyUtils.tryGetId(pgpKeyManager.getKeyById(identifier).unwrap()) ?: throw
+    // NullPointerException()
+
+    viewModel.updateKeySet()
   }
 
   private fun askPassphrase(identifier: PGPIdentifier, isError: Boolean = false) {
@@ -267,7 +411,7 @@ class PGPKeyListActivity : AppCompatActivity() {
         } else {
           KeyUtils.extractPublicKeyData(key)
         }
-      Pair(pgpKeyManager.getKeyId(key), contents)
+      pgpKeyManager.getKeyId(key) to contents
     }
 
     keyNumericId = keyIdAndContent.first?.toString()
@@ -302,7 +446,6 @@ class PGPKeyListActivity : AppCompatActivity() {
     const val PGP_KEY_ADD_REQUEST_KEY = "add_pgp_key"
     const val ACTION_KEY = "action"
     const val ACTION_IMPORT_FILE = "from_file"
-    const val ACTION_IMPORT_HW = "from_hw"
     const val ACTION_NEW_PGP_KEY = "generate_new"
 
     fun newSelectionActivity(context: Context): Intent {

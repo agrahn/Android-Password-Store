@@ -32,11 +32,15 @@ public data object InvalidKeyException :
 
 /** Key failed the [app.passwordstore.crypto.KeyUtils.isKeyUsable] test. */
 public data object UnusableKeyException :
-  KeyManagerException("Given key is not usable for encryption - is it using AEAD?")
+  KeyManagerException("Given key is not usable for encryption")
 
 /** No key matching `keyId` could be found. */
 public class KeyNotFoundException(keyId: String) :
   KeyManagerException("No key found for ID: $keyId")
+
+/** No key found that matches a given JCA key. */
+public data object NoMatchingKeyException :
+  KeyManagerException("No key matching the given JCA key was found")
 
 /** Attempting to add another key for `keyId` without requesting a replace. */
 public class KeyAlreadyExistsException(keyId: String) :

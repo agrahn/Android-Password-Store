@@ -69,10 +69,6 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
 import logcat.LogPriority.INFO
 import logcat.logcat
-import com.yubico.yubikit.android.YubiKitManager
-import com.yubico.yubikit.core.smartcard.SmartCardConnection
-import com.yubico.yubikit.openpgp.OpenPgpSession
-import com.yubico.yubikit.android.transport.nfc.NfcConfiguration
 
 const val PASSWORD_FRAGMENT_TAG = "PasswordsList"
 
@@ -251,23 +247,6 @@ class PasswordStore : BaseGitActivity() {
         }
       }
     }
-
-// instantiate YubiKitManager
-val yubikitManager = YubiKitManager(this@PasswordStore)
-
-val nfcConfiguration = NfcConfiguration().timeout(15000)
-
-// Listen for YubiKey via NFC
-yubikitManager.startNfcDiscovery(nfcConfiguration, this) { device ->
-    logcat { "++++++++++++++++++++ key discovered +++++++++++++++++++++++" }
-    val connection = device.openConnection(SmartCardConnection::class.java)
-    if (connection is SmartCardConnection) {
-        // Now you can pass this to OpenPgpSession
-        logcat { "++++++++++++++++++++ connection established +++++++++++++++++++++++" }
-        val openPgpSession = OpenPgpSession(connection)
-        // Use openPgpSession to perform PGP operations
-    }
-}
   }
 
   override fun onStart() {

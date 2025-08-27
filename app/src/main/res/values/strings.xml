@@ -143,6 +143,7 @@
   <string name="pref_pgp_ascii_armor_title">Encrypt in ASCII armor mode</string>
   <string name="pref_pgp_key_manager_export">Backup/Export</string>
   <string name="pref_pgp_key_manager_export_public">Export public key</string>
+  <string name="pref_pgp_key_manager_link_token">Link to a YubiKey</string>
   <string name="pref_pgp_key_manager_change_passphrase">Change passphrase</string>
 
   <!-- PasswordGenerator fragment -->
@@ -289,7 +290,6 @@
   <string name="bottom_sheet_create_new_folder">Create new folder</string>
   <string name="bottom_sheet_create_new_password">Create new password</string>
   <string name="bottom_sheet_import_pgp_key">Restore backup/import from file</string>
-  <string name="bottom_sheet_import_pgp_hw">Import from YubiKey</string>
   <string name="bottom_sheet_create_pgp_key">Create new key</string>
   <string name="pref_debug_logging_summary">Enable debug logging (requires app restart)</string>
   <string name="pref_debug_logging_title">Debug logging</string>
@@ -406,6 +406,11 @@
   <string name="pgp_key_manager_delete_secret_key_confirmation_dialog_title">Delete secret key?</string>
   <string name="pgp_key_manager_delete_key_confirmation_dialog_title">Delete key?</string>
   <string name="pgp_key_manager_delete_confirmation_dialog_message">Be sure to keep a backup of the PGP key. Without it, you will lose access to any password items encrypted with that key.</string>
+  <string name="pgp_key_manager_link_token_message">Future decryption operations will be performed on the external hardware token. It must already have been initialised with the appropriate PGP key.</string>
+  <string name="pgp_key_manager_link_token_warning_message">This action deletes the secret PGP key from Password Store. Thus, make sure you have a backup of the PGP key before you proceed.</string>
+  <string name="pgp_key_manager_connect_token_dialog_title">"Connect YubiKey via USB or hold it against the NFC sensor"</string>
+  <string name="pgp_key_manager_missing_openpgp_capability_warning_title">"OpenPGP capability missing"</string>
+  <string name="pgp_key_manager_missing_openpgp_capability_warning_message">"The connected token does not allow OpenPGP operations. Make sure the token supports OpenPGP and the application is enabled."</string>
   <string name="pgp_change_passphrase_title">Change PGP key passphrase</string>
   <string name="pgp_old_passphrase">Current passphrase</string>
   <string name="pgp_new_passphrase">New passphrase</string>
@@ -424,7 +429,7 @@
   <string name="pgp_id_label">PGP ID: </string>
   <string name="pgp_id_label_plural">PGP IDs: </string>
   <string name="aes_key_invalidated_dialog_title">Warning! New fingerprint added</string>
-  <string name="aes_key_invalidated_dialog_message">A new fingerprint has been registered in the device lock settings since the last use. Make sure it was added by you and not by someone else</string>
+  <string name="aes_key_invalidated_dialog_message">A new fingerprint has been registered in the device lock settings since the last use. Make sure it was added by you and not by someone else.</string>
 
   <!-- PIN input -->
   <string name="pin_entry_hint" translatable="false">PIN</string>

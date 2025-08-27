@@ -608,7 +608,7 @@ open class BasePGPActivity : AppCompatActivity() {
      * Newest Samsung phones now feature a history of up to 30 items. To err on the side of caution,
      * push 35 fake ones.
      */
-    private const val CLIPBOARD_CLEAR_COUNT = 35
+    private const val CLIPBOARD_CLEAR_COUNT = 50
     var clearTimer: ScheduledExecutorService? = null
 
     /** Gets the relative path to the repository */

@@ -58,6 +58,7 @@ fun KeyList(
   onDeleteItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportPublicClick: (identifier: PGPIdentifier) -> Unit,
+  onLinkHwClick: (identifier: PGPIdentifier) -> Unit,
   modifier: Modifier = Modifier,
   onKeySelected: ((identifier: PGPIdentifier, isSelected: Boolean) -> Unit)? = null,
 ) {
@@ -83,6 +84,7 @@ fun KeyList(
           onDeleteItemClick = onDeleteItemClick,
           onExportItemClick = onExportItemClick,
           onExportPublicClick = onExportPublicClick,
+          onLinkHwClick = onLinkHwClick,
           onKeySelected = onKeySelected,
         )
       }
@@ -98,6 +100,7 @@ private fun KeyItem(
   onDeleteItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportPublicClick: (identifier: PGPIdentifier) -> Unit,
+  onLinkHwClick: (identifier: PGPIdentifier) -> Unit,
   modifier: Modifier = Modifier,
   onKeySelected: ((identifier: PGPIdentifier, isSelected: Boolean) -> Unit)? = null,
 ) {
@@ -134,6 +137,11 @@ private fun KeyItem(
     horizontalArrangement = Arrangement.SpaceBetween,
     verticalAlignment = Alignment.CenterVertically,
   ) {
+    /* Icon(
+      painter = painterResource(R.drawable.ic_action_new_pgp_hw),
+      stringResource(id = R.string.delete),
+      modifier = Modifier.padding(end = SpacingSmall)
+    ) */
     Text(
       text = label,
       modifier = Modifier.weight(1f),
@@ -176,7 +184,14 @@ private fun KeyItem(
               onExportPublicClick(identifier)
             },
           )
-          HorizontalDivider(modifier = Modifier.padding(top = SpacingLarge))
+          DropdownMenuItem(
+            text = { Text(stringResource(id = R.string.pref_pgp_key_manager_link_token)) },
+            onClick = {
+              isMenuExpanded = false
+              onLinkHwClick(identifier)
+            },
+          )
+          HorizontalDivider()
           DropdownMenuItem(
             text = {
               Text(stringResource(id = R.string.delete))
@@ -266,6 +281,7 @@ private fun KeyListPreview() {
         onDeleteItemClick = {},
         onExportItemClick = {},
         onExportPublicClick = {},
+        onLinkHwClick = {},
       )
     }
   }
@@ -283,6 +299,7 @@ private fun EmptyKeyListPreview() {
         onDeleteItemClick = {},
         onExportItemClick = {},
         onExportPublicClick = {},
+        onLinkHwClick = {},
       )
     }
   }

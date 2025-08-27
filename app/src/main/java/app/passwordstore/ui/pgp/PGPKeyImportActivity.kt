@@ -25,7 +25,6 @@ import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.runCatching
-import com.github.michaelbull.result.unwrap
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayInputStream
@@ -34,15 +33,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.launch
 import logcat.asLog
 import logcat.logcat
-import app.passwordstore.ui.pgp.PGPKeyListActivity.Companion.ACTION_IMPORT_HW
-import app.passwordstore.ui.pgp.PGPKeyListActivity.Companion.ACTION_KEY
-import com.yubico.yubikit.android.YubiKitManager
-import com.yubico.yubikit.core.smartcard.SmartCardConnection
-import com.yubico.yubikit.openpgp.OpenPgpSession
-import com.yubico.yubikit.android.transport.nfc.NfcConfiguration
-import com.yubico.yubikit.android.transport.usb.UsbConfiguration
-import com.yubico.yubikit.openpgp.KeyRef
-//import org.bouncycastle.openpgp.PGPSecretKeyRing
 
 @AndroidEntryPoint
 class PGPKeyImportActivity : AppCompatActivity() {
@@ -81,30 +71,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-
-    if(intent.extras?.getString(ACTION_KEY) == ACTION_IMPORT_HW) {
-
-      ////////////////////////////////////////////////////////////////////////////
-	  
-      val yubikitManager = YubiKitManager(this)
-      val nfcConfiguration = NfcConfiguration().timeout(15000)
-      
-      // Listen for YubiKey via NFC
-      //yubikitManager.startUsbDiscovery(UsbConfiguration()) { device ->
-      yubikitManager.startNfcDiscovery(nfcConfiguration, this) { device ->
-        val connection = device.openConnection(SmartCardConnection::class.java)
-        if (connection is SmartCardConnection) {
-          val openPgpSession = OpenPgpSession(connection)
-          // Use openPgpSession to perform PGP operations
-      	  //val bytes = openPgpSession.getPublicKey(KeyRef.DEC).getEncoded()
-      	  val pkey = openPgpSession.getPublicKey(KeyRef.SIG).toPublicKey()
-		  logcat{ "++++++++++++++++" + isKeyUsable(keyManager.getPGPPublicKeyByPublicKey(pkey).unwrap()).toString() + "+++++++++++"}
-        }
-      }
-      
-      ////////////////////////////////////////////////////////////////////////////
-	}
-	else pgpKeyImportAction.launch(arrayOf("*/*"))
+    pgpKeyImportAction.launch(arrayOf("*/*"))
   }
 
   override fun onDestroy() {
