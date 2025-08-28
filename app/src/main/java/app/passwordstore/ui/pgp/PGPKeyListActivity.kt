@@ -5,6 +5,7 @@
 
 package app.passwordstore.ui.pgp
 
+import androidx.appcompat.app.AlertDialog
 import com.yubico.yubikit.core.application.ApplicationNotAvailableException
 import com.yubico.yubikit.openpgp.OpenPgpSession
 import android.content.Context
@@ -22,7 +23,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FloatingActionButton
@@ -238,18 +238,15 @@ class PGPKeyListActivity : AppCompatActivity() {
             yubikit.stopUsbDiscovery()
             dialog.dismiss()
         }
-        .create()
-
-    dialog.setOnShowListener {
-      yubikit.startUsbDiscovery(UsbConfiguration()) { device -> linkToken(identifier, device) }
-      runCatching {
-        yubikit.startNfcDiscovery(nfcConfiguration, this) { device ->
-          linkToken(identifier, device)
-        }
-      }
-    }
-
+		.create()
     dialog.show()
+
+    yubikit.startUsbDiscovery(UsbConfiguration()) { device -> linkToken(identifier, device) }
+    runCatching {
+      yubikit.startNfcDiscovery(nfcConfiguration, this) { device ->
+          linkToken(identifier, device, dialog)
+      }
+	} 
   }
 
   //// Listen for YubiKey via NFC
@@ -272,62 +269,25 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   //       }
 
-  private fun linkToken(identifier: PGPIdentifier, device: YubiKeyDevice) {
+  private fun linkToken(identifier: PGPIdentifier, device: YubiKeyDevice, dialog: AlertDialog? = null) {
     device.requestConnection(SmartCardConnection::class.java) { result ->
       if (result.isSuccess) {
           val connection=result.getValue()
-          val openpgpsession = runCatching {
-             //val openpgp = OpenPgpSession(connection);
-             OpenPgpSession(connection);
-          }
-          if(openpgpsession.isOk){
-          }
-          else {
-            val dialog = MaterialAlertDialogBuilder(this)
-              .setTitle(R.string.aes_key_invalidated_dialog_title)
-              .setMessage(R.string.aes_key_invalidated_dialog_message)
-              .setIcon(R.drawable.ic_warning_red_24dp)
-              .setPositiveButton(R.string.dialog_ok) { _, _ -> }
-              .create()
-
-              dialog.show()
-          }
-          //.onFailure { e ->
-          //    if(e is ApplicationNotAvailableException){
-          //      logcat{"++++++++++++++++++++++++++++++++++++++++++++++++++"}
-          //      val dialog = MaterialAlertDialogBuilder(this)
-          //        .setTitle(R.string.aes_key_invalidated_dialog_title)
-          //        .setMessage(R.string.aes_key_invalidated_dialog_message)
-          //        .setIcon(R.drawable.ic_warning_red_24dp)
-          //        .setPositiveButton(R.string.dialog_ok) { _, _ -> }
-          //        .create()
-
-          //        dialog.show()
-          //    }
-          //    logcat { e.asLog() }
-          //}
+		  runCatching {
+            val openpgp = OpenPgpSession(connection);
+	      }
+		  .onSuccess {
+		    logcat {"+++++++++++++++++++++++++openpgp"}
+		    dialog?.dismiss()
+		  }
+		  .onFailure { e ->
+		    logcat {"+++++++++++++++++++++++++missing"}
+		    dialog?.dismiss()
+			throw e
+		  }
       }
     }
-    //      // The result is a Result<SmartCardConnection, IOException>, which represents either a
-    // successful connection, or an error.
-    //      try {
-    //        SmartCardConnection connection = result.getValue();  // This may throw an IOException
-    //        // The SmartCardProtocol offers a the ability of sending APDU-based smartcard commands
-    //        SmartCardProtocol protocol = new SmartCardProtocol(connection);
-    //        byte[] aid = new byte[] {0xA0, 0x00, 0x00, 0x03, 0x08};
-    //        protocol.select(aid);  // Select a smartcard application (this may throw an
-    // ApplicationNotAvailableException)
-    //        protocol.sendAndReceive(new Apdu(0x00, 0xA4, 0x00, 0x00)));
-    //      } catch(ApplicationNotAvailableException | IOException e) {
-    //        // Handle errors
-    //      }
-    //    });
-    //
-    //    val keyId = KeyUtils.tryGetId(pgpKeyManager.getKeyById(identifier).unwrap()) ?: throw
-    // NullPointerException()
-
-    viewModel.updateKeySet()
-  }
+  }	
 
   private fun askPassphrase(identifier: PGPIdentifier, isError: Boolean = false) {
     if (++retries > MAX_RETRIES) return
