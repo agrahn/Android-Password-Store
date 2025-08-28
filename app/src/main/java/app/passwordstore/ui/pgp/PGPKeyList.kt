@@ -53,6 +53,7 @@ import kotlinx.collections.immutable.toPersistentList
 @Composable
 fun KeyList(
   identifiers: ImmutableList<PGPIdentifier>,
+  tokenLinkedIds: ImmutableList<PGPIdentifier>,
   hasSecretKey: (identifier: PGPIdentifier) -> Boolean,
   onChangePassphraseClick: (identifier: PGPIdentifier) -> Unit,
   onDeleteItemClick: (identifier: PGPIdentifier) -> Unit,
@@ -79,6 +80,7 @@ fun KeyList(
       items(identifiers) { identifier ->
         KeyItem(
           identifier = identifier,
+          tokenLinkedIds = tokenLinkedIds,
           hasSecretKey = hasSecretKey,
           onChangePassphraseClick = onChangePassphraseClick,
           onDeleteItemClick = onDeleteItemClick,
@@ -95,6 +97,7 @@ fun KeyList(
 @Composable
 private fun KeyItem(
   identifier: PGPIdentifier,
+  tokenLinkedIds: ImmutableList<PGPIdentifier>,
   hasSecretKey: (identifier: PGPIdentifier) -> Boolean,
   onChangePassphraseClick: (identifier: PGPIdentifier) -> Unit,
   onDeleteItemClick: (identifier: PGPIdentifier) -> Unit,
@@ -137,11 +140,13 @@ private fun KeyItem(
     horizontalArrangement = Arrangement.SpaceBetween,
     verticalAlignment = Alignment.CenterVertically,
   ) {
-    /* Icon(
-      painter = painterResource(R.drawable.ic_action_new_pgp_hw),
-      stringResource(id = R.string.delete),
-      modifier = Modifier.padding(end = SpacingSmall)
-    ) */
+    if (tokenLinkedIds.contains(identifier)) {
+      Icon(
+        painter = painterResource(R.drawable.ic_action_new_pgp_hw),
+        stringResource(id = R.string.delete),
+        modifier = Modifier.padding(end = SpacingSmall),
+      )
+    }
     Text(
       text = label,
       modifier = Modifier.weight(1f),
@@ -276,6 +281,7 @@ private fun KeyListPreview() {
               PGPIdentifier.fromString("0xB950AE2813841585"),
             )
             .toPersistentList(),
+        tokenLinkedIds = listOf<PGPIdentifier>().toPersistentList(),
         hasSecretKey = { _ -> true },
         onChangePassphraseClick = {},
         onDeleteItemClick = {},
@@ -294,6 +300,7 @@ private fun EmptyKeyListPreview() {
     Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
       KeyList(
         identifiers = persistentListOf(),
+        tokenLinkedIds = listOf<PGPIdentifier>().toPersistentList(),
         hasSecretKey = { _ -> true },
         onChangePassphraseClick = {},
         onDeleteItemClick = {},
