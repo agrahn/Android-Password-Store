@@ -107,4 +107,6 @@ object PreferenceKeys {
   const val CLEAR_PASSPHRASE_CACHE = "pgpainless_auto_clear_passphrase_cache_screen_off"
 
   const val CACHE_PASSPHRASE = "cache_passphrase_until_screen_off"
+
+  const val TOKEN_LINKED_PGP_IDS = "token_linked_pgp_ids"
 }

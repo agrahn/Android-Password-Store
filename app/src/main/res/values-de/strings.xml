@@ -405,7 +405,11 @@
   <string name="pgp_key_manager_delete_confirmation_dialog_message">Stellen Sie sicher, dass Sie eine Sicherungskopie des PGP-Schlüssels haben. Andernfalls gehen alle mit diesem Schlüssel verschlüsselten Passworteinträge verloren.</string>
   <string name="pgp_key_manager_link_token_message">Künftige Entschlüsselungsvorgänge werden vom externen Hardware-Token ausgeführt. Dieser muss bereits mit dem entsprechenden PGP-Schlüssel initialisiert worden sein.</string>
   <string name="pgp_key_manager_link_token_warning_message">Mit dieser Aktion wird der geheime PGP-Schlüssel aus dem Password Store entfernt. Stellen Sie sicher, dass Sie eine Sicherungskopie des PGP-Schlüssels haben, bevor Sie fortfahren.</string>
-  <string name="pgp_key_manager_connect_token_dialog_title">"Verbinden Sie den YubiKey über USB oder halten Sie ihn gegen den NFC-Sensor"</string>
+  <string name="pgp_key_manager_connect_token_dialog_title">Verbinden Sie den YubiKey über USB oder halten Sie ihn gegen den NFC-Sensor</string>
+  <string name="pgp_key_manager_missing_openpgp_capability_warning_title">Fehlende OpenPGP-Fähigkeit</string>
+  <string name="pgp_key_manager_missing_openpgp_capability_warning_message">Der verbundene Token lässt keine OpenPGP-Operationen zu. Stellen Sie sicher, dass der Token OpenPGP unterstützt und die Anwendung aktiviert ist.</string>
+  <string name="pgp_key_manager_no_matching_key_on_token_warning_title">Kein passender PGP-Schlüssel</string>
+  <string name="pgp_key_manager_no_matching_key_on_token_warning_message">Der verbundene Token stellt keinen passenden PGP-Schlüssel bereit. Verwenden Sie den richtigen Token?</string>
   <string name="pgp_change_passphrase_title">PGP-Kennwortsatz ändern</string>
   <string name="pgp_old_passphrase">Aktueller Kennwortsatz</string>
   <string name="pgp_new_passphrase">Neuer Kennwortsatz</string>

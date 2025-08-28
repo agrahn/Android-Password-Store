@@ -56,6 +56,12 @@ public object KeyUtils {
     return runCatching { PGPainless.readKeyRing().secretKeyRing(key.contents) }.get() != null
   }
 
+  public fun extractPublicKey(key: PGPKey): PGPKey? {
+    val keyRing = tryParseKeyring(key) ?: return null
+    val publicKeyRing = PGPPublicKeyRing(keyRing.getPublicKeys().asSequence().toList())
+    return PGPKey(publicKeyRing.getEncoded())
+  }
+
   public fun extractPublicKeyData(key: PGPKey): ByteArray? {
     val keyRing = tryParseKeyring(key) ?: return null
     val publicKeyRing = PGPPublicKeyRing(keyRing.getPublicKeys().asSequence().toList())

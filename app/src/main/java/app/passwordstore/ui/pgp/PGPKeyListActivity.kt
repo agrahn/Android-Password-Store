@@ -5,9 +5,10 @@
 
 package app.passwordstore.ui.pgp
 
-import androidx.appcompat.app.AlertDialog
+import androidx.core.content.edit
+import app.passwordstore.util.settings.PreferenceKeys.TOKEN_LINKED_PGP_IDS
+import app.passwordstore.crypto.errors.NoMatchingKeyException
 import com.yubico.yubikit.core.application.ApplicationNotAvailableException
-import com.yubico.yubikit.openpgp.OpenPgpSession
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -23,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FloatingActionButton
@@ -57,6 +59,8 @@ import com.yubico.yubikit.android.transport.nfc.NfcConfiguration
 import com.yubico.yubikit.android.transport.usb.UsbConfiguration
 import com.yubico.yubikit.core.YubiKeyDevice
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
+import com.yubico.yubikit.openpgp.KeyRef
+import com.yubico.yubikit.openpgp.OpenPgpSession
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -66,12 +70,15 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
+import android.content.SharedPreferences
+import app.passwordstore.injection.prefs.SettingsPreferences
 
 @AndroidEntryPoint
 class PGPKeyListActivity : AppCompatActivity() {
 
   @Inject lateinit var cryptoRepository: CryptoRepository
   @Inject lateinit var pgpKeyManager: PGPKeyManager
+  @Inject @SettingsPreferences lateinit var settings: SharedPreferences
   lateinit var yubikit: YubiKitManager
 
   /* Counter for the user's passphrase attempts */
@@ -144,7 +151,7 @@ class PGPKeyListActivity : AppCompatActivity() {
             identifiers = viewModel.keys,
             hasSecretKey = ::hasSecretKey,
             onChangePassphraseClick = ::changeKeyPassphrase,
-            onDeleteItemClick = viewModel::deleteKey,
+            onDeleteItemClick = ::deleteKey,
             onExportItemClick = ::exportKey,
             onExportPublicClick = ::exportPublicKey,
             onLinkHwClick = ::onLinkHwClick,
@@ -168,12 +175,12 @@ class PGPKeyListActivity : AppCompatActivity() {
   }
 
   override fun onPause() {
-    yubikit.stopNfcDiscovery(this)
+    runCatching { yubikit.stopNfcDiscovery(this) }
     super.onPause()
   }
 
   override fun onDestroy() {
-    yubikit.stopUsbDiscovery()
+    runCatching { yubikit.stopUsbDiscovery() }
     super.onDestroy()
   }
 
@@ -185,6 +192,17 @@ class PGPKeyListActivity : AppCompatActivity() {
     intent.putExtra(PGPKeyChangePassphraseActivity.EXTRA_SELECTED_IDENTIFIER, identifier.toString())
     keyAction.launch(intent)
   }
+
+  private fun deleteKey(identifier: PGPIdentifier) {
+    val keyIdPassedIn =
+      KeyUtils.tryGetId(pgpKeyManager.getKeyById(identifier).unwrap())
+        ?: throw NullPointerException()
+    val tokenLinkedIds = settings.getStringSet(TOKEN_LINKED_PGP_IDS, setOf<String>())
+    settings.edit{
+       putStringSet(TOKEN_LINKED_PGP_IDS, tokenLinkedIds?.minus(keyIdPassedIn.toString()) ?: setOf<String>())
+    }
+    viewModel.deleteKey(identifier)
+  }    
 
   private fun exportKey(identifier: PGPIdentifier) {
     retries = 0
@@ -206,13 +224,14 @@ class PGPKeyListActivity : AppCompatActivity() {
     lifecycleScope.launch { writeBackupFile(identifier) }
   }
 
+  private var connectTokenDialog: AlertDialog? = null
+
   private fun onLinkHwClick(identifier: PGPIdentifier) {
     yubikit = YubiKitManager(this)
     val nfcConfiguration = NfcConfiguration().timeout(15000)
 
-    val dialogView = layoutInflater.inflate(R.layout.dialog_message, null)
-
-    dialogView.findViewById<TextView>(R.id.dialog_message).text =
+    val connectTokenDialogView = layoutInflater.inflate(R.layout.dialog_message, null)
+    connectTokenDialogView.findViewById<TextView>(R.id.dialog_message).text =
       resources.getString(R.string.pgp_key_manager_link_token_message)
 
     if (hasSecretKey(identifier)) {
@@ -224,31 +243,108 @@ class PGPKeyListActivity : AppCompatActivity() {
         val imageSpan = ImageSpan(it, ImageSpan.ALIGN_BOTTOM)
         spannable.setSpan(imageSpan, 0, 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
       }
-      val warningMessageView = dialogView.findViewById<TextView>(R.id.dialog_extended_message)
+      val warningMessageView =
+        connectTokenDialogView.findViewById<TextView>(R.id.dialog_extended_message)
       warningMessageView.text = spannable
       warningMessageView.visibility = View.VISIBLE
     }
 
-    val dialog =
+    connectTokenDialog =
       MaterialAlertDialogBuilder(this)
         .setTitle(R.string.pgp_key_manager_connect_token_dialog_title)
-        .setView(dialogView)
-        .setNegativeButton(R.string.dialog_cancel) { dialog, _ -> 
+        .setView(connectTokenDialogView)
+        .setNegativeButton(R.string.dialog_cancel, null)
+        .setOnDismissListener{
+          yubikit.stopNfcDiscovery(this)
+          yubikit.stopUsbDiscovery()
+        }
+        .create()
+    connectTokenDialog?.show()
+
+    lifecycleScope.launch {
+      yubikit.startUsbDiscovery(UsbConfiguration()) { device -> connectToken(identifier, device) }
+      runCatching {
+        yubikit.startNfcDiscovery(nfcConfiguration, this@PGPKeyListActivity) { device ->
+          connectToken(identifier, device)
+        }
+      }
+    }
+  }
+
+  private var noOpenPgpDialog: AlertDialog? = null
+
+  private fun connectToken(identifier: PGPIdentifier, device: YubiKeyDevice) {
+    device.requestConnection(SmartCardConnection::class.java) { result ->
+      noOpenPgpDialog?.dismiss()
+      if (result.isSuccess) {
+        val connection = result.getValue()
+        runCatching { linkTokenKey(identifier, OpenPgpSession(connection)) }
+          .onFailure { e ->
+            if(e is  ApplicationNotAvailableException) 
+              runOnUiThread {
+                if (noOpenPgpDialog == null)
+                  noOpenPgpDialog =
+                    MaterialAlertDialogBuilder(this)
+                      .setTitle(R.string.pgp_key_manager_missing_openpgp_capability_warning_title)
+                      .setMessage(R.string.pgp_key_manager_missing_openpgp_capability_warning_message)
+                      .setIcon(R.drawable.ic_warning_red_24dp)
+                      .setPositiveButton(R.string.dialog_ok, null)
+                      .setOnDismissListener{
+                        yubikit.stopNfcDiscovery(this)
+                        yubikit.stopUsbDiscovery()
+                      }
+                      .create()
+                noOpenPgpDialog?.show()
+              }
+            logcat(ERROR) { e.asLog() }
+          }
+        connectTokenDialog?.dismiss()
+      }
+    }
+  }
+
+  private var matchingKeyNotFoundDialog: AlertDialog? = null
+
+  private fun linkTokenKey(identifier: PGPIdentifier, openPgpSession: OpenPgpSession) {
+    matchingKeyNotFoundDialog?.dismiss()
+    runCatching {
+        val jcaPublicKey = openPgpSession.getPublicKey(KeyRef.SIG).toPublicKey()
+        val pgpPublicKey = pgpKeyManager.getPublicKeyByJCAPublicKey(jcaPublicKey).getOrThrow()
+        val keyIdFound = KeyUtils.tryGetId(pgpPublicKey)
+        val keyIdPassedIn =
+          KeyUtils.tryGetId(pgpKeyManager.getKeyById(identifier).unwrap())
+            ?: throw NullPointerException()
+        if(keyIdFound != null && keyIdFound == keyIdPassedIn){
+           val tokenLinkedIds = settings.getStringSet(TOKEN_LINKED_PGP_IDS, setOf<String>())
+            settings.edit{
+               putStringSet(TOKEN_LINKED_PGP_IDS, tokenLinkedIds?.plus(keyIdPassedIn.toString()) ?: setOf<String>())
+            }
+            logcat{"++++++++++++++++++++++++++++++++++++ success" }
             yubikit.stopNfcDiscovery(this)
             yubikit.stopUsbDiscovery()
-            dialog.dismiss()
         }
-		.show()
-
-    runCatching {
-      yubikit.startNfcDiscovery(nfcConfiguration, this@PGPKeyListActivity) { device ->
-          logcat {"++++++++++++++++ nfc discovery success +++++++++"}
-          MaterialAlertDialogBuilder(this)
-            .setTitle("NFC discovery")
-            .setMessage("Success!")
-	        .show()
+        else {
+            throw NoMatchingKeyException
+        }
       }
-	} 
+      .onFailure { e ->
+        runOnUiThread {
+          if (matchingKeyNotFoundDialog == null)
+            matchingKeyNotFoundDialog =
+              MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.pgp_key_manager_no_matching_key_on_token_warning_title)
+                .setMessage(R.string.pgp_key_manager_no_matching_key_on_token_warning_message)
+                .setIcon(R.drawable.ic_warning_red_24dp)
+                .setPositiveButton(R.string.dialog_ok, null)
+                .setOnDismissListener{
+                  yubikit.stopNfcDiscovery(this)
+                  yubikit.stopUsbDiscovery()
+                }
+                .create()
+          matchingKeyNotFoundDialog?.show()
+        }
+        logcat { e.asLog() }
+      }
   }
 
   private fun askPassphrase(identifier: PGPIdentifier, isError: Boolean = false) {
