@@ -238,56 +238,18 @@ class PGPKeyListActivity : AppCompatActivity() {
             yubikit.stopUsbDiscovery()
             dialog.dismiss()
         }
-		.create()
-    dialog.show()
+		.show()
 
-    yubikit.startUsbDiscovery(UsbConfiguration()) { device -> linkToken(identifier, device) }
     runCatching {
-      yubikit.startNfcDiscovery(nfcConfiguration, this) { device ->
-          linkToken(identifier, device, dialog)
+      yubikit.startNfcDiscovery(nfcConfiguration, this@PGPKeyListActivity) { device ->
+          logcat {"++++++++++++++++ nfc discovery success +++++++++"}
+          MaterialAlertDialogBuilder(this)
+            .setTitle("NFC discovery")
+            .setMessage("Success!")
+	        .show()
       }
 	} 
   }
-
-  //// Listen for YubiKey via NFC
-  //// yubikitManager.startUsbDiscovery(UsbConfiguration()) { device ->
-  // yubikitManager.startNfcDiscovery(nfcConfiguration, this) { device ->
-  //  val connection = device.openConnection(SmartCardConnection::class.java)
-  //  if (connection is SmartCardConnection) {
-  //    val openPgpSession = OpenPgpSession(connection)
-  //	  //val bytes = openPgpSession.getPublicKey(KeyRef.DEC).getEncoded()
-  //	  val jcaPublicKey = openPgpSession.getPublicKey(KeyRef.SIG).toPublicKey()
-  //    logcat{ "++++++++++++++++" +
-  // KeyUtils.isKeyUsable(pgpKeyManager.getPublicKeyByJCAPublicKey(jcaPublicKey).unwrap()).toString() + "+++++++++++"}
-  //  }
-  // }
-  //
-  //      ////////////////////////////////////////////////////////////////////////////
-  //    //lifecycleScope.launch {
-  //    //    linkKeyToHwToken(identifier)
-  //    //}
-
-  //       }
-
-  private fun linkToken(identifier: PGPIdentifier, device: YubiKeyDevice, dialog: AlertDialog? = null) {
-    device.requestConnection(SmartCardConnection::class.java) { result ->
-      if (result.isSuccess) {
-          val connection=result.getValue()
-		  runCatching {
-            val openpgp = OpenPgpSession(connection);
-	      }
-		  .onSuccess {
-		    logcat {"+++++++++++++++++++++++++openpgp"}
-		    dialog?.dismiss()
-		  }
-		  .onFailure { e ->
-		    logcat {"+++++++++++++++++++++++++missing"}
-		    dialog?.dismiss()
-			throw e
-		  }
-      }
-    }
-  }	
 
   private fun askPassphrase(identifier: PGPIdentifier, isError: Boolean = false) {
     if (++retries > MAX_RETRIES) return
