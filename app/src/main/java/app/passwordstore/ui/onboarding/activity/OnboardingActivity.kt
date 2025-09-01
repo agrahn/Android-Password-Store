@@ -8,6 +8,7 @@ package app.passwordstore.ui.onboarding.activity
 import android.os.Bundle
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import app.passwordstore.R
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -16,6 +17,7 @@ class OnboardingActivity : AppCompatActivity(R.layout.activity_onboarding) {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    WindowCompat.enableEdgeToEdge(window)
     supportActionBar?.hide()
     val callback = onBackPressedDispatcher.addCallback(enabled = false) { finishAffinity() }
     supportFragmentManager.addOnBackStackChangedListener {

@@ -8,6 +8,8 @@ package app.passwordstore.ui.onboarding.fragments
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.Keep
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import app.passwordstore.R
 import app.passwordstore.databinding.FragmentWelcomeBinding
@@ -23,11 +25,20 @@ class WelcomeFragment : Fragment(R.layout.fragment_welcome) {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    binding.letsGo.setOnClickListener {
-      parentFragmentManager.performTransactionWithBackStack(CloneFragment.newInstance())
+
+    ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
+      val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+      v.setPadding(0, statusBarHeight, 0, 0)
+      insets
     }
-    binding.settingsButton.setOnClickListener {
-      requireActivity().launchActivity(SettingsActivity::class.java)
+
+    with(binding) {
+      letsGo.setOnClickListener {
+        parentFragmentManager.performTransactionWithBackStack(CloneFragment.newInstance())
+      }
+      settingsButton.setOnClickListener {
+        requireActivity().launchActivity(SettingsActivity::class.java)
+      }
     }
   }
 }
