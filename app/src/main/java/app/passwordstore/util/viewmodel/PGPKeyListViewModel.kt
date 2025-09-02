@@ -36,7 +36,10 @@ class PGPKeyListViewModel @Inject constructor(private val keyManager: PGPKeyMana
       keyManager
         .getAllKeys()
         .map { keys -> keys.mapNotNull { key -> KeyUtils.tryGetEmail(key) } }
-        .onSuccess { keys = it.toPersistentList() }
+        .onSuccess {
+           keys = listOf<PGPIdentifier>().toPersistentList()
+           keys = it.toPersistentList()
+        }
     }
   }
 
