@@ -7,6 +7,7 @@
 package app.passwordstore.crypto
 
 import androidx.annotation.VisibleForTesting
+import app.passwordstore.crypto.KeyUtils.hasSecretKey
 import app.passwordstore.crypto.KeyUtils.isKeyUsable
 import app.passwordstore.crypto.KeyUtils.tryGetId
 import app.passwordstore.crypto.KeyUtils.tryParseKeyring
@@ -41,19 +42,24 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
   /** @see KeyManager.addKey */
   override fun addKey(key: PGPKey, replace: Boolean): Result<PGPKey, Throwable> = runCatching {
     if (!keyDirExists()) throw KeyDirectoryUnavailableException
-    val incomingKeyRing = tryParseKeyring(key) ?: throw InvalidKeyException
     if (!isKeyUsable(key)) throw UnusableKeyException
     val keyFile = File(keyDir, "${tryGetId(key)}.$KEY_EXTENSION")
     if (keyFile.exists()) {
       val existingKeyBytes = keyFile.readBytes()
-      val existingKeyRing = tryParseKeyring(PGPKey(existingKeyBytes)) ?: throw InvalidKeyException
+      val existingKey = PGPKey(existingKeyBytes)
       when {
-        existingKeyRing is PGPPublicKeyRing && incomingKeyRing is PGPSecretKeyRing -> {
+        !hasSecretKey(existingKey) && hasSecretKey(key) -> {
           keyFile.writeBytes(key.contents)
           return@runCatching key
         }
-        existingKeyRing is PGPPublicKeyRing && incomingKeyRing is PGPPublicKeyRing -> {
-          val updatedPublicKey = PGPainless.mergeCertificate(existingKeyRing, incomingKeyRing)
+        !hasSecretKey(existingKey) && !hasSecretKey(key) -> {
+          val incomingKeyRing = tryParseKeyring(key) ?: throw InvalidKeyException
+          val existingKeyRing = tryParseKeyring(existingKey) ?: throw InvalidKeyException
+          val updatedPublicKey =
+            PGPainless.mergeCertificate(
+              existingKeyRing as PGPPublicKeyRing,
+              incomingKeyRing as PGPPublicKeyRing,
+            )
           val keyBytes = PGPainless.asciiArmor(updatedPublicKey).encodeToByteArray()
           keyFile.writeBytes(keyBytes)
           return@runCatching key
