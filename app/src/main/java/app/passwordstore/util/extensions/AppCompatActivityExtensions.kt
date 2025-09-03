@@ -9,21 +9,21 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
 
 fun AppCompatActivity.enableEdgeToEdgeView(view: View) = run {
-  WindowCompat.enableEdgeToEdge(window)
-  ViewCompat.setOnApplyWindowInsetsListener(view) { v, windowInsets ->
-    val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-    v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-      topMargin = insets.top
-      leftMargin = insets.left
-      bottomMargin = insets.bottom
-      rightMargin = insets.right
-    }
+  ViewCompat.setOnApplyWindowInsetsListener(view, windowInsetsLambda)
+}
 
-    WindowInsetsCompat.CONSUMED
+val windowInsetsLambda: (View, WindowInsetsCompat) -> WindowInsetsCompat = { v, windowInsets ->
+  val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+  v.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+    topMargin = insets.top
+    leftMargin = insets.left
+    bottomMargin = insets.bottom
+    rightMargin = insets.right
   }
+
+  windowInsets
 }

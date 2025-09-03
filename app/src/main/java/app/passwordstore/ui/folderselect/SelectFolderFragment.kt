@@ -8,6 +8,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.flowWithLifecycle
@@ -20,6 +21,7 @@ import app.passwordstore.ui.adapters.PasswordItemRecyclerAdapter
 import app.passwordstore.ui.passwords.PasswordStore
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.extensions.viewBinding
+import app.passwordstore.util.extensions.windowInsetsLambda
 import app.passwordstore.util.viewmodel.ListMode
 import app.passwordstore.util.viewmodel.SearchableRepositoryViewModel
 import com.github.michaelbull.result.onFailure
@@ -42,6 +44,9 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+
+    ViewCompat.setOnApplyWindowInsetsListener(view, windowInsetsLambda)
+
     binding.fab.hide()
     recyclerAdapter =
       PasswordItemRecyclerAdapter(lifecycleScope, dispatcherProvider).onItemClicked { _, item ->
