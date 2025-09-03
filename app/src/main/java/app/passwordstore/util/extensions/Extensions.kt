@@ -10,6 +10,10 @@ import java.time.Instant
 import logcat.asLog
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.revwalk.RevCommit
+import java.nio.charset.StandardCharsets
+import android.util.Base64
+import java.nio.ByteBuffer
+import java.nio.CharBuffer
 
 /** Checks if this [Int] contains the given [flag] */
 infix fun Int.hasFlag(flag: Int): Boolean {
@@ -59,3 +63,29 @@ fun <T> unsafeLazy(initializer: () -> T) = lazy(LazyThreadSafetyMode.NONE) { ini
 
 /** A convenience extension to turn a [Throwable] with a message into a loggable string. */
 fun Throwable.asLog(message: String): String = "$message\n${asLog()}"
+
+/** A few conversion methods */
+fun CharArray.toByteArray(): ByteArray {
+  val byteBuffer = StandardCharsets.UTF_8.encode(CharBuffer.wrap(this))
+  val byteArray = ByteArray(byteBuffer.remaining())
+  byteBuffer.get(byteArray)
+  return byteArray
+}
+
+fun ByteArray.toCharArray(): CharArray {
+  val charBuffer = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(this))
+  val charArray = CharArray(charBuffer.remaining())
+  charBuffer.get(charArray)
+  return charArray
+}
+
+fun ByteArray.encodeToBase64CharArray(): CharArray {
+  val encodedBytes = Base64.encode(this, Base64.NO_WRAP)
+  return CharArray(encodedBytes.size) { i -> Char(encodedBytes[i].toUShort()) }
+}
+
+fun CharArray.decodeFromBase64ToByteArray(): ByteArray {
+  val byteArray = ByteArray(this.size) { i -> this[i].code.toByte() }
+  return Base64.decode(byteArray, Base64.NO_WRAP)
+}
+

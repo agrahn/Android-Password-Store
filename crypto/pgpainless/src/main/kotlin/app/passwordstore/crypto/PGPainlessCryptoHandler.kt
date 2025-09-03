@@ -5,6 +5,8 @@
 
 package app.passwordstore.crypto
 
+import java.io.ByteArrayInputStream
+import org.pgpainless.util.ArmorUtils
 import app.passwordstore.crypto.errors.CryptoHandlerException
 import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
@@ -173,4 +175,11 @@ public class PGPainlessCryptoHandler @Inject constructor() :
     keys
       .map { key -> KeyUtils.hasSecretKey(key) && !passphraseIsCorrect(key, charArrayOf()) }
       .all { it }
+
+  public override fun removeArmor(armored: ByteArray): ByteArray {
+    val decoderStream = ArmorUtils.getDecoderStream(ByteArrayInputStream(armored))
+    val buffer = ByteArrayOutputStream()
+    decoderStream.copyTo(buffer)
+    return buffer.toByteArray()
+  }
 }

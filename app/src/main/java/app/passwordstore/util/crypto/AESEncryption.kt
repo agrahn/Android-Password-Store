@@ -4,6 +4,10 @@
  */
 package app.passwordstore.util.crypto
 
+import app.passwordstore.util.extensions.toByteArray
+import app.passwordstore.util.extensions.toCharArray
+import app.passwordstore.util.extensions.encodeToBase64CharArray
+import app.passwordstore.util.extensions.decodeFromBase64ToByteArray
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -103,30 +107,6 @@ object AESEncryption {
         KeyType.PERSISTENT_WITH_AUTHENTICATION -> KEYSTORE_ALIAS_WITH_AUTHENTICATION
       }
     return androidKeystore.getKey(keyStoreAlias, null) as SecretKey
-  }
-
-  private fun CharArray.toByteArray(): ByteArray {
-    val byteBuffer = StandardCharsets.UTF_8.encode(CharBuffer.wrap(this))
-    val byteArray = ByteArray(byteBuffer.remaining())
-    byteBuffer.get(byteArray)
-    return byteArray
-  }
-
-  private fun ByteArray.toCharArray(): CharArray {
-    val charBuffer = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(this))
-    val charArray = CharArray(charBuffer.remaining())
-    charBuffer.get(charArray)
-    return charArray
-  }
-
-  private fun ByteArray.encodeToBase64CharArray(): CharArray {
-    val encodedBytes = Base64.encode(this, Base64.NO_WRAP)
-    return CharArray(encodedBytes.size) { i -> Char(encodedBytes[i].toUShort()) }
-  }
-
-  private fun CharArray.decodeFromBase64ToByteArray(): ByteArray {
-    val byteArray = ByteArray(this.size) { i -> this[i].code.toByte() }
-    return Base64.decode(byteArray, Base64.NO_WRAP)
   }
 
   /* Public methods */

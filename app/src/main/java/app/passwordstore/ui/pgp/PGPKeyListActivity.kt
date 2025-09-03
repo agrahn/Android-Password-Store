@@ -210,6 +210,33 @@ class PGPKeyListActivity : AppCompatActivity() {
     keyAction.launch(intent)
   }
 
+  private fun decryptionTest(openPgpSession: OpenPgpSession) : String {
+    val cipherTextWithArmor =
+      """
+          -----BEGIN PGP MESSAGE-----
+          
+          hQGMA1+zW06M+3VwAQwAoDf3Ty669GOO6AfcQqoJN1ABQpUd0BKF1HiWnZwr0kzz
+          SHTVwQVxR2LC8MHmi+riAslNBfoFcVd2jgSbzoNT6C2kRd4qVnM9OYE789w8abtq
+          /Fa7s+TsKAiv+BwonU1r+PJ8O8zVm1MGoq33glOiKDgnmk6Q7iLVWe+uhNrYXlpR
+          lTToO5GRmFvYNUXecUWYSrrVMB0wb1qV3Z6MNBY1voD9hjIQYnc10YsBcDe4+7bQ
+          QAgo6ENt+XYKJFvvRyb9aTyBN+Lhw/oc8FBfY4NcXReX8twLZRf8hHq9ff3lxfVZ
+          IK3+c+BpVZ4o99s5E8xx/uN7wmtce6eVPzVY1RF8ZmfEg3xoHmn0AzvYgCUPOrca
+          K0IgpqoluRUmIhhn91zkK+5xtCJVgGpKqrxY1jR6ne0QyiU7fdDoF67M3unnULeS
+          pv2hlme4e3NZqQpfogFSBeusfqi4JDaXS+ol4bSX/oIRkDNmsWawsNFygi1FscsQ
+          rlviFkYFZFSvc0/ZK2rZ0kIB62BPgOmqV1EedQ64uOAMDMk/ob/KJL+1goZpGUTC
+          WydWkRrVDtd2pYq7yS7NzEGaVJpBV0NOCRPVIJTUD38QykQ=
+          =l97u
+          -----END PGP MESSAGE-----
+      """.trimIndent()
+
+      logcat{"++++++++++++++++ A verified-----------------"}
+      openPgpSession.verifyUserPin("123456".toCharArray(), true)
+      logcat{"++++++++++++++++ B verified-----------------"}
+      logcat{cipherTextWithArmor}
+      //return openPgpSession.decrypt(cryptoRepository.removeArmor(cipherTextWithArmor.toByteArray())).decodeToString()
+      return openPgpSession.decrypt(cipherTextWithArmor.toByteArray()).decodeToString()
+  }
+
   private fun deleteKey(identifier: PGPIdentifier) {
     val keyIdPassedIn =
       KeyUtils.tryGetId(pgpKeyManager.getKeyById(identifier).unwrap())
@@ -326,46 +353,53 @@ class PGPKeyListActivity : AppCompatActivity() {
   private var matchingKeyNotFoundDialog: AlertDialog? = null
 
   private fun linkTokenKey(identifier: PGPIdentifier, openPgpSession: OpenPgpSession) {
-    matchingKeyNotFoundDialog?.dismiss()
+    //matchingKeyNotFoundDialog?.dismiss()
+    //runCatching {
+    //    val jcaPublicKey = openPgpSession.getPublicKey(KeyRef.DEC).toPublicKey() // get decryption key from yubikey
+    //    val pgpPublicKey = pgpKeyManager.getPublicKeyByJCAPublicKey(jcaPublicKey).getOrThrow()
+    //    val keyIdFound = KeyUtils.tryGetId(pgpPublicKey)
+    //    val keyIdPassedIn =
+    //      KeyUtils.tryGetId(pgpKeyManager.getKeyById(identifier).unwrap())
+    //        ?: throw NullPointerException()
+    //    if (keyIdFound != null && keyIdFound == keyIdPassedIn) {
+    //      val tokenLinkedIds = settings.getStringSet(TOKEN_LINKED_PGP_IDS, setOf<String>())
+    //      settings.edit {
+    //        putStringSet(
+    //          TOKEN_LINKED_PGP_IDS,
+    //          tokenLinkedIds?.plus(keyIdPassedIn.toString()) ?: setOf<String>(),
+    //        )
+    //      }
+    //      viewModel.deleteKey(identifier)
+    //      viewModel.addKey(pgpPublicKey)
+    //      yubikit.stopNfcDiscovery(this)
+    //      yubikit.stopUsbDiscovery()
+    //    } else {
+    //      throw NoMatchingKeyException
+    //    }
+    //  }
+    //  .onFailure { e ->
+    //    runOnUiThread {
+    //      if (matchingKeyNotFoundDialog == null)
+    //        matchingKeyNotFoundDialog =
+    //          MaterialAlertDialogBuilder(this)
+    //            .setTitle(R.string.pgp_key_manager_no_matching_key_on_token_warning_title)
+    //            .setMessage(R.string.pgp_key_manager_no_matching_key_on_token_warning_message)
+    //            .setIcon(R.drawable.ic_warning_red_24dp)
+    //            .setPositiveButton(R.string.dialog_ok, null)
+    //            .setOnDismissListener {
+    //              yubikit.stopNfcDiscovery(this)
+    //              yubikit.stopUsbDiscovery()
+    //            }
+    //            .create()
+    //      matchingKeyNotFoundDialog?.show()
+    //    }
+    //    logcat { e.asLog() }
+    //  }
     runCatching {
-        val jcaPublicKey = openPgpSession.getPublicKey(KeyRef.DEC).toPublicKey() // get decryption key from yubikey
-        val pgpPublicKey = pgpKeyManager.getPublicKeyByJCAPublicKey(jcaPublicKey).getOrThrow()
-        val keyIdFound = KeyUtils.tryGetId(pgpPublicKey)
-        val keyIdPassedIn =
-          KeyUtils.tryGetId(pgpKeyManager.getKeyById(identifier).unwrap())
-            ?: throw NullPointerException()
-        if (keyIdFound != null && keyIdFound == keyIdPassedIn) {
-          val tokenLinkedIds = settings.getStringSet(TOKEN_LINKED_PGP_IDS, setOf<String>())
-          settings.edit {
-            putStringSet(
-              TOKEN_LINKED_PGP_IDS,
-              tokenLinkedIds?.plus(keyIdPassedIn.toString()) ?: setOf<String>(),
-            )
-          }
-          viewModel.deleteKey(identifier)
-          viewModel.addKey(pgpPublicKey)
-          yubikit.stopNfcDiscovery(this)
-          yubikit.stopUsbDiscovery()
-        } else {
-          throw NoMatchingKeyException
-        }
+        val clearText = decryptionTest(openPgpSession)
+        logcat{ "++++++++++++++++++++++++++++++++++:"+clearText}
       }
       .onFailure { e ->
-        runOnUiThread {
-          if (matchingKeyNotFoundDialog == null)
-            matchingKeyNotFoundDialog =
-              MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.pgp_key_manager_no_matching_key_on_token_warning_title)
-                .setMessage(R.string.pgp_key_manager_no_matching_key_on_token_warning_message)
-                .setIcon(R.drawable.ic_warning_red_24dp)
-                .setPositiveButton(R.string.dialog_ok, null)
-                .setOnDismissListener {
-                  yubikit.stopNfcDiscovery(this)
-                  yubikit.stopUsbDiscovery()
-                }
-                .create()
-          matchingKeyNotFoundDialog?.show()
-        }
         logcat { e.asLog() }
       }
   }

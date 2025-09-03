@@ -51,4 +51,7 @@ public interface CryptoHandler<Key, EncOpts : CryptoOptions, DecryptOpts : Crypt
    * Inspects the given [keys] and returns `false` if none of them require a passphrase to decrypt.
    */
   public fun isPassphraseProtected(keys: List<Key>): Boolean
+
+  /** Utility function */
+  public fun removeArmor(armored: ByteArray): ByteArray
 }

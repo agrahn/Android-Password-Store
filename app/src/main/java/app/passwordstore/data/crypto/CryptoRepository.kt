@@ -162,4 +162,6 @@ constructor(
       .encrypt(listOf<PGPKey>(), passphrase, message, encryptedMessage, encryptionOptions)
       .map { encryptedMessage }
   }
+
+  fun removeArmor(armored: ByteArray) = pgpCryptoHandler.removeArmor(armored)
 }
