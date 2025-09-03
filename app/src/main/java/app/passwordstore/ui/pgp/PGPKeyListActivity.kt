@@ -5,6 +5,7 @@
 
 package app.passwordstore.ui.pgp
 
+import javax.crypto.Cipher
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -233,8 +234,17 @@ class PGPKeyListActivity : AppCompatActivity() {
       openPgpSession.verifyUserPin("123456".toCharArray(), true)
       logcat{"++++++++++++++++ B verified-----------------"}
       logcat{cipherTextWithArmor}
-      //return openPgpSession.decrypt(cryptoRepository.removeArmor(cipherTextWithArmor.toByteArray())).decodeToString()
-      return openPgpSession.decrypt(cipherTextWithArmor.toByteArray()).decodeToString()
+      return openPgpSession.decrypt(cryptoRepository.removeArmor(cipherTextWithArmor.toByteArray())).decodeToString()
+      ////return openPgpSession.decrypt(cipherTextWithArmor.toByteArray()).decodeToString()
+      //// decryption
+      //val message = "hello".toByteArray()
+      //val publicKey = openPgpSession.getPublicKey(KeyRef.DEC).toPublicKey() // get decryption key from yubikey
+      //val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+      //cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+      //val cipherText = cipher.doFinal(message);
+      //
+      //openPgpSession.verifyUserPin("123456".toCharArray(), true)
+      //return openPgpSession.decrypt(cipherText).decodeToString();
   }
 
   private fun deleteKey(identifier: PGPIdentifier) {

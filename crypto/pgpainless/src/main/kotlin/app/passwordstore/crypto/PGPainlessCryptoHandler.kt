@@ -16,7 +16,6 @@ import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.mapError
 import com.github.michaelbull.result.runCatching
 import java.io.ByteArrayOutputStream
-import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Inject
 import org.bouncycastle.openpgp.PGPPublicKeyRing
@@ -32,6 +31,13 @@ import org.pgpainless.exception.MissingDecryptionMethodException
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
+import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory
+import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData
+import org.bouncycastle.openpgp.PGPEncryptedDataList
+import org.bouncycastle.bcpg.ArmoredInputStream
+import java.io.InputStream
+import org.bouncycastle.bcpg.BCPGInputStream
+import org.bouncycastle.openpgp.PGPObjectFactory
 
 public class PGPainlessCryptoHandler @Inject constructor() :
   CryptoHandler<PGPKey, PGPEncryptOptions, PGPDecryptOptions> {
@@ -177,9 +183,49 @@ public class PGPainlessCryptoHandler @Inject constructor() :
       .all { it }
 
   public override fun removeArmor(armored: ByteArray): ByteArray {
+    //val decoderStream = ArmorUtils.getDecoderStream(ByteArrayInputStream(armored))
+    //val buffer = ByteArrayOutputStream()
+    //decoderStream.copyTo(buffer)
+    ////return buffer.toByteArray()
+    //val objectFactory = JcaPGPObjectFactory(buffer.toByteArray())
+    ////return objectFactory.nextObject() as ByteArray
+    //val litData = objectFactory.nextObject()
+    //return Streams.readAll(litData.getInputStream()) as ByteArray
+    //val inputStream: InputStream = ArmoredInputStream(ByteArrayInputStream(armored))
+    //val pgpFactory = PGPObjectFactory(inputStream, null)
+    //var encryptedDataList: PGPEncryptedDataList? = null
+
+    //while (true) {
+    //    val obj = pgpFactory.nextObject() ?: break
+    //    if (obj is PGPEncryptedDataList) {
+    //        encryptedDataList = obj
+    //        break
+    //    }
+    //}
+
+    //if (encryptedDataList == null) throw IllegalArgumentException("No encrypted data packet found")
+
+    //// Get the first encrypted packet (usually only one for typical usage)
+    //val encryptedData = encryptedDataList.encryptedDataObjects.next() as PGPPublicKeyEncryptedData
+    //return encryptedData.getEncryptedData() // This is the JCA-compatible ciphertext for YubiKit
     val decoderStream = ArmorUtils.getDecoderStream(ByteArrayInputStream(armored))
-    val buffer = ByteArrayOutputStream()
-    decoderStream.copyTo(buffer)
-    return buffer.toByteArray()
+    val bcpgStream = BCPGInputStream(decoderStream)
+    val encryptedPacketBytes = ByteArrayOutputStream()
+
+    // Read packets until we find the public key encrypted packet (tag 1)
+    while (true) {
+        val tag = bcpgStream.nextPacketTag()
+        if (tag == 1) { // 1 = Public-Key Encrypted Session Key Packet
+            bcpgStream.transferTo(encryptedPacketBytes)
+            break
+        } else if (tag == -1) {
+            throw IllegalArgumentException("No encrypted packet found")
+        } else {
+            // Skip non-encrypted packets
+            bcpgStream.skipMarkerAndPaddingPackets()
+        }
+    }
+
+    return encryptedPacketBytes.toByteArray()
   }
 }
