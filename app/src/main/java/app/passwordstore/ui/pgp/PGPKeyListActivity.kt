@@ -5,7 +5,6 @@
 
 package app.passwordstore.ui.pgp
 
-import javax.crypto.Cipher
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -40,7 +39,6 @@ import app.passwordstore.R
 import app.passwordstore.crypto.KeyUtils
 import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.PGPKeyManager
-import app.passwordstore.crypto.errors.NoMatchingKeyException
 import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.ui.APSAppBar
@@ -62,18 +60,17 @@ import com.yubico.yubikit.android.transport.usb.UsbConfiguration
 import com.yubico.yubikit.core.YubiKeyDevice
 import com.yubico.yubikit.core.application.ApplicationNotAvailableException
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
-import com.yubico.yubikit.openpgp.KeyRef
 import com.yubico.yubikit.openpgp.OpenPgpSession
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.security.SecureRandom
 import javax.inject.Inject
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
-import kotlinx.collections.immutable.toPersistentList
 
 @AndroidEntryPoint
 class PGPKeyListActivity : AppCompatActivity() {
@@ -211,7 +208,7 @@ class PGPKeyListActivity : AppCompatActivity() {
     keyAction.launch(intent)
   }
 
-  private fun decryptionTest(openPgpSession: OpenPgpSession) : String {
+  private fun decryptionTest(openPgpSession: OpenPgpSession): String {
     val cipherTextWithArmor =
       """
           -----BEGIN PGP MESSAGE-----
@@ -228,23 +225,43 @@ class PGPKeyListActivity : AppCompatActivity() {
           WydWkRrVDtd2pYq7yS7NzEGaVJpBV0NOCRPVIJTUD38QykQ=
           =l97u
           -----END PGP MESSAGE-----
-      """.trimIndent()
+      """
+        .trimIndent()
 
-      logcat{"++++++++++++++++ A verified-----------------"}
-      openPgpSession.verifyUserPin("123456".toCharArray(), true)
-      logcat{"++++++++++++++++ B verified-----------------"}
-      logcat{cipherTextWithArmor}
-      return openPgpSession.decrypt(cryptoRepository.removeArmor(cipherTextWithArmor.toByteArray())).decodeToString()
-      ////return openPgpSession.decrypt(cipherTextWithArmor.toByteArray()).decodeToString()
-      //// decryption
-      //val message = "hello".toByteArray()
-      //val publicKey = openPgpSession.getPublicKey(KeyRef.DEC).toPublicKey() // get decryption key from yubikey
-      //val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-      //cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-      //val cipherText = cipher.doFinal(message);
-      //
-      //openPgpSession.verifyUserPin("123456".toCharArray(), true)
-      //return openPgpSession.decrypt(cipherText).decodeToString();
+    //    val cipherTextWithArmor =
+    //      """
+    //          -----BEGIN PGP MESSAGE-----
+    //
+    //          hQEMA4HZzmzcSxnyAQf+LTcb+6uOPJbMsN3DPUPb65Mvd/7itkKVfYTxE7sx5+G5
+    //          8Z57jH2Y7INJJN3b97c1U63AugT4cnIVXeGq8BwcvMCnXT1Z8bjP14joT/99kcz5
+    //          NkzBopTRBFeJ4SM04kXv8jD1Sc4viQJSgL2hHXfshDP1nrNhlVzwSaopM9R+iExr
+    //          ccKJBChUHJtNP9ocahPneM302On7R/KXdIo0pjlL1538JGg1BZG+jRf07B9kTn0k
+    //          cx0C6nrg6MEI0E86Y+u4Uc7Dg4OLJ0HMS0/MJ5jHVK0v8qKaLNEMIsme76wIfdvb
+    //          v8+mz9SyWjkyuY9auiPFSO6+vn9Gm7BgeweCWi4jdNRZAQkCEDNRggprGLbM0xr1
+    //          xlL/7UhTHzuQSb9seiH7jcQ2m/5+WztUkZhCDrGbYKWYnddfYnu1B8JTJme+Y02q
+    //          5zN5/EzEk1Gq/ayRtQn6pABpc94R5pGSsgY=
+    //          =Ux2a
+    //          -----END PGP MESSAGE-----
+    //      """.trimIndent()
+
+    logcat { "++++++++++++++++ A verified-----------------" }
+    openPgpSession.verifyUserPin("123456".toCharArray(), true)
+    logcat { "++++++++++++++++ B verified-----------------" }
+    val sessionKey = cryptoRepository.removeArmor(cipherTextWithArmor.toByteArray())
+    logcat { "session key size: " + sessionKey.count().toString() }
+    logcat { "session key 1st octet: " + sessionKey[2].toInt().toString() }
+    return openPgpSession.decrypt(sessionKey).decodeToString()
+    //// return openPgpSession.decrypt(cipherTextWithArmor.toByteArray()).decodeToString()
+    //// decryption
+    // val message = "hello".toByteArray()
+    // val publicKey = openPgpSession.getPublicKey(KeyRef.DEC).toPublicKey() // get decryption key
+    // from yubikey
+    // val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+    // cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+    // val cipherText = cipher.doFinal(message);
+    //
+    // openPgpSession.verifyUserPin("123456".toCharArray(), true)
+    // return openPgpSession.decrypt(cipherText).decodeToString();
   }
 
   private fun deleteKey(identifier: PGPIdentifier) {
@@ -319,7 +336,8 @@ class PGPKeyListActivity : AppCompatActivity() {
     lifecycleScope.launch {
       yubikit.startUsbDiscovery(UsbConfiguration()) { device -> connectToken(identifier, device) }
       runCatching {
-        yubikit.startNfcDiscovery(NfcConfiguration().timeout(15000), this@PGPKeyListActivity) { device ->
+        yubikit.startNfcDiscovery(NfcConfiguration().timeout(15000), this@PGPKeyListActivity) {
+          device ->
           connectToken(identifier, device)
         }
       }
@@ -363,9 +381,10 @@ class PGPKeyListActivity : AppCompatActivity() {
   private var matchingKeyNotFoundDialog: AlertDialog? = null
 
   private fun linkTokenKey(identifier: PGPIdentifier, openPgpSession: OpenPgpSession) {
-    //matchingKeyNotFoundDialog?.dismiss()
-    //runCatching {
-    //    val jcaPublicKey = openPgpSession.getPublicKey(KeyRef.DEC).toPublicKey() // get decryption key from yubikey
+    // matchingKeyNotFoundDialog?.dismiss()
+    // runCatching {
+    //    val jcaPublicKey = openPgpSession.getPublicKey(KeyRef.DEC).toPublicKey() // get decryption
+    // key from yubikey
     //    val pgpPublicKey = pgpKeyManager.getPublicKeyByJCAPublicKey(jcaPublicKey).getOrThrow()
     //    val keyIdFound = KeyUtils.tryGetId(pgpPublicKey)
     //    val keyIdPassedIn =
@@ -407,11 +426,9 @@ class PGPKeyListActivity : AppCompatActivity() {
     //  }
     runCatching {
         val clearText = decryptionTest(openPgpSession)
-        logcat{ "++++++++++++++++++++++++++++++++++:"+clearText}
+        logcat { "++++++++++++++++++++++++++++++++++:" + clearText }
       }
-      .onFailure { e ->
-        logcat { e.asLog() }
-      }
+      .onFailure { e -> logcat { e.asLog() } }
   }
 
   private fun askPassphrase(identifier: PGPIdentifier, isError: Boolean = false) {

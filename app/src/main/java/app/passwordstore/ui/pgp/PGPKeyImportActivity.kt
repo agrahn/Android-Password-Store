@@ -6,23 +6,25 @@
 
 package app.passwordstore.ui.pgp
 
-import androidx.core.content.edit
-import app.passwordstore.util.settings.PreferenceKeys.TOKEN_LINKED_PGP_IDS
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts.OpenDocument
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
+import app.passwordstore.crypto.KeyUtils.hasSecretKey
 import app.passwordstore.crypto.KeyUtils.isKeyUsable
 import app.passwordstore.crypto.KeyUtils.tryGetId
-import app.passwordstore.crypto.KeyUtils.hasSecretKey
 import app.passwordstore.crypto.PGPKey
 import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.crypto.errors.KeyAlreadyExistsException
 import app.passwordstore.data.crypto.CryptoRepository
+import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.ui.dialogs.TextInputDialog
 import app.passwordstore.util.coroutines.DispatcherProvider
+import app.passwordstore.util.settings.PreferenceKeys.TOKEN_LINKED_PGP_IDS
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getError
@@ -36,8 +38,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.launch
 import logcat.asLog
 import logcat.logcat
-import android.content.SharedPreferences
-import app.passwordstore.injection.prefs.SettingsPreferences
 
 @AndroidEntryPoint
 class PGPKeyImportActivity : AppCompatActivity() {
@@ -92,7 +92,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
       lastBytes = null
     }
     if (error != null) throw error
-    if(key != null && hasSecretKey(key)) {
+    if (key != null && hasSecretKey(key)) {
       val tokenLinkedIds = settings.getStringSet(TOKEN_LINKED_PGP_IDS, setOf<String>())
       val keyId = tryGetId(key)
       settings.edit {

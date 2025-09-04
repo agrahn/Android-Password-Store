@@ -9,10 +9,14 @@ import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPIdentifier.UserId
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.runCatching
+import java.io.ByteArrayInputStream
+import org.bouncycastle.bcpg.BCPGInputStream
+import org.bouncycastle.bcpg.PublicKeyEncSessionPacket
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.pgpainless.PGPainless
 import org.pgpainless.key.parsing.KeyRingReader
+import org.pgpainless.util.ArmorUtils
 
 /** Utility methods to deal with [PGPKey]s. */
 public object KeyUtils {
@@ -66,5 +70,34 @@ public object KeyUtils {
     val keyRing = tryParseKeyring(key) ?: return null
     val publicKeyRing = PGPPublicKeyRing(keyRing.getPublicKeys().asSequence().toList())
     return PGPainless.asciiArmor(publicKeyRing).toByteArray()
+  }
+
+  public fun getEncryptedSessionKeys(
+    message: ByteArray
+  ): MutableList<Triple<Int, ByteArray, PGPIdentifier?>> {
+    val decoderStream = ArmorUtils.getDecoderStream(ByteArrayInputStream(message))
+    val bcpgStream = BCPGInputStream(decoderStream)
+
+    val encSessionKeys: MutableList<Triple<Int, ByteArray, PGPIdentifier?>> = mutableListOf()
+
+    var packet = bcpgStream.readPacket()
+    while (packet != null) {
+      if (packet is PublicKeyEncSessionPacket) {
+        val algorithm = packet.getAlgorithm()
+        val encSessionKeyBC = packet.getEncSessionKey()
+        /* BouncyCastle exports encrypted session keys in a special format where
+         * the first two bytes denote the length. We need to strip them.
+         */
+        val encSessionKey = encSessionKeyBC[0].copyOfRange(2, encSessionKeyBC[0].count())
+        val keyID = packet.getKeyID()
+        encSessionKeys.add(Triple(algorithm, encSessionKey, KeyId(keyID)))
+      }
+      packet = bcpgStream.readPacket()
+    }
+
+    /* Once decrypted, key data and algorithm are used to create a PGPSessionKey instance:
+     * PGPSessionKey(algorithm: Int, keydata: ByteArray) */
+
+    return encSessionKeys
   }
 }

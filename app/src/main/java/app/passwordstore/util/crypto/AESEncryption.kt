@@ -4,25 +4,21 @@
  */
 package app.passwordstore.util.crypto
 
-import app.passwordstore.util.extensions.toByteArray
-import app.passwordstore.util.extensions.toCharArray
-import app.passwordstore.util.extensions.encodeToBase64CharArray
-import app.passwordstore.util.extensions.decodeFromBase64ToByteArray
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
-import android.util.Base64
 import app.passwordstore.Application
+import app.passwordstore.util.extensions.decodeFromBase64ToByteArray
+import app.passwordstore.util.extensions.encodeToBase64CharArray
+import app.passwordstore.util.extensions.toByteArray
+import app.passwordstore.util.extensions.toCharArray
 import app.passwordstore.util.extensions.unsafeLazy
 import com.github.michaelbull.result.getOrElse
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.runCatching
-import java.nio.ByteBuffer
-import java.nio.CharBuffer
-import java.nio.charset.StandardCharsets
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator

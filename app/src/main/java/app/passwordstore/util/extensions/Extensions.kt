@@ -4,16 +4,16 @@
  */
 package app.passwordstore.util.extensions
 
+import android.util.Base64
 import app.passwordstore.data.repo.PasswordRepository
 import java.io.File
+import java.nio.ByteBuffer
+import java.nio.CharBuffer
+import java.nio.charset.StandardCharsets
 import java.time.Instant
 import logcat.asLog
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.revwalk.RevCommit
-import java.nio.charset.StandardCharsets
-import android.util.Base64
-import java.nio.ByteBuffer
-import java.nio.CharBuffer
 
 /** Checks if this [Int] contains the given [flag] */
 infix fun Int.hasFlag(flag: Int): Boolean {
@@ -88,4 +88,3 @@ fun CharArray.decodeFromBase64ToByteArray(): ByteArray {
   val byteArray = ByteArray(this.size) { i -> this[i].code.toByte() }
   return Base64.decode(byteArray, Base64.NO_WRAP)
 }
-
