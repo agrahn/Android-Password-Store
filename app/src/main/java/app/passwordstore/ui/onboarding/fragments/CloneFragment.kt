@@ -10,6 +10,7 @@ import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
@@ -20,6 +21,7 @@ import app.passwordstore.util.extensions.performTransactionWithBackStack
 import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
+import app.passwordstore.util.extensions.windowInsetsLambda
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.runCatching
@@ -54,6 +56,8 @@ class CloneFragment : Fragment(R.layout.fragment_clone) {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    ViewCompat.setOnApplyWindowInsetsListener(view, windowInsetsLambda)
+
     binding.cloneRemote.setOnClickListener { cloneToHiddenDir() }
     binding.createLocal.setOnClickListener { createRepository() }
   }

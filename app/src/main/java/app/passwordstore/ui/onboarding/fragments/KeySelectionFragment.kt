@@ -11,6 +11,7 @@ import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
@@ -22,6 +23,7 @@ import app.passwordstore.util.extensions.commitChange
 import app.passwordstore.util.extensions.finish
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.viewBinding
+import app.passwordstore.util.extensions.windowInsetsLambda
 import app.passwordstore.util.settings.PreferenceKeys
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -60,6 +62,8 @@ class KeySelectionFragment : Fragment(R.layout.fragment_key_selection) {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    ViewCompat.setOnApplyWindowInsetsListener(view, windowInsetsLambda)
+
     binding.selectKey.setOnClickListener {
       gpgKeySelectAction.launch(PGPKeyListActivity.newSelectionActivity(requireContext()))
     }

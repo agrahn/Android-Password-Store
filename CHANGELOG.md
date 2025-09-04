@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Exported PGP keys are now usable as OpenKeychain key backups
+- Several edge-to-edge view issues on Android 15 devices
 
 ## [1.15.1] - 2025-08-15
 
