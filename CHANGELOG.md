@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.15.2] - 2025-09-05
+
 ### Fixed
 
 - Exported PGP keys are now usable as OpenKeychain key backups
@@ -563,7 +565,8 @@ All notable changes to this project will be documented in this file.
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.1...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.2...HEAD
+[1.15.2]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.1...v1.15.2
 [1.15.1]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.5...v1.15.0
 [1.14.5]: https://github.com/agrahn/Android-Password-Store/compare/v1.14.4...v1.14.5
