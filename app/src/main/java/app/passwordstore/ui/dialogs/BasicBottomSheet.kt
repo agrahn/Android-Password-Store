@@ -7,6 +7,7 @@ package app.passwordstore.ui.dialogs
 
 import android.content.Context
 import android.content.DialogInterface.OnDismissListener
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -65,11 +66,12 @@ private constructor(
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    ViewCompat.setOnApplyWindowInsetsListener(view) { v, windowInsets ->
-      val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-      v.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin = insets.bottom }
-      windowInsets
-    }
+    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+      ViewCompat.setOnApplyWindowInsetsListener(view) { v, windowInsets ->
+        val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+        v.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin = insets.bottom }
+        windowInsets
+      }
 
     view.viewTreeObserver.addOnGlobalLayoutListener(
       object : ViewTreeObserver.OnGlobalLayoutListener {
