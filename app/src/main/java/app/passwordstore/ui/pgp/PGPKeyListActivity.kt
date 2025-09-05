@@ -209,10 +209,11 @@ class PGPKeyListActivity : AppCompatActivity() {
   }
 
   private fun decryptionTest(openPgpSession: OpenPgpSession): String {
+    //passtest
     val cipherTextWithArmor =
       """
           -----BEGIN PGP MESSAGE-----
-          
+                    
           hQGMA1+zW06M+3VwAQwAoDf3Ty669GOO6AfcQqoJN1ABQpUd0BKF1HiWnZwr0kzz
           SHTVwQVxR2LC8MHmi+riAslNBfoFcVd2jgSbzoNT6C2kRd4qVnM9OYE789w8abtq
           /Fa7s+TsKAiv+BwonU1r+PJ8O8zVm1MGoq33glOiKDgnmk6Q7iLVWe+uhNrYXlpR
@@ -228,28 +229,45 @@ class PGPKeyListActivity : AppCompatActivity() {
       """
         .trimIndent()
 
-    //    val cipherTextWithArmor =
-    //      """
-    //          -----BEGIN PGP MESSAGE-----
-    //
-    //          hQEMA4HZzmzcSxnyAQf+LTcb+6uOPJbMsN3DPUPb65Mvd/7itkKVfYTxE7sx5+G5
-    //          8Z57jH2Y7INJJN3b97c1U63AugT4cnIVXeGq8BwcvMCnXT1Z8bjP14joT/99kcz5
-    //          NkzBopTRBFeJ4SM04kXv8jD1Sc4viQJSgL2hHXfshDP1nrNhlVzwSaopM9R+iExr
-    //          ccKJBChUHJtNP9ocahPneM302On7R/KXdIo0pjlL1538JGg1BZG+jRf07B9kTn0k
-    //          cx0C6nrg6MEI0E86Y+u4Uc7Dg4OLJ0HMS0/MJ5jHVK0v8qKaLNEMIsme76wIfdvb
-    //          v8+mz9SyWjkyuY9auiPFSO6+vn9Gm7BgeweCWi4jdNRZAQkCEDNRggprGLbM0xr1
-    //          xlL/7UhTHzuQSb9seiH7jcQ2m/5+WztUkZhCDrGbYKWYnddfYnu1B8JTJme+Y02q
-    //          5zN5/EzEk1Gq/ayRtQn6pABpc94R5pGSsgY=
-    //          =Ux2a
-    //          -----END PGP MESSAGE-----
-    //      """.trimIndent()
-
+//    //passtest2
+//    val cipherTextWithArmor =
+//      """
+//          -----BEGIN PGP MESSAGE-----
+//          
+//          hF4D9de8BCyNdHMSAQdAA8L5smQDLI98R+EanyseF2WnbJylEh+peo7Fv/AP3Uww
+//          BsKmAfm06gPxbmjxb0slhx51aND0kiXE+eNUoQG1BzmGbFYQI+owWDVqwMcfQPum
+//          0k8B3yCX7xPnoRlze//1eU/k/UHJz9lhyWyV4hOIWpxjgZCpvn4xru0qy86sYK98
+//          mErFsRStBxY/S56JCTy9wZsFfYXg1UBesDcb2f35SUoK
+//          =kAe3
+//          -----END PGP MESSAGE-----
+//      """.trimIndent()
+//
+//    //passtest, passtest2
+//    val cipherTextWithArmor =
+//      """
+//        -----BEGIN PGP MESSAGE-----
+//        
+//        hQGMA1+zW06M+3VwAQwAhw/v6EMvOKONeBJF0JqGqW8+v8dPhRjUn6IQ6ikrnLbv
+//        j3zJhJj3XANDqFXtlVxbNhvW6GFBUumWF6Ug8veGLqGTqJkhTS+Zdf6YylVDLCQj
+//        w/bVSJfCW/3j+AbVqVud8cjrGYvA3pQ+sappqeJg7JG8wGXjKNEDw8Ix2lxPOwuN
+//        1Adg5/JGOtZQK5138H8ATAjEB3SSnH8R6fqTQCa5GB+enhG3v+XQVFy8SsbPFGJk
+//        t3u4oyHFO7JmcIX+rIp4/9yOnvcZqrHdNSNq+vRI2/KMTXPHRI9zMq3TXsvm76N7
+//        fFItshECZpYy63FZRrlUMRXx6+W6Hw6gzDZx9kpp/lEvEiSu9bqFoAqZsAAsd1py
+//        5+r2WZTqXqK0AmE77J/EID3yL4makPIPhKa7RMjUEze7DsYZ/w90JBAh2bvfEFXk
+//        wR4W7OCL7DMi2qsuxoh46KvefSAmCnUwdjYSnKYGaTRg9My7OR9FzR6BH3pdu+2N
+//        1uAnO9nx8PaRM/Z1UOFuhF4D9de8BCyNdHMSAQdAPRM0StcoHZWQDLrO1tUh84UO
+//        EAx/kpcn5Ux9RLyr3G4wNY1d7DKp+8gv2y1ein6Nu5hS8g1QaWedZ+1JHrJGwmNp
+//        +USInvQXx6w+4k+t49EP0k8B8sxgxAYa+3NWbBLayifv1QoHqECv5qdfYkQlnbml
+//        jcS9vE8wLBGrcljbHWudMY9w8Erb06EDVq8tayd398wTlA7VKKOqGr4HT5p85c9z
+//        =yDst
+//        -----END PGP MESSAGE-----
+//    """.trimIndent()
+//    
     logcat { "++++++++++++++++ A verified-----------------" }
     openPgpSession.verifyUserPin("123456".toCharArray(), true)
     logcat { "++++++++++++++++ B verified-----------------" }
     val sessionKey = cryptoRepository.removeArmor(cipherTextWithArmor.toByteArray())
     logcat { "session key size: " + sessionKey.count().toString() }
-    logcat { "session key 1st octet: " + sessionKey[2].toInt().toString() }
     return openPgpSession.decrypt(sessionKey).decodeToString()
     //// return openPgpSession.decrypt(cipherTextWithArmor.toByteArray()).decodeToString()
     //// decryption
