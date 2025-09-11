@@ -4,7 +4,8 @@
  */
 
 package app.passwordstore.crypto
-
+ 
+import org.bouncycastle.openpgp.PGPSessionKey
 import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPIdentifier.UserId
 import com.github.michaelbull.result.get
@@ -32,6 +33,13 @@ public object KeyUtils {
   public fun tryGetId(key: PGPKey): KeyId? {
     val keyRing = tryParseKeyring(key) ?: return null
     return KeyId(keyRing.publicKey.keyID)
+  }
+
+  /** Parses a [PGPKeyRing] from the given [key] and calculates the encryption subkey's long key ID */
+  public fun tryGetEncryptionId(key: PGPKey): KeyId? {
+    val keyRing = tryParseKeyring(key) ?: return null
+    val encryptionKey = keyRing.getPublicKeys().asSequence().toList().firstOrNull{ it.isEncryptionKey() } ?: return null
+    return KeyId(encryptionKey.keyID)
   }
 
   /**
@@ -100,4 +108,8 @@ public object KeyUtils {
 
     return encSessionKeys
   }
+
+  public fun createPGPSessionKey(bytes: ByteArray) : PGPSessionKey {
+      return PGPSessionKey(9, bytes)
+  }    
 }

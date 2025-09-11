@@ -45,7 +45,7 @@ import org.bouncycastle.openpgp.operator.RFC6637Utils
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory
-import org.bouncycastle.openpgp.operator.bc.RFC6637KDFCalculator
+import org.bouncycastle.bcpg.SymmetricEncIntegrityPacket
 
 public class PGPainlessCryptoHandler @Inject constructor() :
   CryptoHandler<PGPKey, PGPEncryptOptions, PGPDecryptOptions> {
@@ -195,9 +195,9 @@ public class PGPainlessCryptoHandler @Inject constructor() :
     val bcpgStream = BCPGInputStream(decoderStream)
 
     lateinit var encSessionKey: ByteArray
-    logcat {"Tag: " + bcpgStream.nextPacketTag() }
     var packet = bcpgStream.readPacket()
     while (packet != null) {
+      logcat {"Tag: " + packet.getPacketTag().toString() }
       if (packet is PublicKeyEncSessionPacket) {
         logcat {" packet is PublicKeyEncSessionPacket "}
         val encSessionKeyArr = packet.getEncSessionKey()
@@ -205,15 +205,17 @@ public class PGPainlessCryptoHandler @Inject constructor() :
         logcat { "sessionKeyData size:" + sessionKeyData.count().toString() }
         val pLen = ((((sessionKeyData[0].toInt() and 0xff) shl 8) + (sessionKeyData[1].toInt() and 0xff)) + 7) / 8
         logcat { "size retrieved from first two bytes:" + pLen.toString() }
+        logcat { "keyID     :" + java.lang.Long.toHexString(packet.getKeyID()) }
         /* BouncyCastle exports encrypted session keys in a special format where
          * the first two bytes denote the length. We need to strip them.
          */
-        logcat { "algorithm :" + packet.getAlgorithm().toString() }
-        logcat { "keyID     :" + java.lang.Long.toHexString(packet.getKeyID()) }
         encSessionKey = sessionKeyData.copyOfRange(2, sessionKeyData.count())
-        break
+        /* The algorithm of the symmetric session key is coded in the 1 byte of its encrypted data */
+        //logcat { "algorithm :" + (((encSessionKey[0] and 0xff) + 7) /8).toString() }
       }
-      logcat {"Tag: " + bcpgStream.nextPacketTag() }
+      else if (packet is SymmetricEncIntegrityPacket) {
+        logcat {"SymmetricEncIntegrityPacket version: " + packet.getVersion().toString() }
+      }
       packet = bcpgStream.readPacket()
     }
 

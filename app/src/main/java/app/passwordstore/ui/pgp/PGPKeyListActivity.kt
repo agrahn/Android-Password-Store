@@ -266,9 +266,12 @@ class PGPKeyListActivity : AppCompatActivity() {
     logcat { "++++++++++++++++ A verified-----------------" }
     openPgpSession.verifyUserPin("123456".toCharArray(), true)
     logcat { "++++++++++++++++ B verified-----------------" }
-    val sessionKey = cryptoRepository.removeArmor(cipherTextWithArmor.toByteArray())
-    logcat { "session key size: " + sessionKey.count().toString() }
-    return openPgpSession.decrypt(sessionKey).decodeToString()
+    val encSessionKey = cryptoRepository.removeArmor(cipherTextWithArmor.toByteArray())
+    val sessionKey =  openPgpSession.decrypt(encSessionKey)
+    logcat { "session key :" + sessionKey.toString() }
+    logcat { "algorithm :" + sessionKey[0].toUByte().toInt() }
+    logcat { "length :" + sessionKey.size.toInt() }
+    //val pgpSessionKey = KeyUtils.createPGPSessionKey(sessionKey)
     //// return openPgpSession.decrypt(cipherTextWithArmor.toByteArray()).decodeToString()
     //// decryption
     // val message = "hello".toByteArray()
@@ -279,7 +282,9 @@ class PGPKeyListActivity : AppCompatActivity() {
     // val cipherText = cipher.doFinal(message);
     //
     // openPgpSession.verifyUserPin("123456".toCharArray(), true)
-    // return openPgpSession.decrypt(cipherText).decodeToString();
+    //return openPgpSession.decrypt(cipherText).decodeToString();
+    //logcat { "pgp session key: " + pgpSessionKey.toString() }
+    return sessionKey.toString();
   }
 
   private fun deleteKey(identifier: PGPIdentifier) {
