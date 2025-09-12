@@ -109,7 +109,20 @@ public object KeyUtils {
     return encSessionKeys
   }
 
-  public fun createPGPSessionKey(bytes: ByteArray) : PGPSessionKey {
-      return PGPSessionKey(9, bytes)
-  }    
+  /* Creates BC PGPSessionKey from decrypted session key data; session key data format acc. to
+   * https://www.rfc-editor.org/rfc/rfc9580.html#name-algorithm-specific-fields-f
+  */ 
+  public fun createPGPSessionKey(bytes: ByteArray) : PGPSessionKey? {
+      val algorithm = bytes[0].toUByte().toInt() // symmetric key algorithm
+      val keyData = when(algorithm) {
+        7 ->  // AES-128
+          bytes.copyOfRange(1, 1+128/8)
+        8 ->  // AES-192
+          bytes.copyOfRange(1, 1+192/8)
+        9 ->  // AES-256
+          bytes.copyOfRange(1, 1+256/8)
+        else -> return null
+      }
+      return PGPSessionKey(algorithm, keyData)
+  }
 }
