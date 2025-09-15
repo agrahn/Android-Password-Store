@@ -46,6 +46,7 @@ import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory
 import org.bouncycastle.bcpg.SymmetricEncIntegrityPacket
+import org.pgpainless.util.SessionKey
 
 public class PGPainlessCryptoHandler @Inject constructor() :
   CryptoHandler<PGPKey, PGPEncryptOptions, PGPDecryptOptions> {
@@ -90,22 +91,32 @@ public class PGPainlessCryptoHandler @Inject constructor() :
   ): Result<Unit, CryptoHandlerException> =
     runCatching {
         if (keys.isEmpty()) {
-          // ciphertextStream may be symmetrically encrypted
+          // ciphertextStream may be symmetrically encrypted with a password/passphrase
           val decryptionStream =
             PGPainless.decryptAndOrVerify()
               .onInputStream(ciphertextStream)
               .withOptions(ConsumerOptions().addMessagePassphrase(Passphrase(passphrase)))
           decryptionStream.use { Streams.pipeAll(it, outputStream) }
         } else {
-          val keyringCollection =
-            keys
-              .mapNotNull { key -> PGPainless.readKeyRing().secretKeyRing(key.contents) }
-              .run(::PGPSecretKeyRingCollection)
-          val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
+          val decryptOptions = 
+		    if(options.isOptionEnabled(PGPDecryptOptions.WITH_SESSION_KEY)) {
+              ConsumerOptions().setSessionKey(SessionKey(
+			    KeyUtils.createPGPSessionKey(keys.first().contents) ?: throw NoKeysProvidedException
+
+			  ))
+            }
+		    else {
+              val keyringCollection =
+                keys
+                  .mapNotNull { key -> PGPainless.readKeyRing().secretKeyRing(key.contents) }
+                  .run(::PGPSecretKeyRingCollection)
+              val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
+              ConsumerOptions().addDecryptionKeys(keyringCollection, protector)
+		    }
           val decryptionStream =
             PGPainless.decryptAndOrVerify()
               .onInputStream(ciphertextStream)
-              .withOptions(ConsumerOptions().addDecryptionKeys(keyringCollection, protector))
+              .withOptions(decryptOptions)
           decryptionStream.use { Streams.pipeAll(it, outputStream) }
         }
         return@runCatching

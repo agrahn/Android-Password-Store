@@ -4,7 +4,7 @@
  */
 
 package app.passwordstore.crypto
- 
+
 import org.bouncycastle.openpgp.PGPSessionKey
 import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPIdentifier.UserId
@@ -40,6 +40,17 @@ public object KeyUtils {
     val keyRing = tryParseKeyring(key) ?: return null
     val encryptionKey = keyRing.getPublicKeys().asSequence().toList().firstOrNull{ it.isEncryptionKey() } ?: return null
     return KeyId(encryptionKey.keyID)
+  }
+
+  /**
+   * Parses a [PGPKeyRing] from the given [key] and tries to determine its public key encryption algorithm;
+   * returned integer code is one of https://www.rfc-editor.org/rfc/rfc4880.html#section-9.1 or zero if no
+   * encryption key was found
+   */
+  public fun tryGetEncryptionAlgorithm(key: PGPKey): Int {
+    val keyRing = tryParseKeyring(key) ?: return 0
+    val encryptionKey = keyRing.getPublicKeys().asSequence().toList().firstOrNull{ it.isEncryptionKey() } ?: return 0
+    return encryptionKey.getAlgorithm()
   }
 
   /**
@@ -103,15 +114,13 @@ public object KeyUtils {
       packet = bcpgStream.readPacket()
     }
 
-    /* Once decrypted, key data and algorithm are used to create a PGPSessionKey instance:
-     * PGPSessionKey(algorithm: Int, keydata: ByteArray) */
-
     return encSessionKeys
   }
 
-  /* Creates BC PGPSessionKey from decrypted session key data; session key data format acc. to
+  /**
+   * Creates BC PGPSessionKey from decrypted session key data; session key data format acc. to
    * https://www.rfc-editor.org/rfc/rfc9580.html#name-algorithm-specific-fields-f
-  */ 
+   */
   public fun createPGPSessionKey(bytes: ByteArray) : PGPSessionKey? {
       val algorithm = bytes[0].toUByte().toInt() // symmetric key algorithm
       val keyData = when(algorithm) {

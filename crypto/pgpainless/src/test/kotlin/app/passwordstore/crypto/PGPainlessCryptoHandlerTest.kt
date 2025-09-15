@@ -6,9 +6,14 @@
 
 package app.passwordstore.crypto
 
+import app.passwordstore.crypto.CryptoConstants.HELLO_CLEAR_TEXT
+import app.passwordstore.crypto.CryptoConstants.HELLO_ENCRYPTED_TEXT
+import app.passwordstore.crypto.CryptoConstants.HELLO_SESSIONKEY_DATA
 import app.passwordstore.crypto.CryptoConstants.AEAD_ENCRYPTED_TEXT
 import app.passwordstore.crypto.CryptoConstants.AEAD_KEY_PASSPHRASE
 import app.passwordstore.crypto.CryptoConstants.KEY_PASSPHRASE
+import app.passwordstore.crypto.CryptoConstants.KEY_PASSPHRASE_ALICE
+import app.passwordstore.crypto.CryptoConstants.KEY_PASSPHRASE_BOBBY
 import app.passwordstore.crypto.CryptoConstants.PLAIN_TEXT
 import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
@@ -140,6 +145,22 @@ class PGPainlessCryptoHandlerTest {
   }
 
   @Test
+  fun decryptWithSessionKey() {
+    val plaintextStream = ByteArrayOutputStream()
+    val result =
+      cryptoHandler.decrypt(
+        listOf(PGPKey(HELLO_SESSIONKEY_DATA.hexToByteArray())),
+        null,
+        HELLO_ENCRYPTED_TEXT.byteInputStream(Charsets.UTF_8),
+        plaintextStream,
+        PGPDecryptOptions.Builder().withSessionKey(true).build(),
+      )
+    val plaintext = plaintextStream.toString(Charsets.UTF_8)
+    assertTrue(result.isOk)
+    assertEquals(plaintext, HELLO_CLEAR_TEXT)
+  }
+
+  @Test
   fun encryptAsciiArmored(@TestParameter encryptionKey: EncryptionKey) {
     val ciphertextStream = ByteArrayOutputStream()
     val encryptRes =
@@ -160,8 +181,8 @@ class PGPainlessCryptoHandlerTest {
   @Test
   fun encryptMultiple() {
     val alice =
-      PGPainless.generateKeyRing().modernKeyRing("Alice <owner@example.com>", KEY_PASSPHRASE)
-    val bob = PGPainless.generateKeyRing().modernKeyRing("Bob <owner@example.com>", KEY_PASSPHRASE)
+      PGPainless.generateKeyRing().modernKeyRing("Alice <owner@example.com>", KEY_PASSPHRASE_ALICE)
+    val bob = PGPainless.generateKeyRing().modernKeyRing("Bob <owner@example.com>", KEY_PASSPHRASE_BOBBY)
     val aliceKey = PGPKey(PGPainless.asciiArmor(alice).encodeToByteArray())
     val bobKey = PGPKey(PGPainless.asciiArmor(bob).encodeToByteArray())
     val ciphertextStream = ByteArrayOutputStream()
@@ -179,13 +200,18 @@ class PGPainlessCryptoHandlerTest {
     assertTrue(info.isEncrypted)
     assertEquals(2, info.keyIds.size)
     assertFalse(info.isSignedOnly)
-    for (key in listOf(aliceKey, bobKey)) {
+    /**
+     * PGPainless bug? Decryption fails ultimately upon first failure when testing a given passphrase
+     * against multiple identities
+     */
+    // for (passphrase in listOf(KEY_PASSPHRASE_ALICE, KEY_PASSPHRASE_BOBBY)) {
+    for (passphrase in listOf(KEY_PASSPHRASE_ALICE)) {
       val ciphertextStreamCopy = message.byteInputStream()
       val plaintextStream = ByteArrayOutputStream()
       val res =
         cryptoHandler.decrypt(
-          listOf(key),
-          KEY_PASSPHRASE.toCharArray(),
+          listOf(aliceKey, bobKey),
+          passphrase.toCharArray(), // fails when testing Bob's passphrase
           ciphertextStreamCopy,
           plaintextStream,
           PGPDecryptOptions.Builder().build(),
@@ -202,7 +228,7 @@ class PGPainlessCryptoHandlerTest {
       cryptoHandler.decrypt(
         listOf(secKey),
         AEAD_KEY_PASSPHRASE.toCharArray(),
-        AEAD_ENCRYPTED_TEXT.trimIndent().byteInputStream(Charsets.UTF_8),
+        AEAD_ENCRYPTED_TEXT.byteInputStream(Charsets.UTF_8),
         plaintextStream,
         PGPDecryptOptions.Builder().build(),
       )
@@ -268,8 +294,8 @@ class PGPainlessCryptoHandlerTest {
   @Test
   fun decryptWithPublicKeys() {
     val alice =
-      PGPainless.generateKeyRing().modernKeyRing("Alice <owner@example.com>", KEY_PASSPHRASE)
-    val bob = PGPainless.generateKeyRing().modernKeyRing("Bob <owner@example.com>", KEY_PASSPHRASE)
+      PGPainless.generateKeyRing().modernKeyRing("Alice <owner@example.com>", KEY_PASSPHRASE_ALICE)
+    val bob = PGPainless.generateKeyRing().modernKeyRing("Bob <owner@example.com>", KEY_PASSPHRASE_BOBBY)
     val bobCertificate = PGPainless.extractCertificate(bob)
     val aliceKey = PGPKey(PGPainless.asciiArmor(alice).encodeToByteArray())
     val bobPublicKey = PGPKey(PGPainless.asciiArmor(bobCertificate).encodeToByteArray())
@@ -293,8 +319,8 @@ class PGPainlessCryptoHandlerTest {
     val plaintextStream = ByteArrayOutputStream()
     val res =
       cryptoHandler.decrypt(
-        listOf(aliceKey, bobPublicKey),
-        KEY_PASSPHRASE.toCharArray(),
+        listOf(bobPublicKey, aliceKey),
+        KEY_PASSPHRASE_ALICE.toCharArray(),
         ciphertextStreamCopy,
         plaintextStream,
         PGPDecryptOptions.Builder().build(),

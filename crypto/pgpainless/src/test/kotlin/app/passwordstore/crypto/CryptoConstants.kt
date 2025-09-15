@@ -7,6 +7,9 @@ package app.passwordstore.crypto
 
 object CryptoConstants {
   const val KEY_PASSPHRASE = "hunter2"
+  const val KEY_PASSPHRASE_ALICE = "12345678"
+  const val KEY_PASSPHRASE_BOBBY = "asdfghjk"
+
   const val PLAIN_TEXT = "encryption worthy content"
   const val AEAD_KEY_PASSPHRASE = "Password"
   val AEAD_ENCRYPTED_TEXT =
@@ -32,8 +35,31 @@ object CryptoConstants {
     a9lzB0qeaiJCo1Xgd2qm
     =WpO6
     -----END PGP MESSAGE-----
-    """
+    """.trimIndent()
   const val KEY_NAME = "John Doe"
   const val KEY_EMAIL = "john.doe@example.com"
   const val KEY_ID = 0x08edf7567183ce27
+
+  val HELLO_CLEAR_TEXT = "Hello World!\n"
+  val HELLO_ENCRYPTED_TEXT =
+    """
+    -----BEGIN PGP MESSAGE-----
+
+    hQIMA3yZAYfOcsjkAQ/9GRK0yzIxjEhPnZMXe23+rXVBN1mSVai+eCJcYJkZQVH3
+    i7/XTPg8i8DRm06W7gK+soOTGNTdQrEs8YXaG1OJX+RrFaW8wTt77ASqSCSDT36a
+    ww/8l4Fqq96j2i5IiBajbFmmNyIxbE59ZxcWa9RiY2KMDaD6hbVtj8jTJNUBN44g
+    UUVSulr4ZEJCc7bMGHsTWjmU1rnXfD/4R6ynlLN9tohIl3kH7ghAyOeXTTR7NeG/
+    eJJFDp2hgk+PnYiO8GAbZRpug1Fl157MNwbh0GJrWzwkENfTYgO1YXZZspmKuGM9
+    9JQQPgVcVn66zo0eWhESq5w+DqkKjamcVYvuAlYgTc6+Z9ae4b32AJ1kUu3bWQx6
+    3bwNyQHVE9wXhu2BHq6y+c6G9f63v+wfdt2p828rtFB33wyb+/1n0pH9bnYd6KLi
+    M1pftuHfGSsuJr5j6ivW9nEWI6LF0VBP6axYh3ao6JQw0STYNm2PCmggpQX8A+Tk
+    1UYWbHmES/3BOVcnjM8bP9XYWjBrNaXwnLfKv9/t7UwVDbX7MYUMs0gAVSBzkRCn
+    /4kkQ/p6ZZn253ro9pA0hYP2/qL8d2zngi3oQsCAkzxQlnHL9rHbYT+ffowvn3bK
+    8iz0xnKvinLCuHk+mfAptCIn9oNdwUvE/Wk/o4fe7ZRSikX/VA61AynGa8JImGfS
+    TwH26wjbaOHbkHZ8Feuh52+fU8D+PoZ92MrQ6HP3LjKjSmmoqHLLrBJyCz/ichYg
+    DNqbZW2NmB6aJkr46rifUc0JmturPw713yRF78kmhVA=
+    =gWDu
+    -----END PGP MESSAGE-----
+    """.trimIndent()
+  val HELLO_SESSIONKEY_DATA = "0943C92A7EEF59AA014D2FDC54767D7DA7126CA7DF1C94B71769B6F45629B3A69D"
 }
