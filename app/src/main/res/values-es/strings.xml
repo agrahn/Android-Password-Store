@@ -12,21 +12,20 @@
   </plurals>
 
   <!-- Activity names -->
-  <string name="app_name" translatable="false">Password Store</string>
 
-  <string name="action_settings">Configuración</string>
+    <string name="action_settings">Configuración</string>
   <string name="dialog_delete_title">El directorio ya existe</string>
   <string name="dialog_delete_msg">El directorio de destino ya existe. La versión actual solo admite un único almacén. ¿Desea eliminar el directorio actual del almacén de contraseñas?\n(%1$s)</string>
   <string name="dialog_delete">Eliminar directorio</string>
   <string name="dialog_do_not_delete">Cancelar</string>
   <string name="title_activity_git_clone">Información del repositorio</string>
-  <string name="title_activity_git_config">Configuración de Git</string>
   <string name="title_activity_git_log">Registro de commits</string>
 
   <!-- Password Store -->
   <string name="creation_dialog_text">Clona o crea un nuevo repositorio a continuación antes de intentar agregar una contraseña o ejecutar cualquier operación de sincronización.</string>
   <plurals name="delete_dialog_text">
     <item quantity="one">¿Está seguro de que desea eliminar el elemento seleccionado?</item>
+    <item quantity="many">¿Está seguro de que desea eliminar el %d de elementos seleccionados?</item>
     <item quantity="other">¿Está seguro de que desea eliminar los %d elementos seleccionados?</item>
   </plurals>
   <string name="delete_directory_progress_text">Eliminando…</string>
@@ -222,7 +221,6 @@
   <string name="oreo_autofill_warning_publisher_header">El editor de esta aplicación ha cambiado desde que asoció por primera vez una entrada de almacén de contraseñas con ella:</string>
   <string name="oreo_autofill_warning_publisher_footer"><b>Es posible que la aplicación instalada actualmente esté intentando robar sus credenciales haciéndose pasar por una aplicación de confianza.</b>\n\nIntente desinstalar y volver a instalar la aplicación desde una fuente confiable, como Play Store, Amazon Appstore, F-Droid o la tienda del fabricante de su teléfono.</string>
   <string name="oreo_autofill_warning_publisher_install_time">Instalado: %1$s</string>
-  <string name="oreo_autofill_warning_publisher_app_name" translatable="false">“%1$s“</string>
   <string name="oreo_autofill_warning_publisher_advanced_info_template">Package:\n%1$s\n\nHash:\n%2$s</string>
   <string name="oreo_autofill_warning_publisher_advanced_info_button">Información avanzada</string>
   <string name="oreo_autofill_warning_publisher_changed_disable_autofill_button">Mantener Autocompletar desactivado</string>
@@ -423,7 +421,6 @@
   <string name="aes_key_invalidated_dialog_message">Se ha registrado una nueva huella digital en la configuración de bloqueo del dispositivo desde el último uso. Asegúrese de que lo haya agregado usted y no otra persona</string>
 
   <!-- PIN input -->
-  <string name="pin_entry_hint" translatable="false">PIN</string>
   <string name="pin_new_entry_title">Establecer PIN</string>
   <string name="pin_new_entry_description">Su código PIN para un desbloqueo rápido debe tener al menos 4 dígitos</string>
   <string name="pin_entry_title">Verificación de PIN</string>
