@@ -19,7 +19,8 @@
   <string name="dialog_delete">Eliminar directorio</string>
   <string name="dialog_do_not_delete">Cancelar</string>
   <string name="title_activity_git_clone">Información del repositorio</string>
-  <string name="title_activity_git_log">Registro de commits</string>
+    <string name="title_activity_git_config">Configuración de Git</string>
+    <string name="title_activity_git_log">Registro de commits</string>
 
   <!-- Password Store -->
   <string name="creation_dialog_text">Clona o crea un nuevo repositorio a continuación antes de intentar agregar una contraseña o ejecutar cualquier operación de sincronización.</string>
