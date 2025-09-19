@@ -5,6 +5,7 @@
 
 package app.passwordstore.crypto
 
+import org.bouncycastle.bcpg.MPInteger
 import app.passwordstore.crypto.errors.CryptoHandlerException
 import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
@@ -45,8 +46,18 @@ import org.bouncycastle.openpgp.operator.RFC6637Utils
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory
+//import org.bouncycastle.openpgp.operator.bc.RFC6637KDFCalculator
 import org.bouncycastle.bcpg.SymmetricEncIntegrityPacket
 import org.pgpainless.util.SessionKey
+import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags
+import org.bouncycastle.crypto.generators.HKDFBytesGenerator
+import org.bouncycastle.crypto.params.HKDFParameters
+import org.bouncycastle.math.ec.ECPoint
+import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.operator.PGPDigestCalculator
+import org.bouncycastle.util.Strings
+import org.bouncycastle.util.encoders.Hex
+
 
 public class PGPainlessCryptoHandler @Inject constructor() :
   CryptoHandler<PGPKey, PGPEncryptOptions, PGPDecryptOptions> {
@@ -211,16 +222,19 @@ public class PGPainlessCryptoHandler @Inject constructor() :
       logcat {"Tag: " + packet.getPacketTag().toString() }
       if (packet is PublicKeyEncSessionPacket) {
         logcat {" packet is PublicKeyEncSessionPacket "}
-        val encSessionKeyArr = packet.getEncSessionKey()
-        val sessionKeyData = encSessionKeyArr[0]
+        val sessionKeyData = packet.getEncSessionKey()[0]
         logcat { "sessionKeyData size:" + sessionKeyData.count().toString() }
         val pLen = ((((sessionKeyData[0].toInt() and 0xff) shl 8) + (sessionKeyData[1].toInt() and 0xff)) + 7) / 8
-        logcat { "size retrieved from first two bytes:" + pLen.toString() }
-        logcat { "keyID     :" + java.lang.Long.toHexString(packet.getKeyID()) }
+        logcat { "size of ephemeral pub key, retrieved from first two bytes:" + pLen.toString() }
+        val sessionkeyDataBcpgStream = BCPGInputStream(ByteArrayInputStream(sessionKeyData))
+        val encSessionKey = MPInteger(sessionkeyDataBcpgStream).getValue().toByteArray()
+        logcat { "size of ephemeral pub key (MPInteger length):" + encSessionKey.size.toString() }
+        logcat { "ephemeral: " + encSessionKey.toHexString() }
+        //logcat { "keyID     :" + java.lang.Long.toHexString(packet.getKeyID()) }
         /* BouncyCastle exports encrypted session keys in a special format where
          * the first two bytes denote the length. We need to strip them.
          */
-        encSessionKey = sessionKeyData.copyOfRange(2, sessionKeyData.count())
+        //encSessionKey = sessionKeyData.copyOfRange(2, sessionKeyData.count())
         /* The algorithm of the symmetric session key is coded in the 1 byte of its encrypted data */
         //logcat { "algorithm :" + (((encSessionKey[0] and 0xff) + 7) /8).toString() }
       }

@@ -117,7 +117,7 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
   }
 
   /** @see KeyManager.getKeyById */
-  override fun getKeyById(id: PGPIdentifier, withArmor: Boolean): Result<PGPKey, Throwable> =
+  override fun getKeyById(id: PGPIdentifier, publicOnly: Boolean, withArmor: Boolean): Result<PGPKey, Throwable> =
     runCatching {
       if (!keyDirExists()) throw KeyDirectoryUnavailableException
       val keyFiles = keyDir.listFiles()
@@ -128,22 +128,26 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
         is PGPIdentifier.KeyId -> {
           for (key in keys) {
             val keyRing = tryParseKeyring(key) ?: continue
+            val publicKeyRing = PGPPublicKeyRing(keyRing.getPublicKeys().asSequence().toList())
             if (
-              KeyRingUtils.keyRingContainsKeyWithId(
-                KeyRingUtils.publicKeys(keyRing),
-                id.id.toLong(),
-              )
+              KeyRingUtils.keyRingContainsKeyWithId(publicKeyRing, id.id.toLong())
             ) {
-              if (withArmor) {
-                if (keyRing is PGPSecretKeyRing)
-                  return@runCatching PGPKey(
+              return@runCatching if(publicOnly || keyRing is PGPPublicKeyRing){
+                if (withArmor) {
+                  PGPKey(
+                    ArmorUtils.toAsciiArmoredString(publicKeyRing).toByteArray()
+                  )
+                }
+                else PGPKey(publicKeyRing.getEncoded())
+              }
+              else {
+                if (withArmor) {
+                  PGPKey(
                     ArmorUtils.toAsciiArmoredString(keyRing as PGPSecretKeyRing).toByteArray()
                   )
-                else
-                  return@runCatching PGPKey(
-                    ArmorUtils.toAsciiArmoredString(keyRing as PGPPublicKeyRing).toByteArray()
-                  )
-              } else return@runCatching key
+                }
+                else PGPKey(keyRing.getEncoded())
+              }
             }
           }
         }
@@ -155,16 +159,23 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
                 id.email == it || id.email == PGPIdentifier.splitUserId(it)
               }
             ) {
-              if (withArmor) {
-                if (keyRing is PGPSecretKeyRing)
-                  return@runCatching PGPKey(
+              val publicKeyRing = PGPPublicKeyRing(keyRing.getPublicKeys().asSequence().toList())
+              return@runCatching if(publicOnly || keyRing is PGPPublicKeyRing){
+                if (withArmor) {
+                  PGPKey(
+                    ArmorUtils.toAsciiArmoredString(publicKeyRing).toByteArray()
+                  )
+                }
+                else PGPKey(publicKeyRing.getEncoded())
+              }
+              else {
+                if (withArmor) {
+                  PGPKey(
                     ArmorUtils.toAsciiArmoredString(keyRing as PGPSecretKeyRing).toByteArray()
                   )
-                else
-                  return@runCatching PGPKey(
-                    ArmorUtils.toAsciiArmoredString(keyRing as PGPPublicKeyRing).toByteArray()
-                  )
-              } else return@runCatching key
+                }
+                else PGPKey(keyRing.getEncoded())
+              }
             }
           }
         }
