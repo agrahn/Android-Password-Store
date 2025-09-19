@@ -125,7 +125,7 @@
     <string name="ssh_keygen_share">Comparteix</string>
     <string name="ssh_keygen_later">Més tard</string>
     <string name="ssh_keygen_message">%1$s  Proporcioneu aquest clau pública al servidor Git.</string>
-    <string name="ssh_key_gen_generating_progress">Generant claus...</string>
+    <string name="ssh_key_gen_generating_progress">Generant claus…</string>
     <string name="ssh_keygen_require_authentication">Protegiu amb credencials de bloqueig de pantalla</string>
     <string name="ssh_keygen_label_rsa">RSA</string>
     <string name="ssh_keygen_label_ecdsa">ECDSA</string>
@@ -152,7 +152,7 @@
     <string name="fast_unlock_pref_title">Desbloqueig ràpid de les entrades</string>
     <string name="pwd_generate_button">Generar</string>
     <string name="refresh_list">Refresca la lista</string>
-    <string name="send_plaintext_password_to">Envia la contrasenya com texte usant...</string>
+    <string name="send_plaintext_password_to">Envia la contrasenya com texte usant…</string>
     <string name="app_icon_hint">Icona de l\'aplicació</string>
     <string name="oreo_autofill_select_and_fill_into">Selecciona l\'entrada a omplir</string>
     <string name="oreo_autofill_strict_domain_search">Cerca resistent al Phishing</string>
@@ -262,7 +262,7 @@
     <string name="git_push_generic_error">La pujada ha estat refusada per servidor remot, motiu: %1%s</string>
     <string name="git_push_other_error">La pujada amb avanç ràpid ha estat refusada pel servidor remot. Comprova la variable receive.denyNonFastForwards al fitxer de configuració del repositori destí.</string>
     <string name="git_unknown_host">Host desconegut: %1$s</string>
-    <string name="git_operation_running">Executant operació Git...</string>
+    <string name="git_operation_running">Executant operació Git…</string>
     <string name="folder_creation_err_folder_exists">Ja existeix una carpeta amb aquest nom</string>
     <string name="let_s_go">Som-hi!</string>
     <string name="git_break_out_of_detached_success">S\'ha produït un conflicte al fer rebase. La branca local %1$s ha estat pujada a una altra branca %2$s. Useu aquesta brance per resoldre el conflicte a l\'ordinador</string>
