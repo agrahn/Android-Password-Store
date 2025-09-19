@@ -2,7 +2,7 @@
 <resources>
     <string name="action_settings">Configuració</string>
     <string name="dialog_delete_title">El directori ja existeix</string>
-    <string name="dialog_delete_msg">El directori de destinació ja existeix. La versió actual només admet un sol magatzem. Voleu suprimir el directori actual del magatzem de contrasenyes?</string>
+    <string name="dialog_delete_msg">El directori de destinació ja existeix. La versió actual només admet un sol magatzem. Voleu suprimir el directori actual del magatzem de contrasenyes?\n(%1$s)</string>
     <string name="dialog_delete">Suprimeix el directori</string>
     <string name="dialog_do_not_delete">Cancel·lar</string>
     <string name="title_activity_git_clone">Informació del repositori</string>
