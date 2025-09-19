@@ -259,7 +259,7 @@
     <string name="git_pull_rebase_fail_error">La baixada ha fallat, estàs en HEAD separat. Usa Configuració > Utilitats de Git, desa els canvis a una brance remota nova i resol els conflictes al teu ordinador.</string>
     <string name="git_pull_merge_fail_error">Ha fallat la fusió, hi ha conflictes per resoldre. TODO: Afegir un métode de recuperació.</string>
     <string name="git_push_nff_error">La pujada ha estat refusada per servidor remot, torna a provar. Pots usar Sincronitza en comptes de baixar/pujar ja que implementa tots dos.</string>
-    <string name="git_push_generic_error">La pujada ha estat refusada per servidor remot, motiu: %1%s</string>
+    <string name="git_push_generic_error">La pujada ha estat refusada per servidor remot, motiu: %1$s</string>
     <string name="git_push_other_error">La pujada amb avanç ràpid ha estat refusada pel servidor remot. Comprova la variable receive.denyNonFastForwards al fitxer de configuració del repositori destí.</string>
     <string name="git_unknown_host">Host desconegut: %1$s</string>
     <string name="git_operation_running">Executant operació Git…</string>
