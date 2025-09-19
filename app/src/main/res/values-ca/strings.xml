@@ -332,7 +332,6 @@
     <string name="pgp_key_manager_delete_confirmation_dialog_message">Fes una còpia de seguretat de la clau PGP. Sense ella perdràs accés a qualsevol contrasenya xifrada amb aquesta clau.</string>
     <string name="pgp_change_passphrase_title">Canvieu la frase de pas de la clau PGP</string>
     <string name="pgp_old_passphrase">Frase de pas actual</string>
-    <string name="pgp_old_passphrase">Frase de pas actual</string>
     <string name="pgp_new_passphrase">Contrasenya nova</string>
     <string name="pgp_new_passphrase_repeated">Repetiu la nova frase de pas</string>
     <string name="git_utils_reset_remote_branch_title">Nom de la branca remota</string>
