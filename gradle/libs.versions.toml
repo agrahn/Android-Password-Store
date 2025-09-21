@@ -9,7 +9,7 @@ kotlin = "2.2.20"
 kotlinResult = "2.1.0"
 lifecycle = "2.9.4"
 moshi = "1.15.2"
-yubikit = "2.8.2"
+yubikit = "2.9.0"
 
 [libraries]
 yubikit-android = { module = "com.yubico.yubikit:android", version.ref = "yubikit" }

@@ -5,6 +5,7 @@
 
 package app.passwordstore.ui.pgp
 
+import com.yubico.yubikit.openpgp.Do
 import app.passwordstore.crypto.errors.NoMatchingKeyException
 import com.yubico.yubikit.openpgp.KeyRef
 import kotlinx.collections.immutable.toPersistentList
@@ -50,6 +51,7 @@ import app.passwordstore.ui.dialogs.AddPgpKeyBottomSheet
 import app.passwordstore.ui.dialogs.PasswordDialog
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.settings.PreferenceKeys.TOKEN_LINKED_PGP_IDS
+import app.passwordstore.util.settings.PreferenceKeys.SELECTED_PGP_ID
 import app.passwordstore.util.viewmodel.PGPKeyListViewModel
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onFailure
@@ -108,7 +110,7 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    yubikit = YubiKitManager(this)
+
     val isSelecting = intent.extras?.getBoolean(EXTRA_KEY_SELECTION) ?: false
     val selectedKeyIds = mutableSetOf<String>()
     supportFragmentManager.setFragmentResultListener(PGP_KEY_ADD_REQUEST_KEY, this) { _, bundle ->
@@ -117,6 +119,17 @@ class PGPKeyListActivity : AppCompatActivity() {
         ACTION_NEW_PGP_KEY -> keyAction.launch(Intent(this, PGPKeyCreationActivity::class.java))
       }
     }
+
+    if(!isSelecting) {
+      yubikit = YubiKitManager(this)
+      yubikit.startUsbDiscovery(UsbConfiguration()) { device -> 
+	    selectedIdentifierForHwLink?.let {connectToken(it, device)}
+        device.setOnClosed {
+	        selectedIdentifierForHwLink = null
+        }
+	  }
+	}  
+
     setContent {
       APSTheme {
         Scaffold(
@@ -327,6 +340,8 @@ class PGPKeyListActivity : AppCompatActivity() {
   private var connectTokenDialog: AlertDialog? = null
 
   private fun onLinkHwClick(identifier: PGPIdentifier) {
+    selectedIdentifierForHwLink = identifier
+
     val connectTokenDialogView = layoutInflater.inflate(R.layout.dialog_message, null)
     connectTokenDialogView.findViewById<TextView>(R.id.dialog_message).text =
       resources.getString(R.string.pgp_key_manager_link_token_message)
@@ -350,24 +365,21 @@ class PGPKeyListActivity : AppCompatActivity() {
       MaterialAlertDialogBuilder(this)
         .setTitle(R.string.pgp_key_manager_connect_token_dialog_title)
         .setView(connectTokenDialogView)
-        .setNegativeButton(R.string.dialog_cancel, null)
+        .setNegativeButton(R.string.dialog_cancel) { _, _ ->
+          selectedIdentifierForHwLink = null
+		}
         .setCancelable(false)
-        .setOnDismissListener {
-          yubikit.stopNfcDiscovery(this)
-          yubikit.stopUsbDiscovery()
-        }
         .create()
     connectTokenDialog?.show()
 
     lifecycleScope.launch {
-      yubikit.startUsbDiscovery(UsbConfiguration()) { device -> connectToken(identifier, device) }
       runCatching {
         yubikit.startNfcDiscovery(NfcConfiguration().timeout(15000), this@PGPKeyListActivity) {
           device ->
-          connectToken(identifier, device)
+	      connectToken(identifier, device)
         }
       }
-    }
+	}  
   }
 
   private var noOpenPgpDialog: AlertDialog? = null
@@ -406,32 +418,49 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   private var matchingKeyNotFoundDialog: AlertDialog? = null
 
+  /**
+   * Extract encryption key (DEC) fingerprint (20 bytes) from Application Related Data (tag 0x6E),
+   * because it is not directly accessible via getData(). However, the preceeding tag 0xC4 is,
+   * which we exploit to localise the combined (SIG+DEC+AUT) fingerprints within the app related
+   * data array and to finally slice out the DEC fingerprint
+   */
+  private fun extractEncFingerprint(tag0x6E: ByteArray, tag0xC4: ByteArray) : ByteArray {
+    val tag0x6EString = tag0x6E.toHexString()
+    val tag0xC4String = "c407" + tag0xC4.toHexString() // prepend tag ID + length (always 7 bytes)
+	val leadingRegex = "^6e.*${tag0xC4String}".toRegex()
+	val combinedFingerprintsPlus = tag0x6EString.replaceFirst(leadingRegex, "").hexToByteArray()
+	require(combinedFingerprintsPlus[0].toUByte().toInt() == 0xC5) // tag ID of combined FPs
+    require(combinedFingerprintsPlus[1].toUByte().toInt() >= 60) // length of combined fingerprints subarray
+	return combinedFingerprintsPlus.copyOfRange(2+20, 2+40) // skip SIG FP and drop trailing bytes
+  }
+
   private fun linkTokenKey(identifier: PGPIdentifier, openPgpSession: OpenPgpSession) {
      matchingKeyNotFoundDialog?.dismiss()
      runCatching {
-        // get decryption key from yubikey
-        val jcaPublicKey = openPgpSession.getPublicKey(KeyRef.DEC).toPublicKey()
+        val appRelatedData = openPgpSession.getData(0x6E) // Application Related Data (tag 0x6E)
+        val tagC4Data = openPgpSession.getData(0xC4) // preceeding (tag 0xC4) data
+		// extract encryption key fingerprint
+        val encKeyFingerprint = extractEncFingerprint(appRelatedData, tagC4Data).toHexString()
+        val encKeyIdentifier = PGPIdentifier.fromString(encKeyFingerprint) ?: throw NoMatchingKeyException
 
-        val pgpPublicKey = pgpKeyManager.getPublicKeyByJCAPublicKey(jcaPublicKey).getOrThrow()
-        val keyIdFound = KeyUtils.tryGetId(pgpPublicKey)
-        val keyIdPassedIn =
-          KeyUtils.tryGetId(pgpKeyManager.getKeyById(identifier).unwrap())
-            ?: throw NullPointerException()
-        if (keyIdFound != null && keyIdFound == keyIdPassedIn) {
-          val tokenLinkedIds = settings.getStringSet(TOKEN_LINKED_PGP_IDS, setOf<String>())
-          settings.edit {
-            putStringSet(
-              TOKEN_LINKED_PGP_IDS,
-              tokenLinkedIds?.plus(keyIdPassedIn.toString()) ?: setOf<String>(),
-            )
-          }
-          viewModel.deleteKey(identifier)
-          viewModel.addKey(pgpPublicKey)
-          yubikit.stopNfcDiscovery(this)
-          yubikit.stopUsbDiscovery()
-        } else {
-          throw NoMatchingKeyException
+	    // get public key with matching fingerprint from Passwordstore
+        val pgpPublicKey = pgpKeyManager.getKeyById(encKeyIdentifier, publicOnly=true).getOrThrow()
+
+	    // get public key from Passwordstore that corresponds to passed-in identifier
+        val pgpPublicKeyPassedIn = pgpKeyManager.getKeyById(identifier, publicOnly=true).getOrThrow()
+
+		// make sure they are the same
+		if(!pgpPublicKey.contents.contentEquals(pgpPublicKeyPassedIn.contents)) throw NoMatchingKeyException
+
+        val tokenLinkedIds = settings.getStringSet(TOKEN_LINKED_PGP_IDS, setOf<String>())
+        settings.edit {
+          putStringSet(
+            TOKEN_LINKED_PGP_IDS,
+            tokenLinkedIds?.plus(encKeyIdentifier.toString()) ?: setOf<String>(),
+          )
         }
+        viewModel.deleteKey(identifier)
+        viewModel.addKey(pgpPublicKey)
       }
       .onFailure { e ->
         runOnUiThread {
@@ -576,6 +605,8 @@ class PGPKeyListActivity : AppCompatActivity() {
     const val ACTION_KEY = "action"
     const val ACTION_IMPORT_FILE = "from_file"
     const val ACTION_NEW_PGP_KEY = "generate_new"
+
+    private var selectedIdentifierForHwLink : PGPIdentifier? = null
 
     fun newSelectionActivity(context: Context): Intent {
       val intent = Intent(context, PGPKeyListActivity::class.java)

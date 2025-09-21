@@ -68,7 +68,7 @@ public sealed class PGPIdentifier {
       }
 
       // Match fingerprints:
-      // FF223344556677889900112233445566778899 or 0xFF223344556677889900112233445566778899
+      // FF11223344556677889900112233445566778899 or 0xFF11223344556677889900112233445566778899
       val maybeFingerprint =
         identifier.removePrefix("0x").takeIf { it.matches("[a-fA-F\\d]{40}".toRegex()) }
       if (maybeFingerprint != null) {
