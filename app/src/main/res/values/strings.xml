@@ -143,7 +143,7 @@
   <string name="pref_pgp_ascii_armor_title">Encrypt in ASCII armor mode</string>
   <string name="pref_pgp_key_manager_export">Backup/Export</string>
   <string name="pref_pgp_key_manager_export_public">Export public key</string>
-  <string name="pref_pgp_key_manager_link_token">Link to a YubiKey</string>
+  <string name="pref_pgp_key_manager_link_token">Link with a YubiKey</string>
   <string name="pref_pgp_key_manager_change_passphrase">Change passphrase</string>
 
   <!-- PasswordGenerator fragment -->
