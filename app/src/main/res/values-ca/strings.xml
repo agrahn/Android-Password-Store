@@ -1,5 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright © 2014-2025 The Android Password Store Authors. All Rights Reserved.
+  ~ SPDX-License-Identifier: GPL-3.0-only
+  -->
+
 <resources>
+    <plurals name="delete_title">
+        <item quantity="one">%d element seleccionat</item>
+        <item quantity="many">%d d\'elements seleccionats</item>
+        <item quantity="other">%d elements seleccionats</item>
+    </plurals>
     <string name="action_settings">Configuració</string>
     <string name="dialog_delete_title">El directori ja existeix</string>
     <string name="dialog_delete_msg">El directori de destinació ja existeix. La versió actual només admet un sol magatzem. Voleu suprimir el directori actual del magatzem de contrasenyes?\n(%1$s)</string>
@@ -8,10 +17,16 @@
     <string name="title_activity_git_clone">Informació del repositori</string>
     <string name="title_activity_git_config">Configuració de Git</string>
     <string name="title_activity_git_log">Registre de commits</string>
+    <string name="creation_dialog_text">Cloneu o creeu un nou repositori absn d\'intentar afegir una contrasenya o sincronitzar.</string>
+    <plurals name="delete_dialog_text">
+        <item quantity="one">Segur que vols eliminar l\'element seleccionat?</item>
+        <item quantity="many">Segur que vols eliminar el %d d\'elements seleccionats?</item>
+        <item quantity="other">Segur que vols eliminar els %d elements seleccionats?</item>
+    </plurals>
     <string name="delete_directory_progress_text">Eliminant</string>
     <string name="move">Mou</string>
     <string name="edit">Edita</string>
-    <string name="delete">Suprimeix</string>
+    <string name="delete">Elimina</string>
     <string name="password_exists_title">La contrasenya ja existeix.</string>
     <string name="password_exists_message">Aquesta acció sobreescriurà %1$s amb %2$s.</string>
     <string name="password_move_error_title">Error al moure contrasenyes</string>
@@ -237,7 +252,7 @@
     <string name="git_operation_hint_password">Contrasenya</string>
     <string name="preference_custom_public_suffixes_title">Dominis personalitzats</string>
     <string name="preference_custom_public_suffixes_summary">L\'emplenament automàtic distingirà subdominis d\'aquests dominis</string>
-    <string name="preference_custom_public_suffixes_hint">company.com personal.com</string>
+    <string name="preference_custom_public_suffixes_hint">company.com\npersonal.com</string>
     <string name="password_creation_file_fail_title">Error</string>
     <string name="password_creation_file_write_fail_message">No s\'ha pogut escriute el fitxer de contrasenya al magatzem, prova un altre cop.</string>
     <string name="password_creation_file_delete_fail_message">No s\'ha pogut eliminar el fitxer de contrasenya %1$s del magatzem, prova a suprimir-lo manualment.</string>
@@ -263,10 +278,10 @@
     <string name="git_push_other_error">La pujada amb avanç ràpid ha estat refusada pel servidor remot. Comprova la variable receive.denyNonFastForwards al fitxer de configuració del repositori destí.</string>
     <string name="git_unknown_host">Host desconegut: %1$s</string>
     <string name="git_operation_running">Executant operació Git…</string>
-    <string name="folder_creation_err_folder_exists">Ja existeix una carpeta amb aquest nom</string>
-    <string name="let_s_go">Som-hi!</string>
     <string name="git_break_out_of_detached_success">S\'ha produït un conflicte al fer rebase. La branca local %1$s ha estat pujada a una altra branca %2$s. Useu aquesta brance per resoldre el conflicte a l\'ordinador</string>
     <string name="git_break_out_of_detached_unneeded">El repositori no està fent rebase, no cal pujar a una altra branca</string>
+    <string name="folder_creation_err_folder_exists">Ja existeix una carpeta amb aquest nom</string>
+    <string name="let_s_go">Som-hi!</string>
     <string name="gpg_key_select_mandatory">És necessari seleccionar una clau PGP per continuar</string>
     <string name="folder_creation_err_file_exists">Ja existeix un fitxer amb aquest nom</string>
     <string name="select_n_repository_type">Selecciona el tipus de repositori</string>
