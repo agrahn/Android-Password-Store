@@ -24,7 +24,7 @@
     <string name="git_commit_gpg_id">Inicialitza IDs de PGP a %1$s.</string>
     <string name="clipboard_copied_text">Copiat al porta‑retalls</string>
     <string name="file_toast_text">Indiqueu un nom de fitxer</string>
-    <string name="path_toast_text">Indiqueu una ruta d\'arxiu</string>
+    <string name="path_toast_text">Indiqueu una ruta de fitxer</string>
     <string name="empty_toast_text">No podeu usar una contrasenya o contingut extra buit</string>
     <string name="jgit_error_dialog_title">S\'ha produït un error a l\'operació Git</string>
     <string name="ssh_preferences_dialog_text">Importeu o genereu el fitxer de clau SSH a les preferències</string>
@@ -62,13 +62,13 @@
     <string name="pref_ssh_keygen_title">Genera un parell de claus SSH</string>
     <string name="pref_ssh_see_key_title">Mostra la clau SSH pública generada</string>
     <string name="pref_git_delete_repo_title">Suprimeix el repositori</string>
-    <string name="pref_dialog_delete_title">Buida el repository</string>
+    <string name="pref_dialog_delete_title">Buida el repositori</string>
     <string name="pref_category_general_title">General</string>
     <string name="pref_category_passwords_title">Contrasenyes</string>
     <string name="pref_clipboard_timeout_title">Temps d\'espera de còpia de la contrasenya</string>
     <string name="pref_clipboard_timeout_summary">Estableix el temps (segons) que la contrasenya romandrà al porta-retalls. 0 significa mantenir per sempre. Valor actual: %1$s</string>
     <string name="pref_copy_title">Copia automàticament la contrasenya</string>
-    <string name="pref_copy_summary">Copia automàticament la contrasenya al porta-retalls desprès de desxifrar-la.</string>
+    <string name="pref_copy_summary">Copia automàticament la contrasenya al porta-retalls després de desxifrar-la.</string>
     <string name="ssh_key_import_error_not_an_ssh_key_message">El fitxer seleccionat no sembla un clau privada SSH.</string>
     <string name="ssh_key_success_dialog_title">Clau SSH importada</string>
     <string name="ssh_key_error_dialog_title">No s\'ha pogut importar la clau</string>
@@ -92,7 +92,7 @@
     <string name="prefs_import_passwords_title">Importa el repositori</string>
     <string name="prefs_import_passwords_summary">Importa un repositori de contrasenyes des d\'un directory extern</string>
     <string name="prefs_repo_not_empty_dialog_title">El repositori local no està buit</string>
-    <string name="prefs_repo_not_empty_dialog_summary">Primer has d\'eliminat el repositori de contrasenyes local</string>
+    <string name="prefs_repo_not_empty_dialog_summary">Primer has d\'eliminar el repositori de contrasenyes local</string>
     <string name="pref_rebase_on_pull_title">Fer \"Rebase\" al fer una baixada</string>
     <string name="pref_rebase_on_pull_summary">Al fer una baixada/sincronització, crea una comissió de fusió amb els canvis de la branca font</string>
     <string name="pref_rebase_on_pull_summary_on">Al fer una baixada/sincronització, fes \"rebase\" de les comissions que no estiguin presents al repositori remot</string>
@@ -107,7 +107,7 @@
     <string name="pwgen_title">Genera una contrasenya</string>
     <string name="pwgen_generate">Genera</string>
     <string name="pwgen_include">Inclou</string>
-    <string name="pwgen_length">Longitut</string>
+    <string name="pwgen_length">Longitud</string>
     <string name="pwgen_numerals">Xifres</string>
     <string name="pwgen_symbols">Símbols</string>
     <string name="pwgen_uppercase">Majúscules</string>
@@ -115,8 +115,8 @@
     <string name="pwgen_ambiguous">Ambigus</string>
     <string name="pwgen_pronounceable">Pronunciable</string>
     <string name="pwgen_no_chars_error">Sense caràcters inclosos</string>
-    <string name="pwgen_length_too_short_error">Longitut massa curta pels criteris seleccionats</string>
-    <string name="pwgen_max_iterations_exceeded">Falla al generar una contrasenya amb els requisits establerts. Proveu d\'incrementat la longitut.</string>
+    <string name="pwgen_length_too_short_error">Longitud massa curta pels criteris seleccionats</string>
+    <string name="pwgen_max_iterations_exceeded">Falla al generar una contrasenya amb els requisits establerts. Proveu d\'incrementar la longitud.</string>
     <string name="pwgen_separator">Separador</string>
     <string name="pref_password_generator_type_title">Tipus de generació de contrasenyes</string>
     <string name="ssh_keygen_passphrase">Frase de pas</string>
@@ -124,12 +124,12 @@
     <string name="ssh_keygen_generate">Genera</string>
     <string name="ssh_keygen_share">Comparteix</string>
     <string name="ssh_keygen_later">Més tard</string>
-    <string name="ssh_keygen_message">%1$s  Proporcioneu aquest clau pública al servidor Git.</string>
+    <string name="ssh_keygen_message">%1$s  Proporcioneu aquesta clau pública al servidor Git.</string>
     <string name="ssh_key_gen_generating_progress">Generant claus…</string>
     <string name="ssh_keygen_require_authentication">Protegiu amb credencials de bloqueig de pantalla</string>
     <string name="ssh_keygen_label_rsa">RSA</string>
     <string name="ssh_keygen_label_ecdsa">ECDSA</string>
-    <string name="ssh_keygen_explanation_rsa"><b>RSA (3072 bit)</b> Suportat per tots el servidors, però l\'autenticació és més lenta.</string>
+    <string name="ssh_keygen_explanation_rsa"><b>RSA (3072 bit)</b> Suportat per tots els servidors, però l\'autenticació és més lenta.</string>
     <string name="ssh_keygen_explanation_ecdsa"><b>ECDSA (NIST P-256)</b> Autenticació ràpida i suportada per la majoria de servidors que encara rebent actualitzacions.</string>
     <string name="ssh_keygen_existing_title">Clau SSH</string>
     <string name="ssh_keygen_existing_message">Vols reemplaçar la clau SSH existent? Podríes perdre accés al servidor.</string>
@@ -143,7 +143,7 @@
     <string name="dialog_no">No</string>
     <string name="dialog_cancel">Cancel·lar</string>
     <string name="git_sync">Sincronitzeu el repositori</string>
-    <string name="git_pull">Baixada desde el remot</string>
+    <string name="git_pull">Baixada des de el remot</string>
     <string name="git_push">Pujada al remot</string>
     <string name="git_push_up_to_date">Tot està actualitzat</string>
     <string name="git_log">Mostra registre de comissions</string>
@@ -151,8 +151,8 @@
     <string name="show_password_pref_summary">Controla la visibilitat de les contrasenyes desxifrades. Aquesta acció no desactiva la copia al porta-retalls.</string>
     <string name="fast_unlock_pref_title">Desbloqueig ràpid de les entrades</string>
     <string name="pwd_generate_button">Generar</string>
-    <string name="refresh_list">Refresca la lista</string>
-    <string name="send_plaintext_password_to">Envia la contrasenya com texte usant…</string>
+    <string name="refresh_list">Refresca la llista</string>
+    <string name="send_plaintext_password_to">Envia la contrasenya com text usant…</string>
     <string name="app_icon_hint">Icona de l\'aplicació</string>
     <string name="oreo_autofill_select_and_fill_into">Selecciona l\'entrada a omplir</string>
     <string name="oreo_autofill_strict_domain_search">Cerca resistent al Phishing</string>
@@ -161,7 +161,7 @@
     <string name="oreo_autofill_filter_no_results">Sense resultats.</string>
     <string name="oreo_autofill_search_in_store">Entrada de la cerca</string>
     <string name="oreo_autofill_save_internal_error">No s\'ha pogut desat degut a un error intern</string>
-    <string name="oreo_autofill_save_app_not_supported">Aquest aplicació no està actualment suportada</string>
+    <string name="oreo_autofill_save_app_not_supported">Aquesta aplicació no està actualment suportada</string>
     <string name="oreo_autofill_save_passwords_dont_match">Les contrasenyes no coincideixen</string>
     <string name="oreo_autofill_generate_password">Crea una entrada</string>
     <string name="oreo_autofill_max_matches_reached">Nombre màxim de coincidències (%1$d) assolit; neteja les concordances abans d\'afegir noves.</string>
@@ -183,7 +183,7 @@
     <string name="oreo_autofill_enable_dialog_instructions">Per habilitar aquesta funció, toqueu \"D\'acord\" per anar a la configuració d\'emplenament automàtic. Allà, seleccioneu Password Store de la llista i confirmeu la sol·licitud de confirmació.</string>
     <string name="oreo_autofill_enable_dialog_installed_browsers">Suport d\'emplenament automàtic amb navegadors instal·lats:</string>
     <string name="ssh_key_does_not_exist">No es pot obrir la clau privada SSH, comproveu que el fitxer existeixi</string>
-    <string name="new_password_title">"Nova contrasenya "</string>
+    <string name="new_password_title">Nova contrasenya</string>
     <string name="git_tools">Utilitats</string>
     <string name="abort_rebase">Interromp el procés de rebase i pujar una nova branca</string>
     <string name="reset_to_remote">Reinicia a una branca remota</string>
@@ -318,7 +318,7 @@
     <string name="pgp_key_change_passphrase_succeeded_message">S\'ha modificat la frase de pas de la clau amb ID %1$s correctament.</string>
     <string name="pgp_key_change_passphrase_error">No s\'ha pogut definir la frase de pas</string>
     <string name="pgp_key_empty_passphrase_warning">La frase de pas és buida</string>
-    <string name="pgp_key_empty_passphrase_warning_message">No és recomana usar una frase de pas buida, ja que la clau PGP estarà totalment desprotegida.</string>
+    <string name="pgp_key_empty_passphrase_warning_message">No es recomana usar una frase de pas buida, ja que la clau PGP estarà totalment desprotegida.</string>
     <string name="pgp_key_short_passphrase_warning">La frase de pas no és segura</string>
     <string name="pgp_key_short_passphrase_warning_message">La frase de pas ha de contenir vuit caràcters com a mínim.</string>
     <string name="pgp_key_insecure_passphrase_warning_confirm">Continua igualment</string>
@@ -339,7 +339,7 @@
     <string name="no_keys_imported_dialog_title">No s\'han trobat claus</string>
     <string name="no_keys_imported_dialog_message">No s\'ha afegit claus PGP encara. Importeu un fitxer de clau o creeu una nova clau al gestor de claus PGP.</string>
     <string name="no_keys_imported_dialog_open_key_manager">Obreiu el gestor de claus PGP</string>
-    <string name="cache_password_until_screen_off">Manteniu la frase de pas fins the la pantalla s\'apagui</string>
+    <string name="cache_password_until_screen_off">Manteniu la frase de pas fins que la pantalla s\'apagui</string>
     <string name="biometric_prompt_description_persistently_cache_password">Xifra la frase de pas de PGP a la memòria cau del dispositiu</string>
     <string name="biometric_prompt_description_unlock_entry">Desbloqueja l\'entrada amb l\'emprempta digital</string>
     <string name="pgp_wrong_passphrase_input">Frase de pas incorrecta</string>
