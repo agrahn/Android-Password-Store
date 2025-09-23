@@ -202,8 +202,20 @@ class PGPKeyListActivity : AppCompatActivity() {
   }
 
   override fun onResume() {
-    viewModel.updateKeySet()
     super.onResume()
+    viewModel.updateKeySet()
+    if(!(intent.extras?.getBoolean(EXTRA_KEY_SELECTION) ?: false))
+      lifecycleScope.launch {
+        runCatching {
+          yubikit.startNfcDiscovery(NfcConfiguration().timeout(15000), this@PGPKeyListActivity) {
+            device ->
+	        selectedIdentifierForLinkHw?.let {connectHw(it, device)}
+            device.remove {
+	            selectedIdentifierForLinkHw = null
+            }
+          }
+        }
+	  }  
   }
 
   override fun onPause() {
@@ -372,18 +384,6 @@ class PGPKeyListActivity : AppCompatActivity() {
         .setCancelable(false)
         .create()
     connectHwDialog?.show()
-
-    lifecycleScope.launch {
-      runCatching {
-        yubikit.startNfcDiscovery(NfcConfiguration().timeout(15000), this@PGPKeyListActivity) {
-          device ->
-	      selectedIdentifierForLinkHw?.let {connectHw(it, device)}
-          device.remove {
-	          selectedIdentifierForLinkHw = null
-          }
-        }
-      }
-	}  
   }
 
   private var openPgpAppMissingDialog: AlertDialog? = null
