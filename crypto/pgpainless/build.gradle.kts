@@ -6,6 +6,8 @@ plugins { id("com.github.android-password-store.kotlin-jvm-library") }
 
 dependencies {
   api(projects.crypto.common)
+//  implementation(libs.yubikit.android)
+//  implementation(libs.yubikit.openpgp)
   implementation(libs.androidx.annotation)
   implementation(libs.dagger.hilt.core)
   implementation(libs.kotlinx.coroutines.core)

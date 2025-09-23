@@ -5,6 +5,7 @@
 
 package app.passwordstore.ui.pgp
 
+import android.nfc.TagLostException
 import com.yubico.yubikit.openpgp.Do
 import app.passwordstore.crypto.errors.NoMatchingKeyException
 import com.yubico.yubikit.openpgp.KeyRef
@@ -408,6 +409,8 @@ class PGPKeyListActivity : AppCompatActivity() {
                       .create()
                 openPgpAppMissingDialog?.show()
               }
+	        else if(e is TagLostException)
+              snackbar(message = resources.getString(R.string.pgp_key_hardware_lost_connection))
             logcat(ERROR) { e.asLog() }
           }
         connectHwDialog?.dismiss()
@@ -472,6 +475,7 @@ class PGPKeyListActivity : AppCompatActivity() {
                 .create()
           matchingKeyNotFoundDialog?.show()
         }
+
         logcat { e.asLog() }
       }
     //runCatching {

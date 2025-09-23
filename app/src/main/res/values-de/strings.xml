@@ -410,6 +410,7 @@
   <string name="pgp_key_manager_missing_openpgp_capability_warning_message">Der verbundene Token lässt keine OpenPGP-Operationen zu. Stellen Sie sicher, dass der Token OpenPGP unterstützt und die Anwendung aktiviert ist.</string>
   <string name="pgp_key_manager_no_matching_key_on_token_warning_title">Kein passender PGP-Schlüssel</string>
   <string name="pgp_key_manager_no_matching_key_on_token_warning_message">Der verbundene Token stellt keinen passenden PGP-Schlüssel bereit. Verwenden Sie den richtigen Token?</string>
+  <string name="pgp_key_hardware_lost_connection">Verbindung verloren. Versuchen Sie es erneut.</string>
   <string name="pgp_change_passphrase_title">PGP-Kennwortsatz ändern</string>
   <string name="pgp_old_passphrase">Aktueller Kennwortsatz</string>
   <string name="pgp_new_passphrase">Neuer Kennwortsatz</string>
