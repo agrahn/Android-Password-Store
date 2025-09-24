@@ -281,6 +281,8 @@
   <string name="git_server_config_save_auth_mode_mismatch">Gültige Authentifizierungsarten für %1$s: %2$s</string>
   <string name="git_operation_wrong_passphrase">Falscher Kennwortsatz</string>
   <string name="git_operation_wrong_password">Falsches Passwort</string>
+  <string name="clear_saved_passphrase_ssh">Gespeicherten Kennwortsatz für lokalen SSH-Schlüssel löschen</string>
+  <string name="clear_saved_passphrase_https">Gespeichertes HTTPS-Passwort löschen</string>
   <string name="bottom_sheet_create_new_folder">Neuen Ordner erstellen</string>
   <string name="bottom_sheet_create_new_password">Neues Passwort erstellen</string>
   <string name="bottom_sheet_import_pgp_key">Aus Datei/Backup importieren</string>

@@ -27,12 +27,14 @@ class MigrationsTest {
   private lateinit var context: Context
   private lateinit var filesDir: String
   private lateinit var sharedPrefs: SharedPreferences
+  private lateinit var gitSecrets: SharedPreferences
 
   @BeforeTest
   fun setup() {
     context = SPMockBuilder().createContext()
     filesDir = tempFolder.root.path
     sharedPrefs = SPMockBuilder().createSharedPreferences()
+    gitSecrets = SPMockBuilder().createSharedPreferences()
   }
 
   private fun checkOldKeysAreRemoved() =
@@ -57,7 +59,7 @@ class MigrationsTest {
     runMigrations(
       filesDir,
       sharedPrefs,
-      GitSettings(sharedPrefs, filesDir),
+      GitSettings(sharedPrefs, gitSecrets, filesDir),
       context,
       runTest = true,
     )
@@ -80,7 +82,7 @@ class MigrationsTest {
     runMigrations(
       filesDir,
       sharedPrefs,
-      GitSettings(sharedPrefs, filesDir),
+      GitSettings(sharedPrefs, gitSecrets, filesDir),
       context,
       runTest = true,
     )
@@ -103,7 +105,7 @@ class MigrationsTest {
     runMigrations(
       filesDir,
       sharedPrefs,
-      GitSettings(sharedPrefs, filesDir),
+      GitSettings(sharedPrefs, gitSecrets, filesDir),
       context,
       runTest = true,
     )
@@ -119,7 +121,7 @@ class MigrationsTest {
     runMigrations(
       filesDir,
       sharedPrefs,
-      GitSettings(sharedPrefs, filesDir),
+      GitSettings(sharedPrefs, gitSecrets, filesDir),
       context,
       runTest = true,
     )
@@ -133,7 +135,7 @@ class MigrationsTest {
     runMigrations(
       filesDir,
       sharedPrefs,
-      GitSettings(sharedPrefs, filesDir),
+      GitSettings(sharedPrefs, gitSecrets, filesDir),
       context,
       runTest = true,
     )
@@ -147,7 +149,7 @@ class MigrationsTest {
     runMigrations(
       filesDir,
       sharedPrefs,
-      GitSettings(sharedPrefs, filesDir),
+      GitSettings(sharedPrefs, gitSecrets, filesDir),
       context,
       runTest = true,
     )
@@ -161,7 +163,7 @@ class MigrationsTest {
     runMigrations(
       filesDir,
       sharedPrefs,
-      GitSettings(sharedPrefs, filesDir),
+      GitSettings(sharedPrefs, gitSecrets, filesDir),
       context,
       runTest = true,
     )
@@ -174,7 +176,7 @@ class MigrationsTest {
     runMigrations(
       filesDir,
       sharedPrefs,
-      GitSettings(sharedPrefs, filesDir),
+      GitSettings(sharedPrefs, gitSecrets, filesDir),
       context,
       runTest = true,
     )
@@ -190,7 +192,7 @@ class MigrationsTest {
     runMigrations(
       filesDir,
       sharedPrefs,
-      GitSettings(sharedPrefs, filesDir),
+      GitSettings(sharedPrefs, gitSecrets, filesDir),
       context,
       runTest = true,
     )
@@ -208,7 +210,7 @@ class MigrationsTest {
     runMigrations(
       filesDir,
       sharedPrefs,
-      GitSettings(sharedPrefs, filesDir),
+      GitSettings(sharedPrefs, gitSecrets, filesDir),
       context,
       runTest = true,
     )

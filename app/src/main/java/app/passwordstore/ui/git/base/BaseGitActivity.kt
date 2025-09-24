@@ -4,9 +4,11 @@
  */
 package app.passwordstore.ui.git.base
 
+import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import app.passwordstore.R
+import app.passwordstore.injection.prefs.GitSecrets
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.git.ErrorMessages
@@ -54,6 +56,7 @@ abstract class BaseGitActivity : AppCompatActivity() {
 
   @Inject lateinit var gitSettings: GitSettings
   @Inject lateinit var dispatcherProvider: DispatcherProvider
+  @GitSecrets @Inject lateinit var gitSecrets: SharedPreferences
 
   /**
    * Poor workaround to pass in a specified remote branch for [ResetToRemoteOperation]. Callers of
@@ -100,6 +103,7 @@ abstract class BaseGitActivity : AppCompatActivity() {
   suspend fun promptOnErrorHandler(err: Throwable, onPromptDone: () -> Unit = {}) {
     val error = rootCauseException(err)
     if (!isExplicitlyUserInitiatedError(error)) {
+      gitSecrets.edit { remove(PreferenceKeys.HTTPS_PASSWORD) }
       sharedPrefs.edit { remove(PreferenceKeys.SSH_OPENKEYSTORE_KEYID) }
       logcat { error.asLog() }
       withContext(dispatcherProvider.main()) {

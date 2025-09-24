@@ -41,19 +41,19 @@ class ProxyUtils @Inject constructor(private val gitSettings: GitSettings) {
       }
     )
     val user = gitSettings.proxyUsername ?: ""
-    val password = gitSettings.proxyPassword ?: ""
-    if (user.isEmpty() || password.isEmpty()) {
+    val password = gitSettings.proxyPassword ?: charArrayOf()
+    if (user.isEmpty() || password.size == 0) {
       System.clearProperty(HTTP_PROXY_USER_PROPERTY)
       System.clearProperty(HTTP_PROXY_PASSWORD_PROPERTY)
     } else {
       System.setProperty(HTTP_PROXY_USER_PROPERTY, user)
-      System.setProperty(HTTP_PROXY_PASSWORD_PROPERTY, password)
+      System.setProperty(HTTP_PROXY_PASSWORD_PROPERTY, String(password))
     }
     Authenticator.setDefault(
       object : Authenticator() {
         override fun getPasswordAuthentication(): PasswordAuthentication? {
           return if (requestorType == RequestorType.PROXY) {
-            PasswordAuthentication(user, password.toCharArray())
+            PasswordAuthentication(user, password)
           } else {
             null
           }

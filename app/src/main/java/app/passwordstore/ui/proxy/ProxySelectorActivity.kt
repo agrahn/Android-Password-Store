@@ -13,10 +13,10 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Patterns
 import android.view.MenuItem
+import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.core.os.postDelayed
-import androidx.core.widget.doOnTextChanged
 import app.passwordstore.R
 import app.passwordstore.databinding.ActivityProxySelectorBinding
 import app.passwordstore.injection.prefs.SettingsPreferences
@@ -49,10 +49,11 @@ class ProxySelectorActivity : AppCompatActivity() {
         .getInt(PreferenceKeys.PROXY_PORT, -1)
         .takeIf { it != -1 }
         ?.let { proxyPort.setText("$it") }
-      proxyPassword.setText(proxyPrefs.getString(PreferenceKeys.PROXY_PASSWORD))
+      gitSettings.proxyPassword?.let { proxyPassword.setText(String(it)) }
       save.setOnClickListener { saveSettings() }
-      proxyHost.doOnTextChanged { text, _, _, _ ->
-        if (text != null) {
+      proxyHost.setOnFocusChangeListener { v, hasFocus ->
+        if (!hasFocus) {
+          val text = (v as EditText).text.toString()
           proxyHost.error =
             if (isNumericAddress(text) || text.matches(WEB_ADDRESS_REGEX)) {
               null
@@ -96,9 +97,7 @@ class ProxySelectorActivity : AppCompatActivity() {
         ?.toString()
         ?.takeIf { it.isNotEmpty() }
         ?.let { gitSettings.proxyPort = it.toInt() }
-      binding.proxyPassword.text
-        ?.toString()
-        ?.takeIf { it.isNotEmpty() }
+      (binding.proxyPassword.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf())
         .let { gitSettings.proxyPassword = it }
     }
     proxyUtils.setDefaultProxy()

@@ -8,7 +8,10 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.context.FilesDirPath
+import app.passwordstore.injection.prefs.GitSecrets
 import app.passwordstore.injection.prefs.SettingsPreferences
+import app.passwordstore.util.crypto.AESEncryption
+import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.getString
 import com.github.michaelbull.result.getOrElse
 import com.github.michaelbull.result.runCatching
@@ -49,6 +52,7 @@ class GitSettings
 @Inject
 constructor(
   @SettingsPreferences private val settings: SharedPreferences,
+  @GitSecrets private val gitSecrets: SharedPreferences,
   @FilesDirPath private val filesDirPath: String,
 ) {
 
@@ -69,6 +73,7 @@ constructor(
       // When the server changes, remote password, multiplexing support and host key file
       // should be deleted/reset.
       useMultiplexing = true
+      gitSecrets.edit { remove(PreferenceKeys.HTTPS_PASSWORD) }
       clearSavedHostKey()
     }
 
@@ -109,9 +114,15 @@ constructor(
     }
 
   var proxyPassword
-    get() = settings.getString(PreferenceKeys.PROXY_PASSWORD)
+    get() =
+      AESEncryption.decrypt(
+        gitSecrets.getString(PreferenceKeys.PROXY_PASSWORD, null)?.toCharArray(),
+        keyType = KeyType.PERSISTENT,
+      )
     set(value) {
-      settings.edit { putString(PreferenceKeys.PROXY_PASSWORD, value) }
+      AESEncryption.encrypt(value, keyType = KeyType.PERSISTENT)?.let { encrypted ->
+        gitSecrets.edit { putString(PreferenceKeys.PROXY_PASSWORD, String(encrypted)) }
+      }
     }
 
   var rebaseOnPull

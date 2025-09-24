@@ -7,6 +7,7 @@ package app.passwordstore.ui.settings
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.ShortcutManager
 import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContracts
@@ -17,6 +18,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.injection.prefs.GitSecrets
 import app.passwordstore.ui.git.config.GitConfigActivity
 import app.passwordstore.ui.git.config.GitServerConfigActivity
 import app.passwordstore.ui.proxy.ProxySelectorActivity
@@ -147,6 +149,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
   private var showSshKeyPref: Preference? = null
 
   override fun provideSettings(builder: PreferenceScreen.Builder) {
+    val gitOperationSecrets = hiltEntryPoint.gitSecrets()
     val gitSettings = hiltEntryPoint.gitSettings()
 
     builder.apply {
@@ -203,6 +206,28 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
             true
           }
         }
+      pref(PreferenceKeys.CLEAR_SAVED_PASS) {
+        fun Preference.updatePref() {
+          val sshPass = gitOperationSecrets.getString(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE)
+          val httpsPass = gitOperationSecrets.getString(PreferenceKeys.HTTPS_PASSWORD)
+          if (sshPass == null && httpsPass == null) {
+            visible = false
+            return
+          }
+          titleRes =
+            when {
+              httpsPass != null -> R.string.clear_saved_passphrase_https
+              else -> R.string.clear_saved_passphrase_ssh
+            }
+          visible = true
+          requestRebind()
+        }
+        onClick {
+          updatePref()
+          true
+        }
+        updatePref()
+      }
       pref(PreferenceKeys.SSH_OPENKEYSTORE_CLEAR_KEY_ID) {
         titleRes = R.string.pref_title_openkeystore_clear_keyid
         visible =
@@ -351,5 +376,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
   @InstallIn(SingletonComponent::class)
   interface RepositorySettingsEntryPoint {
     fun gitSettings(): GitSettings
+
+    @GitSecrets fun gitSecrets(): SharedPreferences
   }
 }

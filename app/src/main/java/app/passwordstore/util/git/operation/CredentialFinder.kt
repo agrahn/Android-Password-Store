@@ -6,22 +6,31 @@
 package app.passwordstore.util.git.operation
 
 import android.annotation.SuppressLint
+import android.content.SharedPreferences
 import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.annotation.StringRes
+import androidx.core.content.edit
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
+import app.passwordstore.injection.prefs.GitSecrets
 import app.passwordstore.util.coroutines.DispatcherProvider
+import app.passwordstore.util.crypto.AESEncryption
+import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.git.sshj.InteractivePasswordFinder
 import app.passwordstore.util.settings.AuthMode
+import app.passwordstore.util.settings.PreferenceKeys
+import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
-
-private var storedCredential: CharArray? = null
 
 class CredentialFinder(
   private val callingActivity: FragmentActivity,
@@ -29,25 +38,44 @@ class CredentialFinder(
   dispatcherProvider: DispatcherProvider,
 ) : InteractivePasswordFinder(dispatcherProvider) {
 
+  private val hiltEntryPoint =
+    EntryPointAccessors.fromApplication(
+      callingActivity.applicationContext,
+      CredentialFinderEntryPoint::class.java,
+    )
+
   override fun askForPassword(cont: Continuation<CharArray?>, isRetry: Boolean) {
+    val gitOperationSecrets = hiltEntryPoint.gitSecrets()
+    val credentialPref: String
     @StringRes val messageRes: Int
     @StringRes val hintRes: Int
+    @StringRes val rememberRes: Int
     @StringRes val errorRes: Int
     when (authMode) {
       AuthMode.SshKey -> {
+        credentialPref = PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE
         messageRes = R.string.passphrase_dialog_text
         hintRes = R.string.ssh_keygen_passphrase
+        rememberRes = R.string.git_operation_remember_passphrase
         errorRes = R.string.git_operation_wrong_passphrase
       }
       AuthMode.Password -> {
+        // Could be either an SSH or an HTTPS password
+        credentialPref = PreferenceKeys.HTTPS_PASSWORD
         messageRes = R.string.password_dialog_text
         hintRes = R.string.git_operation_hint_password
+        rememberRes = R.string.git_operation_remember_password
         errorRes = R.string.git_operation_wrong_password
       }
       else ->
         throw IllegalStateException("Only SshKey and Password connection mode ask for passwords")
     }
-    if (isRetry) storedCredential = null
+    if (isRetry) gitOperationSecrets.edit { remove(credentialPref) }
+    val storedCredential =
+      AESEncryption.decrypt(
+        gitOperationSecrets.getString(credentialPref, null)?.toCharArray(),
+        keyType = KeyType.PERSISTENT,
+      )
     if (storedCredential == null) {
       val layoutInflater = LayoutInflater.from(callingActivity)
 
@@ -56,7 +84,11 @@ class CredentialFinder(
       val credentialLayout =
         dialogView.findViewById<TextInputLayout>(R.id.git_auth_passphrase_layout)
       val editCredential = dialogView.findViewById<TextInputEditText>(R.id.git_auth_credential)
+      credentialLayout.setHint(hintRes)
       editCredential.setHint(hintRes)
+      val rememberCredential =
+        dialogView.findViewById<MaterialCheckBox>(R.id.git_auth_remember_credential)
+      rememberCredential.setText(rememberRes)
       if (isRetry) {
         credentialLayout.error = callingActivity.resources.getString(errorRes)
         // Reset error when user starts entering a password
@@ -70,7 +102,11 @@ class CredentialFinder(
           setPositiveButton(R.string.dialog_ok) { _, _ ->
             val credential =
               editCredential.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
-            storedCredential = credential.clone()
+            if (rememberCredential.isChecked) {
+              AESEncryption.encrypt(credential, keyType = KeyType.PERSISTENT)?.let { encrypted ->
+                gitOperationSecrets.edit { putString(credentialPref, String(encrypted)) }
+              }
+            }
             cont.resume(credential)
           }
           setNegativeButton(R.string.dialog_cancel) { _, _ -> cont.resume(null) }
@@ -82,7 +118,13 @@ class CredentialFinder(
           show()
         }
     } else {
-      cont.resume(storedCredential?.clone())
+      cont.resume(storedCredential)
     }
+  }
+
+  @EntryPoint
+  @InstallIn(SingletonComponent::class)
+  interface CredentialFinderEntryPoint {
+    @GitSecrets fun gitSecrets(): SharedPreferences
   }
 }

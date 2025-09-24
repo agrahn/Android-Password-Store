@@ -42,7 +42,7 @@ fun runMigrations(
   migrateToDiceware(sharedPrefs)
   removeExternalStorageProperties(sharedPrefs)
   removeCurrentBranchValue(sharedPrefs)
-  removePersistentCredentialCache(sharedPrefs, context, runTest)
+  removePersistentCredentialCache(sharedPrefs, gitSettings, context, runTest)
   if (!runTest) moveToPasswordGeneratorPrefs(sharedPrefs, context)
   deleteKeystoreWrappedEd25519Key(sharedPrefs, context)
   migrateToFastUnlockOptions(sharedPrefs)
@@ -82,6 +82,7 @@ private fun deleteKeystoreWrappedEd25519Key(sharedPrefs: SharedPreferences, cont
 
 private fun removePersistentCredentialCache(
   sharedPrefs: SharedPreferences,
+  gitSettings: GitSettings,
   context: Context,
   runTest: Boolean,
 ) {
@@ -118,11 +119,14 @@ private fun removePersistentCredentialCache(
     proxyPrefs.edit { remove(PreferenceKeys.PROXY_USERNAME) }
     sharedPrefs.edit { putString(PreferenceKeys.PROXY_USERNAME, it) }
   }
-  val password = proxyPrefs.getString(PreferenceKeys.PROXY_PASSWORD, null)?.toCharArray()
+  val password =
+    proxyPrefs.getString(PreferenceKeys.PROXY_PASSWORD, null)?.toCharArray()
+      ?: sharedPrefs.getString(PreferenceKeys.PROXY_PASSWORD, null)?.toCharArray()
   password?.let {
-    logcat(TAG, INFO) { "Moving PreferenceKeys.PROXY_PASSWORD to SharedPreferences" }
+    logcat(TAG, INFO) { "Moving PreferenceKeys.PROXY_PASSWORD to GitSecrets" }
     proxyPrefs.edit { remove(PreferenceKeys.PROXY_PASSWORD) }
-    sharedPrefs.edit { putString(PreferenceKeys.PROXY_PASSWORD, String(it)) }
+    sharedPrefs.edit { remove(PreferenceKeys.PROXY_PASSWORD) }
+    gitSettings.proxyPassword = it
   }
 }
 

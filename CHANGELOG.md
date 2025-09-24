@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Optional caching of Git credentials
+
+### Fixed
+
+- App crashed when trying to enter a proxy url in Settings --> Repository --> HTTP(S) proxy settings
+
 ## [1.15.2] - 2025-09-05
 
 ### Fixed
