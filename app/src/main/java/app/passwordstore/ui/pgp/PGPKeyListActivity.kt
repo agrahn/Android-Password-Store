@@ -101,7 +101,7 @@ class PGPKeyListActivity : AppCompatActivity() {
               title =
                 if (isSelecting) stringResource(R.string.activity_label_pgp_key_select)
                 else stringResource(R.string.activity_label_pgp_key_manager),
-              navigationIcon = painterResource(R.drawable.ic_arrow_back_black_24dp),
+              navigationIcon = painterResource(R.drawable.ic_arrow_back_24dp),
               onNavigationIconClick = {
                 if (selectedKeyIds.isNotEmpty()) {
                   val result = Intent()

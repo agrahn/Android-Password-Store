@@ -64,7 +64,7 @@ private fun APSAppBarPreview() {
       actions = {
         IconButton(onClick = {}) {
           Icon(
-            painter = painterResource(id = R.drawable.ic_search_black_24dp),
+            painter = painterResource(id = R.drawable.ic_search_24dp),
             contentDescription = "Search items",
           )
         }
