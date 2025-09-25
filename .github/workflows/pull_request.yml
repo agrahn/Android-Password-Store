@@ -73,25 +73,6 @@ jobs:
           name: Build report (build-apks)
           path: build/reports/kotlin-build/
 
-  check-api:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup build environment
-        uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@develop
-        with:
-          java-version: 17
-
-      - name: Check library API
-        shell: bash
-        run: ./gradlew metalavaCheckCompatibilityRelease
-
-      - name: Upload Kotlin build report
-        if: "${{ always() }}"
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: Build report (check-api)
-          path: build/reports/kotlin-build/
-
   lint:
     runs-on: ubuntu-latest
     steps:

@@ -7,9 +7,6 @@ package app.passwordstore.ui
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,7 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.res.painterResource
+import app.passwordstore.ui.compose.R
 import app.passwordstore.ui.compose.preview.DevicePreviews
 import app.passwordstore.ui.compose.preview.ThemePreviews
 import app.passwordstore.ui.compose.theme.APSTheme
@@ -62,11 +60,11 @@ private fun APSAppBarPreview() {
     APSAppBar(
       title = "Preview",
       backgroundColor = MaterialTheme.colorScheme.surface,
-      navigationIcon = rememberVectorPainter(Icons.AutoMirrored.Filled.ArrowBack),
+      navigationIcon = painterResource(id = R.drawable.ic_arrow_back_24dp),
       actions = {
         IconButton(onClick = {}) {
           Icon(
-            painter = rememberVectorPainter(Icons.Filled.Search),
+            painter = painterResource(id = R.drawable.ic_search_black_24dp),
             contentDescription = "Search items",
           )
         }
