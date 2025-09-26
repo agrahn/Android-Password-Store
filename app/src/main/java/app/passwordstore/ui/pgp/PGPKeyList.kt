@@ -142,8 +142,8 @@ private fun KeyItem(
   ) {
     if (tokenLinkedIds.contains(identifier)) {
       Icon(
-        painter = painterResource(R.drawable.ic_action_new_pgp_hw),
-        stringResource(id = R.string.delete),
+        painter = painterResource(R.drawable.ic_security_key_24dp),
+        contentDescription = "PGP security key",
         modifier = Modifier.padding(end = SpacingSmall),
       )
     }

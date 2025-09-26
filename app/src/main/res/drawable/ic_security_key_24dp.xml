@@ -1,0 +1,16 @@
+<!--
+  ~ Copyright © 2014-2025 The Android Password Store Authors. All Rights Reserved.
+  ~ SPDX-License-Identifier: GPL-3.0-only
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:autoMirrored="true"
+    android:viewportHeight="960"
+    android:viewportWidth="960"
+    android:height="24dp"
+    android:width="24dp">
+    <path
+      android:fillColor="?attr/colorOnBackground"
+      android:pathData="m920,560q0,33 -23.5,56.5Q873,640 840,640L720,640q0,33 -23.5,56.5Q673,720 640,720L120,720Q87,720 63.5,696.5 40,673 40,640v-320q0,-33 23.5,-56.5Q87,240 120,240h520q33,0 56.5,23.5 23.5,23.5 23.5,56.5h120q33,0 56.5,23.5 23.5,23.5 23.5,56.5zM500,480q0,-50 -35,-85 -35,-35 -85,-35 -50,0 -85,35 -35,35 -35,85 0,50 35,85 35,35 85,35 50,0 85,-35 35,-35 35,-85zM840,560L840,400L720,400v160zM640,640L640,320L120,320v320zM420,480q0,17 -11.5,28.5Q397,520 380,520 363,520 351.5,508.5 340,497 340,480q0,-17 11.5,-28.5 11.5,-11.5 28.5,-11.5 17,0 28.5,11.5 11.5,11.5 11.5,28.5zM640,640v-320z"/>
+    
+</vector>
