@@ -1,4 +1,4 @@
-136192
+136204
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -204,6 +204,7 @@
 *.webhare.dev
 *.webpaas.ovh.net
 *.wf.crm.dev
+*.xenonconnect.de
 *.xmit.co
 *.yokohama.jp
 *.zerops.app
@@ -444,9 +445,6 @@ air-traffic-control.aero
 airbus
 aircraft.aero
 airforce
-airkitapps-au.com
-airkitapps.com
-airkitapps.eu
 airline.aero
 airport.aero
 airtel
@@ -1269,6 +1267,7 @@ canon
 cantho.vn
 canva-apps.cn
 canva-apps.com
+canva.run
 caobang.vn
 capetown
 capital
@@ -2187,6 +2186,7 @@ dyrøy.no
 dz
 dønna.no
 e.bg
+e.id
 e.se
 e12.ve
 e164.arpa
@@ -7173,6 +7173,7 @@ ri.it
 ri.us
 ribeirao.br
 ric.jelastic.vps-host.net
+rice-labs.com
 rich
 richardli
 ricoh
@@ -8514,6 +8515,7 @@ tel
 tel.tr
 telebit.app
 telebit.io
+teleport.sh
 temasek
 temp-dns.com
 tempio-olbia.it
