@@ -70,6 +70,7 @@ testing-testparameterinjector = "com.google.testparameterinjector:test-parameter
 testing-turbine = "app.cash.turbine:turbine:1.2.1"
 thirdparty-bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
 thirdparty-bouncycastle-bcutil = { module = "org.bouncycastle:bcutil-jdk18on", version.ref = "bouncycastle" }
+thirdparty-bouncycastle-bcpg = { module = "org.bouncycastle:bcpg-jdk18on", version.ref = "bouncycastle" }
 thirdparty-commons_codec = "commons-codec:commons-codec:1.19.0"
 thirdparty-compose-lints = "com.slack.lint.compose:compose-lint-checks:1.4.2"
 thirdparty-fastscroll = "me.zhanghai.android.fastscroll:library:1.3.0"
@@ -82,7 +83,7 @@ thirdparty-kotlinResult-coroutines = { module = "com.michael-bull.kotlin-result:
 thirdparty-leakcanary-plumber = "com.squareup.leakcanary:plumber-android-startup:2.14"
 thirdparty-logcat = "com.squareup.logcat:logcat:0.4"
 thirdparty-modernAndroidPrefs = "de.maxr1998:modernandroidpreferences:2.4.0-beta2"
-thirdparty-pgpainless = "org.pgpainless:pgpainless-core:1.7.6"
+thirdparty-pgpainless = "org.pgpainless:pgpainless-core:2.0.0"
 thirdparty-slack-lints = "com.slack.lint:slack-lint-checks:0.11.0"
 thirdparty-slf4j-api = { module = "org.slf4j:slf4j-api", version = { strictly = "[1.7, 1.8[", prefer = "1.7.36" } }
 thirdparty-sshj = "com.hierynomus:sshj:0.40.0"

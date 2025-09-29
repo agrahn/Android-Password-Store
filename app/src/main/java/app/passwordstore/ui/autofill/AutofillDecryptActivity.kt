@@ -22,6 +22,7 @@ import app.passwordstore.ui.crypto.BasePGPActivity
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.autofill.AutofillResponseBuilder
 import app.passwordstore.util.extensions.snackbar
+import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.androidpasswordstore.autofillparser.AutofillAction
 import com.github.michaelbull.result.getError
@@ -131,7 +132,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
             if (result.second.getError() is IncorrectPassphraseException) {
               /* Remove wrong passphrases from temporary and persistent caches */
               persistentPassphrases.edit { remove(result.first) }
-              cachedPassphrases[result.first]?.fill('\u0000')
+              cachedPassphrases[result.first]?.wipe()
               cachedPassphrases.remove(result.first)
               true
             } else false
@@ -153,7 +154,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
       }
     }
     if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {
-      cachedPassphrases.values.forEach { it.fill('\u0000') }
+      cachedPassphrases.values.forEach { it.wipe() }
       cachedPassphrases.clear()
     }
   }

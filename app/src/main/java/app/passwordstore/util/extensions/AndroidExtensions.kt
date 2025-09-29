@@ -16,7 +16,6 @@ import android.content.pm.PackageManager
 import android.content.pm.PackageManager.ApplicationInfoFlags
 import android.content.pm.PackageManager.PackageInfoFlags
 import android.os.Build
-import android.util.Base64
 import android.util.TypedValue
 import android.view.View
 import android.view.autofill.AutofillManager
@@ -116,11 +115,6 @@ fun <T : ComponentActivity> ComponentActivity.launchActivity(clazz: Class<T>) {
 
 /** Simplifies the common `getString(key, null) ?: defaultValue` case slightly */
 fun SharedPreferences.getString(key: String): String? = getString(key, null)
-
-/** Convert this [String] to its [Base64] representation */
-fun String.base64(): String {
-  return Base64.encodeToString(encodeToByteArray(), Base64.NO_WRAP)
-}
 
 fun PackageManager.getPackageInfoCompat(packageName: String, flags: Int): PackageInfo {
   return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
