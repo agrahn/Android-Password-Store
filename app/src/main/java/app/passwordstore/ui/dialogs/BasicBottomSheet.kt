@@ -174,7 +174,7 @@ private constructor(
     }
 
     fun build(): BasicBottomSheet {
-      require(message != null) { "Message needs to be set" }
+      requireNotNull(message) { "Message needs to be set" }
       return BasicBottomSheet(
         title,
         message ?: throw NullPointerException(),

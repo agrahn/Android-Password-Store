@@ -317,7 +317,7 @@
   <string name="new_folder_set_gpg_key">Set PGP key for directory</string>
 
   <!-- Password decryption failure -->
-  <string name="password_decryption_no_decryption_key">Decryption failed: No matching key found</string>
+  <string name="password_decryption_no_decryption_key">Decryption failed: No suitable secret key found</string>
   <string name="password_decryption_unknown_error">Unknown decryption error</string>
 
   <!-- GitException messages -->

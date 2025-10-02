@@ -47,7 +47,8 @@ public sealed class CryptoHandlerException(message: String? = null, cause: Throw
   CryptoException(message, cause)
 
 /** The passphrase provided for decryption was incorrect. */
-public class IncorrectPassphraseException(cause: Throwable) : CryptoHandlerException(null, cause)
+public class IncorrectPassphraseException(message: String? = null, cause: Throwable? = null) :
+  CryptoHandlerException(message, cause)
 
 /** Store contains no keys. */
 public class NoDecryptionKeyAvailableException(message: String? = null, cause: Throwable? = null) :

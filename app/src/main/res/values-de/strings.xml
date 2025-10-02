@@ -314,7 +314,7 @@
   <string name="new_folder_set_gpg_key">PGP-Schlüssel für Ordner festlegen</string>
 
   <!-- Password decryption failure -->
-  <string name="password_decryption_no_decryption_key">Entschlüsseln fehlgeschlagen: Kein passender Schlüssel gefunden</string>
+  <string name="password_decryption_no_decryption_key">Entschlüsseln fehlgeschlagen: Kein geeigneter geheimer Schlüssel gefunden</string>
   <string name="password_decryption_unknown_error">Unbekannter Fehler beim Entschlüsseln</string>
 
   <!-- GitException messages -->

@@ -17,10 +17,8 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Inject
-import org.bouncycastle.openpgp.PGPPublicKeyRing
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection
-import org.bouncycastle.openpgp.PGPSecretKeyRing
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.ConsumerOptions
@@ -33,6 +31,8 @@ import org.pgpainless.util.Passphrase
 
 public class PGPainlessCryptoHandler @Inject constructor() :
   CryptoHandler<PGPKey, PGPEncryptOptions, PGPDecryptOptions> {
+
+  private val pgpApi = PGPainless.getInstance()
 
   public override fun passphraseIsCorrect(key: PGPKey, passphrase: CharArray?): Boolean {
     val ciphertextStream = ByteArrayOutputStream()
@@ -48,7 +48,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
     val plaintextStream = ByteArrayOutputStream()
     val decryptRes =
       decrypt(
-        listOf(key),
+        key,
         passphrase,
         ciphertextStream.toByteArray().inputStream(),
         plaintextStream,
@@ -60,45 +60,44 @@ public class PGPainlessCryptoHandler @Inject constructor() :
 
   /**
    * Decrypts the given [ciphertextStream] using [PGPainless] and writes the decrypted output to
-   * [outputStream]. The provided [passphrase] is wrapped in a [SecretKeyRingProtector] and the
-   * [keys] argument is defensively checked to ensure it has at least one key present.
+   * [outputStream]. The provided [passphrase] is wrapped in a [SecretKeyRingProtector].
    *
    * @see CryptoHandler.decrypt
    */
   public override fun decrypt(
-    keys: List<PGPKey>,
+    key: PGPKey?,
     passphrase: CharArray?,
     ciphertextStream: InputStream,
     outputStream: OutputStream,
     options: PGPDecryptOptions,
   ): Result<Unit, CryptoHandlerException> =
     runCatching {
-        if (keys.isEmpty()) {
+        val consumerOptions = ConsumerOptions.get(pgpApi)
+        if (key == null) {
           // ciphertextStream may be symmetrically encrypted
-          val decryptionStream =
-            PGPainless.decryptAndOrVerify()
-              .onInputStream(ciphertextStream)
-              .withOptions(ConsumerOptions().addMessagePassphrase(Passphrase(passphrase)))
-          decryptionStream.use { Streams.pipeAll(it, outputStream) }
+          consumerOptions.addMessagePassphrase(Passphrase(passphrase))
         } else {
-          val keyringCollection =
-            keys
-              .mapNotNull { key -> PGPainless.readKeyRing().secretKeyRing(key.contents) }
-              .run(::PGPSecretKeyRingCollection)
           val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
-          val decryptionStream =
-            PGPainless.decryptAndOrVerify()
-              .onInputStream(ciphertextStream)
-              .withOptions(ConsumerOptions().addDecryptionKeys(keyringCollection, protector))
-          decryptionStream.use { Streams.pipeAll(it, outputStream) }
+          val openPgpKey = KeyUtils.tryParseCertificateOrKey(key)
+          if (openPgpKey !is OpenPGPKey || !openPgpKey.isSecretKey())
+            throw NoDecryptionKeyAvailableException("Key not usable for decryption")
+          consumerOptions.addDecryptionKey(openPgpKey, protector)
         }
+
+        val decryptionStream =
+          pgpApi.processMessage().onInputStream(ciphertextStream).withOptions(consumerOptions)
+        decryptionStream.use { Streams.pipeAll(it, outputStream) }
+
         return@runCatching
       }
       .mapError { error ->
         when (error) {
-          is MissingDecryptionMethodException ->
-            NoDecryptionKeyAvailableException(error.message, error)
-          is WrongPassphraseException -> IncorrectPassphraseException(error)
+          is MissingDecryptionMethodException -> {
+            if (key == null) // wrong passphrase provided for symmetric decryption
+             IncorrectPassphraseException(error.message, error.cause)
+            else NoDecryptionKeyAvailableException(error.message, error.cause)
+          }
+          is WrongPassphraseException -> IncorrectPassphraseException(error.message, error.cause)
           is CryptoHandlerException -> error
           else -> UnknownError(error.message, error)
         }
@@ -121,39 +120,41 @@ public class PGPainlessCryptoHandler @Inject constructor() :
   ): Result<Unit, CryptoHandlerException> =
     runCatching {
         if (keys.isEmpty() && passphrase == null) throw NoKeysProvidedException
-        val (publicKeyRingCollection, encryptionOptions) =
+        val (certificates, encryptionOptions) =
           if (passphrase == null) { // asymmetric (public key) encryption
-            val publicKeyRings =
-              keys.mapNotNull(KeyUtils::tryParseKeyring).mapNotNull { keyRing ->
-                when (keyRing) {
-                  is PGPPublicKeyRing -> keyRing
-                  is PGPSecretKeyRing -> PGPainless.extractCertificate(keyRing)
-                  else -> null
+            val certificates =
+              keys.mapNotNull(KeyUtils::tryParseCertificateOrKey).mapNotNull { certOrKey ->
+                when (certOrKey) {
+                  is OpenPGPKey -> certOrKey.toCertificate()
+                  else -> certOrKey
                 }
               }
-            require(keys.size == publicKeyRings.size) {
-              "Failed to parse all keys: ${keys.size} keys were provided but only ${publicKeyRings.size} were valid"
+            require(keys.size == certificates.size) {
+              "Failed to parse all keys: ${keys.size} keys were provided but only ${certificates.size} were valid"
             }
-            if (publicKeyRings.isEmpty()) {
+            if (certificates.isEmpty()) {
               throw NoKeysProvidedException
             }
-            val publicKeyRingCollection = PGPPublicKeyRingCollection(publicKeyRings)
-            val encryptionOptions = EncryptionOptions().addRecipients(publicKeyRingCollection)
-            Pair(publicKeyRingCollection, encryptionOptions)
+            val encryptionOptions = EncryptionOptions.encryptCommunications(pgpApi)
+            certificates.forEach { encryptionOptions.addRecipient(it) }
+            Pair(certificates, encryptionOptions)
           } else { // symmetric (with password) encryption
-            val encryptionOptions = EncryptionOptions().addMessagePassphrase(Passphrase(passphrase))
-            Pair(listOf<PGPPublicKeyRing>(), encryptionOptions)
+            val encryptionOptions =
+              EncryptionOptions.encryptCommunications(pgpApi)
+                .addMessagePassphrase(Passphrase(passphrase))
+            Pair(listOf<OpenPGPCertificate>(), encryptionOptions)
           }
         val producerOptions =
           ProducerOptions.encrypt(encryptionOptions)
             .setAsciiArmor(options.isOptionEnabled(PGPEncryptOptions.ASCII_ARMOR))
         val encryptionStream =
-          PGPainless.encryptAndOrSign().onOutputStream(outputStream).withOptions(producerOptions)
+          pgpApi.generateMessage().onOutputStream(outputStream).withOptions(producerOptions)
+
         encryptionStream.use { Streams.pipeAll(plaintextStream, it) }
         val result = encryptionStream.result
-        publicKeyRingCollection.forEach { keyRing ->
-          require(result.isEncryptedFor(keyRing)) {
-            "Stream should be encrypted for ${keyRing.publicKey.keyID} but wasn't"
+        certificates.forEach { cert ->
+          require(result.isEncryptedFor(cert)) {
+            "Stream should be encrypted for ${cert.getKeyIdentifier().getKeyId()} but wasn't"
           }
         }
       }

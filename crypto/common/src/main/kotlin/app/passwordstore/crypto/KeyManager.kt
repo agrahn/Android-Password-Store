@@ -39,12 +39,6 @@ public interface KeyManager<Key, KeyIdentifier> {
   /** Returns all keys currently in the store as a [List]. */
   public fun getAllKeys(): Result<List<Key>, Throwable>
 
-  /**
-   * Get a stable identifier for the given [key]. The returned key ID should be suitable to be used
-   * as an identifier for the cryptographic identity tied to this key.
-   */
-  public fun getKeyId(key: Key): KeyIdentifier?
-
   public fun changeKeyPassphrase(
     identifier: KeyIdentifier,
     oldPassphrase: CharArray?,

@@ -25,6 +25,7 @@ import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
+import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.getOrThrow
@@ -88,7 +89,7 @@ class DecryptActivity : BasePGPActivity() {
             if (result.second.getError() is IncorrectPassphraseException) {
               /* Remove wrong passphrases from temporary and persistent caches */
               persistentPassphrases.edit { remove(result.first) }
-              cachedPassphrases[result.first]?.fill('\u0000')
+              cachedPassphrases[result.first]?.wipe()
               cachedPassphrases.remove(result.first)
               true
             } else false
@@ -107,7 +108,7 @@ class DecryptActivity : BasePGPActivity() {
       }
     }
     if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {
-      cachedPassphrases.values.forEach { it.fill('\u0000') }
+      cachedPassphrases.values.forEach { it.wipe() }
       cachedPassphrases.clear()
     }
   }

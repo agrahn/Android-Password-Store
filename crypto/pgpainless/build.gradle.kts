@@ -15,4 +15,8 @@ dependencies {
   testImplementation(libs.bundles.testDependencies)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.testing.testparameterinjector)
+  implementation(libs.thirdparty.bouncycastle.bcprov)
+  implementation(libs.thirdparty.bouncycastle.bcutil)
+  implementation(libs.thirdparty.bouncycastle.bcpg)
+  implementation(libs.thirdparty.logcat)
 }

@@ -4,6 +4,7 @@
  */
 package app.passwordstore.util.extensions
 
+import android.util.Base64
 import app.passwordstore.data.repo.PasswordRepository
 import java.io.File
 import java.time.Instant
@@ -59,3 +60,13 @@ fun <T> unsafeLazy(initializer: () -> T) = lazy(LazyThreadSafetyMode.NONE) { ini
 
 /** A convenience extension to turn a [Throwable] with a message into a loggable string. */
 fun Throwable.asLog(message: String): String = "$message\n${asLog()}"
+
+/** Convert this [String] to its [Base64] representation */
+fun String.base64(): String {
+  return Base64.encodeToString(encodeToByteArray(), Base64.NO_WRAP)
+}
+
+fun CharArray.wipe() {
+  fill('\u0000')
+  drop(size)
+}
