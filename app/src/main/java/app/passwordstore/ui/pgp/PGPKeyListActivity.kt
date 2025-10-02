@@ -139,7 +139,7 @@ class PGPKeyListActivity : AppCompatActivity() {
                 { identifier, isSelected ->
                   val keyId = run { // ensure numeric key ID
                     val key = pgpKeyManager.getKeyById(identifier).unwrap()
-                    pgpKeyManager.getKeyId(key) ?: throw NullPointerException()
+                    KeyUtils.tryGetId(key) ?: throw NullPointerException()
                   }
                   if (isSelected) selectedKeyIds.add(keyId.toString())
                   else selectedKeyIds.remove(keyId.toString())
@@ -262,7 +262,7 @@ class PGPKeyListActivity : AppCompatActivity() {
         } else {
           KeyUtils.extractPublicKeyData(key)
         }
-      Pair(pgpKeyManager.getKeyId(key), contents)
+      Pair(KeyUtils.tryGetId(key), contents)
     }
 
     keyNumericId = keyIdAndContent.first?.toString()

@@ -94,7 +94,7 @@ constructor(
         val decryptionOptions = PGPDecryptOptions.Builder().build()
         val result =
           pgpCryptoHandler.decrypt(
-            listOf(key),
+            key,
             passphrases.values.first(),
             encryptedMessage,
             message,
@@ -108,12 +108,12 @@ constructor(
         encryptedMessage.reset()
         message.reset()
         val pgpId = PGPIdentifier.fromString(id)
-        val keys =
-          pgpId?.let { listOf(pgpKeyManager.getKeyById(pgpId).unwrap()) } ?: listOf<PGPKey>()
+        requireNotNull(pgpId) { "Error while parsing cached PGP identifier \"${id}\"" }
+        val key = pgpKeyManager.getKeyById(pgpId).unwrap()
         val decryptionOptions = PGPDecryptOptions.Builder().build()
         val result =
           pgpCryptoHandler.decrypt(
-            keys,
+            key,
             passphrases[id],
             encryptedMessage,
             message,
@@ -131,9 +131,9 @@ constructor(
     message: ByteArrayOutputStream,
   ) = run {
     val decryptionOptions = PGPDecryptOptions.Builder().build()
-    pgpCryptoHandler
-      .decrypt(listOf<PGPKey>(), passphrase, encryptedMessage, message, decryptionOptions)
-      .map { message }
+    pgpCryptoHandler.decrypt(null, passphrase, encryptedMessage, message, decryptionOptions).map {
+      message
+    }
   }
 
   fun encrypt(

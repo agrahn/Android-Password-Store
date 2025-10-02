@@ -16,13 +16,12 @@ public interface CryptoHandler<Key, EncOpts : CryptoOptions, DecryptOpts : Crypt
   public fun passphraseIsCorrect(key: Key, passphrase: CharArray?): Boolean
 
   /**
-   * Decrypt the given [ciphertextStream] using a set of potential [keys] and [passphrase], and
-   * writes the resultant plaintext to [outputStream]. The returned [Result] should be checked to
-   * ensure it is **not** an instance of [com.github.michaelbull.result.Err] before the contents of
-   * [outputStream] are used.
+   * Decrypt the given [ciphertextStream] using a [key] and a [passphrase], and writes the resultant
+   * plaintext to [outputStream]. The returned [Result] should be checked to ensure it is **not** an
+   * instance of [com.github.michaelbull.result.Err] before the contents of [outputStream] are used.
    */
   public fun decrypt(
-    keys: List<Key>,
+    key: Key?,
     passphrase: CharArray?,
     ciphertextStream: InputStream,
     outputStream: OutputStream,

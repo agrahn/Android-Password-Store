@@ -39,6 +39,7 @@ import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
+import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.Constants
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.onFailure
@@ -167,6 +168,7 @@ open class BasePGPActivity : AppCompatActivity() {
     showSnackbar: Boolean = true,
   ): ScheduledExecutorService? {
     copyTextToClipboard(password, isSensitive = isSensitive, showSnackbar)
+    password?.wipe()
 
     val clearAfter = settings.getString(PreferenceKeys.GENERAL_SHOW_TIME)?.toIntOrNull() ?: 45
     val deepClear = settings.getBoolean(PreferenceKeys.CLEAR_CLIPBOARD_HISTORY, false)

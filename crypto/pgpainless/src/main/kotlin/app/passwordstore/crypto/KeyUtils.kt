@@ -9,10 +9,10 @@ import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPIdentifier.UserId
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.runCatching
+import java.util.Date
 import org.bouncycastle.openpgp.PGPKeyRing
-import org.pgpainless.PGPainless
-import org.pgpainless.key.parsing.KeyRingReader
-import org.pgpainless.key.util.KeyRingUtils
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPKeyReader
 
 /** Utility methods to deal with [PGPKey]s. */
 public object KeyUtils {
@@ -21,43 +21,51 @@ public object KeyUtils {
    * then as a public one before the method gives up and returns null.
    */
   public fun tryParseKeyring(key: PGPKey): PGPKeyRing? {
-    return runCatching { KeyRingReader.readKeyRing(key.contents.inputStream()) }.get()
+    return runCatching {
+        OpenPGPKeyReader().parseCertificateOrKey(key.contents.inputStream()).getPGPKeyRing()
+      }
+      .get()
   }
 
-  /** Parses a [PGPKeyRing] from the given [key] and calculates its long key ID */
+  /** Attempts to parse an [OpenPGPCertificate] from a given [key]. */
+  public fun tryParseCertificateOrKey(key: PGPKey): OpenPGPCertificate? {
+    return runCatching { OpenPGPKeyReader().parseCertificateOrKey(key.contents.inputStream()) }
+      .get()
+  }
+
+  /** Parses an [OpenPGPPrimaryKey] from the given [key] and calculates its long key ID */
   public fun tryGetId(key: PGPKey): KeyId? {
-    val keyRing = tryParseKeyring(key) ?: return null
-    return KeyId(keyRing.publicKey.keyID)
+    return tryParseCertificateOrKey(key)?.getPrimaryKey()?.getKeyIdentifier()?.getKeyId()?.let {
+      KeyId(it)
+    }
   }
 
-  /**
-   * Attempts to parse the given [PGPKey] into a [PGPKeyRing] and obtains the [UserId] of the
-   * corresponding public key.
-   */
+  /** Parses an [OpenPGPPrimaryKey] from the given [key] and attempts to obtain the [UserId] */
   public fun tryGetEmail(key: PGPKey): UserId? {
-    val keyRing = tryParseKeyring(key) ?: return null
-    return UserId(keyRing.publicKey.userIDs.next())
+    return tryParseCertificateOrKey(key)?.getPrimaryKey()?.getValidUserIds()?.first()?.let {
+      UserId(it.getUserId())
+    }
   }
 
   /**
-   * Tests if the given [key] can be used for encryption, which is a bare minimum necessity for the
-   * app.
+   * Tests if the given [key] can be used for encryption (as of today), which is a bare minimum
+   * necessity for the app.
    */
   public fun isKeyUsable(key: PGPKey): Boolean {
-    return runCatching {
-        val keyRing = tryParseKeyring(key) ?: return false
-        PGPainless.inspectKeyRing(keyRing).isUsableForEncryption
-      }
-      .get() != null
+    val certificate = tryParseCertificateOrKey(key) ?: return false
+    return certificate.getEncryptionKeys(Date()).isNotEmpty()
   }
 
   /** Tests if the given [key] provides a secret key */
   public fun hasSecretKey(key: PGPKey): Boolean {
-    return runCatching { PGPainless.readKeyRing().secretKeyRing(key.contents) }.get() != null
+    return tryParseCertificateOrKey(key)?.isSecretKey() ?: false
   }
 
   public fun extractPublicKeyData(key: PGPKey): ByteArray? {
-    val keyRing = tryParseKeyring(key) ?: return null
-    return PGPainless.asciiArmor(KeyRingUtils.publicKeys(keyRing)).toByteArray()
+    return tryParseCertificateOrKey(key)?.let {
+      OpenPGPCertificate(it.getPGPPublicKeyRing() as PGPKeyRing)
+        .toAsciiArmoredString()
+        .toByteArray()
+    }
   }
 }

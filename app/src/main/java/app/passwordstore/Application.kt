@@ -26,6 +26,7 @@ import app.passwordstore.ui.crypto.BasePGPActivity.Companion.cachedPassphrases
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.getString
+import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.features.Features
 import app.passwordstore.util.git.sshj.setUpBouncyCastleForSshj
 import app.passwordstore.util.proxy.ProxyUtils
@@ -153,7 +154,7 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
       object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
           if (intent.action == Intent.ACTION_SCREEN_OFF) {
-            cachedPassphrases.values.forEach { it.fill('\u0000') }
+            cachedPassphrases.values.forEach { it.wipe() }
             cachedPassphrases.clear()
           }
         }

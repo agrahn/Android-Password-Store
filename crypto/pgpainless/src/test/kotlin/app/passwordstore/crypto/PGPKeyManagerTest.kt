@@ -49,7 +49,7 @@ class PGPKeyManagerTest {
   fun addKey() =
     runTest(dispatcher) {
       // Check if the key id returned is correct
-      val keyId = keyManager.getKeyId(keyManager.addKey(secretKey).unwrap())
+      val keyId = tryGetId(keyManager.addKey(secretKey).unwrap())
       assertEquals(KeyId(CryptoConstants.KEY_ID), keyId)
       // Check if the keys directory have one file
       assertEquals(1, filesDir.list()?.size)
@@ -73,7 +73,7 @@ class PGPKeyManagerTest {
     runTest(dispatcher) {
       // Check adding the keys twice
       keyManager.addKey(secretKey, true).unwrap()
-      val keyId = keyManager.getKeyId(keyManager.addKey(secretKey, true).unwrap())
+      val keyId = tryGetId(keyManager.addKey(secretKey, true).unwrap())
 
       assertEquals(KeyId(CryptoConstants.KEY_ID), keyId)
     }
@@ -83,12 +83,12 @@ class PGPKeyManagerTest {
     runTest(dispatcher) {
       // Add key using KeyManager
       keyManager.addKey(secretKey).unwrap()
-      val keyId = keyManager.getKeyId(secretKey)
+      val keyId = tryGetId(secretKey)
       assertNotNull(keyId)
-      assertEquals(KeyId(CryptoConstants.KEY_ID), keyManager.getKeyId(secretKey))
+      assertEquals(KeyId(CryptoConstants.KEY_ID), tryGetId(secretKey))
       // Check returned key id matches the expected id and the created key id
       val returnedKey = keyManager.getKeyById(keyId).unwrap()
-      assertEquals(keyManager.getKeyId(secretKey), keyManager.getKeyId(returnedKey))
+      assertEquals(tryGetId(secretKey), tryGetId(returnedKey))
     }
 
   @Test
@@ -97,7 +97,7 @@ class PGPKeyManagerTest {
       val key =
         keyManager.generateKey("John Doe <j.doe@example.org", KEY_PASSPHRASE.toCharArray()).unwrap()
       assertNotNull(key)
-      val keyId = keyManager.getKeyId(key)
+      val keyId = tryGetId(key)
       assertNotNull(keyId)
       val returnedKey = keyManager.getKeyById(keyId).unwrap()
       val ciphertextStream = ByteArrayOutputStream()
@@ -113,7 +113,7 @@ class PGPKeyManagerTest {
       val plaintextStream = ByteArrayOutputStream()
       val decryptRes =
         cryptoHandler.decrypt(
-          listOf(returnedKey),
+          returnedKey,
           KEY_PASSPHRASE.toCharArray(),
           ciphertextStream.toByteArray().inputStream(),
           plaintextStream,
@@ -128,7 +128,7 @@ class PGPKeyManagerTest {
     runTest(dispatcher) {
       val key = keyManager.addKey(secretKey).unwrap()
       assertEquals(1, filesDir.list()?.size)
-      val keyId = keyManager.getKeyId(key)
+      val keyId = tryGetId(key)
       assertNotNull(keyId)
       keyManager
         .changeKeyPassphrase(keyId, KEY_PASSPHRASE.toCharArray(), "pa55w0rD".toCharArray())
@@ -155,7 +155,7 @@ class PGPKeyManagerTest {
       keyManager.addKey(secretKey).unwrap()
       val keyId = "${CryptoConstants.KEY_NAME} <${CryptoConstants.KEY_EMAIL}>"
       val returnedKey = keyManager.getKeyById(UserId(keyId)).unwrap()
-      assertEquals(keyManager.getKeyId(secretKey), keyManager.getKeyId(returnedKey))
+      assertEquals(tryGetId(secretKey), tryGetId(returnedKey))
     }
 
   @Test
@@ -164,7 +164,7 @@ class PGPKeyManagerTest {
       keyManager.addKey(secretKey).unwrap()
       val keyId = CryptoConstants.KEY_EMAIL
       val returnedKey = keyManager.getKeyById(UserId(keyId)).unwrap()
-      assertEquals(keyManager.getKeyId(secretKey), keyManager.getKeyId(returnedKey))
+      assertEquals(tryGetId(secretKey), tryGetId(returnedKey))
     }
 
   @Test
