@@ -371,6 +371,7 @@ open class BasePGPActivity : AppCompatActivity() {
                         )
                       }
                     }
+                    passphrase.wipe()
                   }
                 } else if (
                   settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") == "PIN" &&
@@ -408,7 +409,9 @@ open class BasePGPActivity : AppCompatActivity() {
                             )
                           }
                         }
+                        pin.wipe()
                       }
+                      passphrase.wipe()
                     }
                   } else {
                     persistentPassphrases.edit {
@@ -418,10 +421,16 @@ open class BasePGPActivity : AppCompatActivity() {
                           ?.concatToString(),
                       )
                     }
+                    passphrase.wipe()
                   }
+                } else {
+                  passphrase.wipe()
                 }
               }
-              .onFailure { e -> logcat { e.asLog() } }
+              .onFailure { e ->
+                logcat { e.asLog() }
+                passphrase.wipe()
+              }
           }
         }
       }
@@ -562,6 +571,7 @@ open class BasePGPActivity : AppCompatActivity() {
           persistentPassphrases.edit { clear() } // reset PIN to prevent bruteforcing
           decrypt(identifiers) // decrypt with passphrase verification
         }
+        pin.wipe()
       }
     }
   }
@@ -576,10 +586,11 @@ open class BasePGPActivity : AppCompatActivity() {
         decryptWithPassphrase(mapOf("" to charArrayOf()), identifiersWithSecretKey)
       } else if (!isError && !passphrases.isEmpty()) {
         // try cached passphrases
-        decryptWithPassphrase(
-          passphrases.mapValues { AESEncryption.decrypt(it.value) ?: charArrayOf() },
-          identifiers,
-        )
+        val decryptedCachedPassphrases =
+          passphrases.mapValues { AESEncryption.decrypt(it.value) ?: charArrayOf() }
+        decryptWithPassphrase(decryptedCachedPassphrases, identifiers) {
+          decryptedCachedPassphrases.values.forEach { it.wipe() }
+        }
       } else {
         askPassphrase(isError, identifiers)
       }
@@ -607,10 +618,10 @@ open class BasePGPActivity : AppCompatActivity() {
     val cachedPassphrases = mutableMapOf<String, CharArray>() // pgp id, passphrase
 
     /**
-     * Newest Samsung phones now feature a history of up to 30 items. To err on the side of caution,
-     * push 35 fake ones.
+     * Newest Samsung phones now feature a history of >30 items. To err on the side of caution, push
+     * 50 fake ones.
      */
-    private const val CLIPBOARD_CLEAR_COUNT = 35
+    private const val CLIPBOARD_CLEAR_COUNT = 50
     var clearTimer: ScheduledExecutorService? = null
 
     /** Gets the relative path to the repository */

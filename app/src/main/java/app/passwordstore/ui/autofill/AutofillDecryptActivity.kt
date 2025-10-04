@@ -126,6 +126,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
       onSuccess(lastResult.first) // pass ID
       withContext(dispatcherProvider.main()) { finish() }
     } else {
+      passphrases.values.forEach { it.wipe() }
       if (
         results
           .filter { result ->

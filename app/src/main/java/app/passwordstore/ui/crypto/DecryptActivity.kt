@@ -83,6 +83,7 @@ class DecryptActivity : BasePGPActivity() {
       createPasswordUI(entry)
       onSuccess(lastResult.first) // pass ID for which the entry was successfully decrypted
     } else {
+      passphrases.values.forEach { it.wipe() }
       if (
         results
           .filter { result ->
