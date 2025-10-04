@@ -29,6 +29,8 @@ import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 
+// import org.pgpainless.algorithm.Feature
+
 public class PGPKeyManager
 @Inject
 constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
@@ -91,8 +93,17 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
       // PGPainless.generateKey()
       val pgpPassphraseCopy = Passphrase(passphrase?.copyOf())
 
-      val secretKeys = pgpApi.generateKey().modernKeyRing(userId, pgpPassphrase)
+      /**
+       * Attempt to generate a GnuPG-compatible key
+       * https://github.com/pgpainless/pgpainless/issues/486
+       */
+      /* var policy = pgpApi.algorithmPolicy
+      policy = policy.copy().withKeyGenerationAlgorithmSuite(
+          policy.keyGenerationAlgorithmSuite.modify().overrideFeatures(listOf(Feature.MODIFICATION_DETECTION))
+          .build()).build()
+      val api = PGPainless(policy) */
 
+      val secretKeys = pgpApi.generateKey().modernKeyRing(userId, pgpPassphrase)
       val protector = SecretKeyRingProtector.unlockAnyKeyWith(pgpPassphraseCopy)
       var key =
         pgpApi

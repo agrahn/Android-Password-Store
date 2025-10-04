@@ -17,7 +17,8 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Inject
-import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
@@ -72,6 +73,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
     options: PGPDecryptOptions,
   ): Result<Unit, CryptoHandlerException> =
     runCatching {
+        if (key == null && passphrase == null) throw NoKeysProvidedException
         val consumerOptions = ConsumerOptions.get(pgpApi)
         if (key == null) {
           // ciphertextStream may be symmetrically encrypted
@@ -120,37 +122,38 @@ public class PGPainlessCryptoHandler @Inject constructor() :
   ): Result<Unit, CryptoHandlerException> =
     runCatching {
         if (keys.isEmpty() && passphrase == null) throw NoKeysProvidedException
-        val (certificates, encryptionOptions) =
-          if (passphrase == null) { // asymmetric (public key) encryption
-            val certificates =
-              keys.mapNotNull(KeyUtils::tryParseCertificateOrKey).mapNotNull { certOrKey ->
-                when (certOrKey) {
-                  is OpenPGPKey -> certOrKey.toCertificate()
-                  else -> certOrKey
-                }
-              }
-            require(keys.size == certificates.size) {
-              "Failed to parse all keys: ${keys.size} keys were provided but only ${certificates.size} were valid"
+
+        val certificates = // retrieve all recipients public encryption keys
+          keys.mapNotNull(KeyUtils::tryParseCertificateOrKey).mapNotNull { certOrKey ->
+            when (certOrKey) {
+              is OpenPGPKey -> certOrKey.toCertificate()
+              else -> certOrKey
             }
-            if (certificates.isEmpty()) {
-              throw NoKeysProvidedException
-            }
-            val encryptionOptions = EncryptionOptions.encryptCommunications(pgpApi)
-            certificates.forEach { encryptionOptions.addRecipient(it) }
-            Pair(certificates, encryptionOptions)
-          } else { // symmetric (with password) encryption
-            val encryptionOptions =
-              EncryptionOptions.encryptCommunications(pgpApi)
-                .addMessagePassphrase(Passphrase(passphrase))
-            Pair(listOf<OpenPGPCertificate>(), encryptionOptions)
           }
+        require(keys.isEmpty() || keys.size == certificates.size) {
+          "Failed to parse all keys: ${keys.size} keys were provided but only ${certificates.size} were valid"
+        }
+
+        val encryptionOptions = EncryptionOptions.encryptCommunications(pgpApi)
+
+        if (passphrase == null) { // public key encryption
+          certificates.forEach { encryptionOptions.addRecipient(it) }
+        } else { // symmetric (with password) encryption
+          encryptionOptions
+            .overrideEncryptionMechanism(
+              MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithmTags.AES_256)
+            )
+            .addMessagePassphrase(Passphrase(passphrase))
+        }
+
         val producerOptions =
           ProducerOptions.encrypt(encryptionOptions)
             .setAsciiArmor(options.isOptionEnabled(PGPEncryptOptions.ASCII_ARMOR))
+
         val encryptionStream =
           pgpApi.generateMessage().onOutputStream(outputStream).withOptions(producerOptions)
-
         encryptionStream.use { Streams.pipeAll(plaintextStream, it) }
+
         val result = encryptionStream.result
         certificates.forEach { cert ->
           require(result.isEncryptedFor(cert)) {
