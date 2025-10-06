@@ -17,6 +17,7 @@ import app.passwordstore.databinding.PgpKeyCreationActivityBinding
 import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.viewBinding
+import app.passwordstore.util.extensions.wipe
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -85,12 +86,16 @@ class PGPKeyCreationActivity : AppCompatActivity() {
             false
           }
 
+        repeatedPassphrase.wipe()
+
         if (emailIsValid && passphrasesMatch) {
           if (passphrase.size >= 8) {
             createPgpKey(email, passphrase)
           } else {
             insecurePassphraseWarning(email, passphrase)
           }
+        } else {
+          passphrase.wipe()
         }
       }
       else -> return super.onOptionsItemSelected(item)
@@ -119,6 +124,8 @@ class PGPKeyCreationActivity : AppCompatActivity() {
         createPgpKey(email, passphrase)
       }
       .setNegativeButton(R.string.dialog_cancel, null)
+      .setCancelable(false)
+      .setOnDismissListener { passphrase.wipe() }
       .show()
   }
 
@@ -135,6 +142,7 @@ class PGPKeyCreationActivity : AppCompatActivity() {
           setResult(RESULT_OK)
           finish()
         }
+        .setOnDismissListener { passphrase.wipe() }
         .setCancelable(false)
         .show()
     } else {
@@ -147,6 +155,7 @@ class PGPKeyCreationActivity : AppCompatActivity() {
           setResult(RESULT_CANCELED)
           finish()
         }
+        .setOnDismissListener { passphrase.wipe() }
         .setCancelable(false)
         .show()
     }

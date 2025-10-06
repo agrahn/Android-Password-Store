@@ -111,6 +111,8 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
           .setExpirationDate(null, protector) // never expire
           .done()
 
+      pgpPassphraseCopy.clear()
+
       addKey(PGPKey(key.getEncoded()), false).unwrap()
     }
 

@@ -20,6 +20,7 @@ import app.passwordstore.databinding.PgpKeyChangePassphraseActivityBinding
 import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.viewBinding
+import app.passwordstore.util.extensions.wipe
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -100,12 +101,17 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
             false
           }
 
+        repeatedPassphrase.wipe()
+
         if (oldPassphraseIsCorrect && passphrasesMatch) {
           if (passphrase.size >= 8) {
             changePassphrase(identifier, oldPassphrase, passphrase)
           } else {
             insecurePassphraseWarning(identifier, oldPassphrase, passphrase)
           }
+        } else {
+          oldPassphrase?.wipe()
+          passphrase.wipe()
         }
       }
       else -> return super.onOptionsItemSelected(item)
@@ -138,6 +144,11 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
         changePassphrase(identifier, oldPassphrase, passphrase)
       }
       .setNegativeButton(R.string.dialog_cancel, null)
+      .setCancelable(false)
+      .setOnDismissListener {
+        oldPassphrase?.wipe()
+        passphrase.wipe()
+      }
       .show()
   }
 
@@ -156,6 +167,10 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
           setResult(RESULT_OK)
           finish()
         }
+        .setOnDismissListener {
+          oldPassphrase?.wipe()
+          passphrase.wipe()
+        }
         .setCancelable(false)
         .show()
     } else {
@@ -167,6 +182,10 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
         .setPositiveButton(android.R.string.ok) { _, _ ->
           setResult(RESULT_CANCELED)
           finish()
+        }
+        .setOnDismissListener {
+          oldPassphrase?.wipe()
+          passphrase.wipe()
         }
         .setCancelable(false)
         .show()

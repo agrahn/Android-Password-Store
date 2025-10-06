@@ -384,6 +384,7 @@ open class BasePGPActivity : AppCompatActivity() {
                       PinDialog.newInstance(
                         title = resources.getString(R.string.pin_new_entry_title),
                         description = resources.getString(R.string.pin_new_entry_description),
+                        clearOnDismiss = passphrase,
                       )
                     pinDialog.show(supportFragmentManager, "PIN_DIALOG")
                     pinDialog.setFragmentResultListener(PinDialog.PIN_RESULT_KEY) { key, bundle ->
@@ -411,7 +412,6 @@ open class BasePGPActivity : AppCompatActivity() {
                         }
                         pin.wipe()
                       }
-                      passphrase.wipe()
                     }
                   } else {
                     persistentPassphrases.edit {
@@ -588,9 +588,8 @@ open class BasePGPActivity : AppCompatActivity() {
         // try cached passphrases
         val decryptedCachedPassphrases =
           passphrases.mapValues { AESEncryption.decrypt(it.value) ?: charArrayOf() }
-        decryptWithPassphrase(decryptedCachedPassphrases, identifiers) {
-          decryptedCachedPassphrases.values.forEach { it.wipe() }
-        }
+        decryptWithPassphrase(decryptedCachedPassphrases, identifiers)
+        decryptedCachedPassphrases.values.forEach { it.wipe() }
       } else {
         askPassphrase(isError, identifiers)
       }
