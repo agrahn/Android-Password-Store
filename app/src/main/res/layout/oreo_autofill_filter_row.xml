@@ -28,6 +28,7 @@
 
   <TextView
     android:id="@+id/title"
+    android:textIsSelectable="false"
     android:layout_width="0dp"
     android:layout_height="wrap_content"
     android:layout_marginStart="8dp"
@@ -42,6 +43,7 @@
 
   <TextView
     android:id="@+id/subtitle"
+    android:textIsSelectable="false"
     android:layout_width="0dp"
     android:layout_height="wrap_content"
     android:layout_marginStart="8dp"

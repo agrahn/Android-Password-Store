@@ -29,6 +29,7 @@
 
   <TextView
     android:id="@+id/app_name"
+    android:textIsSelectable="false"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:text="@string/app_name"
@@ -52,6 +53,7 @@
 
   <TextView
     android:id="@+id/warningHeader"
+    android:textIsSelectable="false"
     android:layout_width="0dp"
     android:layout_height="wrap_content"
     android:layout_marginStart="8dp"
@@ -65,6 +67,7 @@
 
   <TextView
     android:id="@+id/warningAppName"
+    android:textIsSelectable="false"
     android:layout_width="0dp"
     android:layout_height="wrap_content"
     android:layout_marginStart="@dimen/activity_horizontal_margin"
@@ -80,6 +83,7 @@
 
   <TextView
     android:id="@+id/warningAppInstallDate"
+    android:textIsSelectable="false"
     android:layout_width="0dp"
     android:layout_height="wrap_content"
     android:layout_marginStart="@dimen/activity_horizontal_margin"
@@ -94,6 +98,7 @@
 
   <TextView
     android:id="@+id/warningAppFooter"
+    android:textIsSelectable="false"
     android:layout_width="0dp"
     android:layout_height="wrap_content"
     android:layout_marginStart="@dimen/activity_horizontal_margin"
