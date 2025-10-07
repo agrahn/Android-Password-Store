@@ -12,6 +12,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.passwordstore.crypto.KeyUtils
 import app.passwordstore.crypto.PGPIdentifier
+import app.passwordstore.crypto.PGPIdentifier.KeyId
+import app.passwordstore.crypto.PGPIdentifier.UserId
+import app.passwordstore.crypto.PGPKey
 import app.passwordstore.crypto.PGPKeyManager
 import com.github.michaelbull.result.map
 import com.github.michaelbull.result.onSuccess
@@ -24,7 +27,7 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class PGPKeyListViewModel @Inject constructor(private val keyManager: PGPKeyManager) : ViewModel() {
-  var keys: ImmutableList<PGPIdentifier> by mutableStateOf(persistentListOf())
+  var keys: ImmutableList<Pair<KeyId?, UserId?>> by mutableStateOf(persistentListOf())
 
   init {
     updateKeySet()
@@ -34,14 +37,26 @@ class PGPKeyListViewModel @Inject constructor(private val keyManager: PGPKeyMana
     viewModelScope.launch {
       keyManager
         .getAllKeys()
-        .map { keys -> keys.mapNotNull { key -> KeyUtils.tryGetUserId(key) } }
-        .onSuccess { keys = it.toPersistentList() }
+        .map { keys ->
+          keys.mapNotNull { key -> KeyUtils.tryGetKeyId(key) to KeyUtils.tryGetUserId(key) }
+        }
+        .onSuccess {
+          keys = persistentListOf<Pair<KeyId, UserId>>()
+          keys = it.filter { it.first != null && it.second != null }.toPersistentList()
+        }
     }
   }
 
   fun deleteKey(identifier: PGPIdentifier) {
     viewModelScope.launch {
       keyManager.removeKey(identifier)
+      updateKeySet()
+    }
+  }
+
+  fun addKey(key: PGPKey) {
+    viewModelScope.launch {
+      keyManager.addKey(key, replace = true)
       updateKeySet()
     }
   }

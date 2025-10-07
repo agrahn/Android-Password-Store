@@ -1,4 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 8.12.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.12.0)" variant="all" version="8.12.0">
+<issues format="6" by="lint 8.13.0" type="baseline" client="gradle" dependencies="false" name="AGP (8.13.0)" variant="all" version="8.13.0">
+
+    <issue
+        id="InvalidPackage"
+        message="Invalid package reference in org.bouncycastle:bcprov-jdk18on; not included in Android: `javax.naming.directory`. Referenced from `org.bouncycastle.jce.provider.CrlCache`.">
+        <location
+            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.bouncycastle/bcprov-jdk18on/1.82/e1118397395d21909a1b7b15120d0c2a68d7fd0c/bcprov-jdk18on-1.82.jar"/>
+    </issue>
+
+    <issue
+        id="InvalidPackage"
+        message="Invalid package reference in org.bouncycastle:bcprov-jdk18on; not included in Android: `javax.naming`. Referenced from `org.bouncycastle.jce.provider.X509LDAPCertStoreSpi`.">
+        <location
+            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.bouncycastle/bcprov-jdk18on/1.82/e1118397395d21909a1b7b15120d0c2a68d7fd0c/bcprov-jdk18on-1.82.jar"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 33 (current min is 26): `java.io.ByteArrayOutputStream#toString`"
+        errorLine1="    return &quot;passwordstore&quot; == plaintextStream.toString(Charsets.UTF_8)"
+        errorLine2="                                              ~~~~~~~~">
+        <location
+            file="src/main/kotlin/app/passwordstore/crypto/PGPainlessCryptoHandler.kt"
+            line="59"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="DenyListedApi"
+        message="Use java.time.Instant or java.time.ZonedDateTime instead. There is no reason to use java.util.Date in Java 8+."
+        errorLine1="    return cert.getEncryptionKeys(Date()).isNotEmpty()"
+        errorLine2="                                  ~~~~">
+        <location
+            file="src/main/kotlin/app/passwordstore/crypto/KeyUtils.kt"
+            line="71"
+            column="35"/>
+    </issue>
 
 </issues>

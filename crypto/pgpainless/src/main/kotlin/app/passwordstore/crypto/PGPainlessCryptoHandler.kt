@@ -57,14 +57,20 @@ public class PGPainlessCryptoHandler @Inject constructor() :
           // ciphertextStream may be symmetrically encrypted
           consumerOptions.addMessagePassphrase(Passphrase(passphrase))
         } else {
-          val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
-          val openPgpKey = KeyUtils.tryParseCertificateOrKey(key)
-          if (
-            openPgpKey !is OpenPGPKey ||
-              openPgpKey.getKeys().filter { it.isEncryptionKey() }.isEmpty()
-          )
-            throw NoDecryptionKeyAvailableException("Key not usable for decryption")
-          consumerOptions.addDecryptionKey(openPgpKey, protector)
+          if (options.isOptionEnabled(PGPDecryptOptions.WITH_SESSION_KEY)) {
+            consumerOptions.setSessionKey(
+              KeyUtils.createSessionKey(key.contents) ?: throw NoKeysProvidedException
+            )
+          } else {
+            val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
+            val openPgpKey = KeyUtils.tryParseCertificateOrKey(key)
+            if (
+              openPgpKey !is OpenPGPKey ||
+                openPgpKey.getKeys().filter { it.isEncryptionKey() }.isEmpty()
+            )
+              throw NoDecryptionKeyAvailableException("Key not usable for decryption")
+            consumerOptions.addDecryptionKey(openPgpKey, protector)
+          }
         }
 
         val decryptionStream =

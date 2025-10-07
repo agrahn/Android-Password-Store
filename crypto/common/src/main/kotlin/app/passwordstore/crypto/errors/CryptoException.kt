@@ -34,6 +34,10 @@ public data object InvalidKeyException :
 public data object UnusableKeyException :
   KeyManagerException("Given key is not usable for encryption")
 
+/** No key found that matches a given JCA key. */
+public data object NoMatchingKeyException :
+  KeyManagerException("No key matching the given JCA key was found")
+
 /** No key matching `keyId` could be found. */
 public class KeyNotFoundException(keyId: String) :
   KeyManagerException("No key found for ID: $keyId")

@@ -9,10 +9,17 @@ import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPIdentifier.UserId
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.runCatching
+import java.io.ByteArrayInputStream
+import java.util.Date
+import org.bouncycastle.bcpg.BCPGInputStream
+import org.bouncycastle.bcpg.PublicKeyEncSessionPacket
 import org.bouncycastle.openpgp.PGPKeyRing
+import org.bouncycastle.openpgp.PGPSessionKey
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPKeyReader
 import org.pgpainless.key.info.KeyRingInfo
+import org.pgpainless.util.ArmorUtils
+import org.pgpainless.util.SessionKey
 
 /** Utility methods to deal with [PGPKey]s. */
 public object KeyUtils {
@@ -80,4 +87,52 @@ public object KeyUtils {
         .toAsciiArmoredString()
         .toByteArray()
     }
+
+  public fun extractPublicKey(key: PGPKey): PGPKey? =
+    return extractPublicKeyData(key)?.let { PGPKey(it) }
+
+  public fun getEncryptedSessionKeys(
+    message: ByteArray
+  ): MutableList<Triple<Int, ByteArray, PGPIdentifier?>> {
+    val decoderStream = ArmorUtils.getDecoderStream(ByteArrayInputStream(message))
+    val bcpgStream = BCPGInputStream(decoderStream)
+
+    val encSessionKeys: MutableList<Triple<Int, ByteArray, PGPIdentifier?>> = mutableListOf()
+
+    var packet = bcpgStream.readPacket()
+    while (packet != null) {
+      if (packet is PublicKeyEncSessionPacket) {
+        val algorithm = packet.getAlgorithm()
+        val encSessionKeyBC = packet.getEncSessionKey()
+        /* BouncyCastle exports encrypted session keys in a special format where
+         * the first two bytes denote the length. We need to strip them.
+         */
+        val encSessionKey = encSessionKeyBC[0].copyOfRange(2, encSessionKeyBC[0].count())
+        val keyID = packet.getKeyID()
+        encSessionKeys.add(Triple(algorithm, encSessionKey, KeyId(keyID)))
+      }
+      packet = bcpgStream.readPacket()
+    }
+
+    return encSessionKeys
+  }
+
+  /**
+   * Creates PGPainless SessionKey from decrypted session key data; session key data format acc. to
+   * https://www.rfc-editor.org/rfc/rfc9580.html#name-algorithm-specific-fields-f
+   */
+  public fun createSessionKey(bytes: ByteArray): SessionKey? {
+    val algorithm = bytes[0].toUByte().toInt() // symmetric key algorithm
+    val keyData =
+      when (algorithm) {
+        7 -> // AES-128
+        bytes.copyOfRange(1, 1 + 128 / 8)
+        8 -> // AES-192
+        bytes.copyOfRange(1, 1 + 192 / 8)
+        9 -> // AES-256
+        bytes.copyOfRange(1, 1 + 256 / 8)
+        else -> return null
+      }
+    return SessionKey(PGPSessionKey(algorithm, keyData))
+  }
 }

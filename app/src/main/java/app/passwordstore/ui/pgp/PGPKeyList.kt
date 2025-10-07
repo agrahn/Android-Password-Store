@@ -42,22 +42,25 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
+import app.passwordstore.crypto.PGPIdentifier.KeyId
+import app.passwordstore.crypto.PGPIdentifier.UserId
 import app.passwordstore.ui.compose.theme.APSTheme
 import app.passwordstore.ui.compose.theme.SpacingLarge
 import app.passwordstore.ui.compose.theme.SpacingSmall
 import app.passwordstore.util.extensions.conditional
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
 
 @Composable
 fun KeyList(
-  identifiers: ImmutableList<PGPIdentifier>,
+  identifiers: ImmutableList<Pair<KeyId?, UserId?>>,
+  tokenLinkedIds: ImmutableList<KeyId>,
   hasSecretKey: (identifier: PGPIdentifier) -> Boolean,
   onChangePassphraseClick: (identifier: PGPIdentifier) -> Unit,
   onDeleteItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportPublicClick: (identifier: PGPIdentifier) -> Unit,
+  onLinkHwClick: (identifier: PGPIdentifier) -> Unit,
   modifier: Modifier = Modifier,
   onKeySelected: ((identifier: PGPIdentifier, isSelected: Boolean) -> Unit)? = null,
 ) {
@@ -78,11 +81,13 @@ fun KeyList(
       items(identifiers) { identifier ->
         KeyItem(
           identifier = identifier,
+          tokenLinkedIds = tokenLinkedIds,
           hasSecretKey = hasSecretKey,
           onChangePassphraseClick = onChangePassphraseClick,
           onDeleteItemClick = onDeleteItemClick,
           onExportItemClick = onExportItemClick,
           onExportPublicClick = onExportPublicClick,
+          onLinkHwClick = onLinkHwClick,
           onKeySelected = onKeySelected,
         )
       }
@@ -92,30 +97,28 @@ fun KeyList(
 
 @Composable
 private fun KeyItem(
-  identifier: PGPIdentifier,
+  identifier: Pair<KeyId?, UserId?>,
+  tokenLinkedIds: ImmutableList<KeyId>,
   hasSecretKey: (identifier: PGPIdentifier) -> Boolean,
   onChangePassphraseClick: (identifier: PGPIdentifier) -> Unit,
   onDeleteItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportPublicClick: (identifier: PGPIdentifier) -> Unit,
+  onLinkHwClick: (identifier: PGPIdentifier) -> Unit,
   modifier: Modifier = Modifier,
   onKeySelected: ((identifier: PGPIdentifier, isSelected: Boolean) -> Unit)? = null,
 ) {
   var isDeleting by remember { mutableStateOf(false) }
+  var keyId = identifier.first ?: throw NullPointerException()
   DeleteConfirmationDialog(
     isDeleting = isDeleting,
-    isSecretKey = hasSecretKey(identifier),
+    isSecretKey = hasSecretKey(keyId),
     onDismiss = { isDeleting = false },
     onConfirm = {
-      onDeleteItemClick(identifier)
+      onDeleteItemClick(keyId)
       isDeleting = false
     },
   )
-  val label =
-    when (identifier) {
-      is PGPIdentifier.KeyId -> identifier.id.toString()
-      is PGPIdentifier.UserId -> identifier.email
-    }
   var checked by remember { mutableStateOf(false) }
   Row(
     modifier =
@@ -127,15 +130,22 @@ private fun KeyItem(
             value = checked,
             onValueChange = {
               checked = it
-              onKeySelected?.invoke(identifier, it)
+              onKeySelected?.invoke(keyId, it)
             },
           )
         },
     horizontalArrangement = Arrangement.SpaceBetween,
     verticalAlignment = Alignment.CenterVertically,
   ) {
+    if (tokenLinkedIds.contains(keyId)) {
+      Icon(
+        painter = painterResource(R.drawable.ic_security_key_24dp),
+        contentDescription = "PGP security key",
+        modifier = Modifier.padding(end = SpacingSmall),
+      )
+    }
     Text(
-      text = label,
+      text = identifier.second.toString(),
       modifier = Modifier.weight(1f),
       overflow = TextOverflow.Ellipsis,
       maxLines = 1,
@@ -152,19 +162,19 @@ private fun KeyItem(
         }
 
         DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
-          if (hasSecretKey(identifier)) {
+          if (hasSecretKey(keyId)) {
             DropdownMenuItem(
               text = { Text(stringResource(id = R.string.pref_pgp_key_manager_change_passphrase)) },
               onClick = {
                 isMenuExpanded = false
-                onChangePassphraseClick(identifier)
+                onChangePassphraseClick(keyId)
               },
             )
             DropdownMenuItem(
               text = { Text(stringResource(id = R.string.pref_pgp_key_manager_export)) },
               onClick = {
                 isMenuExpanded = false
-                onExportItemClick(identifier)
+                onExportItemClick(keyId)
               },
             )
             Spacer(modifier = Modifier)
@@ -173,10 +183,17 @@ private fun KeyItem(
             text = { Text(stringResource(id = R.string.pref_pgp_key_manager_export_public)) },
             onClick = {
               isMenuExpanded = false
-              onExportPublicClick(identifier)
+              onExportPublicClick(keyId)
             },
           )
-          HorizontalDivider(modifier = Modifier.padding(top = SpacingLarge))
+          DropdownMenuItem(
+            text = { Text(stringResource(id = R.string.pref_pgp_key_manager_link_token)) },
+            onClick = {
+              isMenuExpanded = false
+              onLinkHwClick(keyId)
+            },
+          )
+          HorizontalDivider()
           DropdownMenuItem(
             text = {
               Text(stringResource(id = R.string.delete))
@@ -255,17 +272,14 @@ private fun KeyListPreview() {
   APSTheme {
     Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
       KeyList(
-        identifiers =
-          listOfNotNull(
-              PGPIdentifier.fromString("ultramicroscopicsilicovolcanoconiosis@example.com"),
-              PGPIdentifier.fromString("0xB950AE2813841585"),
-            )
-            .toPersistentList(),
+        identifiers = persistentListOf(),
+        tokenLinkedIds = persistentListOf(),
         hasSecretKey = { _ -> true },
         onChangePassphraseClick = {},
         onDeleteItemClick = {},
         onExportItemClick = {},
         onExportPublicClick = {},
+        onLinkHwClick = {},
       )
     }
   }
@@ -278,11 +292,13 @@ private fun EmptyKeyListPreview() {
     Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
       KeyList(
         identifiers = persistentListOf(),
+        tokenLinkedIds = persistentListOf(),
         hasSecretKey = { _ -> true },
         onChangePassphraseClick = {},
         onDeleteItemClick = {},
         onExportItemClick = {},
         onExportPublicClick = {},
+        onLinkHwClick = {},
       )
     }
   }

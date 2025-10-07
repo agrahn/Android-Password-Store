@@ -31,6 +31,8 @@ android {
 }
 
 dependencies {
+  implementation(libs.yubikit.android)
+  implementation(libs.yubikit.openpgp)
   implementation(platform(libs.compose.bom))
   kapt(libs.dagger.hilt.compiler)
   implementation(libs.androidx.annotation)

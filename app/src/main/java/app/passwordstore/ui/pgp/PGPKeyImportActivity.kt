@@ -6,22 +6,28 @@
 
 package app.passwordstore.ui.pgp
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.crypto.KeyUtils.isCertificateOrKey
 import app.passwordstore.crypto.KeyUtils.tryGetKeyId
+import app.passwordstore.crypto.KeyUtils.hasSecretKey
+import app.passwordstore.crypto.KeyUtils.isKeyUsable
 import app.passwordstore.crypto.PGPKey
 import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.crypto.errors.KeyAlreadyExistsException
 import app.passwordstore.crypto.errors.UnusableKeyException
 import app.passwordstore.data.crypto.CryptoRepository
+import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.ui.dialogs.TextInputDialog
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.extensions.snackbar
+import app.passwordstore.util.settings.PreferenceKeys.TOKEN_LINKED_PGP_IDS
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getError
@@ -49,6 +55,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
   @Inject lateinit var keyManager: PGPKeyManager
   @Inject lateinit var repository: CryptoRepository
   @Inject lateinit var dispatcherProvider: DispatcherProvider
+  @Inject @SettingsPreferences lateinit var settings: SharedPreferences
 
   private val MAX_RETRIES = 3
   private var retries = 0
@@ -94,6 +101,16 @@ class PGPKeyImportActivity : AppCompatActivity() {
       lastBytes = null
     }
     if (error != null) throw error
+    if (key != null && hasSecretKey(key)) {
+      val tokenLinkedIds = settings.getStringSet(TOKEN_LINKED_PGP_IDS, setOf<String>())
+      val keyId = tryGetKeyId(key)
+      settings.edit {
+        putStringSet(
+          TOKEN_LINKED_PGP_IDS,
+          tokenLinkedIds?.minus(keyId.toString()) ?: setOf<String>(),
+        )
+      }
+    }
     return key
   }
 

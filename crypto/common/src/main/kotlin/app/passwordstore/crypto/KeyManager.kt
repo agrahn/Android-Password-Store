@@ -36,6 +36,9 @@ public interface KeyManager<Key, KeyIdentifier> {
    */
   public fun getKeyById(id: KeyIdentifier, withArmor: Boolean = false): Result<Key, Throwable>
 
+  //  /** Get public OpenPGP [Key] matching a passed-in JCA [publicKey]. */
+  //  public fun getPublicKeyByJCAPublicKey(publicKey: PublicKey): Result<Key, Throwable>
+
   /** Returns all keys currently in the store as a [List]. */
   public fun getAllKeys(): Result<List<Key>, Throwable>
 
