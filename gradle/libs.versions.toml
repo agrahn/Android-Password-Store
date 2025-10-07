@@ -43,7 +43,7 @@ build-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.r
 build-metalava = "me.tylerbwong.gradle.metalava:plugin:0.3.5"
 build-moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
 build-moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
-build-okhttp = "com.squareup.okhttp3:okhttp:5.1.0"
+build-okhttp = "com.squareup.okhttp3:okhttp:5.2.0"
 build-r8 = "com.android.tools:r8:8.11.18"
 build-semver = "com.github.zafarkhaja:java-semver:0.10.2"
 build-spotless = "com.diffplug.spotless:spotless-plugin-gradle:8.0.0"
