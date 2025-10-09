@@ -6,6 +6,7 @@
 package app.passwordstore.injection.crypto
 
 import app.passwordstore.crypto.PGPainlessCryptoHandler
+import app.passwordstore.crypto.YubiKeyCryptoHandler
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,4 +16,5 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 object CryptoHandlerModule {
   @Provides fun providePgpCryptoHandler() = PGPainlessCryptoHandler()
+  @Provides fun provideYubiKeyCryptoHandler() = YubiKeyCryptoHandler()
 }

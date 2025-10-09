@@ -13,6 +13,7 @@ import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.PGPKey
 import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.crypto.PGPainlessCryptoHandler
+import app.passwordstore.crypto.YubiKeyCryptoHandler
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.settings.PreferenceKeys
@@ -43,6 +44,7 @@ class CryptoRepository
 constructor(
   private val pgpKeyManager: PGPKeyManager,
   private val pgpCryptoHandler: PGPainlessCryptoHandler,
+  private val ykCryptoHandler: YubiKeyCryptoHandler,
   private val dispatcherProvider: DispatcherProvider,
   @SettingsPreferences private val settings: SharedPreferences,
 ) {

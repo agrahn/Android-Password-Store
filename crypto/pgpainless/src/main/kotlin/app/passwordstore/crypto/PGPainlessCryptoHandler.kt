@@ -76,8 +76,6 @@ public class PGPainlessCryptoHandler @Inject constructor() :
         val decryptionStream =
           pgpApi.processMessage().onInputStream(ciphertextStream).withOptions(consumerOptions)
         decryptionStream.use { Streams.pipeAll(it, outputStream) }
-
-        return@runCatching
       }
       .mapError { error ->
         when (error) {
