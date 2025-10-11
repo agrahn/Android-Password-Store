@@ -133,6 +133,8 @@
   <string name="prefs_import_passwords_summary">Imports a password repository from an external directory</string>
   <string name="prefs_repo_not_empty_dialog_title">Local repository not empty</string>
   <string name="prefs_repo_not_empty_dialog_summary">The local password repository must be deleted first</string>
+  <string name="prefs_repo_invalid_source_dialog_title">Source directory unusable</string>
+  <string name="prefs_repo_invalid_source_dialog_summary">The source directory does not appear to be a valid Git repository: missing .git folder</string>
   <string name="pref_rebase_on_pull_title">Rebase on pull</string>
   <string name="pref_rebase_on_pull_summary">When pulling or syncing, create a merge commit with upstream changes</string>
   <string name="pref_rebase_on_pull_summary_on">When pulling or syncing, rebase commits that are not present in the remote repository</string>

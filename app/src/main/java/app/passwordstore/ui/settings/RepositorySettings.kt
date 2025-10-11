@@ -143,6 +143,13 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
             logcat { "Done with importing $sourceDirectory to ${repositoryDirectory.path}" }
           }
           .onFailure { e -> logcat(ERROR) { e.asLog() } }
+      } else {
+        MaterialAlertDialogBuilder(activity)
+          .setTitle(R.string.prefs_repo_invalid_source_dialog_title)
+          .setIcon(R.drawable.ic_crossmark_red_24dp)
+          .setMessage(R.string.prefs_repo_invalid_source_dialog_summary)
+          .setPositiveButton(R.string.dialog_ok) { dialog, _ -> dialog.dismiss() }
+          .show()
       }
     }
 
@@ -256,11 +263,9 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
             true
           } else {
             MaterialAlertDialogBuilder(activity)
-              .setTitle(activity.getString(R.string.prefs_repo_not_empty_dialog_title))
-              .setMessage(activity.getString(R.string.prefs_repo_not_empty_dialog_summary))
-              .setPositiveButton(activity.getString(R.string.dialog_ok)) { dialog, _ ->
-                dialog.dismiss()
-              }
+              .setTitle(R.string.prefs_repo_not_empty_dialog_title)
+              .setMessage(R.string.prefs_repo_not_empty_dialog_summary)
+              .setPositiveButton(R.string.dialog_ok) { dialog, _ -> dialog.dismiss() }
               .show()
             false
           }

@@ -132,6 +132,8 @@
   <string name="prefs_import_passwords_summary">Importiert ein Password-Repository aus einem externen Verzeichnis.</string>
   <string name="prefs_repo_not_empty_dialog_title">Lokales Repository ist nicht leer</string>
   <string name="prefs_repo_not_empty_dialog_summary">Vor dem Importieren muss das lokale Repository zunächst gelöscht werden.</string>
+  <string name="prefs_repo_invalid_source_dialog_title">Unbrauchbares Quellverzeichnis</string>
+  <string name="prefs_repo_invalid_source_dialog_summary">Das Quellverzeichnis ist kein gültiges Git-Repository: fehlender .git-Ordner</string>
   <string name="pref_rebase_on_pull_title">Rebase beim Pullen</string>
   <string name="pref_rebase_on_pull_summary">Ein Merge-Commit mit Upstream-Änderungen beim Pullen oder Synchronisieren erstellen</string>
   <string name="pref_rebase_on_pull_summary_on">Beim Pullen oder Synchronisieren Commits rebasen, die nicht im Remote-Repository vorhanden sind</string>
