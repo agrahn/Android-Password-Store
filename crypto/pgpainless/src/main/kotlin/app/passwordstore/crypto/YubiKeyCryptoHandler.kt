@@ -36,16 +36,46 @@ import com.yubico.yubikit.core.YubiKeyDevice
 import com.yubico.yubikit.core.application.ApplicationNotAvailableException
 import com.yubico.yubikit.core.smartcard.SmartCardConnection
 import com.yubico.yubikit.openpgp.OpenPgpSession
+import app.passwordstore.crypto.KeyUtils
+import app.passwordstore.crypto.PGPIdentifier
+import app.passwordstore.crypto.PGPIdentifier.KeyId
+import app.passwordstore.crypto.PGPKeyManager
 
 public class YubiKeyCryptoHandler @Inject constructor() {
 
-  /**
-   * Decrypts the given [ciphertextStream] using [PGPainless] and writes the decrypted output to
-   * [outputStream]. The provided [passphrase] is wrapped in a [SecretKeyRingProtector].
-   *
-   * @see CryptoHandler.decrypt
-   */
-  public  fun decrypt(
+  public fun parseEncMessage(
+    keyId: KeyId,
+    ciphertextStream: InputStream,
+  ): Result<Unit, CryptoHandlerException> =
+     
+    runCatching {
+	  val decoderStream = ArmorUtils.getDecoderStream(ciphertextStream)
+      val bcpgStream = BCPGInputStream(decoderStream)
+
+      lateinit var encSessionKey: ByteArray
+      lateinit var pubKeyAlgorithm: Int
+      lateinit var pubKeyVersion: Int
+      lateinit var pkeskVersion: Int
+
+      var packet = bcpgStream.readPacket()
+      while (packet != null) {
+        logcat {"Tag: " + packet.getPacketTag().toString() }
+        if (packet is PublicKeyEncSessionPacket && packet.getKeyId() == keyId.id) {
+          logcat {"Matching PublicKeyEncSessionPacket found"}
+          encSessionKey = packet.getEncSessionKey()[0]
+          pubKeyAlgorithm = getAlgorithm()
+          pubKeyVersion = getKeyVersion()
+          pkeskVersion = getVersion()
+		  return@runCatching
+	    }	
+	  }  
+	  throw NoDecryptionKeyAvailableException
+    }
+    .mapError { error ->
+       NoDecryptionKeyAvailableException()
+    }
+
+  public fun decrypt(
 	openPgpSession: OpenPgpSession,
     userpin: CharArray,
     ciphertextStream: InputStream,
