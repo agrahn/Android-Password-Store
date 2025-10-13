@@ -83,7 +83,7 @@ thirdparty-kotlinResult-coroutines = { module = "com.michael-bull.kotlin-result:
 thirdparty-leakcanary-plumber = "com.squareup.leakcanary:plumber-android-startup:2.14"
 thirdparty-logcat = "com.squareup.logcat:logcat:0.4"
 thirdparty-modernAndroidPrefs = "de.maxr1998:modernandroidpreferences:2.4.0-beta2"
-thirdparty-pgpainless = "org.pgpainless:pgpainless-core:2.0.0"
+thirdparty-pgpainless = "org.pgpainless:pgpainless-core:2.0.1"
 thirdparty-slack-lints = "com.slack.lint:slack-lint-checks:0.11.1"
 thirdparty-slf4j-api = { module = "org.slf4j:slf4j-api", version = { strictly = "[1.7, 1.8[", prefer = "1.7.36" } }
 thirdparty-sshj = "com.hierynomus:sshj:0.40.0"
