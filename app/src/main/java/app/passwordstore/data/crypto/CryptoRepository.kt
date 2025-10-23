@@ -92,6 +92,7 @@ constructor(
     encryptedMessage: ByteArrayInputStream,
     message: ByteArrayOutputStream,
   ) = run {
+    ykCryptoHandler.parseEncMessage(encryptedMessage)
     if (passphrases.keys.first() == "") { // New passphrase from user input
       // Test it against the PGP identities of current entry
       identities.mapUntil({ it.second.isOk }) { id ->
@@ -118,6 +119,9 @@ constructor(
         requireNotNull(pgpId) { "Error while parsing cached PGP identifier \"${id}\"" }
         val key = pgpKeyManager.getKeyById(pgpId).getOrThrow()
         val decryptionOptions = PGPDecryptOptions.Builder().build()
+//		val keyId = KeyUtils.tryGetId(key)?.let {
+//		  ykCryptoHandler.parseEncMessage(it, encryptedMessage)
+//		}
         val result =
           pgpCryptoHandler.decrypt(
             key,
