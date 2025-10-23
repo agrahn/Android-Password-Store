@@ -79,9 +79,14 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
         onBackPressedDispatcher.onBackPressed()
       }
       R.id.save_key -> {
-        val oldPassphrase = binding.oldPassphrase.text?.let { CharArray(it.length) { i -> it[i] } }
+        val oldPassphrase =
+          binding.oldPassphrase.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
         val oldPassphraseIsCorrect =
-          if (cryptoRepository.isPasswordCorrect(identifier, oldPassphrase)) true
+          if (
+            cryptoRepository.isPasswordCorrect(identifier, null) ||
+              cryptoRepository.isPasswordCorrect(identifier, oldPassphrase)
+          )
+            true
           else {
             binding.oldPassphraseInputLayout.error = getString(R.string.pgp_wrong_passphrase_input)
             false
@@ -105,12 +110,20 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
 
         if (oldPassphraseIsCorrect && passphrasesMatch) {
           if (passphrase.size >= 8) {
-            changePassphrase(identifier, oldPassphrase, passphrase)
+            changePassphrase(
+              identifier,
+              if (oldPassphrase.isEmpty()) null else oldPassphrase,
+              passphrase,
+            )
           } else {
-            insecurePassphraseWarning(identifier, oldPassphrase, passphrase)
+            insecurePassphraseWarning(
+              identifier,
+              if (oldPassphrase.isEmpty()) null else oldPassphrase,
+              if (passphrase.isEmpty()) null else passphrase,
+            )
           }
         } else {
-          oldPassphrase?.wipe()
+          oldPassphrase.wipe()
           passphrase.wipe()
         }
       }
@@ -122,20 +135,19 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
   private fun insecurePassphraseWarning(
     identifier: PGPIdentifier,
     oldPassphrase: CharArray?,
-    passphrase: CharArray,
+    passphrase: CharArray?,
   ) {
     val (title, message) =
-      if (passphrase.isEmpty()) {
-        Pair(
-          getString(R.string.pgp_key_empty_passphrase_warning),
-          getString(R.string.pgp_key_empty_passphrase_warning_message),
-        )
-      } else {
+      passphrase?.let {
         Pair(
           getString(R.string.pgp_key_short_passphrase_warning),
           getString(R.string.pgp_key_short_passphrase_warning_message),
         )
       }
+        ?: Pair(
+          getString(R.string.pgp_key_empty_passphrase_warning),
+          getString(R.string.pgp_key_empty_passphrase_warning_message),
+        )
     MaterialAlertDialogBuilder(this)
       .setIcon(R.drawable.ic_warning_red_24dp)
       .setTitle(title)
@@ -147,7 +159,7 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
       .setCancelable(false)
       .setOnDismissListener {
         oldPassphrase?.wipe()
-        passphrase.wipe()
+        passphrase?.wipe()
       }
       .show()
   }
@@ -155,7 +167,7 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
   private fun changePassphrase(
     identifier: PGPIdentifier,
     oldPassphrase: CharArray?,
-    passphrase: CharArray,
+    passphrase: CharArray?,
   ) {
     val (key, error) = keyManager.changeKeyPassphrase(identifier, oldPassphrase, passphrase)
 
@@ -169,7 +181,7 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
         }
         .setOnDismissListener {
           oldPassphrase?.wipe()
-          passphrase.wipe()
+          passphrase?.wipe()
         }
         .setCancelable(false)
         .show()
@@ -185,7 +197,7 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
         }
         .setOnDismissListener {
           oldPassphrase?.wipe()
-          passphrase.wipe()
+          passphrase?.wipe()
         }
         .setCancelable(false)
         .show()

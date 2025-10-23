@@ -32,7 +32,7 @@ public data object InvalidKeyException :
 
 /** Key failed the [app.passwordstore.crypto.KeyUtils.isKeyUsable] test. */
 public data object UnusableKeyException :
-  KeyManagerException("Given key is not usable for encryption - is it using AEAD?")
+  KeyManagerException("Given key is not usable for encryption")
 
 /** No key matching `keyId` could be found. */
 public class KeyNotFoundException(keyId: String) :

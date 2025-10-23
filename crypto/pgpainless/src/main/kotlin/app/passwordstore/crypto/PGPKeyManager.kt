@@ -29,8 +29,6 @@ import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 
-// import org.pgpainless.algorithm.Feature
-
 public class PGPKeyManager
 @Inject
 constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
@@ -43,7 +41,7 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
   /** @see KeyManager.addKey */
   override fun addKey(key: PGPKey, replace: Boolean): Result<PGPKey, Throwable> = runCatching {
     if (!keyDirExists()) throw KeyDirectoryUnavailableException
-    val incomingCertOrKey = tryParseCertificateOrKey(key) ?: throw UnusableKeyException
+    val incomingCertOrKey = tryParseCertificateOrKey(key) ?: throw InvalidKeyException
     val incomingKey = incomingCertOrKey.getEncoded().let { PGPKey(it) }
     if (!isKeyUsable(incomingKey)) throw UnusableKeyException
     val keyFile = File(keyDir, "${tryGetId(incomingCertOrKey)}.$KEY_EXTENSION")
@@ -93,16 +91,6 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
       // PGPainless.generateKey()
       val pgpPassphraseCopy = Passphrase(passphrase?.copyOf())
 
-      /**
-       * Attempt to generate a GnuPG-compatible key
-       * https://github.com/pgpainless/pgpainless/issues/486
-       */
-      /* var policy = pgpApi.algorithmPolicy
-      policy = policy.copy().withKeyGenerationAlgorithmSuite(
-          policy.keyGenerationAlgorithmSuite.modify().overrideFeatures(listOf(Feature.MODIFICATION_DETECTION))
-          .build()).build()
-      val api = PGPainless(policy) */
-
       val secretKeys = pgpApi.generateKey().modernKeyRing(userId, pgpPassphrase)
       val protector = SecretKeyRingProtector.unlockAnyKeyWith(pgpPassphraseCopy)
       var key =
@@ -123,11 +111,13 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
   ): Result<PGPKey, Throwable> = runCatching {
     val key = getKeyById(identifier).unwrap()
     val openPgpKey = tryParseCertificateOrKey(key) ?: throw InvalidKeyException
-    if (openPgpKey !is OpenPGPKey || !openPgpKey.isSecretKey()) throw InvalidKeyException
+    if (openPgpKey !is OpenPGPKey || openPgpKey.getEncryptionKeys().isEmpty())
+      throw InvalidKeyException
+    val encryptionSubkeyId = openPgpKey.getEncryptionKeys().first().getKeyIdentifier()
     val modifiedOpenPgpKey =
       pgpApi
         .modify(openPgpKey)
-        .changePassphraseFromOldPassphrase(Passphrase(oldPassphrase))
+        .changeSubKeyPassphraseFromOldPassphrase(encryptionSubkeyId, Passphrase(oldPassphrase))
         .withSecureDefaultSettings()
         .toNewPassphrase(Passphrase(newPassphrase))
         .done()

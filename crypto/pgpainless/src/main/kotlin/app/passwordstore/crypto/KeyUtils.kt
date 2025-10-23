@@ -9,7 +9,6 @@ import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPIdentifier.UserId
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.runCatching
-import java.util.Date
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPKeyReader
@@ -56,13 +55,18 @@ public object KeyUtils {
     return cert.getPrimaryKey().getValidUserIds().firstOrNull()?.let { UserId(it.getUserId()) }
   }
 
+  /** Tests if the given [PGPKey] content is a PGP certificate or key at all */
+  public fun isCertificateOrKey(key: PGPKey): Boolean {
+    return tryParseCertificateOrKey(key)?.let { true } ?: false
+  }
+
   /**
    * Tests if the given [PGPKey] can be used for encryption (as of today), which is a bare minimum
    * necessity for the app.
    */
   public fun isKeyUsable(key: PGPKey): Boolean {
     val certificate = tryParseCertificateOrKey(key) ?: return false
-    return certificate.getEncryptionKeys(Date()).isNotEmpty()
+    return certificate.getEncryptionKeys().isNotEmpty()
   }
 
   /** Tests if the given [PGPKey] provides a secret key */

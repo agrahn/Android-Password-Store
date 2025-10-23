@@ -5,6 +5,7 @@
 
 package app.passwordstore.crypto
 
+import app.passwordstore.crypto.KeyUtils.tryParseCertificateOrKey
 import app.passwordstore.crypto.errors.CryptoHandlerException
 import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
@@ -13,7 +14,6 @@ import app.passwordstore.crypto.errors.UnknownError
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.mapError
 import com.github.michaelbull.result.runCatching
-import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Inject
@@ -35,29 +35,12 @@ public class PGPainlessCryptoHandler @Inject constructor() :
 
   private val pgpApi = PGPainless.getInstance()
 
-  public override fun passphraseIsCorrect(key: PGPKey, passphrase: CharArray?): Boolean {
-    val ciphertextStream = ByteArrayOutputStream()
-    val encryptRes =
-      encrypt(
-        listOf(key),
-        null,
-        "passwordstore".byteInputStream(Charsets.UTF_8),
-        ciphertextStream,
-        PGPEncryptOptions.Builder().build(),
-      )
-    if (!encryptRes.isOk) return false
-    val plaintextStream = ByteArrayOutputStream()
-    val decryptRes =
-      decrypt(
-        key,
-        passphrase,
-        ciphertextStream.toByteArray().inputStream(),
-        plaintextStream,
-        PGPDecryptOptions.Builder().build(),
-      )
-    if (!decryptRes.isOk) return false
-    return "passwordstore" == plaintextStream.toString(Charsets.UTF_8)
-  }
+  public override fun passphraseIsCorrect(key: PGPKey, passphrase: CharArray?): Boolean =
+    tryParseCertificateOrKey(key)?.let {
+      if (it is OpenPGPKey)
+        it.getSecretKey(it.getEncryptionKeys().first()).isPassphraseCorrect(passphrase)
+      else false
+    } ?: false
 
   /**
    * Decrypts the given [ciphertextStream] using [PGPainless] and writes the decrypted output to
@@ -81,7 +64,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
         } else {
           val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
           val openPgpKey = KeyUtils.tryParseCertificateOrKey(key)
-          if (openPgpKey !is OpenPGPKey || !openPgpKey.isSecretKey())
+          if (openPgpKey !is OpenPGPKey || openPgpKey.getEncryptionKeys().isEmpty())
             throw NoDecryptionKeyAvailableException("Key not usable for decryption")
           consumerOptions.addDecryptionKey(openPgpKey, protector)
         }
@@ -124,12 +107,15 @@ public class PGPainlessCryptoHandler @Inject constructor() :
         if (keys.isEmpty() && passphrase == null) throw NoKeysProvidedException
 
         val certificates = // retrieve all recipients public encryption keys
-          keys.mapNotNull(KeyUtils::tryParseCertificateOrKey).mapNotNull { certOrKey ->
-            when (certOrKey) {
-              is OpenPGPKey -> certOrKey.toCertificate()
-              else -> certOrKey
+          keys
+            .mapNotNull(KeyUtils::tryParseCertificateOrKey)
+            .mapNotNull { certOrKey ->
+              when (certOrKey) {
+                is OpenPGPKey -> certOrKey.toCertificate()
+                else -> certOrKey
+              }
             }
-          }
+            .filter { !it.getEncryptionKeys().isEmpty() }
         require(keys.isEmpty() || keys.size == certificates.size) {
           "Failed to parse all keys: ${keys.size} keys were provided but only ${certificates.size} were valid"
         }
@@ -174,7 +160,5 @@ public class PGPainlessCryptoHandler @Inject constructor() :
   }
 
   public override fun isPassphraseProtected(keys: List<PGPKey>): Boolean =
-    keys
-      .map { key -> KeyUtils.hasSecretKey(key) && !passphraseIsCorrect(key, charArrayOf()) }
-      .all { it }
+    keys.map { key -> KeyUtils.hasSecretKey(key) && !passphraseIsCorrect(key, null) }.all { it }
 }

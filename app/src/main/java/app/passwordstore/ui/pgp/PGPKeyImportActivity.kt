@@ -12,11 +12,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
-import app.passwordstore.crypto.KeyUtils.isKeyUsable
+import app.passwordstore.crypto.KeyUtils.isCertificateOrKey
 import app.passwordstore.crypto.KeyUtils.tryGetId
 import app.passwordstore.crypto.PGPKey
 import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.crypto.errors.KeyAlreadyExistsException
+import app.passwordstore.crypto.errors.UnusableKeyException
 import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.ui.dialogs.TextInputDialog
 import app.passwordstore.util.coroutines.DispatcherProvider
@@ -60,10 +61,10 @@ class PGPKeyImportActivity : AppCompatActivity() {
           contentResolver.openInputStream(uri)
             ?: throw IllegalStateException("Failed to open selected file")
         val bytes = keyInputStream.use { `is` -> `is`.readBytes() }
-        if (isKeyUsable(PGPKey(bytes))) {
+        if (isCertificateOrKey(PGPKey(bytes))) {
           runCatching { importKey(bytes, false) }.run(::handleImportResult)
         } else {
-          // incoming key file may be encrypted
+          // incoming material may be a symmetrically encrypted key backup
           lifecycleScope.launch(dispatcherProvider.main()) { askBackupCode(bytes, isError = false) }
         }
       }
@@ -126,8 +127,8 @@ class PGPKeyImportActivity : AppCompatActivity() {
       if (key == null) {
         setResult(RESULT_CANCELED)
         finish()
-        // This return convinces Kotlin that the control flow for `key == null` definitely
-        // terminates here and allows for a smart cast below.
+        /* This return convinces Kotlin that the control flow for `key == null` definitely
+        terminates here and allows for a smart cast below. */
         return
       }
       MaterialAlertDialogBuilder(this)
@@ -140,10 +141,14 @@ class PGPKeyImportActivity : AppCompatActivity() {
         .setCancelable(false)
         .show()
     } else {
-      val error = result.getError()
-      if (error != null && error is KeyAlreadyExistsException && lastBytes != null) {
+      val dialog =
         MaterialAlertDialogBuilder(this)
           .setTitle(getString(R.string.pgp_key_import_failed))
+          .setCancelable(false)
+
+      val error = result.getError()
+      if (error is KeyAlreadyExistsException && lastBytes != null) {
+        dialog
           .setMessage(getString(R.string.pgp_key_import_failed_replace_message))
           .setPositiveButton(R.string.dialog_yes) { _, _ ->
             handleImportResult(
@@ -151,16 +156,15 @@ class PGPKeyImportActivity : AppCompatActivity() {
             )
           }
           .setNegativeButton(R.string.dialog_no) { _, _ -> finish() }
-          .setCancelable(false)
-          .show()
       } else {
-        MaterialAlertDialogBuilder(this)
-          .setTitle(getString(R.string.pgp_key_import_failed))
-          .setMessage(error?.message)
-          .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
-          .setCancelable(false)
-          .show()
+        val errMessage =
+          if (error is UnusableKeyException) {
+            getString(R.string.pgp_key_import_failed_unusable_message)
+          } else error?.message
+        dialog.setMessage(errMessage).setPositiveButton(android.R.string.ok) { _, _ -> finish() }
       }
+
+      dialog.show()
     }
   }
 }

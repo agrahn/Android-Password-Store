@@ -248,19 +248,16 @@ class PGPainlessCryptoHandlerTest {
 
   @Test
   fun detectsKeysWithoutPassphrase() {
-    // Uses the internal method instead of the public API because GnuPG seems to have made it
-    // impossible to generate a key without a passphrase and I can't care to find a magical
-    // incantation to convince it I am smarter than whatever they are protecting against.
-    assertFalse(
-      cryptoHandler.isPassphraseProtected(
-        listOf(
-          PGPKey(
-            PGPainless.getInstance()
-              .toAsciiArmor(PGPainless.getInstance().generateKey().modernKeyRing("John Doe"))
-              .encodeToByteArray()
-          )
-        )
+    val unprotectedKey =
+      PGPKey(
+        PGPainless.getInstance()
+          .toAsciiArmor(PGPainless.getInstance().generateKey().modernKeyRing("John Doe"))
+          .encodeToByteArray()
       )
+    assertFalse(cryptoHandler.isPassphraseProtected(listOf(unprotectedKey)))
+    assertTrue(cryptoHandler.passphraseIsCorrect(unprotectedKey, null))
+    assertFalse(
+      cryptoHandler.passphraseIsCorrect(unprotectedKey, "obviously wrong passphrase".toCharArray())
     )
   }
 
