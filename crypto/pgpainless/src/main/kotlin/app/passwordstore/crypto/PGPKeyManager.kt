@@ -2,7 +2,6 @@
  * Copyright © 2014-2025 The Android Password Store Authors. All Rights Reserved.
  * SPDX-License-Identifier: GPL-3.0-only
  */
-@file:Suppress("BlockingMethodInNonBlockingContext")
 
 package app.passwordstore.crypto
 
@@ -23,7 +22,6 @@ import com.github.michaelbull.result.runCatching
 import com.github.michaelbull.result.unwrap
 import java.io.File
 import javax.inject.Inject
-import kotlinx.coroutines.CoroutineDispatcher
 import logcat.asLog
 import logcat.logcat
 import org.bouncycastle.openpgp.PGPSecretKeyRing
@@ -33,9 +31,7 @@ import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 
-public class PGPKeyManager
-@Inject
-constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
+public class PGPKeyManager @Inject constructor(filesDir: String) :
   KeyManager<PGPKey, PGPIdentifier> {
 
   private val pgpApi = PGPainless.getInstance()
