@@ -16,5 +16,6 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 object CryptoHandlerModule {
   @Provides fun providePgpCryptoHandler() = PGPainlessCryptoHandler()
+
   @Provides fun provideYubiKeyCryptoHandler() = YubiKeyCryptoHandler()
 }

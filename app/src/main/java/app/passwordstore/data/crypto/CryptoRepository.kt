@@ -119,9 +119,9 @@ constructor(
         requireNotNull(pgpId) { "Error while parsing cached PGP identifier \"${id}\"" }
         val key = pgpKeyManager.getKeyById(pgpId).getOrThrow()
         val decryptionOptions = PGPDecryptOptions.Builder().build()
-//		val keyId = KeyUtils.tryGetId(key)?.let {
-//		  ykCryptoHandler.parseEncMessage(it, encryptedMessage)
-//		}
+        //		val keyId = KeyUtils.tryGetId(key)?.let {
+        //		  ykCryptoHandler.parseEncMessage(it, encryptedMessage)
+        //		}
         val result =
           pgpCryptoHandler.decrypt(
             key,

@@ -310,7 +310,7 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   private fun deleteKey(identifier: PGPIdentifier) {
     val keyIdPassedIn =
-      KeyUtils.tryGetId(pgpKeyManager.getKeyById(identifier).unwrap())
+      KeyUtils.tryGetId(pgpKeyManager.getKeyById(identifier).getOrThrow())
         ?: throw NullPointerException()
     val tokenLinkedIds = settings.getStringSet(TOKEN_LINKED_PGP_IDS, setOf<String>())
     settings.edit {

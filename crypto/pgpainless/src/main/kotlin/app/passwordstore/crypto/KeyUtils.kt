@@ -10,7 +10,6 @@ import app.passwordstore.crypto.PGPIdentifier.UserId
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.runCatching
 import java.io.ByteArrayInputStream
-import java.util.Date
 import org.bouncycastle.bcpg.BCPGInputStream
 import org.bouncycastle.bcpg.PublicKeyEncSessionPacket
 import org.bouncycastle.openpgp.PGPKeyRing
@@ -125,6 +124,8 @@ public object KeyUtils {
     val algorithm = bytes[0].toUByte().toInt() // symmetric key algorithm
     val keyData =
       when (algorithm) {
+        2 -> // 3DES
+        bytes.copyOfRange(1, 1 + 192 / 8)
         7 -> // AES-128
         bytes.copyOfRange(1, 1 + 128 / 8)
         8 -> // AES-192
