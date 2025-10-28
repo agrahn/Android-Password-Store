@@ -11,6 +11,7 @@ import com.github.michaelbull.result.get
 import com.github.michaelbull.result.runCatching
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKeyReader
 
 /** Utility methods to deal with [PGPKey]s. */
@@ -65,16 +66,21 @@ public object KeyUtils {
    * necessity for the app.
    */
   public fun isKeyUsable(key: PGPKey): Boolean {
-    val certificate = tryParseCertificateOrKey(key) ?: return false
-    return certificate.getEncryptionKeys().isNotEmpty()
+    val cert = tryParseCertificateOrKey(key) ?: return false
+    return cert.getEncryptionKeys().isNotEmpty()
   }
 
-  /** Tests if the given [PGPKey] provides a secret key */
-  public fun hasSecretKey(key: PGPKey): Boolean =
-    tryParseCertificateOrKey(key)?.isSecretKey() ?: false
+  /** Tests if the given [PGPKey] provides a secret subkey usable for de-cryption */
+  public fun hasSecretKey(key: PGPKey): Boolean {
+    val cert = tryParseCertificateOrKey(key) ?: return false
+    return hasSecretKey(cert)
+  }
 
-  /** Tests if the given [OpenPGPCertificate] provides a secret key */
-  public fun hasSecretKey(cert: OpenPGPCertificate): Boolean = cert.isSecretKey()
+  /** Tests if the given [OpenPGPCertificate] provides a secret subkey usable for de-cryption */
+  public fun hasSecretKey(cert: OpenPGPCertificate): Boolean {
+    if (cert !is OpenPGPKey) return false
+    return cert.getSecretKeys().values.map { it.isEncryptionKey() }.any()
+  }
 
   public fun extractPublicKeyData(key: PGPKey): ByteArray? {
     return tryParseCertificateOrKey(key)?.let {

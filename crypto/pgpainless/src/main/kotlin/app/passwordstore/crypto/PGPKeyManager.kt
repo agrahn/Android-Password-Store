@@ -18,11 +18,15 @@ import app.passwordstore.crypto.errors.KeyNotFoundException
 import app.passwordstore.crypto.errors.NoKeysAvailableException
 import app.passwordstore.crypto.errors.UnusableKeyException
 import com.github.michaelbull.result.Result
+import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.runCatching
 import com.github.michaelbull.result.unwrap
 import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
+import logcat.asLog
+import logcat.logcat
+import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
@@ -111,18 +115,22 @@ constructor(filesDir: String, private val dispatcher: CoroutineDispatcher) :
   ): Result<PGPKey, Throwable> = runCatching {
     val key = getKeyById(identifier).unwrap()
     val openPgpKey = tryParseCertificateOrKey(key) ?: throw InvalidKeyException
-    if (openPgpKey !is OpenPGPKey || openPgpKey.getEncryptionKeys().isEmpty())
-      throw InvalidKeyException
-    val encryptionSubkeyId = openPgpKey.getEncryptionKeys().first().getKeyIdentifier()
-    val modifiedOpenPgpKey =
-      pgpApi
-        .modify(openPgpKey)
-        .changeSubKeyPassphraseFromOldPassphrase(encryptionSubkeyId, Passphrase(oldPassphrase))
-        .withSecureDefaultSettings()
-        .toNewPassphrase(Passphrase(newPassphrase))
-        .done()
-        .getEncoded()
-    addKey(PGPKey(modifiedOpenPgpKey), true).unwrap()
+    if (openPgpKey !is OpenPGPKey) throw InvalidKeyException
+
+    var secretKeyRing = openPgpKey.getPGPSecretKeyRing()
+    val secretKeys = openPgpKey.getSecretKeys()
+
+    secretKeys.values.forEach { sk -> // treat subkeys individually to allow for stripped keys
+      runCatching {
+          val modifiedSecretKey = sk.unlock(oldPassphrase).changePassphrase(newPassphrase)
+          secretKeyRing =
+            PGPSecretKeyRing.insertSecretKey(secretKeyRing, modifiedSecretKey.getPGPSecretKey())
+        }
+        .onFailure { e -> logcat { e.asLog() } }
+    }
+
+    val modifiedOpenPgpKey = OpenPGPKey(secretKeyRing)
+    addKey(PGPKey(modifiedOpenPgpKey.getEncoded()), true).unwrap()
   }
 
   /** @see KeyManager.getKeyById */

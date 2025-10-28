@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - App crashed when trying to enter a proxy url in Settings --> Repository --> HTTP(S) proxy settings
+- Handling "stripped" PGP keys (passphrase changing, correctness verification)
 
 ## [1.15.2] - 2025-09-05
 
