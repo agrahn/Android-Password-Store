@@ -42,7 +42,6 @@ import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.onSuccess
 import com.github.michaelbull.result.runCatching
-import com.github.michaelbull.result.unwrap
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
@@ -138,7 +137,7 @@ class PGPKeyListActivity : AppCompatActivity() {
               if (isSelecting) {
                 { identifier, isSelected ->
                   val keyId = run { // ensure numeric key ID
-                    val key = pgpKeyManager.getKeyById(identifier).unwrap()
+                    val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
                     KeyUtils.tryGetId(key) ?: throw NullPointerException()
                   }
                   if (isSelected) selectedKeyIds.add(keyId.toString())
@@ -238,7 +237,7 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   private fun writeBackupFile(identifier: PGPIdentifier, code: String? = null) {
     val keyIdAndContent = run {
-      val key = pgpKeyManager.getKeyById(identifier, withArmor = true).unwrap()
+      val key = pgpKeyManager.getKeyById(identifier, withArmor = true).getOrThrow()
       val contents =
         if (code != null) { // encrypt secret keys symmetrically
           val keyContents = ByteArrayOutputStream()
