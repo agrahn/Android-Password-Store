@@ -19,9 +19,9 @@ import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.filterValues
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getError
+import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.map
 import com.github.michaelbull.result.mapBoth
-import com.github.michaelbull.result.unwrap
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
@@ -63,19 +63,19 @@ constructor(
   }
 
   fun isPasswordCorrect(identifier: PGPIdentifier, passphrase: CharArray?): Boolean {
-    val key = pgpKeyManager.getKeyById(identifier).unwrap()
+    val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
     return pgpCryptoHandler.passphraseIsCorrect(key, passphrase)
   }
 
   fun getEmailFromKeyId(identifier: PGPIdentifier): String? {
-    val key = pgpKeyManager.getKeyById(identifier).unwrap()
+    val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
     val userId = KeyUtils.tryGetEmail(key)
     if (userId == null) return null
     return PGPIdentifier.splitUserId(userId.email)
   }
 
   fun getUserIdFromKeyId(identifier: PGPIdentifier): String? {
-    val key = pgpKeyManager.getKeyById(identifier).unwrap()
+    val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
     return KeyUtils.tryGetEmail(key).toString()
   }
 
@@ -90,7 +90,7 @@ constructor(
       identities.mapUntil({ it.second.isOk }) { id ->
         encryptedMessage.reset()
         message.reset()
-        val key = pgpKeyManager.getKeyById(id).unwrap()
+        val key = pgpKeyManager.getKeyById(id).getOrThrow()
         val decryptionOptions = PGPDecryptOptions.Builder().build()
         val result =
           pgpCryptoHandler.decrypt(
@@ -109,7 +109,7 @@ constructor(
         message.reset()
         val pgpId = PGPIdentifier.fromString(id)
         requireNotNull(pgpId) { "Error while parsing cached PGP identifier \"${id}\"" }
-        val key = pgpKeyManager.getKeyById(pgpId).unwrap()
+        val key = pgpKeyManager.getKeyById(pgpId).getOrThrow()
         val decryptionOptions = PGPDecryptOptions.Builder().build()
         val result =
           pgpCryptoHandler.decrypt(

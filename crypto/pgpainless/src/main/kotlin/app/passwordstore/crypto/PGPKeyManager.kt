@@ -17,14 +17,10 @@ import app.passwordstore.crypto.errors.KeyNotFoundException
 import app.passwordstore.crypto.errors.NoKeysAvailableException
 import app.passwordstore.crypto.errors.UnusableKeyException
 import com.github.michaelbull.result.Result
-import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.runCatching
-import com.github.michaelbull.result.unwrap
 import java.io.File
 import javax.inject.Inject
-import logcat.asLog
-import logcat.logcat
-import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
@@ -76,7 +72,7 @@ public class PGPKeyManager @Inject constructor(filesDir: String) :
   /** @see KeyManager.removeKey */
   override fun removeKey(identifier: PGPIdentifier): Result<Unit, Throwable> = runCatching {
     if (!keyDirExists()) throw KeyDirectoryUnavailableException
-    val key = getKeyById(identifier).unwrap()
+    val key = getKeyById(identifier).getOrThrow()
     val keyFile = File(keyDir, "${tryGetId(key)}.$KEY_EXTENSION")
     if (keyFile.exists()) {
       if (!keyFile.delete()) throw KeyDeletionFailedException
@@ -101,7 +97,7 @@ public class PGPKeyManager @Inject constructor(filesDir: String) :
 
       pgpPassphraseCopy.clear()
 
-      addKey(PGPKey(key.getEncoded()), false).unwrap()
+      addKey(PGPKey(key.getEncoded()), false).getOrThrow()
     }
 
   override fun changeKeyPassphrase(
@@ -109,24 +105,19 @@ public class PGPKeyManager @Inject constructor(filesDir: String) :
     oldPassphrase: CharArray?,
     newPassphrase: CharArray?,
   ): Result<PGPKey, Throwable> = runCatching {
-    val key = getKeyById(identifier).unwrap()
+    val key = getKeyById(identifier).getOrThrow()
     val openPgpKey = tryParseCertificateOrKey(key) ?: throw InvalidKeyException
-    if (openPgpKey !is OpenPGPKey) throw InvalidKeyException
+    if (!openPgpKey.isSecretKey()) throw InvalidKeyException
 
-    var secretKeyRing = openPgpKey.getPGPSecretKeyRing()
-    val secretKeys = openPgpKey.getSecretKeys()
+    var openPgpKeyModified =
+      pgpApi
+        .modify(openPgpKey as OpenPGPKey)
+        .changePassphraseFromOldPassphrase(Passphrase(oldPassphrase))
+        .withSecureDefaultSettings()
+        .toNewPassphrase(Passphrase(newPassphrase))
+        .done()
 
-    secretKeys.values.forEach { sk -> // treat subkeys individually to allow for stripped keys
-      runCatching {
-          val modifiedSecretKey = sk.unlock(oldPassphrase).changePassphrase(newPassphrase)
-          secretKeyRing =
-            PGPSecretKeyRing.insertSecretKey(secretKeyRing, modifiedSecretKey.getPGPSecretKey())
-        }
-        .onFailure { e -> logcat { e.asLog() } }
-    }
-
-    val modifiedOpenPgpKey = OpenPGPKey(secretKeyRing)
-    addKey(PGPKey(modifiedOpenPgpKey.getEncoded()), true).unwrap()
+    addKey(PGPKey(openPgpKeyModified.getEncoded()), true).getOrThrow()
   }
 
   /** @see KeyManager.getKeyById */
