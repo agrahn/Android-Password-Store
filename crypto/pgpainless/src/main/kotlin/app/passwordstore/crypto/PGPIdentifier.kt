@@ -63,7 +63,8 @@ public sealed class PGPIdentifier {
       val maybeLongKeyId =
         identifier.removePrefix("0x").takeIf { it.matches("[a-fA-F\\d]{16}".toRegex()) }
       if (maybeLongKeyId != null) {
-        val keyId = maybeLongKeyId.toULong(HEX_RADIX)
+        val keyIdNoComment = maybeLongKeyId.replace("\\s+#\\s?[a-ZA-Z0-9]$", "")
+        val keyId = keyIdNoComment.toULong(HEX_RADIX)
         return KeyId(keyId.toLong())
       }
 
