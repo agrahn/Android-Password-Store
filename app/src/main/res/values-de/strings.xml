@@ -414,6 +414,9 @@
   <string name="no_keys_imported_dialog_title">Keine Schlüssel vorhanden</string>
   <string name="no_keys_imported_dialog_message">Es wurden noch keine PGP-Schlüssel der App hinzugefügt. Importieren Sie eine Schlüsseldatei oder erstellen Sie einen neuen Schlüssel im PGP-Schlüsselmanager.</string>
   <string name="no_keys_imported_dialog_open_key_manager">PGP-Schlüsselmanager öffnen</string>
+  <string name="pgp_invalid_key_identifier">ungültig</string>
+  <string name="pgp_short_key_identifier">ungültig: Kurz-ID</string>
+  <string name="pgp_unknown_key_identifier">unbekannte Schlüssel-ID</string>
 
   <!-- Passphrase input -->
   <string name="cache_password_until_screen_off">Kennwortsatz bis zum Abschalten des Bildschirms merken</string>
