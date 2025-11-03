@@ -61,7 +61,7 @@ public sealed class PGPIdentifier {
       // Match long key IDs:
       // FF22334455667788 or 0xFF22334455667788
       val maybeLongKeyId =
-        identifier.removePrefix("0x").takeIf { it.matches("[a-fA-F\\d]{16}".toRegex()) }
+        identifier.removePrefix("0x").trimEnd().takeIf { it.matches("[a-fA-F\\d]{16}".toRegex()) }
       if (maybeLongKeyId != null) {
         val keyId = maybeLongKeyId.toULong(HEX_RADIX)
         return KeyId(keyId.toLong())
@@ -70,7 +70,7 @@ public sealed class PGPIdentifier {
       // Match fingerprints:
       // FF223344556677889900112233445566778899 or 0xFF223344556677889900112233445566778899
       val maybeFingerprint =
-        identifier.removePrefix("0x").takeIf { it.matches("[a-fA-F\\d]{40}".toRegex()) }
+        identifier.removePrefix("0x").trimEnd().takeIf { it.matches("[a-fA-F\\d]{40}".toRegex()) }
       if (maybeFingerprint != null) {
         // Truncating to the long key ID is not a security issue since OpenKeychain only
         // accepts

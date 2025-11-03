@@ -79,6 +79,11 @@ constructor(
     return KeyUtils.tryGetEmail(key).toString()
   }
 
+  fun getLongKeyIdFromKeyId(identifier: PGPIdentifier): String? {
+    val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
+    return KeyUtils.tryGetId(key).toString()
+  }
+
   fun decrypt(
     passphrases: Map<String, CharArray>,
     identities: List<PGPIdentifier>,

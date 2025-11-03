@@ -23,6 +23,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import app.passwordstore.R
+import app.passwordstore.crypto.PGPIdentifier
+import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.data.password.PasswordItem
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.PasswordRecyclerViewBinding
@@ -57,6 +59,7 @@ import me.zhanghai.android.fastscroll.FastScrollerBuilder
 @AndroidEntryPoint
 class PasswordFragment : Fragment(R.layout.password_recycler_view) {
 
+  @Inject lateinit var repository: CryptoRepository
   @Inject lateinit var gitSettings: GitSettings
   @Inject lateinit var shortcutHandler: ShortcutHandler
   @Inject lateinit var dispatcherProvider: DispatcherProvider
@@ -347,7 +350,39 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
   }
 
   private fun showGpgIds(file: File) {
-    val gpgIds = file.readLines().filter { it.isNotBlank() }
+    val gpgIds =
+      file
+        .readLines()
+        .filter { it.isNotBlank() && it != "gpg-id" }
+        .map { line ->
+          if (line.removePrefix("0x").matches("[a-fA-F0-9]{8}".toRegex())) {
+            "${line.removePrefix("0x")} (${resources.getString(R.string.pgp_short_key_identifier)})"
+          } else {
+            val id = PGPIdentifier.fromString(line)
+            if (id == null) "${line} (${resources.getString(R.string.pgp_invalid_key_identifier)})"
+            else if (!repository.hasKey(id)) {
+              val message = resources.getString(R.string.pgp_unknown_key_identifier)
+              if (id is PGPIdentifier.KeyId) {
+                "${id.toString()} (${message})"
+              } else {
+                if (id.toString().matches("[^@]*@[^@]*".toRegex()))
+                  "<${id.toString()}> (${message})"
+                else "\"${id.toString()}\" (${message})"
+              }
+            } else {
+              if (id is PGPIdentifier.KeyId) {
+                val userId =
+                  requireNotNull(repository.getEmailFromKeyId(id)) {
+                    "Could not extract user e-mail"
+                  }
+                if (userId.matches("[^@]*@[^@]*".toRegex())) "${id.toString()} <${userId}>"
+                else "${id.toString()} \"${userId}\""
+              } else {
+                "${repository.getLongKeyIdFromKeyId(id).toString()} : ${id.toString()}"
+              }
+            }
+          }
+        }
     val title =
       if (gpgIds.size > 1) resources.getString(R.string.pgp_id_label_plural)
       else resources.getString(R.string.pgp_id_label)

@@ -240,11 +240,9 @@ open class BasePGPActivity : AppCompatActivity() {
     val gpgIdentifiers =
       gpgIdentifierFile
         .readLines()
-        .filter { it.isNotBlank() }
+        .filter { it.isNotBlank() && it != "gpg-id" }
         .map { line ->
-          if (line == "gpg-id") {
-            null
-          } else if (line.removePrefix("0x").matches("[a-fA-F0-9]{8}".toRegex())) {
+          if (line.removePrefix("0x").matches("[a-fA-F0-9]{8}".toRegex())) {
             // Short key IDs are not accepted
             shortIdCount++
             null

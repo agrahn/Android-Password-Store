@@ -417,6 +417,9 @@
   <string name="no_keys_imported_dialog_title">No keys available</string>
   <string name="no_keys_imported_dialog_message">No PGP keys have been added to the app yet. Import a key file or create a new key in the PGP key manager.</string>
   <string name="no_keys_imported_dialog_open_key_manager">Open PGP key manager</string>
+  <string name="pgp_invalid_key_identifier">invalid</string>
+  <string name="pgp_short_key_identifier">invalid: short ID</string>
+  <string name="pgp_unknown_key_identifier">unknown key ID</string>
 
   <!-- Passphrase input -->
   <string name="cache_password_until_screen_off">Keep passphrase until screen-off</string>
