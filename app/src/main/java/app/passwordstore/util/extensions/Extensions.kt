@@ -66,6 +66,9 @@ fun String.base64(): String {
   return Base64.encodeToString(encodeToByteArray(), Base64.NO_WRAP)
 }
 
+fun String.substringBefore(delimiter: Regex, missingDelimiterValue: String = this): String =
+  delimiter.find(this)?.value?.let { this.substringBefore(it) } ?: missingDelimiterValue
+
 fun CharArray.wipe() {
   fill('\u0000')
   drop(size)

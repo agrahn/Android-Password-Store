@@ -38,6 +38,7 @@ import app.passwordstore.util.extensions.clipboard
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.extensions.snackbar
+import app.passwordstore.util.extensions.substringBefore
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.Constants
@@ -240,6 +241,9 @@ open class BasePGPActivity : AppCompatActivity() {
     val gpgIdentifiers =
       gpgIdentifierFile
         .readLines()
+        .map { // strip trailing comments
+          it.substringBefore(Regex("\\s+#"))
+        }
         .filter { it.isNotBlank() && it != "gpg-id" }
         .map { line ->
           if (line.removePrefix("0x").matches("[a-fA-F0-9]{8}".toRegex())) {

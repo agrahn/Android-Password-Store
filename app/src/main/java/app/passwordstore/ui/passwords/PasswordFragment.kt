@@ -39,6 +39,7 @@ import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.extensions.base64
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.sharedPrefs
+import app.passwordstore.util.extensions.substringBefore
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.settings.AuthMode
 import app.passwordstore.util.settings.GitSettings
@@ -353,6 +354,9 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
     val gpgIds =
       file
         .readLines()
+        .map { // strip trailing comments
+          it.substringBefore(Regex("\\s+#"))
+        }
         .filter { it.isNotBlank() && it != "gpg-id" }
         .map { line ->
           if (line.removePrefix("0x").matches("[a-fA-F0-9]{8}".toRegex())) {
