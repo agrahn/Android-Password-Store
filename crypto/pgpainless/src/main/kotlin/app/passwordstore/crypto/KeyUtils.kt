@@ -19,6 +19,7 @@ import org.bouncycastle.openpgp.api.OpenPGPKeyReader
 import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.util.ArmorUtils
 import org.pgpainless.util.SessionKey
+import org.bouncycastle.bcpg.PublicKeyAlgorithmTags
 
 /** Utility methods to deal with [PGPKey]s. */
 public object KeyUtils {
@@ -92,23 +93,19 @@ public object KeyUtils {
 
   public fun getEncryptedSessionKeys(
     message: ByteArray
-  ): MutableList<Triple<Int, ByteArray, PGPIdentifier?>> {
+  ): MutableList<Triple<KeyId, Int, ByteArray>> {
     val decoderStream = ArmorUtils.getDecoderStream(ByteArrayInputStream(message))
     val bcpgStream = BCPGInputStream(decoderStream)
 
-    val encSessionKeys: MutableList<Triple<Int, ByteArray, PGPIdentifier?>> = mutableListOf()
+    val encSessionKeys: MutableList<Triple<KeyId, Int, ByteArray>> = mutableListOf()
 
     var packet = bcpgStream.readPacket()
     while (packet != null) {
       if (packet is PublicKeyEncSessionPacket) {
         val algorithm = packet.getAlgorithm()
-        val encSessionKeyBC = packet.getEncSessionKey()
-        /* BouncyCastle exports encrypted session keys in a special format where
-         * the first two bytes denote the length. We need to strip them.
-         */
-        val encSessionKey = encSessionKeyBC[0].copyOfRange(2, encSessionKeyBC[0].count())
-        val keyID = packet.getKeyID()
-        encSessionKeys.add(Triple(algorithm, encSessionKey, KeyId(keyID)))
+        val encSessionKey = packet.getEncSessionKey()[0]
+        val keyId = packet.getKeyID()
+        encSessionKeys.add(Triple(KeyId(keyId), algorithm, encSessionKey))
       }
       packet = bcpgStream.readPacket()
     }
@@ -117,8 +114,7 @@ public object KeyUtils {
   }
 
   /**
-   * Creates PGPainless SessionKey from decrypted session key data; session key data format acc. to
-   * https://www.rfc-editor.org/rfc/rfc9580.html#name-algorithm-specific-fields-f
+   * Creates PGPainless SessionKey from decrypted session key data
    */
   public fun createSessionKey(bytes: ByteArray): SessionKey? {
     val algorithm = bytes[0].toUByte().toInt() // symmetric key algorithm

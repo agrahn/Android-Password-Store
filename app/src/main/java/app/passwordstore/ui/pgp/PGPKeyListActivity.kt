@@ -1,10 +1,12 @@
 /*
- * Copyright © 2014-2025 The Android Password Store Authors. All Rights Reserved.
+import Copyright © 2014-2025 The Android Password Store Authors. All Rights Reserved.
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
 package app.passwordstore.ui.pgp
 
+import app.passwordstore.crypto.errors.NoKeysAvailableException
+import app.passwordstore.crypto.errors.KeyNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -41,7 +43,7 @@ import app.passwordstore.crypto.KeyUtils
 import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPKeyManager
-import app.passwordstore.crypto.errors.NoMatchingKeyException
+import app.passwordstore.crypto.YubiKeyCryptoHandler
 import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.ui.APSAppBar
@@ -53,6 +55,7 @@ import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.PreferenceKeys.TOKEN_LINKED_PGP_IDS
 import app.passwordstore.util.viewmodel.PGPKeyListViewModel
 import com.github.michaelbull.result.getOrThrow
+import com.github.michaelbull.result.get
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.onSuccess
 import com.github.michaelbull.result.runCatching
@@ -80,6 +83,7 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   @Inject lateinit var cryptoRepository: CryptoRepository
   @Inject lateinit var pgpKeyManager: PGPKeyManager
+  @Inject lateinit var yubikeyCryptoHandler: YubiKeyCryptoHandler
   @Inject @SettingsPreferences lateinit var settings: SharedPreferences
   lateinit var yubikit: YubiKitManager
 
@@ -410,51 +414,26 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   private var matchingKeyNotFoundDialog: AlertDialog? = null
 
-  /**
-   * Get the KeyId from the connected hardware key, using the encryption key fingerprint it contains
-   */
-  private fun getKeyIdFromHwKey(openPgpSession: OpenPgpSession): KeyId? {
-    /* Extract the encryption key (DEC) fingerprint (20 bytes) from Application Related
-     * Data (tag 0x6E) array. We use tag 0xC4 that preceedes the combined (SIG+DEC+AUT)
-     * fingerprints within the app related data array to localise and then slice out the
-     * DEC fingerprint.
-     */
-    val tag0x6EString = openPgpSession.getData(0x6E).toHexString() // Application Related Data
-    val tag0xC4String = "c407" + openPgpSession.getData(0xC4).toHexString() // preceeding data
-    val leadingRegex = "^6e.*${tag0xC4String}".toRegex()
-    val combinedFingerprintsPlus = tag0x6EString.replaceFirst(leadingRegex, "").hexToByteArray()
-    require(combinedFingerprintsPlus[0].toUByte().toInt() == 0xC5) { // tag ID of combined FPs
-      "Combined fingerprint subarray (tag ID 0xC5) not found"
-    }
-    require( // length of combined fingerprints subarray
-      combinedFingerprintsPlus[1].toUByte().toInt() >= 60
-    ) {
-      "Assertion error of fingerprint subarray length"
-    }
-    val fingerPrintBytes =
-      combinedFingerprintsPlus.copyOfRange(
-        2 + 20,
-        2 + 40,
-      ) // skip SIG fingerprint and drop trailing bytes
-    return PGPIdentifier.fromString(fingerPrintBytes.toHexString()) as KeyId
-  }
-
   private fun linkHwKey(identifier: PGPIdentifier, openPgpSession: OpenPgpSession) {
     matchingKeyNotFoundDialog?.dismiss()
     runCatching {
-        // extract numerical encryption key identifier (KeyId) from hardware key
-        val keyIdHw = getKeyIdFromHwKey(openPgpSession) ?: throw NoMatchingKeyException
+        // retrieve decryption key ID from hardware key
+        val keyIdHwDec = yubikeyCryptoHandler.getEncKeyIdFromHwKey(openPgpSession) ?: throw NoKeysAvailableException
 
-        // get public key from Passwordstore that corresponds to passed-in identifier
+        /* Look for public encryption subkey with ID [keyIdHwDec] within keyring with primary ID/User ID [identifier];
+         * throw if unavailable */
+        pgpKeyManager.getPublicSubkeyById(keyIdHwDec, identifier).getOrThrow()
+
+        // Get public keyring from Passwordstore by passed-in identifier
         val keyPassedIn = pgpKeyManager.getKeyById(identifier).getOrThrow()
-        val publicKeyPassedIn =
-          KeyUtils.extractPublicKey(keyPassedIn) ?: throw NoMatchingKeyException
-        // and its numerical KeyId
-        val keyIdPassedIn = KeyUtils.tryGetId(keyPassedIn) ?: throw NoMatchingKeyException
+        val publicKeyPassedIn = requireNotNull(KeyUtils.extractPublicKey(keyPassedIn)) { 
+		  "Error while trying to get public key from store"
+		}
 
-        // make sure both IDs are the same
-        if (keyIdHw.id != keyIdPassedIn.id) throw NoMatchingKeyException
-
+		// Get (numeric) KeyId   
+	    val keyIdPassedIn = requireNotNull(KeyUtils.tryGetId(keyPassedIn)){
+		  "Error while trying to get key ID"
+		}
         val tokenLinkedIds = settings.getStringSet(TOKEN_LINKED_PGP_IDS, setOf<String>())
         settings.edit {
           putStringSet(
@@ -462,6 +441,8 @@ class PGPKeyListActivity : AppCompatActivity() {
             tokenLinkedIds?.plus(keyIdPassedIn.toString()) ?: setOf<String>(),
           )
         }
+
+		// Replace secret key with public key
         viewModel.deleteKey(keyIdPassedIn)
         viewModel.addKey(publicKeyPassedIn)
       }

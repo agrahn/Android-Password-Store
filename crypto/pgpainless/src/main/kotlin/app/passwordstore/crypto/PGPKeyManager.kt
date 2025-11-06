@@ -5,6 +5,9 @@
 
 package app.passwordstore.crypto
 
+import app.passwordstore.crypto.PGPIdentifier.KeyId
+import app.passwordstore.crypto.PGPIdentifier.UserId
+import org.bouncycastle.openpgp.PGPPublicKey
 import androidx.annotation.VisibleForTesting
 import app.passwordstore.crypto.KeyUtils.isKeyUsable
 import app.passwordstore.crypto.KeyUtils.tryGetKeyId
@@ -26,9 +29,10 @@ import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
+import org.bouncycastle.bcpg.KeyIdentifier
 
 public class PGPKeyManager @Inject constructor(filesDir: String) :
-  KeyManager<PGPKey, PGPIdentifier> {
+  KeyManager<PGPKey, PGPPublicKey, PGPIdentifier, KeyId> {
 
   private val pgpApi = PGPainless.getInstance()
 
@@ -131,9 +135,9 @@ public class PGPKeyManager @Inject constructor(filesDir: String) :
       for (key in keys) {
         val certificateOrKey = tryParseCertificateOrKey(key) ?: continue
         if (
-          id is PGPIdentifier.KeyId &&
+          id is KeyId &&
             certificateOrKey.getAllKeyIdentifiers().any { id.id == it.getKeyId() } ||
-            id is PGPIdentifier.UserId &&
+            id is UserId &&
               certificateOrKey.getAllUserIds().any {
                 id.email == it.getUserId() || id.email == PGPIdentifier.splitUserId(it.getUserId())
               }
@@ -154,6 +158,15 @@ public class PGPKeyManager @Inject constructor(filesDir: String) :
     if (keyFiles.isNullOrEmpty()) return@runCatching emptyList()
     keyFiles.map { keyFile -> PGPKey(keyFile.readBytes()) }.toList()
   }
+
+  /** @see KeyManager.getPublicSubkeyById */
+  override fun getPublicSubkeyById(subId: KeyId, primaryId: PGPIdentifier?): Result<PGPPublicKey, Throwable> =
+    runCatching {
+      val key = primaryId?.let { getKeyById(it).getOrThrow() } ?: getKeyById(subId).getOrThrow()
+      val certificateOrKey = requireNotNull(tryParseCertificateOrKey(key)) { "Error while re-parsing key material" }
+      val pubkey = certificateOrKey.getKey(KeyIdentifier(subId.id))?.getPGPPublicKey() ?: throw KeyNotFoundException("$subId")
+      return@runCatching pubkey
+    }
 
   /** Checks if [keyDir] exists and attempts to create it if not. */
   private fun keyDirExists(): Boolean {

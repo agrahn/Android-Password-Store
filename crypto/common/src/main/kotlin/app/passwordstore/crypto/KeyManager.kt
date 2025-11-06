@@ -12,7 +12,7 @@ import com.github.michaelbull.result.Result
  * used by an implementation of [CryptoHandler] to obtain eligible public or private keys as
  * required.
  */
-public interface KeyManager<Key, KeyIdentifier> {
+public interface KeyManager<Key, Subkey, KeyIdentifier, SubkeyIdentifier> {
 
   /**
    * Inserts a [key] into the store. If the key already exists, this method will return
@@ -36,8 +36,8 @@ public interface KeyManager<Key, KeyIdentifier> {
    */
   public fun getKeyById(id: KeyIdentifier, withArmor: Boolean = false): Result<Key, Throwable>
 
-  //  /** Get public OpenPGP [Key] matching a passed-in JCA [publicKey]. */
-  //  public fun getPublicKeyByJCAPublicKey(publicKey: PublicKey): Result<Key, Throwable>
+  //  /** Get public [Subkey], identified by its subkey ID and an optional primary key ID. */
+  public fun getPublicSubkeyById(subId: SubkeyIdentifier, primaryId: KeyIdentifier? = null): Result<Subkey, Throwable>
 
   /** Returns all keys currently in the store as a [List]. */
   public fun getAllKeys(): Result<List<Key>, Throwable>
