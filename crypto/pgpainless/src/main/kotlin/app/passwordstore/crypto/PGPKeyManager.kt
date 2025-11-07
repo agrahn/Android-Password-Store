@@ -30,6 +30,7 @@ import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 import org.bouncycastle.bcpg.KeyIdentifier
+import org.pgpainless.algorithm.OpenPGPKeyVersion
 
 public class PGPKeyManager @Inject constructor(filesDir: String) :
   KeyManager<PGPKey, PGPPublicKey, PGPIdentifier, KeyId> {
@@ -90,8 +91,8 @@ public class PGPKeyManager @Inject constructor(filesDir: String) :
       // Make a copy because underlying CharArray gets invalidated/nulled upon
       // PGPainless.generateKey()
       val pgpPassphraseCopy = Passphrase(passphrase?.copyOf())
-
-      val secretKeys = pgpApi.generateKey().modernKeyRing(userId, pgpPassphrase)
+      // Version 4 keys for GnuPG compatibility (although pgpainless default, we explicitly set it)
+      val secretKeys = pgpApi.generateKey(version=OpenPGPKeyVersion.v4).modernKeyRing(userId, pgpPassphrase)
       val protector = SecretKeyRingProtector.unlockAnyKeyWith(pgpPassphraseCopy)
       var key =
         pgpApi

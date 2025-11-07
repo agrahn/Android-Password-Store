@@ -91,7 +91,7 @@ public object KeyUtils {
   public fun extractPublicKey(key: PGPKey): PGPKey? =
     return extractPublicKeyData(key)?.let { PGPKey(it) }
 
-  public fun getEncryptedSessionKeys(
+  public fun getEncryptedSessionKeys (
     message: ByteArray
   ): MutableList<Triple<KeyId, Int, ByteArray>> {
     val decoderStream = ArmorUtils.getDecoderStream(ByteArrayInputStream(message))

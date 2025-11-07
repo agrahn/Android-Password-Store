@@ -461,12 +461,78 @@ class PGPKeyListActivity : AppCompatActivity() {
 
         logcat { e.asLog() }
       }
-    // runCatching {
+     //runCatching {
+         val enckeys = KeyUtils.getEncryptedSessionKeys(cipherTextWithArmor.toByteArray())
+         logcat {"++++++++++++++++++++++++++++++++++++++" + enckeys.size.toString() }
+         enckeys.forEach{(id, algo, content) ->
+             logcat{"id: " + id.toString() + " algo: " + algo.toString() }
+         }
     //    val clearText = decryptionTest(openPgpSession)
     //    logcat { "++++++++++++++++++++++++++++++++++:" + clearText }
-    //  }
+     //}
     //  .onFailure { e -> logcat { e.asLog() } }
   }
+
+  //passtest
+  //val cipherTextWithArmor =
+  //  """
+  //      -----BEGIN PGP MESSAGE-----
+  //
+  //      hQGMA1+zW06M+3VwAQwAoDf3Ty669GOO6AfcQqoJN1ABQpUd0BKF1HiWnZwr0kzz
+  //      SHTVwQVxR2LC8MHmi+riAslNBfoFcVd2jgSbzoNT6C2kRd4qVnM9OYE789w8abtq
+  //      /Fa7s+TsKAiv+BwonU1r+PJ8O8zVm1MGoq33glOiKDgnmk6Q7iLVWe+uhNrYXlpR
+  //      lTToO5GRmFvYNUXecUWYSrrVMB0wb1qV3Z6MNBY1voD9hjIQYnc10YsBcDe4+7bQ
+  //      QAgo6ENt+XYKJFvvRyb9aTyBN+Lhw/oc8FBfY4NcXReX8twLZRf8hHq9ff3lxfVZ
+  //      IK3+c+BpVZ4o99s5E8xx/uN7wmtce6eVPzVY1RF8ZmfEg3xoHmn0AzvYgCUPOrca
+  //      K0IgpqoluRUmIhhn91zkK+5xtCJVgGpKqrxY1jR6ne0QyiU7fdDoF67M3unnULeS
+  //      pv2hlme4e3NZqQpfogFSBeusfqi4JDaXS+ol4bSX/oIRkDNmsWawsNFygi1FscsQ
+  //      rlviFkYFZFSvc0/ZK2rZ0kIB62BPgOmqV1EedQ64uOAMDMk/ob/KJL+1goZpGUTC
+  //      WydWkRrVDtd2pYq7yS7NzEGaVJpBV0NOCRPVIJTUD38QykQ=
+  //      =l97u
+  //      -----END PGP MESSAGE-----
+  //  """
+  //  .trimIndent()
+
+  //passtest, hidden key ID
+  val cipherTextWithArmor =
+    """
+          -----BEGIN PGP MESSAGE-----
+          
+          hQGMAwAAAAAAAAAAAQv/d0xPQuYQcYauK2SZqO9B6fyTNRRYFEq0wVF8Q0jl/ZrB
+          MWeNMEuUhh7/waq2nuS4mHUY7rfxh+9yEiuk8ltK2KF9mVPbOtT9wfyejG6BHPqJ
+          W/vjP9liN6tSnGaDASWcHTx4qTf6QfW3f1AVu32c0/7jBpkQwBLJ/X90y6U31G+m
+          hdi2nrddni027qNt3n7LaNW1cksV07HIdZUnnxOzwAwnBu+vkAdSESwYeGf9DrTj
+          EhL1HHSMm3oQlijjSk/+ftOYzDKUW1UPkF519e/YuRxNh80Gs8Ini0MplZ2FmLiQ
+          OBa8sgEk+ex8qsnJtf8USjbQNgukd0kDa8Hn1zHoFoHWcXB04FmYIMVyK6Vo72Vb
+          /G8vaOjtAn2AlUVfuhMJRKQ4qrDKCEpDinafCItLR0kkBP3rGw62l0BXwfnltu9s
+          Xo68RIJ/vKjU9fh+o6BE06Daj73DUXot1wt9B3fbDhTslGRkVu6WBFtpuXy/mESI
+          1xUIWoFalZtekTXa9Vs60kkBekOp+HqbT95TiDYJ3qVCyHiiHs93RoUSeeSzz1is
+          PMjk+Isnps4xMYFBT9MRRIzTKud5LR5yvnatU8rck9nHB99pKZyDWDdC
+          =hCqM
+          -----END PGP MESSAGE-----
+    """.trimIndent()
+
+
+    ////passtest, passtest2
+    //val cipherTextWithArmor =
+    //  """
+    //    -----BEGIN PGP MESSAGE-----
+  
+    //    hQGMA1+zW06M+3VwAQwAhw/v6EMvOKONeBJF0JqGqW8+v8dPhRjUn6IQ6ikrnLbv
+    //    j3zJhJj3XANDqFXtlVxbNhvW6GFBUumWF6Ug8veGLqGTqJkhTS+Zdf6YylVDLCQj
+    //    w/bVSJfCW/3j+AbVqVud8cjrGYvA3pQ+sappqeJg7JG8wGXjKNEDw8Ix2lxPOwuN
+    //    1Adg5/JGOtZQK5138H8ATAjEB3SSnH8R6fqTQCa5GB+enhG3v+XQVFy8SsbPFGJk
+    //    t3u4oyHFO7JmcIX+rIp4/9yOnvcZqrHdNSNq+vRI2/KMTXPHRI9zMq3TXsvm76N7
+    //    fFItshECZpYy63FZRrlUMRXx6+W6Hw6gzDZx9kpp/lEvEiSu9bqFoAqZsAAsd1py
+    //    5+r2WZTqXqK0AmE77J/EID3yL4makPIPhKa7RMjUEze7DsYZ/w90JBAh2bvfEFXk
+    //    wR4W7OCL7DMi2qsuxoh46KvefSAmCnUwdjYSnKYGaTRg9My7OR9FzR6BH3pdu+2N
+    //    1uAnO9nx8PaRM/Z1UOFuhF4D9de8BCyNdHMSAQdAPRM0StcoHZWQDLrO1tUh84UO
+    //    EAx/kpcn5Ux9RLyr3G4wNY1d7DKp+8gv2y1ein6Nu5hS8g1QaWedZ+1JHrJGwmNp
+    //    +USInvQXx6w+4k+t49EP0k8B8sxgxAYa+3NWbBLayifv1QoHqECv5qdfYkQlnbml
+    //    jcS9vE8wLBGrcljbHWudMY9w8Erb06EDVq8tayd398wTlA7VKKOqGr4HT5p85c9z
+    //    =yDst
+    //    -----END PGP MESSAGE-----
+    //""".trimIndent()
 
   private fun askPassphrase(identifier: PGPIdentifier, isError: Boolean = false) {
     if (++retries > MAX_RETRIES) return
