@@ -11,7 +11,11 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - App crashed when trying to enter a proxy url in Settings --> Repository --> HTTP(S) proxy settings
-- Handling of "stripped" PGP keys (passphrase changing, correctness verification)
+- Handling of "stripped" PGP keys (passphrase changing and verification)
+
+### Changed
+
+- Make `work/example.org(.gpg)` the default password directory structure for fresh installs.
 
 ## [1.15.2] - 2025-09-05
 

@@ -108,7 +108,7 @@ enum class DirectoryStructure(val value: String) {
 
   companion object {
 
-    val DEFAULT = FileBased
+    val DEFAULT = EncryptedUsername
 
     private val reverseMap = entries.associateBy { it.value }
 

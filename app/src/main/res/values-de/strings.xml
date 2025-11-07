@@ -291,7 +291,7 @@
   <string name="bottom_sheet_create_pgp_key">Neuen Schlüssel erstellen</string>
   <string name="pref_debug_logging_summary">Debug-Ausgaben aktivieren (Erfordert Neustart der App)</string>
   <string name="pref_debug_logging_title">Debug-Logging</string>
-  <string name="preference_default_username_summary">Wenn Autofill den Benutzernamen nicht aus der Passwortdatei oder dem Ordner herleiten kann, wird der hier festgelegte Wert verwendet.</string>
+  <string name="preference_default_username_summary">Kann die Autofill-Funktion den Benutzernamen nicht aus dem Inhalt einer Passwortdatei abrufen, wird der hier angegebene Wert verwendet.</string>
   <string name="preference_default_username_title">Standard-Benutzername</string>
   <string name="git_operation_hint_password">Passwort</string>
   <string name="preference_custom_public_suffixes_title">Benutzerdefinierte Domains</string>
