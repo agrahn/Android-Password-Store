@@ -60,6 +60,17 @@ class PasswordSettings(private val activity: FragmentActivity) : SettingsProvide
           true
         }
       }
+      editText(PreferenceKeys.BIOMETRICS_AND_PIN_TIMEOUT) {
+        titleRes = R.string.pref_biometrics_and_pin_timeout_title
+        summaryProvider = { timeout ->
+          activity.getString(R.string.pref_biometrics_and_pin_timeout_summary, timeout ?: "3")
+        }
+        textInputType = InputType.TYPE_CLASS_NUMBER
+        onClick {
+          activity.persistentPassphrases.edit { clear() }
+          true
+        }
+      }
       switch(PreferenceKeys.SHOW_PASSWORD) {
         titleRes = R.string.show_password_pref_title
         summaryRes = R.string.show_password_pref_summary

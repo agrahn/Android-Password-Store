@@ -77,6 +77,8 @@ object PreferenceKeys {
   )
   const val UNLOCK_PASSWORDS_WITH_PIN = "unlock_passwords_with_pin"
   const val PREF_FAST_UNLOCK_OPTION = "pref_fast_unlock_option"
+  const val BIOMETRICS_AND_PIN_TIMEOUT = "biometrics_and_pin_timeout"
+  const val BIOMETRICS_AND_PIN_LAST_USE = "biometrics_and_pin_last_use"
   const val SSH_KEY = "ssh_key"
   const val SSH_KEYGEN = "ssh_keygen"
 

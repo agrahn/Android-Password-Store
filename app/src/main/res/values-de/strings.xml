@@ -13,7 +13,7 @@
   <!-- Activity names -->
 
   <string name="action_settings">Einstellungen</string>
-  <string name="dialog_delete_title">Ordner existiert bereits.</string>
+  <string name="dialog_delete_title">Ordner existiert bereits</string>
   <string name="dialog_delete_msg">Zielordner existiert bereits. Die aktuelle Version unterstützt nur eine einzige Datenquelle. Möchten Sie die aktuelle Datenquelle löschen?\n(%1$s)</string>
   <string name="dialog_delete">Ordner löschen</string>
   <string name="dialog_do_not_delete">Abbruch</string>
@@ -27,14 +27,14 @@
     <item quantity="one">Möchten Sie das ausgewählte Element wirklich löschen?</item>
     <item quantity="other">Möchten Sie die %d ausgewählten Elemente wirklich löschen?</item>
   </plurals>
-  <string name="delete_directory_progress_text">Wird gelöscht</string>
+  <string name="delete_directory_progress_text">Wird gelöscht.</string>
   <string name="move">Verschieben</string>
   <string name="edit">Bearbeiten</string>
   <string name="delete">Löschen</string>
   <string name="password_exists_title">Passwort existiert bereits!</string>
   <string name="password_exists_message">Dies wird %1$s mit %2$s überschreiben.</string>
   <string name="password_move_error_title">Fehler beim Verschieben von Passwörtern</string>
-  <string name="password_move_error_message">Verschieben von %1$s nach %2$s fehlgeschlagen</string>
+  <string name="password_move_error_message">Verschieben von %1$s nach %2$s fehlgeschlagen.</string>
 
   <!-- git commits -->
   <string name="git_commit_add_text">Füge erstelltes Passwort für %1$s mittels Android Password Store hinzu.</string>
@@ -45,13 +45,13 @@
   <string name="git_commit_gpg_id">Initialisiere PGP-IDs in %1$s.</string>
 
   <!-- PGPHandler -->
-  <string name="clipboard_copied_text">In die Zwischenablage kopiert</string>
+  <string name="clipboard_copied_text">In die Zwischenablage kopiert.</string>
   <string name="file_toast_text">Bitte setzen Sie einen Dateinamen.</string>
   <string name="path_toast_text">Bitte setzen Sie einen Pfad.</string>
   <string name="empty_toast_text">Sie können kein leeres Passwort oder leere Extra-Angaben setzen.</string>
 
   <!-- Git Async Task -->
-  <string name="jgit_error_dialog_title">Es ist ein Fehler während der Git-Operation aufgetreten.</string>
+  <string name="jgit_error_dialog_title">Es ist ein Fehler während der Git-Operation aufgetreten</string>
 
   <!-- Git Handler -->
   <string name="ssh_preferences_dialog_text">Bitte importieren oder erstellen Sie Ihre SSH-Schlüsseldatei in den Einstellungen.</string>
@@ -71,7 +71,7 @@
   <!-- Git Config fragment -->
   <string name="git_user_name_hint">Benutzername</string>
   <string name="git_user_email">E-Mail-Adresse</string>
-  <string name="invalid_email_dialog_text">Bitte eine gültige E-Mail-Adresse eingeben</string>
+  <string name="invalid_email_dialog_text">Bitte eine gültige E-Mail-Adresse eingeben.</string>
   <string name="clone_button">Klone!</string>
 
   <!-- PGP Handler -->
@@ -97,16 +97,18 @@
   <string name="pref_category_repository_title">Repository</string>
   <string name="pref_edit_git_server_settings">Git-Server-Einstellungen</string>
   <string name="pref_edit_git_config">Lokale Git-Konfiguration &amp; Dienstprogramme</string>
-  <string name="pref_import_ssh_key_title">Importiere SSH-Schlüssel.</string>
-  <string name="pref_ssh_keygen_title">Erstelle SSH-Schlüsselpaar.</string>
-  <string name="pref_ssh_see_key_title">Zeige erstellten öffentlichen SSH-Schlüssel an.</string>
+  <string name="pref_import_ssh_key_title">Importiere SSH-Schlüssel</string>
+  <string name="pref_ssh_keygen_title">Erstelle SSH-Schlüsselpaar</string>
+  <string name="pref_ssh_see_key_title">Zeige erstellten öffentlichen SSH-Schlüssel an</string>
   <string name="pref_git_delete_repo_title">Repository löschen</string>
   <string name="pref_dialog_delete_title">Repository löschen</string>
   <string name="pref_category_general_title">Allgemein</string>
   <string name="pref_category_passwords_title">Passwörter</string>
+  <string name="pref_biometrics_and_pin_timeout_title">Gültigkeitsdauer (in Tagen) von Biometrie/PIN</string>
+  <string name="pref_biometrics_and_pin_timeout_summary">Nach Ablauf müssen Sie den PGP-Kennwortsatz erneut eingeben. 0 bedeutet für immer. Aktueller Wert: %1$s</string>
   <string name="pref_clipboard_timeout_title">Timeout für das Kopieren des Passwortes</string>
   <string name="pref_clipboard_timeout_summary">Legen Sie die Zeitspanne (in Sekunden) fest, wie lange das Passwort in der Zwischenablage liegen soll. 0 bedeutet für immer. Aktueller Wert: %1$s</string>
-  <string name="pref_copy_title">Kopiere Passwort automatisch.</string>
+  <string name="pref_copy_title">Kopiere Passwort automatisch</string>
   <string name="pref_copy_summary">Kopiert das Passwort in die Zwischenablage, nachdem es entschlüsselt wurde.</string>
   <string name="ssh_key_import_error_not_an_ssh_key_message">Die ausgewählte Datei scheint kein privater SSH-Schlüssel zu sein.</string>
   <string name="ssh_key_success_dialog_title">SSH-Schlüssel importiert</string>
@@ -139,7 +141,7 @@
   <string name="pref_rebase_on_pull_summary_on">Beim Pullen oder Synchronisieren Commits rebasen, die nicht im Remote-Repository vorhanden sind</string>
   <string name="pref_disable_sync_on_pull_title">Kein Synchronisieren durch Abwärtswischen</string>
   <string name="pref_disable_sync_on_pull_summary">Beim Wischen über die Passwortliste keine Git-Synchronisation mit dem Repository anstoßen</string>
-  <string name="pref_import_pgp_key_title">Importiere PGP-Schlüssel.</string>
+  <string name="pref_import_pgp_key_title">Importiere PGP-Schlüssel</string>
   <string name="pref_pgp_key_manager_title">Schlüsselmanager</string>
   <string name="pref_pgp_ascii_armor_title">Im ASCII-Armor-Modus verschlüsseln</string>
   <string name="pref_pgp_key_manager_export">Backup/Exportieren</string>
@@ -158,7 +160,7 @@
   <string name="pwgen_ambiguous">Zweideutig</string>
   <string name="pwgen_pronounceable">Aussprechbar</string>
   <string name="pwgen_no_chars_error">Keine Zeichen hinzugefügt</string>
-  <string name="pwgen_length_too_short_error">Länge zu kurz für die gewählten Kriterien</string>
+  <string name="pwgen_length_too_short_error">Länge zu kurz für die gewählten Kriterien.</string>
   <string name="pwgen_max_iterations_exceeded">Fehler beim Erstellen eines Passworts, das den Anforderungen genügt. Versuchen Sie es mit einem längeren Passwort.</string>
   <string name="pwgen_separator">Trennzeichen</string>
 
@@ -199,7 +201,7 @@
   <string name="git_push">Git Push</string>
   <string name="git_push_up_to_date">Alles aktuell</string>
   <string name="git_log">Commit-Log anzeigen</string>
-  <string name="show_password_pref_title">Zeige das Passwort.</string>
+  <string name="show_password_pref_title">Zeige das Passwort</string>
   <string name="show_password_pref_summary">Soll das entschlüsselte Passwort sichtbar sein? Dies deaktiviert nicht das Kopieren.</string>
   <string name="fast_unlock_pref_title">Schnelles Entsperren von Einträgen</string>
   <string name="pwd_generate_button">Erstellen</string>
@@ -214,7 +216,7 @@
   <string name="oreo_autofill_matches_clear_existing">Bestehende Übereinstimmungen löschen</string>
   <string name="oreo_autofill_filter_no_results">Keine Ergebnisse</string>
   <string name="oreo_autofill_search_in_store">Eintrag suchen</string>
-  <string name="oreo_autofill_save_internal_error">Speichern aufgrund eines internen Fehlers fehlgeschlagen</string>
+  <string name="oreo_autofill_save_internal_error">Speichern aufgrund eines internen Fehlers fehlgeschlagen.</string>
   <string name="oreo_autofill_save_app_not_supported">Diese App wird derzeit nicht unterstützt.</string>
   <string name="oreo_autofill_save_passwords_dont_match">Die Passwörter stimmen nicht überein.</string>
   <string name="oreo_autofill_generate_password">Passwort erstellen…</string>
@@ -253,8 +255,8 @@
   <string name="pref_biometric_auth_title">Authentifizierung beim Start</string>
   <string name="pref_biometric_auth_summary">Password Store fordert Sie beim Start auf, Ihren Fingerabdruck oder die Geräte-PIN zu bestätigen.</string>
   <string name="pref_biometric_auth_summary_error">Bildschirmsperre ist nicht konfiguriert.</string>
-  <string name="check_devicelock_settings_dialog_message">Überprüfen Sie die Geräteeinstellungen (Gerätesperre)</string>
-  <string name="pref_title_openkeystore_clear_keyid">Lösche gespeicherte OpenKeystore SSH-Schlüssel-ID.</string>
+  <string name="check_devicelock_settings_dialog_message">Überprüfen Sie die Geräteeinstellungen (Gerätesperre).</string>
+  <string name="pref_title_openkeystore_clear_keyid">Lösche gespeicherte OpenKeystore SSH-Schlüssel-ID</string>
   <string name="your_public_key">Ihr öffentlicher Schlüssel</string>
   <string name="error_generate_ssh_key">Fehler beim Erstellen des SSH-Schlüssels</string>
   <string name="pref_show_hidden_title">Alle Dateien und Ordner anzeigen</string>
@@ -311,12 +313,12 @@
   <string name="empty_gpg_id">.gpg-id wurde gefunden, ist jedoch leer.</string>
   <string name="missing_gpg_id">.gpg-id wurde nicht gefunden.</string>
   <string name="short_gpg_id">.gpg-id wurde gefunden, enthält jedoch eine kurze Hex-ID, die nicht unterstützt wird.</string>
-  <string name="invalid_filename_text">Dateiname darf kein \'/\' enthalten; Verzeichnis oben setzen</string>
+  <string name="invalid_filename_text">Dateiname darf kein \'/\' enthalten; Verzeichnis oben setzen.</string>
   <string name="directory_hint">Ordner</string>
   <string name="new_folder_set_gpg_key">PGP-Schlüssel für Ordner festlegen</string>
 
   <!-- Password decryption failure -->
-  <string name="password_decryption_no_decryption_key">Entschlüsseln fehlgeschlagen: Kein geeigneter geheimer Schlüssel gefunden</string>
+  <string name="password_decryption_no_decryption_key">Entschlüsseln fehlgeschlagen: Kein geeigneter geheimer Schlüssel gefunden.</string>
   <string name="password_decryption_unknown_error">Unbekannter Fehler beim Entschlüsseln</string>
 
   <!-- GitException messages -->
@@ -324,7 +326,7 @@
   <string name="git_pull_rebase_fail_error">Pull fehlgeschlagen. Sie befinden sich in einem abgelösten Head. Speichern Sie die Änderungen in \"Einstellungen &gt; Lokale Git-Konfiguration &amp; Dienstprogramme\" auf das Remote-Repository in einem neuen Branch und lösen Sie den Konflikt auf Ihrem Computer auf.</string>
   <string name="git_pull_merge_fail_error">Merge fehlgeschlagen, Sie befinden sich in einem Konflikt. TODO: Wiederherstellungsmethode hinzufügen.</string>
 
-  <string name="git_push_nff_error">Push wurde vom Remote abgelehnt. Führen Sie den Pull vor dem Push aus. Sie können \"Synchronisieren\" statt Pull/Push nutzen, da es beides implementiert</string>
+  <string name="git_push_nff_error">Push wurde vom Remote abgelehnt. Führen Sie den Pull vor dem Push aus. Sie können \"Synchronisieren\" statt Pull/Push nutzen, da es beides implementiert.</string>
   <string name="git_push_generic_error">Push wurde von Remote abgelehnt, Grund: %1$s</string>
   <string name="git_push_other_error">Remote hat den Push abgelehnt. Prüfen Sie die Variable receive.denyNonFastForwards in der Konfigurationsdatei des Ziel-Repositorys.</string>
   <string name="git_unknown_host">Unbekannter Host: %1$s</string>
@@ -352,7 +354,7 @@
   <string name="ssh_scheme_needed_message">Es sieht so aus, als ob Sie einen benutzerdefinierten Port in Ihrer URL angegeben haben, aber nicht im ssh://-Schema.\nDas kann dazu führen, dass Ihr Port als Teil des Pfades betrachtet wird. Drücken Sie hier auf OK, um die URL zu korrigieren.</string>
   <string name="https_scheme_with_port_title">HTTPS-URL mit benutzerdefiniertem Port</string>
   <string name="https_scheme_with_port_message">Es sieht so aus, als nutzen Sie eine HTTPS-URL mit benutzerdefiniertem Port. Das ist nicht unterstützt und wird auf lange Sicht zu Problemen führen. Drücken Sie OK, um den Port aus der URL zu entfernen.</string>
-  <string name="git_scheme_disallowed_title">Es wird davon abgeraten, das git://-Protokoll zu nutzen.</string>
+  <string name="git_scheme_disallowed_title">Es wird davon abgeraten, das git://-Protokoll zu nutzen</string>
   <string name="git_scheme_disallowed_message">Das Git-Protokoll des Git-Daemons unterstützt keine verschlüsselten Verbindungen und ist für einen sicheren Betrieb nicht geeignet.</string>
 
   <!-- Proxy configuration activity -->
@@ -385,7 +387,7 @@
   <string name="pgp_email_hint">E-Mail</string>
   <string name="pgp_email_input_invalid_error">Ungültige Eingabe</string>
   <string name="pgp_email_input_required_error">Pflichtfeld</string>
-  <string name="pgp_passphrase_input_differ_error">Kennwortsätze stimmen nicht überein</string>
+  <string name="pgp_passphrase_input_differ_error">Kennwortsätze stimmen nicht überein.</string>
   <string name="pgp_key_creation_succeeded">Erfolgreiche PGP-Schlüsselerstellung</string>
   <string name="pgp_key_creation_succeeded_message">Die ID des neuen Schlüssels lautet:\n%1$s</string>
   <string name="pgp_key_creation_error">Fehler bei der PGP-Schlüsselerstellung</string>

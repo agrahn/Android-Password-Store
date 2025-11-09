@@ -371,6 +371,10 @@ open class BasePGPActivity : AppCompatActivity() {
                             )
                             ?.concatToString(),
                         )
+                        putLong(
+                          PreferenceKeys.BIOMETRICS_AND_PIN_LAST_USE,
+                          Instant.now().toEpochMilli(),
+                        )
                       }
                     }
                     passphrase.wipe()
@@ -409,6 +413,10 @@ open class BasePGPActivity : AppCompatActivity() {
                               id,
                               AESEncryption.encrypt(passphrase, keyType = KeyType.PERSISTENT)
                                 ?.concatToString(),
+                            )
+                            putLong(
+                              PreferenceKeys.BIOMETRICS_AND_PIN_LAST_USE,
+                              Instant.now().toEpochMilli(),
                             )
                           }
                         }
@@ -456,6 +464,19 @@ open class BasePGPActivity : AppCompatActivity() {
         .show()
       return
     }
+
+    // clear persistently cached passphrases if validity period for biometrics/PIN has expired
+    val now = Instant.now().toEpochMilli()
+    val biometrics_and_pin_last_use =
+      persistentPassphrases.getLong(PreferenceKeys.BIOMETRICS_AND_PIN_LAST_USE, 0L)
+    val biometrics_and_pin_timeout =
+      settings.getString(PreferenceKeys.BIOMETRICS_AND_PIN_TIMEOUT)?.toLong() ?: 3L
+    if (
+      biometrics_and_pin_timeout > 0L &&
+        now - biometrics_and_pin_last_use >= TimeUnit.DAYS.toMillis(biometrics_and_pin_timeout)
+    )
+      persistentPassphrases.edit { clear() }
+
     val persistentIds =
       identifiers.map { it.toString() }.filter { persistentPassphrases.contains(it) }
     val pinEncrypted = persistentPassphrases.getString("unlock_pin", null)?.toCharArray()
@@ -486,6 +507,9 @@ open class BasePGPActivity : AppCompatActivity() {
               )
             )
           if (pass != null) cachedPassphrases.put(id, pass)
+          persistentPassphrases.edit {
+            putLong(PreferenceKeys.BIOMETRICS_AND_PIN_LAST_USE, Instant.now().toEpochMilli())
+          }
         }
         if (result !is BiometricResult.Retry) decrypt(identifiers)
       }
@@ -543,6 +567,7 @@ open class BasePGPActivity : AppCompatActivity() {
               AESEncryption.encrypt(charArrayOf('0', ':') + pin, keyType = KeyType.PERSISTENT)
                 ?.concatToString(),
             )
+            putLong(PreferenceKeys.BIOMETRICS_AND_PIN_LAST_USE, Instant.now().toEpochMilli())
           }
           ids.forEach { id ->
             val passEncrypted = persistentPassphrases.getString(id, null)?.toCharArray()

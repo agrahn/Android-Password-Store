@@ -7,10 +7,11 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Optional caching of Git credentials
+- Biometrics and PIN for fast unlocking of passwords expire after a configurable number of days after last successful usage. Default is 3 days, but the validity period can be set to infinity, if desired.
 
 ### Fixed
 
-- App crashed when trying to enter a proxy url in Settings --> Repository --> HTTP(S) proxy settings
+- App crashed when trying to enter a proxy URL in Settings --> Repository --> HTTP(S) proxy settings
 - Handling of "stripped" PGP keys (passphrase changing and verification)
 
 ### Changed
