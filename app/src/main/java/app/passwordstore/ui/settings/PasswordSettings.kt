@@ -74,7 +74,7 @@ class PasswordSettings(private val activity: FragmentActivity) : SettingsProvide
       switch(PreferenceKeys.SHOW_PASSWORD) {
         titleRes = R.string.show_password_pref_title
         summaryRes = R.string.show_password_pref_summary
-        defaultValue = true
+        defaultValue = false
       }
       switch(PreferenceKeys.COPY_ON_DECRYPT) {
         titleRes = R.string.pref_copy_title
