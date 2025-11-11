@@ -182,7 +182,13 @@ class PasswordCreationActivity : BasePGPActivity() {
                       .setDesiredBarcodeFormats(QR_CODE)
                       .createScanIntent()
                   )
-                1 -> imageImportAction.launch("image/*")
+                1 -> {
+                  runCatching { imageImportAction.launch("image/*") }
+                    .onFailure { e ->
+                      logcat(ERROR) { e.asLog() }
+                      e.message?.let { message -> snackbar(message = message) }
+                    }
+                }
                 2 -> OtpImportDialogFragment().show(supportFragmentManager, "OtpImport")
               }
             }

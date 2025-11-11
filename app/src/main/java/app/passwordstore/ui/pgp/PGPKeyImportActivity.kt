@@ -7,7 +7,7 @@
 package app.passwordstore.ui.pgp
 
 import android.os.Bundle
-import androidx.activity.result.contract.ActivityResultContracts.OpenDocument
+import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
@@ -21,10 +21,12 @@ import app.passwordstore.crypto.errors.UnusableKeyException
 import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.ui.dialogs.TextInputDialog
 import app.passwordstore.util.coroutines.DispatcherProvider
+import app.passwordstore.util.extensions.snackbar
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.getOrThrow
+import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,6 +34,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 import kotlinx.coroutines.launch
+import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
 
@@ -51,7 +54,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
   private var retries = 0
 
   private val pgpKeyImportAction =
-    registerForActivityResult(OpenDocument()) { uri ->
+    registerForActivityResult(GetContent()) { uri ->
       runCatching {
         if (uri == null) {
           finish()
@@ -72,7 +75,11 @@ class PGPKeyImportActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    pgpKeyImportAction.launch(arrayOf("*/*"))
+    runCatching { pgpKeyImportAction.launch("*/*") }
+      .onFailure { e ->
+        logcat(ERROR) { e.asLog() }
+        e.message?.let { message -> snackbar(message = message) }
+      }
   }
 
   override fun onDestroy() {

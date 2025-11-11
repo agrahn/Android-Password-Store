@@ -8,18 +8,22 @@ package app.passwordstore.ui.sshkeygen
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
 import app.passwordstore.R
+import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.git.sshj.SshKey
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import logcat.LogPriority.ERROR
+import logcat.asLog
+import logcat.logcat
 
 class SshKeyImportActivity : AppCompatActivity() {
 
   private val sshKeyImportAction =
-    registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+    registerForActivityResult(GetContent()) { uri: Uri? ->
       if (uri == null) {
         finish()
         return@registerForActivityResult
@@ -61,6 +65,10 @@ class SshKeyImportActivity : AppCompatActivity() {
   }
 
   private fun importSshKey() {
-    sshKeyImportAction.launch(arrayOf("*/*"))
+    runCatching { sshKeyImportAction.launch("*/*") }
+      .onFailure { e ->
+        logcat(ERROR) { e.asLog() }
+        e.message?.let { message -> snackbar(message = message) }
+      }
   }
 }
