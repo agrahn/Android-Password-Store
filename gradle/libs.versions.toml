@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.0"
+agp = "8.13.1"
 androidxActivity = "1.11.0"
 bouncycastle = "1.82"
 coroutines = "1.10.2"
