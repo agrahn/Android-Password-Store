@@ -86,6 +86,7 @@ class PGPKeyListActivity : AppCompatActivity() {
   @Inject lateinit var yubikeyCryptoHandler: YubiKeyCryptoHandler
   @Inject @SettingsPreferences lateinit var settings: SharedPreferences
   lateinit var yubikit: YubiKitManager
+  var yubiDevice: YubiKeyDevice? = null
 
   /* Counter for the user's passphrase attempts */
   private var retries = 0
@@ -125,8 +126,14 @@ class PGPKeyListActivity : AppCompatActivity() {
     if (!isSelecting) {
       yubikit = YubiKitManager(this)
       yubikit.startUsbDiscovery(UsbConfiguration()) { device ->
+        yubiDevice = device
+        snackbar(message = "Device connected")
         selectedIdentifierForLinkHw?.let { connectHw(it, device) }
-        device.setOnClosed { selectedIdentifierForLinkHw = null }
+        device.setOnClosed { 
+            snackbar(message = "Device closed")
+            yubiDevice = null
+            selectedIdentifierForLinkHw = null
+        }
       }
     }
 
@@ -207,7 +214,10 @@ class PGPKeyListActivity : AppCompatActivity() {
           yubikit.startNfcDiscovery(NfcConfiguration().timeout(15000), this@PGPKeyListActivity) {
             device ->
             selectedIdentifierForLinkHw?.let { connectHw(it, device) }
-            device.remove { selectedIdentifierForLinkHw = null }
+            device.remove {
+                snackbar(message = "Device removed")
+                selectedIdentifierForLinkHw = null
+            }
           }
         }
       }
@@ -349,6 +359,7 @@ class PGPKeyListActivity : AppCompatActivity() {
   private var connectHwDialog: AlertDialog? = null
 
   private fun onLinkHwClick(identifier: PGPIdentifier) {
+      
     selectedIdentifierForLinkHw = identifier
 
     val connectHwDialogView = layoutInflater.inflate(R.layout.dialog_message, null)
@@ -370,13 +381,22 @@ class PGPKeyListActivity : AppCompatActivity() {
       warningMessageView.visibility = View.VISIBLE
     }
 
-    connectHwDialog =
-      MaterialAlertDialogBuilder(this)
-        .setTitle(R.string.pgp_key_manager_connect_token_dialog_title)
+    val connectHwDialogBuilder = MaterialAlertDialogBuilder(this)
         .setView(connectHwDialogView)
         .setNegativeButton(R.string.dialog_cancel) { _, _ -> selectedIdentifierForLinkHw = null }
         .setCancelable(false)
-        .create()
+
+    if(yubiDevice==null) {
+       connectHwDialogBuilder.setTitle(R.string.pgp_key_manager_connect_token_dialog_title)
+    }  
+    else { // already connected via usb
+       connectHwDialogBuilder.setTitle(R.string.pref_pgp_key_manager_link_token)
+        .setPositiveButton(R.string.dialog_ok) { _, _ ->
+          selectedIdentifierForLinkHw?.let { id -> yubiDevice?.let { dev -> connectHw(id, dev) } }
+        }
+    }
+
+    connectHwDialog = connectHwDialogBuilder.create()
     connectHwDialog?.show()
   }
 
