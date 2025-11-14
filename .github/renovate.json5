@@ -48,10 +48,19 @@
       ],
       enabled: false,
       matchPackageNames: [
-        'org.eclipse.jgit',
         'com.squareup.logcat',
       ],
     },
+    {
+      matchManagers: [
+        'gradle',
+      ],
+      matchPackageNames: [
+        'org.eclipse.jgit',
+      ],
+      "allowedVersions": '6.x',
+      "description": 'keep jgit on 6.x, jgit 7 requires jdk17'
+    }
   ],
   customManagers: [
     {
