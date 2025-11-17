@@ -47,8 +47,8 @@
         'gradle',
       ],
       enabled: false,
+      "description": 'Packages to be excluded from updates'
       matchPackageNames: [
-        'com.squareup.logcat',
       ],
     },
     {
