@@ -41,10 +41,6 @@ gradlePlugin {
       id = "com.github.android-password-store.kotlin-jvm-library"
       implementationClass = "app.passwordstore.gradle.KotlinJVMLibrary"
     }
-    register("published-android-library") {
-      id = "com.github.android-password-store.published-android-library"
-      implementationClass = "app.passwordstore.gradle.PublishedAndroidLibraryPlugin"
-    }
     register("psl") {
       id = "com.github.android-password-store.psl-plugin"
       implementationClass = "app.passwordstore.gradle.psl.PublicSuffixListPlugin"
@@ -75,7 +71,6 @@ dependencies {
   implementation(libs.build.download)
   implementation(libs.build.javapoet)
   implementation(libs.build.kotlin)
-  implementation(libs.build.metalava)
   implementation(libs.build.moshi)
   implementation(libs.build.moshi.kotlin)
   implementation(libs.build.okhttp)
