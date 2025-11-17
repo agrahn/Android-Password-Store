@@ -438,7 +438,7 @@ class PGPKeyListActivity : AppCompatActivity() {
     matchingKeyNotFoundDialog?.dismiss()
     runCatching {
         // retrieve decryption key ID from hardware key
-        val keyIdHwDec = yubikeyCryptoHandler.getEncKeyIdFromHwKey(openPgpSession) ?: throw NoKeysAvailableException
+        val keyIdHwDec = yubikeyCryptoHandler.getEncKeyIdFromHwKey(openPgpSession).getOrThrow()
 
         /* Look for public encryption subkey with ID [keyIdHwDec] within keyring with primary ID/User ID [identifier];
          * throw if unavailable */
@@ -482,7 +482,7 @@ class PGPKeyListActivity : AppCompatActivity() {
         logcat { e.asLog() }
       }
      //runCatching {
-         val enckeys = KeyUtils.getEncryptedSessionKeys(cipherTextWithArmor.toByteArray())
+         val enckeys = KeyUtils.getEncryptedSessionKeys(cipherTextWithArmor.byteInputStream())
          logcat {"++++++++++++++++++++++++++++++++++++++" + enckeys.size.toString() }
          enckeys.forEach{(id, algo, content) ->
              logcat{"id: " + id.toString() + " algo: " + algo.toString() }

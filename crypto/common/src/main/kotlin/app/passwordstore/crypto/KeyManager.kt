@@ -36,7 +36,9 @@ public interface KeyManager<Key, Subkey, KeyIdentifier, SubkeyIdentifier> {
    */
   public fun getKeyById(id: KeyIdentifier, withArmor: Boolean = false): Result<Key, Throwable>
 
-  //  /** Get public [Subkey], identified by its subkey ID and an optional primary key ID. */
+  /** Get public [Subkey], identified by its subkey ID, from the store. If an optional primary key ID is given,
+   *  restrict the search for the subkey to the corresponding PGP key.
+   */
   public fun getPublicSubkeyById(subId: SubkeyIdentifier, primaryId: KeyIdentifier? = null): Result<Subkey, Throwable>
 
   /** Returns all keys currently in the store as a [List]. */

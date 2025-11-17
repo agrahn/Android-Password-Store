@@ -5,6 +5,7 @@
 
 package app.passwordstore.crypto
 
+import java.io.InputStream
 import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPIdentifier.UserId
 import com.github.michaelbull.result.get
@@ -92,9 +93,9 @@ public object KeyUtils {
     return extractPublicKeyData(key)?.let { PGPKey(it) }
 
   public fun getEncryptedSessionKeys (
-    message: ByteArray
+    ciphertextStream: InputStream,
   ): MutableList<Triple<KeyId, Int, ByteArray>> {
-    val decoderStream = ArmorUtils.getDecoderStream(ByteArrayInputStream(message))
+    val decoderStream = ArmorUtils.getDecoderStream(ciphertextStream)
     val bcpgStream = BCPGInputStream(decoderStream)
 
     val encSessionKeys: MutableList<Triple<KeyId, Int, ByteArray>> = mutableListOf()
