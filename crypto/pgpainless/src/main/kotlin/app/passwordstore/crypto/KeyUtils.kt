@@ -92,32 +92,10 @@ public object KeyUtils {
   public fun extractPublicKey(key: PGPKey): PGPKey? =
     return extractPublicKeyData(key)?.let { PGPKey(it) }
 
-  public fun getEncryptedSessionKeys (
-    ciphertextStream: InputStream,
-  ): MutableList<Triple<KeyId, Int, ByteArray>> {
-    val decoderStream = ArmorUtils.getDecoderStream(ciphertextStream)
-    val bcpgStream = BCPGInputStream(decoderStream)
-
-    val encSessionKeys: MutableList<Triple<KeyId, Int, ByteArray>> = mutableListOf()
-
-    var packet = bcpgStream.readPacket()
-    while (packet != null) {
-      if (packet is PublicKeyEncSessionPacket) {
-        val algorithm = packet.getAlgorithm()
-        val encSessionKey = packet.getEncSessionKey()[0]
-        val keyId = packet.getKeyID()
-        encSessionKeys.add(Triple(KeyId(keyId), algorithm, encSessionKey))
-      }
-      packet = bcpgStream.readPacket()
-    }
-
-    return encSessionKeys
-  }
-
   /**
    * Creates PGPainless SessionKey from decrypted session key data
    */
-  public fun createSessionKey(bytes: ByteArray): SessionKey? {
+  public fun getSessionKey(bytes: ByteArray): SessionKey? {
     val algorithm = bytes[0].toUByte().toInt() // symmetric key algorithm
     val keyData =
       when (algorithm) {

@@ -57,6 +57,14 @@ public class NoDecryptionKeyAvailableException(message: String? = null, cause: T
 /** No keys were passed to the encrypt/decrypt operation. */
 public data object NoKeysProvidedException : CryptoHandlerException(null, null)
 
+/** The algorithm used for encrypting the session key or the message is unsupported. */
+public class UnsupportedAlgorithmException(message: String? = null) :
+  CryptoHandlerException(message)
+
+/** The wrong key was passed as argument to decryption method. */
+public class WrongKeyException(message: String? = null) :
+  CryptoHandlerException(message)
+
 /** An unexpected error that cannot be mapped to a known type. */
 public class UnknownError(message: String? = null, cause: Throwable? = null) :
   CryptoHandlerException(message, cause)

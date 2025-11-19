@@ -5,8 +5,30 @@
 
 package app.passwordstore.crypto
 
+import app.passwordstore.crypto.RFC6637KDFCalculator
+import org.bouncycastle.openpgp.operator.PGPPad
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
+import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator
+import org.bouncycastle.bcpg.PublicKeyPacket
+import org.bouncycastle.bcpg.ECDHPublicBCPGKey
+import org.bouncycastle.openpgp.PGPPublicKey
+import org.bouncycastle.openpgp.PGPSessionKey
+import org.bouncycastle.openpgp.operator.RFC6637Utils
+import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider
+import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory
+import org.bouncycastle.crypto.engines.RFC3394WrapEngine
+import org.bouncycastle.crypto.engines.AESEngine
+import org.bouncycastle.crypto.engines.CamelliaEngine
+import org.bouncycastle.crypto.Wrapper
+import org.bouncycastle.crypto.params.KeyParameter
+import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags
+import org.bouncycastle.openpgp.PGPException
+import org.pgpainless.util.SessionKey
 import app.passwordstore.crypto.errors.CryptoHandlerException
 import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
+import app.passwordstore.crypto.errors.UnsupportedAlgorithmException
+import app.passwordstore.crypto.errors.WrongKeyException
 import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPIdentifier.UserId
 import com.github.michaelbull.result.Result
@@ -14,68 +36,154 @@ import com.github.michaelbull.result.mapError
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.runCatching
 import com.yubico.yubikit.openpgp.OpenPgpSession
+import com.yubico.yubikit.core.keys.PublicKeyValues
 import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Inject
 import logcat.logcat
 import org.bouncycastle.bcpg.BCPGInputStream
-import org.bouncycastle.bcpg.PublicKeyAlgorithmTags
 import org.bouncycastle.bcpg.PublicKeyEncSessionPacket
 import org.pgpainless.util.ArmorUtils
+import org.bouncycastle.bcpg.PublicKeyAlgorithmTags
+import java.util.Date
 
 public class YubiKeyCryptoHandler @Inject constructor() {
 
   public fun decryptSessionKey(
-    userPin: CharArray?,
+    userPin: CharArray,
     ciphertextStream: InputStream,
     openPgpSession: OpenPgpSession,
-  ): Result<Unit, CryptoHandlerException> =
+    pubKey: PGPPublicKey // encryption subkey
+  ): Result<PGPKey, Throwable> =
     runCatching {
         val hwKeyId = getEncKeyIdFromHwKey(openPgpSession).getOrThrow()
-        val encSessionKey = KeyUtils.getEncryptedSessionKeys(ciphertextStream).filter{ (keyId, _, _) ->
+        val (keyId, pubKeyAlgorithm, encSessionKeyData) = getEncryptedSessionKeys(ciphertextStream).filter{ (keyId, _, _) ->
           keyId.id == hwKeyId.id 
         }.firstOrNull() ?: throw NoDecryptionKeyAvailableException("No matching decryption key found on the hardware token")
         ciphertextStream.reset()
-      }
-      .mapError { error -> NoDecryptionKeyAvailableException(error.message) }
-  
 
-  public fun parseEncMessage(
-    //    keyId: KeyId,
-    ciphertextStream: InputStream
-  ): Result<Unit, CryptoHandlerException> =
-    runCatching {
-        val decoderStream = ArmorUtils.getDecoderStream(ciphertextStream)
-        val bcpgStream = BCPGInputStream(decoderStream)
+        openPgpSession.verifyUserPin(userPin, true) // throws InvalidPinException, ApduException or IOException
 
-        lateinit var encSessionKey: ByteArray
-        var pubKeyAlgorithm: Int = -1
-        var pubKeyVersion: Int = -1
-        var pkeskVersion: Int = -1
-
-        while (bcpgStream.nextPacketTag() > 0) {
-          var packet = bcpgStream.readPacket()
-          logcat { "Tag: " + packet.getPacketTag().toString() }
-          if (packet is PublicKeyEncSessionPacket) {
-            encSessionKey = packet.getEncSessionKey()[0]
-            pubKeyAlgorithm = packet.getAlgorithm()
-            pubKeyVersion = packet.getKeyVersion()
-            pkeskVersion = packet.getVersion()
-            //		  ciphertextStream.reset()
-            //		  return@runCatching
-            logcat {
-              "+++++++++++++++++++++++++++++PublicKeyEncSessionPacket found ID:" +
-                packet.getKeyID().toHexString()
-            }
-            logcat { "pubKeyAlgorithm:" + pubKeyAlgorithm.toString() }
-            logcat { "pubKeyVersion:" + pubKeyVersion.toString() }
-            logcat { "pkeskVersion:" + pkeskVersion.toString() }
+        val decryptedSessionKey = when (pubKeyAlgorithm) {
+          PublicKeyAlgorithmTags.RSA_GENERAL,
+          @Suppress("DEPRECATION")
+          PublicKeyAlgorithmTags.RSA_SIGN,
+          @Suppress("DEPRECATION")
+          PublicKeyAlgorithmTags.RSA_ENCRYPT  -> {
+            val skLen =
+                ((((encSessionKeyData[0].toInt() and 0xff) shl 8) + (encSessionKeyData[1].toInt() and 0xff)) + 7) / 8
+            val encSessionKey = ByteArray(skLen)
+            System.arraycopy(encSessionKeyData, 2, encSessionKey, 0, skLen)    
+            openPgpSession.decrypt(encSessionKey)
           }
+          PublicKeyAlgorithmTags.ECDH -> {
+            if(pubKey.getKeyID() != keyId.id)
+              throw WrongKeyException("Passed-in public subkey ID ${pubKey.getKeyID()} and decryption key ID ${keyId.id} on connected HW key do not match")
+
+            /**
+             * Code for decrypting ECDH-encrypted session key was taken from pgpainless, file
+             * YubikeyDataDecryptorFactory.kt
+             */
+            
+            val ecPubKey: ECDHPublicBCPGKey = pubKey.publicKeyPacket.key as ECDHPublicBCPGKey 
+
+            // peer key
+            val pkLen =
+                ((((encSessionKeyData[0].toInt() and 0xff) shl 8) + (encSessionKeyData[1].toInt() and 0xff)) + 7) / 8
+            val pkEnc = ByteArray(pkLen)
+            System.arraycopy(encSessionKeyData, 2, pkEnc, 0, pkLen)
+            
+            // encrypted session key
+            val keyLen = encSessionKeyData[pkLen + 2].toInt() and 0xff
+            val keyEnc = ByteArray(keyLen)
+            System.arraycopy(encSessionKeyData, 2 + pkLen + 1, keyEnc, 0, keyLen)
+
+            // perform ECDH key agreement via the YubiKey
+            val x9Params = org.bouncycastle.asn1.x9.ECNamedCurveTable.getByOIDLazy(ecPubKey.curveOID)
+            val publicPoint = x9Params.curve.decodePoint(pkEnc)
+            val peerKey = JcaPGPKeyConverter().setProvider(BouncyCastleProvider())
+                .getPublicKey(
+                    PGPPublicKey(
+                        PublicKeyPacket(
+                            pubKey.version, PublicKeyAlgorithmTags.ECDH, Date(),
+                            ECDHPublicBCPGKey(
+                                ecPubKey.curveOID,
+                                publicPoint,
+                                ecPubKey.hashAlgorithm.toInt(),
+                                ecPubKey.symmetricKeyAlgorithm.toInt(),
+                            ),
+                        ),
+                        BcKeyFingerprintCalculator(),
+                    ),
+                )
+
+            val secret = openPgpSession.decrypt(PublicKeyValues.fromPublicKey(peerKey))
+
+            // Use the shared key to decrypt the session key
+            val hashAlgorithm: Int = ecPubKey.hashAlgorithm.toInt()
+            val symmetricKeyAlgorithm: Int = ecPubKey.symmetricKeyAlgorithm.toInt()
+            val userKeyingMaterial = RFC6637Utils.createUserKeyingMaterial(
+                pubKey.publicKeyPacket,
+                BcKeyFingerprintCalculator(),
+            )
+            val rfc6637KDFCalculator =
+                RFC6637KDFCalculator(
+                    BcPGPDigestCalculatorProvider()[hashAlgorithm],
+                    symmetricKeyAlgorithm,
+                )
+            val key =
+                KeyParameter(rfc6637KDFCalculator.createKey(secret, userKeyingMaterial))
+
+            val wrapper = createWrapper(symmetricKeyAlgorithm).getOrThrow()
+            wrapper.init(false, key)
+            val unwrappedKey = wrapper.unwrap(keyEnc, 0, keyEnc.size)
+    
+            PGPPad.unpadSessionData(unwrappedKey)
+          }
+          else -> throw UnsupportedAlgorithmException("Unsupported public key algorithm (ID: $pubKeyAlgorithm)")
         }
-        ciphertextStream.reset()
-        // throw NoDecryptionKeyAvailableException
+
+        PGPKey(decryptedSessionKey)
       }
-      .mapError { error -> NoDecryptionKeyAvailableException() }
+//      .mapError { error -> NoDecryptionKeyAvailableException(error.message) }
+
+    private fun createWrapper(encAlgorithm: Int): Result<RFC3394WrapEngine, Throwable> =
+      runCatching {
+        when (encAlgorithm) {   
+          SymmetricKeyAlgorithmTags.AES_128,
+          SymmetricKeyAlgorithmTags.AES_192,
+          SymmetricKeyAlgorithmTags.AES_256 ->
+              RFC3394WrapEngine(AESEngine.newInstance())
+          SymmetricKeyAlgorithmTags.CAMELLIA_128,
+          SymmetricKeyAlgorithmTags.CAMELLIA_192,
+          SymmetricKeyAlgorithmTags.CAMELLIA_256 ->
+              RFC3394WrapEngine(CamelliaEngine())
+          else ->
+             throw UnsupportedAlgorithmException("Unknown wrap algorithm (ID: $encAlgorithm)")
+        }
+      }
+  
+  public fun getEncryptedSessionKeys (
+    ciphertextStream: InputStream,
+  ): MutableList<Triple<KeyId, Int, ByteArray>> {
+    val decoderStream = ArmorUtils.getDecoderStream(ciphertextStream)
+    val bcpgStream = BCPGInputStream(decoderStream)
+
+    val encSessionKeys: MutableList<Triple<KeyId, Int, ByteArray>> = mutableListOf()
+
+    var packet = bcpgStream.readPacket()
+    while (packet != null) {
+      if (packet is PublicKeyEncSessionPacket) {
+        val algorithm = packet.getAlgorithm()
+        val encSessionKey = packet.getEncSessionKey()[0]
+        val keyId = packet.getKeyID()
+        encSessionKeys.add(Triple(KeyId(keyId), algorithm, encSessionKey))
+      }
+      packet = bcpgStream.readPacket()
+    }
+
+    return encSessionKeys
+  }
 
   public fun decrypt(
     userpin: CharArray,
@@ -116,6 +224,5 @@ public class YubiKeyCryptoHandler @Inject constructor() {
       return@runCatching PGPIdentifier.fromString(fingerPrintBytes.toHexString()) as KeyId
     }  
     .mapError { error -> NoDecryptionKeyAvailableException(error.message, error.cause) }
-
 }
 

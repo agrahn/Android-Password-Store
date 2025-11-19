@@ -59,7 +59,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
         } else {
           if (options.isOptionEnabled(PGPDecryptOptions.WITH_SESSION_KEY)) {
             consumerOptions.setSessionKey(
-              KeyUtils.createSessionKey(key.contents) ?: throw NoKeysProvidedException
+              KeyUtils.getSessionKey(key.contents) ?: throw NoKeysProvidedException
             )
           } else {
             val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
