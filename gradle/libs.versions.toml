@@ -1,13 +1,13 @@
 [versions]
 agp = "8.13.1"
-androidxActivity = "1.11.0"
+androidxActivity = "1.12.0"
 bouncycastle = "1.82"
 coroutines = "1.10.2"
 flowbinding = "1.2.0"
 hilt = "2.57.2"
 kotlin = "2.2.21"
 kotlinResult = "2.1.0"
-lifecycle = "2.9.4"
+lifecycle = "2.10.0"
 moshi = "1.15.2"
 
 [libraries]
@@ -32,7 +32,7 @@ androidx-preference = "androidx.preference:preference:1.2.1"
 androidx-recyclerview = "androidx.recyclerview:recyclerview:1.4.0"
 androidx-recyclerviewSelection = "androidx.recyclerview:recyclerview-selection:1.2.0"
 androidx-security = "androidx.security:security-crypto-ktx:1.1.0"
-androidx-swiperefreshlayout = "androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-beta01"
+androidx-swiperefreshlayout = "androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-rc01"
 aps-sublimeFuzzy = "com.github.android-password-store:sublime-fuzzy:2.3.4"
 aps-zxingAndroidEmbedded = "com.github.android-password-store:zxing-android-embedded:4.2.1"
 build-agp = { module = "com.android.tools.build:gradle", version.ref = "agp" }
@@ -48,7 +48,7 @@ build-r8 = "com.android.tools:r8:8.13.17"
 build-semver = "com.github.zafarkhaja:java-semver:0.10.2"
 build-spotless = "com.diffplug.spotless:spotless-plugin-gradle:8.1.0"
 build-vcu = "nl.littlerobots.version-catalog-update:nl.littlerobots.version-catalog-update.gradle.plugin:1.0.1"
-compose-bom = "androidx.compose:compose-bom:2025.11.00"
+compose-bom = "androidx.compose:compose-bom:2025.11.01"
 compose-foundation-core = { module = "androidx.compose.foundation:foundation" }
 compose-foundation-layout = { module = "androidx.compose.foundation:foundation-layout" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
