@@ -5,6 +5,8 @@
 
 package app.passwordstore.crypto
 
+import org.bouncycastle.asn1.x9.ECNamedCurveTable
+import org.bouncycastle.crypto.ec.CustomNamedCurves
 import app.passwordstore.crypto.RFC6637KDFCalculator
 import org.bouncycastle.openpgp.operator.PGPPad
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -37,6 +39,7 @@ import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.runCatching
 import com.yubico.yubikit.openpgp.OpenPgpSession
 import com.yubico.yubikit.core.keys.PublicKeyValues
+import com.yubico.yubikit.openpgp.KeyRef
 import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Inject
@@ -92,16 +95,28 @@ public class YubiKeyCryptoHandler @Inject constructor() {
                 ((((encSessionKeyData[0].toInt() and 0xff) shl 8) + (encSessionKeyData[1].toInt() and 0xff)) + 7) / 8
             val pkEnc = ByteArray(pkLen)
             System.arraycopy(encSessionKeyData, 2, pkEnc, 0, pkLen)
-            
+           
+            logcat {"+++++++++++++++++++++++++++++++++++++++++++sseionkeydata (hex): ${encSessionKeyData.toHexString()}"}
+            logcat {"+++++++++++++++++++++++++++++++++++++++++++pkEnc (hex): ${pkEnc.toHexString()}"}
             // encrypted session key
             val keyLen = encSessionKeyData[pkLen + 2].toInt() and 0xff
             val keyEnc = ByteArray(keyLen)
             System.arraycopy(encSessionKeyData, 2 + pkLen + 1, keyEnc, 0, keyLen)
 
             // perform ECDH key agreement via the YubiKey
-			val x9Params = org.bouncycastle.asn1.x9.ECNamedCurveTable.getByOIDLazy(ecPubKey.getCurveOID())
+			//val x9Params = ECNamedCurveTable.getByOIDLazy(ecPubKey.getCurveOID())
+            val oid = ecPubKey.getCurveOID()
+            logcat {"+++++++++++++++++++++++++++++++++++++++++++oid : ${oid}"}
 
-		    logcat {"+++++++++++++++++++++++++++++++++++++++++" + x9Params.toString()}
+            val x9Params =
+              org.bouncycastle.crypto.ec.CustomNamedCurves.getByOID(oid)
+                  ?: org.bouncycastle.asn1.x9.ECNamedCurveTable.getByOID(oid)
+                  ?: org.bouncycastle.asn1.sec.SECNamedCurves.getByOID(oid)
+                  ?: org.bouncycastle.asn1.nist.NISTNamedCurves.getByOID(oid)
+                  ?: org.bouncycastle.asn1.teletrust.TeleTrusTNamedCurves.getByOID(oid)
+
+            if (x9Params == null) throw IllegalArgumentException("Unknown/unsupported curve OID: $oid")
+
             val publicPoint = x9Params.getCurve().decodePoint(pkEnc)
             val peerKey = JcaPGPKeyConverter().setProvider(BouncyCastleProvider())
                 .getPublicKey(
