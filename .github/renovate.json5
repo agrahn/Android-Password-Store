@@ -47,20 +47,11 @@
         'gradle',
       ],
       enabled: false,
-      "description": 'Packages to be excluded from updates',
-      matchPackageNames: [
-      ],
-    },
-    {
-      matchManagers: [
-        'gradle',
-      ],
+      description: 'Packages to be excluded from updates. Android 13+ required for JGit v6.3+.',
       matchPackageNames: [
         'org.eclipse.jgit',
       ],
-      "allowedVersions": '6.x',
-      "description": 'keep jgit on 6.x, jgit 7 requires jdk17'
-    }
+    },
   ],
   customManagers: [
     {
