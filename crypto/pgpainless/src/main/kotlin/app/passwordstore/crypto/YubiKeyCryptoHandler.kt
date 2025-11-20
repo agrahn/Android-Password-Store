@@ -85,7 +85,7 @@ public class YubiKeyCryptoHandler @Inject constructor() {
              * YubikeyDataDecryptorFactory.kt
              */
             
-            val ecPubKey: ECDHPublicBCPGKey = pubKey.publicKeyPacket.key as ECDHPublicBCPGKey 
+            val ecPubKey: ECDHPublicBCPGKey = pubKey.getPublicKeyPacket().getKey() as ECDHPublicBCPGKey 
 
             // peer key
             val pkLen =
@@ -99,8 +99,10 @@ public class YubiKeyCryptoHandler @Inject constructor() {
             System.arraycopy(encSessionKeyData, 2 + pkLen + 1, keyEnc, 0, keyLen)
 
             // perform ECDH key agreement via the YubiKey
-            val x9Params = org.bouncycastle.asn1.x9.ECNamedCurveTable.getByOIDLazy(ecPubKey.curveOID)
-            val publicPoint = x9Params.curve.decodePoint(pkEnc)
+			val x9Params = org.bouncycastle.asn1.x9.ECNamedCurveTable.getByOIDLazy(ecPubKey.getCurveOID())
+
+		    logcat {"+++++++++++++++++++++++++++++++++++++++++" + x9Params.toString()}
+            val publicPoint = x9Params.getCurve().decodePoint(pkEnc)
             val peerKey = JcaPGPKeyConverter().setProvider(BouncyCastleProvider())
                 .getPublicKey(
                     PGPPublicKey(

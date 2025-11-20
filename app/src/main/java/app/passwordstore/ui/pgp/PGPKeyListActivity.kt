@@ -242,86 +242,6 @@ class PGPKeyListActivity : AppCompatActivity() {
     keyAction.launch(intent)
   }
 
-  /*
-    private fun decryptionTest(openPgpSession: OpenPgpSession): String {
-  //    //passtest
-  //    val cipherTextWithArmor =
-  //      """
-  //          -----BEGIN PGP MESSAGE-----
-  //
-  //          hQGMA1+zW06M+3VwAQwAoDf3Ty669GOO6AfcQqoJN1ABQpUd0BKF1HiWnZwr0kzz
-  //          SHTVwQVxR2LC8MHmi+riAslNBfoFcVd2jgSbzoNT6C2kRd4qVnM9OYE789w8abtq
-  //          /Fa7s+TsKAiv+BwonU1r+PJ8O8zVm1MGoq33glOiKDgnmk6Q7iLVWe+uhNrYXlpR
-  //          lTToO5GRmFvYNUXecUWYSrrVMB0wb1qV3Z6MNBY1voD9hjIQYnc10YsBcDe4+7bQ
-  //          QAgo6ENt+XYKJFvvRyb9aTyBN+Lhw/oc8FBfY4NcXReX8twLZRf8hHq9ff3lxfVZ
-  //          IK3+c+BpVZ4o99s5E8xx/uN7wmtce6eVPzVY1RF8ZmfEg3xoHmn0AzvYgCUPOrca
-  //          K0IgpqoluRUmIhhn91zkK+5xtCJVgGpKqrxY1jR6ne0QyiU7fdDoF67M3unnULeS
-  //          pv2hlme4e3NZqQpfogFSBeusfqi4JDaXS+ol4bSX/oIRkDNmsWawsNFygi1FscsQ
-  //          rlviFkYFZFSvc0/ZK2rZ0kIB62BPgOmqV1EedQ64uOAMDMk/ob/KJL+1goZpGUTC
-  //          WydWkRrVDtd2pYq7yS7NzEGaVJpBV0NOCRPVIJTUD38QykQ=
-  //          =l97u
-  //          -----END PGP MESSAGE-----
-  //      """
-  //        .trimIndent()
-  //
-      //passtest2
-      val cipherTextWithArmor =
-        """
-            -----BEGIN PGP MESSAGE-----
-
-            hF4D9de8BCyNdHMSAQdAA8L5smQDLI98R+EanyseF2WnbJylEh+peo7Fv/AP3Uww
-            BsKmAfm06gPxbmjxb0slhx51aND0kiXE+eNUoQG1BzmGbFYQI+owWDVqwMcfQPum
-            0k8B3yCX7xPnoRlze//1eU/k/UHJz9lhyWyV4hOIWpxjgZCpvn4xru0qy86sYK98
-            mErFsRStBxY/S56JCTy9wZsFfYXg1UBesDcb2f35SUoK
-            =kAe3
-            -----END PGP MESSAGE-----
-        """.trimIndent()
-  //
-  //    //passtest, passtest2
-  //    val cipherTextWithArmor =
-  //      """
-  //        -----BEGIN PGP MESSAGE-----
-  //
-  //        hQGMA1+zW06M+3VwAQwAhw/v6EMvOKONeBJF0JqGqW8+v8dPhRjUn6IQ6ikrnLbv
-  //        j3zJhJj3XANDqFXtlVxbNhvW6GFBUumWF6Ug8veGLqGTqJkhTS+Zdf6YylVDLCQj
-  //        w/bVSJfCW/3j+AbVqVud8cjrGYvA3pQ+sappqeJg7JG8wGXjKNEDw8Ix2lxPOwuN
-  //        1Adg5/JGOtZQK5138H8ATAjEB3SSnH8R6fqTQCa5GB+enhG3v+XQVFy8SsbPFGJk
-  //        t3u4oyHFO7JmcIX+rIp4/9yOnvcZqrHdNSNq+vRI2/KMTXPHRI9zMq3TXsvm76N7
-  //        fFItshECZpYy63FZRrlUMRXx6+W6Hw6gzDZx9kpp/lEvEiSu9bqFoAqZsAAsd1py
-  //        5+r2WZTqXqK0AmE77J/EID3yL4makPIPhKa7RMjUEze7DsYZ/w90JBAh2bvfEFXk
-  //        wR4W7OCL7DMi2qsuxoh46KvefSAmCnUwdjYSnKYGaTRg9My7OR9FzR6BH3pdu+2N
-  //        1uAnO9nx8PaRM/Z1UOFuhF4D9de8BCyNdHMSAQdAPRM0StcoHZWQDLrO1tUh84UO
-  //        EAx/kpcn5Ux9RLyr3G4wNY1d7DKp+8gv2y1ein6Nu5hS8g1QaWedZ+1JHrJGwmNp
-  //        +USInvQXx6w+4k+t49EP0k8B8sxgxAYa+3NWbBLayifv1QoHqECv5qdfYkQlnbml
-  //        jcS9vE8wLBGrcljbHWudMY9w8Erb06EDVq8tayd398wTlA7VKKOqGr4HT5p85c9z
-  //        =yDst
-  //        -----END PGP MESSAGE-----
-  //    """.trimIndent()
-  //
-      logcat { "++++++++++++++++ A verified-----------------" }
-      openPgpSession.verifyUserPin("123456".toCharArray(), true)
-      logcat { "++++++++++++++++ B verified-----------------" }
-      val encSessionKey = cryptoRepository.removeArmor(cipherTextWithArmor.toByteArray())
-      val sessionKey =  openPgpSession.decrypt(encSessionKey)
-      logcat { "session key :" + sessionKey.toString() }
-      logcat { "algorithm :" + sessionKey[0].toUByte().toInt() }
-      logcat { "length :" + sessionKey.size.toInt() }
-      //val pgpSessionKey = KeyUtils.createPGPSessionKey(sessionKey)
-      //// return openPgpSession.decrypt(cipherTextWithArmor.toByteArray()).decodeToString()
-      //// decryption
-      // val message = "hello".toByteArray()
-      // val publicKey = openPgpSession.getPublicKey(KeyRef.DEC).toPublicKey() // get decryption key
-      // from yubikey
-      // val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-      // cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-      // val cipherText = cipher.doFinal(message);
-      //
-      // openPgpSession.verifyUserPin("123456".toCharArray(), true)
-      //return openPgpSession.decrypt(cipherText).decodeToString();
-      //logcat { "pgp session key: " + pgpSessionKey.toString() }
-      return sessionKey.toString();
-    } */
-
   private fun deleteKey(identifier: PGPIdentifier) {
     val keyIdPassedIn =
       KeyUtils.tryGetId(pgpKeyManager.getKeyById(identifier).getOrThrow())
@@ -462,20 +382,19 @@ class PGPKeyListActivity : AppCompatActivity() {
           )
         }
 
-		// Replace secret key with public key
+		// Replace secret keyring with public keyring
         viewModel.deleteKey(keyIdPassedIn)
         viewModel.addKey(publicKeyPassedIn)
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
-        logcat {"++++++++++++++++++++++++++++++++++++++"}
-        val pubKey = pgpKeyManager.getPublicSubkeyById(keyIdHwDec, identifier).getOrThrow()
+///////////////////////////////////////////////////////////////////////////////////////////////////
+        val pubKey = pgpKeyManager.getPublicSubkeyById(keyIdHwDec).getOrThrow()
         val sessionKey = yubikeyCryptoHandler.decryptSessionKey(
             "123456".toCharArray(),
             cipherTextWithArmor.byteInputStream(),
             openPgpSession,
             pubKey
         ).getOrThrow()
-/////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
       }
       .onFailure { e ->
