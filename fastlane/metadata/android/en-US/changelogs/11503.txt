@@ -1,0 +1,14 @@
+Added:
+
+- Optional caching of Git credentials
+- Biometrics and PIN for fast unlocking of passwords expire after a configurable number of days after last successful usage
+
+Fixed:
+
+- App crashed when trying to enter a proxy URL in Settings --> Repository --> HTTP(S) proxy settings
+- Handling of "stripped" PGP keys (passphrase changing and verification)
+
+Changed:
+
+- Make work/example.org(.gpg) the default password directory structure for fresh installs
+- Autofill: strict domain search setting ("phishing-resistent search") is now persistent
