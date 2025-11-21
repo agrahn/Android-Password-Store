@@ -126,7 +126,7 @@
   <string name="pref_autofill_enable_title">Autofill aktivieren</string>
   <string name="pref_category_misc_title">Verschiedenes</string>
   <string name="pref_clear_clipboard_title">Zwischenablagenverlauf umgehen</string>
-  <string name="pref_clear_clipboard_summary">Zwischenablagenverlauf (Samsung-Geräte, Gboard) mit Zufallszahlen überschreiben, um ggf. bestehende Passwörter zu entfernen</string>
+  <string name="pref_clear_clipboard_summary">Zwischenablagenverlauf (Samsung-Geräte, Gboard) mit Zufallszahlen überschreiben, um ggf. bestehende Passwörter zu entfernen.</string>
   <string name="pref_git_delete_repo_summary">Lösche das lokale (versteckte) Repository.</string>
   <string name="prefs_export_passwords_title">Passwörter exportieren</string>
   <string name="prefs_export_passwords_summary">Exportiert das Password-Repository in ein externes Verzeichnis.</string>
@@ -137,10 +137,10 @@
   <string name="prefs_repo_invalid_source_dialog_title">Unbrauchbares Quellverzeichnis</string>
   <string name="prefs_repo_invalid_source_dialog_summary">Das Quellverzeichnis ist kein gültiges Git-Repository: fehlender .git-Ordner</string>
   <string name="pref_rebase_on_pull_title">Rebase beim Pullen</string>
-  <string name="pref_rebase_on_pull_summary">Ein Merge-Commit mit Upstream-Änderungen beim Pullen oder Synchronisieren erstellen</string>
-  <string name="pref_rebase_on_pull_summary_on">Beim Pullen oder Synchronisieren Commits rebasen, die nicht im Remote-Repository vorhanden sind</string>
+  <string name="pref_rebase_on_pull_summary">Ein Merge-Commit mit Upstream-Änderungen beim Pullen oder Synchronisieren erstellen.</string>
+  <string name="pref_rebase_on_pull_summary_on">Beim Pullen oder Synchronisieren Commits rebasen, die nicht im Remote-Repository vorhanden sind.</string>
   <string name="pref_disable_sync_on_pull_title">Kein Synchronisieren durch Abwärtswischen</string>
-  <string name="pref_disable_sync_on_pull_summary">Beim Wischen über die Passwortliste keine Git-Synchronisation mit dem Repository anstoßen</string>
+  <string name="pref_disable_sync_on_pull_summary">Beim Wischen über die Passwortliste keine Git-Synchronisation mit dem Repository anstoßen.</string>
   <string name="pref_import_pgp_key_title">Importiere PGP-Schlüssel</string>
   <string name="pref_pgp_key_manager_title">Schlüsselmanager</string>
   <string name="pref_pgp_ascii_armor_title">Im ASCII-Armor-Modus verschlüsseln</string>
@@ -260,7 +260,7 @@
   <string name="your_public_key">Ihr öffentlicher Schlüssel</string>
   <string name="error_generate_ssh_key">Fehler beim Erstellen des SSH-Schlüssels</string>
   <string name="pref_show_hidden_title">Alle Dateien und Ordner anzeigen</string>
-  <string name="pref_show_hidden_summary">Nichtpasswort-Dateien und -Ordner in der Passwortliste anzeigen</string>
+  <string name="pref_show_hidden_summary">Nichtpasswort-Dateien und -Ordner in der Passwortliste anzeigen.</string>
   <string name="title_create_folder">Ordner erstellen</string>
   <string name="title_rename_folder">Ordner umbenennen</string>
   <string name="message_category_error_empty_field">Der Name der Kategorie darf nicht leer sein.</string>
@@ -269,7 +269,7 @@
   <string name="message_rename_folder">Ziel für %1$s angeben</string>
   <string name="button_create">Erstellen</string>
   <string name="pref_search_on_start_title">Suchfeld beim Start öffnen</string>
-  <string name="pref_search_on_start_summary">Suchleiste beim Start der App anzeigen</string>
+  <string name="pref_search_on_start_summary">Suchleiste beim Start der App anzeigen.</string>
   <string name="clone_git_repo">Das Repository muss geklont werden, bevor Änderungen synchronisiert werden können.</string>
   <string name="pref_app_theme_title">App-Farbthema</string>
   <string name="pref_app_theme_value_light">Hell</string>
@@ -291,7 +291,7 @@
   <string name="bottom_sheet_create_new_password">Neues Passwort erstellen</string>
   <string name="bottom_sheet_import_pgp_key">Aus Datei/Backup importieren</string>
   <string name="bottom_sheet_create_pgp_key">Neuen Schlüssel erstellen</string>
-  <string name="pref_debug_logging_summary">Debug-Ausgaben aktivieren (Erfordert Neustart der App)</string>
+  <string name="pref_debug_logging_summary">Debug-Ausgaben aktivieren (Erfordert Neustart der App).</string>
   <string name="pref_debug_logging_title">Debug-Logging</string>
   <string name="preference_default_username_summary">Kann die Autofill-Funktion den Benutzernamen nicht aus dem Inhalt einer Passwortdatei abrufen, wird der hier angegebene Wert verwendet.</string>
   <string name="preference_default_username_title">Standard-Benutzername</string>

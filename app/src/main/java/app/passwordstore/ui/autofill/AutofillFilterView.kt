@@ -144,6 +144,8 @@ class AutofillFilterView : AppCompatActivity() {
   }
 
   private fun bindUI() {
+    val strictDomainSearchPref =
+      formOrigin is FormOrigin.Web && AutofillPreferences.strictDomainSearch(this)
     with(binding) {
       rvPassword.apply {
         adapter =
@@ -193,7 +195,7 @@ class AutofillFilterView : AppCompatActivity() {
       }
       strictDomainSearch.apply {
         visibility = if (formOrigin is FormOrigin.Web) View.VISIBLE else View.GONE
-        isChecked = formOrigin is FormOrigin.Web
+        isChecked = strictDomainSearchPref
         setOnCheckedChangeListener { _, _ -> updateSearch() }
       }
       shouldMatch.text =
@@ -223,6 +225,8 @@ class AutofillFilterView : AppCompatActivity() {
   }
 
   private fun updateSearch() {
+    if (formOrigin is FormOrigin.Web)
+      AutofillPreferences.setStrictDomainSearch(this, binding.strictDomainSearch.isChecked)
     model.search(
       binding.search.text.toString().trim(),
       filterMode =

@@ -1,13 +1,13 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
 ### Added
 
 - Optional caching of Git credentials
-- Biometrics and PIN for fast unlocking of passwords expire after a configurable number of days after last successful usage. Default is 3 days, but the validity period can be set to infinity, if desired.
+- Biometrics and PIN for fast unlocking of passwords expire after a configurable number of days after last successful usage. Default is 3 days, but the validity period can be set to infinity, if desired
 
 ### Fixed
 
@@ -16,7 +16,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- Make `work/example.org(.gpg)` the default password directory structure for fresh installs.
+- Make `work/example.org(.gpg)` the default password directory structure for fresh installs
+- Autofill: strict domain search setting ("phishing-resistent search") made persistent
 
 ## [1.15.2] - 2025-09-05
 

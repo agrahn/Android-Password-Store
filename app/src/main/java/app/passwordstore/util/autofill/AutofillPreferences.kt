@@ -5,6 +5,7 @@
 package app.passwordstore.util.autofill
 
 import android.content.Context
+import androidx.core.content.edit
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.sharedPrefs
@@ -19,6 +20,14 @@ object AutofillPreferences {
   fun directoryStructure(context: Context): DirectoryStructure {
     val value = context.sharedPrefs.getString(PreferenceKeys.DIRECTORY_STRUCTURE)
     return DirectoryStructure.fromValue(value)
+  }
+
+  fun strictDomainSearch(context: Context): Boolean {
+    return context.sharedPrefs.getBoolean(PreferenceKeys.STRICT_DOMAIN_SEARCH, true)
+  }
+
+  fun setStrictDomainSearch(context: Context, strict: Boolean) {
+    context.sharedPrefs.edit { putBoolean(PreferenceKeys.STRICT_DOMAIN_SEARCH, strict) }
   }
 
   fun credentialsFromStoreEntry(
