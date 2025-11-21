@@ -22,7 +22,6 @@ pluginManagement {
       filter {
         includeModule("com.gradle", "develocity-gradle-plugin")
         includeModule("com.gradle.develocity", "com.gradle.develocity.gradle.plugin")
-        includeModule("me.tylerbwong.gradle.metalava", "plugin")
         /* commented out for f-droid */
         /*        includeModule(
           "org.gradle.toolchains.foojay-resolver-convention",
