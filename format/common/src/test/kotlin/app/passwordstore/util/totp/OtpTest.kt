@@ -101,36 +101,37 @@ class OtpTest {
   }
 
   /*
-    Ensure Java runtime supports all the algorithms required by the TOTP spec
-    HMAC-SHA-1 or HMAC-SHA-256 or HMAC-SHA-512 (all SHA2)
-    RFC 6238: https://datatracker.ietf.org/doc/html/rfc6238
-   */
+   Ensure Java runtime supports all the algorithms required by the TOTP spec
+   HMAC-SHA-1 or HMAC-SHA-256 or HMAC-SHA-512 (all SHA2)
+   RFC 6238: https://datatracker.ietf.org/doc/html/rfc6238
+  */
   @Test
   fun otpCheckCryptoSupport() {
     // more info in $JAVA_HOME/conf/security/java.security
-    val algos = listOf(
-      "KeyGenerator.HmacSHA1",
-      "KeyGenerator.HmacSHA256",
-      "KeyGenerator.HmacSHA512",
-      "Mac.HmacSHA1",
-      "Mac.HmacSHA256",
-      "Mac.HmacSHA512",
-    )
+    val algos =
+      listOf(
+        "KeyGenerator.HmacSHA1",
+        "KeyGenerator.HmacSHA256",
+        "KeyGenerator.HmacSHA512",
+        "Mac.HmacSHA1",
+        "Mac.HmacSHA256",
+        "Mac.HmacSHA512",
+      )
     for (a in algos) {
       assertNotNull(Security.getProviders(a))
     }
   }
 
   /*
-    Use this for discovering supported java.security providers
-   */
+   Use this for discovering supported java.security providers
+  */
   // @Test
   fun printJdkSupportedCrypto() {
     // https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/security/Security.html
     // also in $JAVA_HOME/conf/security/java.security
     val p = Security.getProviders()
     p.forEach {
-      println("# ${it.name} - ${it.javaClass} - ${it.info} #");
+      println("# ${it.name} - ${it.javaClass} - ${it.info} #")
       for (s in it.services.sortedBy { x -> x.type + x.algorithm }) {
         print(s.type)
         print(" - ")
