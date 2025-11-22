@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+## [1.15.4] - 2025-11-22
+
 ## [1.15.3] - 2025-11-21
 
 ### Added
@@ -582,7 +584,8 @@ All notable changes to this project will be documented in this file
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.3...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.4...HEAD
+[1.15.4]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.3...v1.15.4
 [1.15.3]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.2...v1.15.3
 [1.15.2]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.1...v1.15.2
 [1.15.1]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.0...v1.15.1
