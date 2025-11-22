@@ -11,7 +11,6 @@ import app.passwordstore.crypto.RFC6637KDFCalculator
 import org.bouncycastle.openpgp.operator.PGPPad
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
-import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator
 import org.bouncycastle.bcpg.PublicKeyPacket
 import org.bouncycastle.bcpg.ECDHPublicBCPGKey
 import org.bouncycastle.openpgp.PGPPublicKey
@@ -49,6 +48,11 @@ import org.bouncycastle.bcpg.PublicKeyEncSessionPacket
 import org.pgpainless.util.ArmorUtils
 import org.bouncycastle.bcpg.PublicKeyAlgorithmTags
 import java.util.Date
+import java.math.BigInteger
+import org.bouncycastle.asn1.ASN1ObjectIdentifier
+import org.bouncycastle.asn1.x9.X9ECParameters
+import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator
+import org.bouncycastle.math.ec.ECPoint
 
 public class YubiKeyCryptoHandler @Inject constructor() {
 
@@ -90,25 +94,30 @@ public class YubiKeyCryptoHandler @Inject constructor() {
             
             val ecPubKey: ECDHPublicBCPGKey = pubKey.getPublicKeyPacket().getKey() as ECDHPublicBCPGKey 
 
-            // peer key
-            val pkLen =
-                ((((encSessionKeyData[0].toInt() and 0xff) shl 8) + (encSessionKeyData[1].toInt() and 0xff)) + 7) / 8
-            val pkEnc = ByteArray(pkLen)
-            System.arraycopy(encSessionKeyData, 2, pkEnc, 0, pkLen)
+            //logcat {"+++++++++++++++++++++++++++++++++++++++++++sessionkeydata (hex): ${encSessionKeyData.toHexString()}"}
+            //logcat {"+++++++++++++++++++++++++++++++++++++++++++sessionkeydata Len: ${encSessionKeyData.size}"}
+
+            //// peer key
+            //val pkLen =
+            //    ((((encSessionKeyData[0].toInt() and 0xff) shl 8) + (encSessionKeyData[1].toInt() and 0xff)) + 7) / 8
+            //val pkEnc = ByteArray(pkLen)
+            //System.arraycopy(encSessionKeyData, 2, pkEnc, 0, pkLen)
            
-            logcat {"+++++++++++++++++++++++++++++++++++++++++++sseionkeydata (hex): ${encSessionKeyData.toHexString()}"}
-            logcat {"+++++++++++++++++++++++++++++++++++++++++++pkEnc (hex): ${pkEnc.toHexString()}"}
-            // encrypted session key
-            val keyLen = encSessionKeyData[pkLen + 2].toInt() and 0xff
-            val keyEnc = ByteArray(keyLen)
-            System.arraycopy(encSessionKeyData, 2 + pkLen + 1, keyEnc, 0, keyLen)
+            //logcat {"+++++++++++++++++++++++++++++++++++++++++++pkLen: $pkLen"}
+            //logcat {"+++++++++++++++++++++++++++++++++++++++++++pkEnc (hex): ${pkEnc.toHexString()}"}
+
+            //// encrypted session key
+            //val keyLen = encSessionKeyData[pkLen + 2].toInt() and 0xff
+            //val keyEnc = ByteArray(keyLen)
+            //System.arraycopy(encSessionKeyData, 2 + pkLen + 1, keyEnc, 0, keyLen)
+
+            //logcat {"+++++++++++++++++++++++++++++++++++++++++++keyLen: $keyLen"}
+            //logcat {"+++++++++++++++++++++++++++++++++++++++++++keyEnc (hex): ${keyEnc.toHexString()}"}
 
             // perform ECDH key agreement via the YubiKey
-			//val x9Params = ECNamedCurveTable.getByOIDLazy(ecPubKey.getCurveOID())
-            val oid = ecPubKey.getCurveOID()
-            logcat {"+++++++++++++++++++++++++++++++++++++++++++oid : ${oid}"}
+            val oid = ecPubKey.getCurveOID() // ASN1ObjectIdentifier
 
-            val x9Params =
+            val x9Params = // X9ECParameters
               org.bouncycastle.crypto.ec.CustomNamedCurves.getByOID(oid)
                   ?: org.bouncycastle.asn1.x9.ECNamedCurveTable.getByOID(oid)
                   ?: org.bouncycastle.asn1.sec.SECNamedCurves.getByOID(oid)
@@ -117,6 +126,11 @@ public class YubiKeyCryptoHandler @Inject constructor() {
 
             if (x9Params == null) throw IllegalArgumentException("Unknown/unsupported curve OID: $oid")
 
+            val hashAlgorithm: Int = ecPubKey.hashAlgorithm.toInt()
+
+            val symAlgorithm: Int = ecPubKey.symmetricKeyAlgorithm.toInt()
+
+            ////////////////////////////////////////////////////////////////////////////////////
             val publicPoint = x9Params.getCurve().decodePoint(pkEnc)
             val peerKey = JcaPGPKeyConverter().setProvider(BouncyCastleProvider())
                 .getPublicKey(
@@ -243,3 +257,79 @@ public class YubiKeyCryptoHandler @Inject constructor() {
     .mapError { error -> NoDecryptionKeyAvailableException(error.message, error.cause) }
 }
 
+private fun parseTag1EncSessionBlob(
+    blob: ByteArray,
+    curveOid: ASN1ObjectIdentifier,
+    x9Params: X9ECParameters,
+    hashAlg: Int,
+    symAlg: Int,
+    creationDate: Date = Date(),
+    version: Int = 4
+): Pair<PGPPublicKey,ByteArray> { //ephemeral key and encrypted session key
+    var off = 0
+    if (blob.size < 2) throw IllegalArgumentException("blob too small")
+
+    // 1) read two-octet MPI bit-length for the ephemeral-public-key MPI
+    val bitLen = ((blob[off].toInt() and 0xff) shl 8) or (blob[off + 1].toInt() and 0xff)
+    val mpiByteLen = (bitLen + 7) / 8
+    off += 2
+    if (off + mpiByteLen > blob.size) throw IllegalArgumentException("truncated MPI for ephemeral public key")
+
+    val mpi = blob.copyOfRange(off, off + mpiByteLen)
+    off += mpiByteLen
+
+    // Determine coordinate byte length for the curve (P-256 -> 32)
+    val coordLen = (x9Params.curve.fieldSize + 7) / 8
+
+    // 2) Interpret mpi contents and produce ECPoint
+    val ecPoint: ECPoint = when {
+        // SEC1 point octet string directly in MPI
+        mpi.isNotEmpty() && (mpi[0].toInt() and 0xff) in setOf(0x02, 0x03, 0x04) -> {
+            x9Params.curve.decodePoint(mpi)
+        }
+
+        // length-prefixed raw X||Y inside MPI: first byte == expectedXY and mpi.size == 1 + expectedXY
+        mpi.size >= 1 -> {
+            val first = mpi[0].toInt() and 0xff
+            val expectedXY = 2 * coordLen
+            if (first == expectedXY && mpi.size == 1 + expectedXY) {
+                val xBytes = mpi.copyOfRange(1, 1 + coordLen)
+                val yBytes = mpi.copyOfRange(1 + coordLen, 1 + expectedXY)
+                val x = BigInteger(1, xBytes)
+                val y = BigInteger(1, yBytes)
+                x9Params.curve.createPoint(x, y)
+            } else if (mpi.size == coordLen) {
+                // maybe compressed point without leading prefix? (rare) try to decode by adding compressed prefix if sensible
+                // If you know the parity of Y use 0x02 or 0x03; here we can't, so throw.
+                throw IllegalArgumentException("MPI appears to be a raw X coordinate only; can't reconstruct Y without parity info")
+            } else {
+                // last fallback: maybe MPI actually contains an ASN.1 OCTET STRING (first byte 0x04 is tag, but we've handled 0x04 above)
+                // If other patterns occur, dump the MPI hex for diagnosis
+                throw IllegalArgumentException("Unrecognized MPI content for ephemeral EC key: size=${mpi.size}, first=0x%02x".format(mpi[0].toInt() and 0xff))
+            }
+        }
+
+        else -> throw IllegalArgumentException("Empty MPI for ephemeral key")
+    }
+
+    // 3) Next octet is length of the encrypted session-key blob (one octet)
+    if (off >= blob.size) throw IllegalArgumentException("no data left for encrypted session key length")
+    val encLen = blob[off].toInt() and 0xff
+    off += 1
+    if (off + encLen > blob.size) throw IllegalArgumentException("truncated encrypted session key; expected $encLen bytes, have ${blob.size - off}")
+
+    val encSessionKey = blob.copyOfRange(off, off + encLen)
+    off += encLen
+
+    // sanity: no leftover bytes expected; if there are, you can log them
+    if (off != blob.size) {
+        // optionally warn: leftover bytes present
+    }
+
+    // 4) build PGPPublicKey packet for the ephemeral EC point so callers can convert to java.security.PublicKey
+    val ecdhBCPGKey = ECDHPublicBCPGKey(curveOid, ecPoint, hashAlg, symAlg)
+    val pubPacket = PublicKeyPacket(version, PublicKeyAlgorithmTags.ECDH, creationDate, ecdhBCPGKey)
+    val pgpPub = PGPPublicKey(pubPacket, BcKeyFingerprintCalculator())
+
+    return pgpPub to encSessionKey
+}
