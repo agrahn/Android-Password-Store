@@ -99,8 +99,8 @@ public class YubiKeyCryptoHandler @Inject constructor() {
             //logcat {"+++++++++++++++++++++++++++++++++++++++++++sessionkeydata Len: ${encSessionKeyData.size}"}
 
             //// peer key
-            val pkLen =
-                ((((encSessionKeyData[0].toInt() and 0xff) shl 8) + (encSessionKeyData[1].toInt() and 0xff)) + 7) / 8
+            //val pkLen =
+            //    ((((encSessionKeyData[0].toInt() and 0xff) shl 8) + (encSessionKeyData[1].toInt() and 0xff)) + 7) / 8
             //val pkEnc = ByteArray(pkLen)
             //System.arraycopy(encSessionKeyData, 2, pkEnc, 0, pkLen)
            
@@ -108,28 +108,28 @@ public class YubiKeyCryptoHandler @Inject constructor() {
             //logcat {"+++++++++++++++++++++++++++++++++++++++++++pkEnc (hex): ${pkEnc.toHexString()}"}
 
             //// encrypted session key
-            val keyLen = encSessionKeyData[pkLen + 2].toInt() and 0xff
-            val keyEnc = ByteArray(keyLen)
-            System.arraycopy(encSessionKeyData, 2 + pkLen + 1, keyEnc, 0, keyLen)
+            //val keyLen = encSessionKeyData[pkLen + 2].toInt() and 0xff
+            //val keyEnc = ByteArray(keyLen)
+            //System.arraycopy(encSessionKeyData, 2 + pkLen + 1, keyEnc, 0, keyLen)
 
 
             //logcat {"+++++++++++++++++++++++++++++++++++++++++++keyLen: $keyLen"}
             //logcat {"+++++++++++++++++++++++++++++++++++++++++++keyEnc (hex): ${keyEnc.toHexString()}"}
 
-            val peerKey = JcaPGPKeyConverter().setProvider(BouncyCastleProvider()).getPublicKey(pubKey)
-            val secret = openPgpSession.decrypt(PublicKeyValues.fromPublicKey(peerKey))
+            //val peerKey = JcaPGPKeyConverter().setProvider(BouncyCastleProvider()).getPublicKey(pubKey)
+            //val secret = openPgpSession.decrypt(PublicKeyValues.fromPublicKey(peerKey))
 
-            //// perform ECDH key agreement via the YubiKey
-            //val oid = ecPubKey.getCurveOID() // ASN1ObjectIdentifier
+            // perform ECDH key agreement via the YubiKey
+            val oid = ecPubKey.getCurveOID() // ASN1ObjectIdentifier
 
-            //val x9Params = // X9ECParameters
-            //  org.bouncycastle.crypto.ec.CustomNamedCurves.getByOID(oid)
-            //      ?: org.bouncycastle.asn1.x9.ECNamedCurveTable.getByOID(oid)
-            //      ?: org.bouncycastle.asn1.sec.SECNamedCurves.getByOID(oid)
-            //      ?: org.bouncycastle.asn1.nist.NISTNamedCurves.getByOID(oid)
-            //      ?: org.bouncycastle.asn1.teletrust.TeleTrusTNamedCurves.getByOID(oid)
+            val x9Params = // X9ECParameters
+              org.bouncycastle.crypto.ec.CustomNamedCurves.getByOID(oid)
+                  ?: org.bouncycastle.asn1.x9.ECNamedCurveTable.getByOID(oid)
+                  ?: org.bouncycastle.asn1.sec.SECNamedCurves.getByOID(oid)
+                  ?: org.bouncycastle.asn1.nist.NISTNamedCurves.getByOID(oid)
+                  ?: org.bouncycastle.asn1.teletrust.TeleTrusTNamedCurves.getByOID(oid)
 
-            //if (x9Params == null) throw IllegalArgumentException("Unknown/unsupported curve OID: $oid")
+            if (x9Params == null) throw IllegalArgumentException("Unknown/unsupported curve OID: $oid")
 
             val hashAlgorithm: Int = ecPubKey.hashAlgorithm.toInt()
 
@@ -161,8 +161,15 @@ public class YubiKeyCryptoHandler @Inject constructor() {
             //    hashAlgorithm,
             //    symmetricKeyAlgorithm,
             //  )
+            val (peerKey, keyEnc, chosenParsing) = parseTag1BlobToJcaPublicKey(
+                encSessionKeyData,
+                oid,
+                x9Params,
+                hashAlgorithm,
+                symmetricKeyAlgorithm,
+              )
 
-            //val secret = openPgpSession.decrypt(PublicKeyValues.fromPublicKey(peerKey))
+            val secret = openPgpSession.decrypt(PublicKeyValues.fromPublicKey(peerKey))
 
             // Use the shared key to decrypt the session key
             val userKeyingMaterial = RFC6637Utils.createUserKeyingMaterial(
@@ -348,5 +355,155 @@ public class YubiKeyCryptoHandler @Inject constructor() {
       val peerKey = JcaPGPKeyConverter().setProvider(BouncyCastleProvider()).getPublicKey(pgpPub)
 
       return peerKey to encSessionKey
+  }
+
+  private fun parseTag1BlobToJcaPublicKey(
+      blob: ByteArray,
+      curveOid: ASN1ObjectIdentifier,
+      x9Params: X9ECParameters,
+      hashAlg: Int,
+      symAlg: Int,
+      creationDate: Date = Date(),
+      version: Int = 4
+  ): Triple<PublicKey, ByteArray, String> {
+      fun coordLen(): Int = (x9Params.curve.fieldSize + 7) / 8
+  
+      var off = 0
+  
+      // Helper to build PublicKey from an ECPoint
+      fun mkJcaPub(ecPoint: ECPoint): PublicKey {
+          val ecdhBCPGKey = ECDHPublicBCPGKey(curveOid, ecPoint, hashAlg, symAlg)
+          val pubPacket = PublicKeyPacket(version, PublicKeyAlgorithmTags.ECDH, creationDate, ecdhBCPGKey)
+          val pgpPub = PGPPublicKey(pubPacket, BcKeyFingerprintCalculator())
+          return JcaPGPKeyConverter().setProvider(BouncyCastleProvider()).getPublicKey(pgpPub)
+      }
+  
+      // Try strategy A: treat blob as starting with two-octet MPI bit-length header
+      try {
+          if (blob.size >= 2) {
+              var p = 0
+              val bitLen = ((blob[p].toInt() and 0xff) shl 8) or (blob[p + 1].toInt() and 0xff)
+              val mpiByteLen = (bitLen + 7) / 8
+              p += 2
+              if (p + mpiByteLen <= blob.size) {
+                  val mpi = blob.copyOfRange(p, p + mpiByteLen)
+                  val afterMpi = p + mpiByteLen
+                  // within MPI, try SEC1 first
+                  if (mpi.isNotEmpty() && (mpi[0].toInt() and 0xff) in setOf(0x02, 0x03, 0x04)) {
+                      val point = x9Params.curve.decodePoint(mpi)
+                      // now read the one-octet length and session key bytes after the MPI
+                      if (afterMpi < blob.size) {
+                          val encLen = blob[afterMpi].toInt() and 0xff
+                          val encStart = afterMpi + 1
+                          if (encStart + encLen <= blob.size) {
+                              val enc = blob.copyOfRange(encStart, encStart + encLen)
+                              return Triple(mkJcaPub(point), enc, "MPI-SEC1")
+                          }
+                      }
+                  }
+                  // else, MPI might contain a one-octet len + X||Y or other format
+                  val expectedXY = 2 * coordLen()
+                  if (mpi.size >= 1) {
+                      val first = mpi[0].toInt() and 0xff
+                      if (first == expectedXY && mpi.size >= 1 + expectedXY) {
+                          val xBytes = mpi.copyOfRange(1, 1 + coordLen())
+                          val yBytes = mpi.copyOfRange(1 + coordLen(), 1 + expectedXY)
+                          val point = x9Params.curve.createPoint(BigInteger(1, xBytes), BigInteger(1, yBytes))
+                          if (afterMpi < blob.size) {
+                              val encLen = blob[afterMpi].toInt() and 0xff
+                              val encStart = afterMpi + 1
+                              if (encStart + encLen <= blob.size) {
+                                  val enc = blob.copyOfRange(encStart, encStart + encLen)
+                                  return Triple(mkJcaPub(point), enc, "MPI-1byteLen-X||Y")
+                              }
+                          }
+                      }
+                  }
+                  // If MPI contained only X (no Y) and some implementations use compressed form without prefix,
+                  // we cannot reconstruct Y without parity information -> skip this branch.
+              }
+          }
+      } catch (ex: Exception) {
+          // ignore and fall through to other strategies
+      }
+  
+      // Try strategy B: treat blob as version(1) + param(1) then one-octet len + X||Y
+      try {
+          if (blob.size >= 3) {
+              var p = 0
+              val versionByte = blob[p].toInt() and 0xff
+              p++
+              val paramByte = blob[p].toInt() and 0xff
+              p++
+              val expectedXY = 2 * coordLen()
+              // next octet may be a one-byte length
+              val lenByte = blob[p].toInt() and 0xff
+              if (lenByte == expectedXY) {
+                  val start = p + 1
+                  if (start + expectedXY <= blob.size) {
+                      val xBytes = blob.copyOfRange(start, start + coordLen())
+                      val yBytes = blob.copyOfRange(start + coordLen(), start + expectedXY)
+                      val point = x9Params.curve.createPoint(BigInteger(1, xBytes), BigInteger(1, yBytes))
+                      val encLenIndex = start + expectedXY
+                      if (encLenIndex < blob.size) {
+                          val encLen = blob[encLenIndex].toInt() and 0xff
+                          val encStart = encLenIndex + 1
+                          if (encStart + encLen <= blob.size) {
+                              val enc = blob.copyOfRange(encStart, encStart + encLen)
+                              return Triple(mkJcaPub(point), enc, "ver+param+1byteLen-X||Y")
+                          }
+                      }
+                  } // else truncated
+              }
+              // also accept the case where after version+param follows a SEC1 prefix directly
+              if (p < blob.size) {
+                  val b0 = blob[p].toInt() and 0xff
+                  if (b0 in setOf(0x02, 0x03, 0x04)) {
+                      // determine expected SEC1 length
+                      val sec1Len = if (b0 == 0x04) 1 + 2 * coordLen() else 1 + coordLen()
+                      if (p + sec1Len <= blob.size) {
+                          val sec1 = blob.copyOfRange(p, p + sec1Len)
+                          val point = x9Params.curve.decodePoint(sec1)
+                          val encLenIndex = p + sec1Len
+                          if (encLenIndex < blob.size) {
+                              val encLen = blob[encLenIndex].toInt() and 0xff
+                              val encStart = encLenIndex + 1
+                              if (encStart + encLen <= blob.size) {
+                                  val enc = blob.copyOfRange(encStart, encStart + encLen)
+                                  return Triple(mkJcaPub(point), enc, "ver+param+SEC1")
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+      } catch (ex: Exception) {
+          // ignore and continue
+      }
+  
+      // Last attempt: raw SEC1 at the beginning of the blob (no version)
+      try {
+          if (blob.isNotEmpty() && (blob[0].toInt() and 0xff) in setOf(0x02, 0x03, 0x04)) {
+              val b0 = blob[0].toInt() and 0xff
+              val sec1Len = if (b0 == 0x04) 1 + 2 * coordLen() else 1 + coordLen()
+              if (sec1Len < blob.size) {
+                  val sec1 = blob.copyOfRange(0, sec1Len)
+                  val point = x9Params.curve.decodePoint(sec1)
+                  val encLenIndex = sec1Len
+                  if (encLenIndex < blob.size) {
+                      val encLen = blob[encLenIndex].toInt() and 0xff
+                      val encStart = encLenIndex + 1
+                      if (encStart + encLen <= blob.size) {
+                          val enc = blob.copyOfRange(encStart, encStart + encLen)
+                          return Triple(mkJcaPub(point), enc, "raw-SEC1")
+                      }
+                  }
+              }
+          }
+      } catch (ex: Exception) {
+          // ignore
+      }
+  
+      throw IllegalArgumentException("Unable to parse Tag-1 blob into an EC point using known encodings (seen 0x40 as a length/marker in many messages).")
   }
 }

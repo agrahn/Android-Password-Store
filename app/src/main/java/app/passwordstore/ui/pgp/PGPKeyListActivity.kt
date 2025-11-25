@@ -387,12 +387,13 @@ class PGPKeyListActivity : AppCompatActivity() {
         //viewModel.addKey(publicKeyPassedIn)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-        //val pubKey = pgpKeyManager.getPublicSubkeyById(keyIdHwDec).getOrThrow()
+        val keyIdHwDec = yubikeyCryptoHandler.getEncKeyIdFromHwKey(openPgpSession).getOrThrow()
+        val pubKey = pgpKeyManager.getPublicSubkeyById(keyIdHwDec).getOrThrow()
 
-        val secKey =  pgpKeyManager.getKeyById(identifier).getOrThrow()
-		val pubKey = KeyUtils.extractPublicKey(secKey)
-        //val pubKey = pgpKeyManager.getPublicSubkeyById(keyIdHwDec).getOrThrow()
-		val encKey = KeyUtils.tryParseCertificateOrKey(pubKey)?.getEncryptionKeys()?.first()
+        //val secKey =  pgpKeyManager.getKeyById(identifier).getOrThrow()
+		//val pubKey = KeyUtils.extractPublicKey(secKey)
+        ////val pubKey = pgpKeyManager.getPublicSubkeyById(keyIdHwDec).getOrThrow()
+		//val encKey = KeyUtils.tryParseCertificateOrKey(pubKey)?.getEncryptionKeys()?.first()
 
         val sessionKey = yubikeyCryptoHandler.decryptSessionKey(
             "123456".toCharArray(),
