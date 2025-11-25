@@ -91,6 +91,11 @@ private val TRUSTED_BROWSER_CERTIFICATE_HASH =
     "app.vanadium.browser" to arrayOf("xq24uDxtTBfSkq/eVv1IilHTFv+PLBHFQQIjv/in27M="),
     "org.ironfoxoss.ironfox" to arrayOf("xeKRtaVx+cjNmpeZwslOAuyXA5SIk/LKdW1nuUIE+QQ="),
     "org.ironfoxoss.ironfox.nightly" to arrayOf("xeKRtaVx+cjNmpeZwslOAuyXA5SIk/LKdW1nuUIE+QQ="),
+    "net.waterfox.android.release" to
+      arrayOf(
+        "8JHKOZi0nhWdI+6VWGmZx10LcCP8+cVBkqgTAKwWbhc=", // GitHub release
+        "KTmZei2PBzA86zetaBCv7wvacQviEWR241Jac3nsLho=", // Play Store
+      ),
   )
 
 private fun isTrustedBrowser(context: Context, appPackage: String): Boolean {
@@ -135,6 +140,7 @@ private val BROWSER_MULTI_ORIGIN_METHOD =
     "us.spotco.fennec_dos" to BrowserMultiOriginMethod.Field,
     "org.ironfoxoss.ironfox" to BrowserMultiOriginMethod.Field,
     "org.ironfoxoss.ironfox.nightly" to BrowserMultiOriginMethod.Field,
+    "net.waterfox.android.release" to BrowserMultiOriginMethod.Field,
   )
 
 private fun getBrowserMultiOriginMethod(appPackage: String): BrowserMultiOriginMethod =
