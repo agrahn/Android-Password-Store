@@ -506,4 +506,54 @@ public class YubiKeyCryptoHandler @Inject constructor() {
   
       throw IllegalArgumentException("Unable to parse Tag-1 blob into an EC point using known encodings (seen 0x40 as a length/marker in many messages).")
   }
+
+  /**
+   * Decode a RFC9580 "prefixed native EC point" at blob[offset..].
+   * Returns Pair(ecPoint, nextOffset).
+   *
+   * Throws IllegalArgumentException if the encoding is unrecognized/truncated.
+   */
+  fun decodePrefixedNativePoint(blob: ByteArray, offset: Int, x9Params: X9ECParameters): Pair<ECPoint, Int> {
+      var off = offset
+      if (off >= blob.size) throw IllegalArgumentException("no data at offset $offset to read length")
+      val len = blob[off++].toInt() and 0xff
+      if (off + len > blob.size) throw IllegalArgumentException("truncated prefixed native point: need $len bytes, only ${blob.size - off}")
+  
+      val payload = blob.copyOfRange(off, off + len)
+      val coordLen = (x9Params.curve.fieldSize + 7) / 8
+  
+      // Case A: payload begins with SEC1 prefix (0x04, 0x02, 0x03)
+      if (payload.isNotEmpty()) {
+          val p0 = payload[0].toInt() and 0xff
+          if (p0 == 0x04 || p0 == 0x02 || p0 == 0x03) {
+              // payload is a SEC1 octet string -> decode directly
+              val point = x9Params.curve.decodePoint(payload)
+              return Pair(point, off + len)
+          }
+      }
+  
+      // Case B: payload is raw X||Y (no SEC1 0x04), length == 2*coordLen
+      if (len == 2 * coordLen) {
+          val xBytes = payload.copyOfRange(0, coordLen)
+          val yBytes = payload.copyOfRange(coordLen, 2 * coordLen)
+          val x = BigInteger(1, xBytes)
+          val y = BigInteger(1, yBytes)
+          val point = x9Params.curve.createPoint(x, y)
+          return Pair(point, off + len)
+      }
+  
+      // Case C: payload might be compressed SEC1 but missing explicit prefix outside payload:
+      // If payload length == 1 + coordLen and first octet is 0x02/0x03, decode as SEC1 compressed.
+      if (len == 1 + coordLen && payload.isNotEmpty()) {
+          val p0 = payload[0].toInt() and 0xff
+          if (p0 == 0x02 || p0 == 0x03) {
+              val point = x9Params.curve.decodePoint(payload)
+              return Pair(point, off + len)
+          }
+      }
+  
+      // Unknown variant: dump some debug info to help diagnosing (payload hex)
+      val hex = payload.joinToString("") { "%02x".format(it) }
+      throw IllegalArgumentException("Unrecognized prefixed native EC point payload (len=$len, coordLen=$coordLen). payload=${hex}")
+  }
 }
