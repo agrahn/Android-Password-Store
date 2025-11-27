@@ -1,0 +1,3 @@
+Fixed:
+
+- The password got inadvertently cleared when the "Edit password" secreen was left via the Copy/Save button.

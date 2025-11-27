@@ -37,8 +37,8 @@ We bundle a [`ignore-revs-file`](https://git-scm.com/docs/git-blame#Documentatio
 
 ## Source code conventions
 
-- Unless you're absolutely sure what you're doing, always prefer the [`unsafeLazy`](https://github.com/android-password-store/Android-Password-Store/blob/f870dd49138d63d9803783458abf1356176851db/app/src/main/java/app/passwordstore/util/extensions/Extensions.kt#L68) method over Kotlin's inbuilt `lazy` for lazily evaluated properties.
-- For inflating a Fragment or Activity view, always use the [`viewBinding`](https://github.com/android-password-store/Android-Password-Store/blob/3a16d77db24b6d79d9d27ce3207d72a7a879f38a/app/src/main/java/dev/msfjarvis/aps/util/extensions/FragmentViewBindingDelegate.kt) extension.
+- Unless you're absolutely sure what you're doing, always prefer the [`unsafeLazy`](https://github.com/agrahn/Android-Password-Store/blob/f870dd49138d63d9803783458abf1356176851db/app/src/main/java/app/passwordstore/util/extensions/Extensions.kt#L68) method over Kotlin's inbuilt `lazy` for lazily evaluated properties.
+- For inflating a Fragment or Activity view, always use the [`viewBinding`](https://github.com/agrahn/Android-Password-Store/blob/3a16d77db24b6d79d9d27ce3207d72a7a879f38a/app/src/main/java/dev/msfjarvis/aps/util/extensions/FragmentViewBindingDelegate.kt) extension.
 
 ## Building the project
 
