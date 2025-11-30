@@ -95,8 +95,8 @@ public sealed class PGPIdentifier {
     }
 
     /**
-     * Takes a 'Name (Comment) <Email>' user ID in any of its permutations and attempts to extract
-     * Email from it. If Email is not present, return Name.
+     * Takes 'Name (Comment) <Email>' in any of its permutations and attempts to extract Email from
+     * it. If Email is not present, return Name.
      */
     @Suppress("NestedBlockDepth")
     public fun splitUserId(userId: String): String? {

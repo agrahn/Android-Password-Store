@@ -7,7 +7,7 @@ package app.passwordstore.crypto
 
 import androidx.annotation.VisibleForTesting
 import app.passwordstore.crypto.KeyUtils.isKeyUsable
-import app.passwordstore.crypto.KeyUtils.tryGetId
+import app.passwordstore.crypto.KeyUtils.tryGetKeyId
 import app.passwordstore.crypto.KeyUtils.tryParseCertificateOrKey
 import app.passwordstore.crypto.errors.InvalidKeyException
 import app.passwordstore.crypto.errors.KeyAlreadyExistsException
@@ -38,9 +38,9 @@ public class PGPKeyManager @Inject constructor(filesDir: String) :
   override fun addKey(key: PGPKey, replace: Boolean): Result<PGPKey, Throwable> = runCatching {
     if (!keyDirExists()) throw KeyDirectoryUnavailableException
     val incomingCertOrKey = tryParseCertificateOrKey(key) ?: throw InvalidKeyException
+    if (!isKeyUsable(incomingCertOrKey)) throw UnusableKeyException
     val incomingKey = incomingCertOrKey.getEncoded().let { PGPKey(it) }
-    if (!isKeyUsable(incomingKey)) throw UnusableKeyException
-    val keyFile = File(keyDir, "${tryGetId(incomingCertOrKey)}.$KEY_EXTENSION")
+    val keyFile = File(keyDir, "${tryGetKeyId(incomingCertOrKey)}.$KEY_EXTENSION")
     val existingKey = if (keyFile.exists()) PGPKey(keyFile.readBytes()) else null
     val existingCertOrKey = existingKey?.let { tryParseCertificateOrKey(existingKey) }
     if (existingCertOrKey != null) {
@@ -59,7 +59,7 @@ public class PGPKeyManager @Inject constructor(filesDir: String) :
       // Check for replace flag first and if it is false, throw an error
       if (!replace)
         throw KeyAlreadyExistsException(
-          tryGetId(incomingCertOrKey)?.toString() ?: "Failed to retrieve key ID"
+          tryGetKeyId(incomingCertOrKey)?.toString() ?: "Failed to retrieve key ID"
         )
       if (!keyFile.delete()) throw KeyDeletionFailedException
     }
@@ -73,7 +73,7 @@ public class PGPKeyManager @Inject constructor(filesDir: String) :
   override fun removeKey(identifier: PGPIdentifier): Result<Unit, Throwable> = runCatching {
     if (!keyDirExists()) throw KeyDirectoryUnavailableException
     val key = getKeyById(identifier).getOrThrow()
-    val keyFile = File(keyDir, "${tryGetId(key)}.$KEY_EXTENSION")
+    val keyFile = File(keyDir, "${tryGetKeyId(key)}.$KEY_EXTENSION")
     if (keyFile.exists()) {
       if (!keyFile.delete()) throw KeyDeletionFailedException
     }

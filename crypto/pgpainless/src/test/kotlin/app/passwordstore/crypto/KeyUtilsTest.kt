@@ -5,13 +5,16 @@
 
 package app.passwordstore.crypto
 
+import app.passwordstore.crypto.KeyUtils.hasSecretKey
 import app.passwordstore.crypto.KeyUtils.isKeyUsable
-import app.passwordstore.crypto.KeyUtils.tryGetId
+import app.passwordstore.crypto.KeyUtils.tryGetKeyId
 import app.passwordstore.crypto.KeyUtils.tryParseCertificateOrKey
 import app.passwordstore.crypto.TestUtils.AllKeys
 import app.passwordstore.crypto.TestUtils.getArmoredSecretKeyWithMultipleIdentities
+import app.passwordstore.crypto.TestUtils.getExpiredKey
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -25,7 +28,7 @@ class KeyUtilsTest {
     assertNotNull(openPgpKey)
     assertIs<OpenPGPKey>(openPgpKey)
     assertTrue(openPgpKey.isSecretKey())
-    val keyId = tryGetId(key)
+    val keyId = tryGetKeyId(key)
     assertNotNull(keyId)
     assertIs<PGPIdentifier.KeyId>(keyId)
     assertEquals("b950ae2813841585", keyId.toString())
@@ -38,5 +41,9 @@ class KeyUtilsTest {
       val key = PGPKey(allKeys.keyMaterial)
       assertEquals(isUsable, isKeyUsable(key), "${allKeys.name} failed expectation:")
     }
+
+    val expiredKey = PGPKey(getExpiredKey())
+    assertTrue(hasSecretKey(expiredKey))
+    assertFalse(isKeyUsable(expiredKey))
   }
 }

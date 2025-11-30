@@ -6,11 +6,13 @@
 package app.passwordstore.crypto
 
 import app.passwordstore.crypto.KeyUtils.tryParseCertificateOrKey
+import app.passwordstore.crypto.errors.CryptoException
 import app.passwordstore.crypto.errors.CryptoHandlerException
 import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
 import app.passwordstore.crypto.errors.NoKeysProvidedException
 import app.passwordstore.crypto.errors.UnknownError
+import app.passwordstore.crypto.errors.UnusableKeyException
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.mapError
 import com.github.michaelbull.result.runCatching
@@ -38,7 +40,9 @@ public class PGPainlessCryptoHandler @Inject constructor() :
   public override fun passphraseIsCorrect(key: PGPKey, passphrase: CharArray?): Boolean =
     tryParseCertificateOrKey(key)?.let {
       if (it is OpenPGPKey)
-        it.getSecretKey(it.getEncryptionKeys().first()).isPassphraseCorrect(passphrase)
+        it
+          .getSecretKey(it.getKeys().filter { it.isEncryptionKey() }.first())
+          .isPassphraseCorrect(passphrase)
       else false
     } ?: false
 
@@ -64,7 +68,10 @@ public class PGPainlessCryptoHandler @Inject constructor() :
         } else {
           val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
           val openPgpKey = KeyUtils.tryParseCertificateOrKey(key)
-          if (openPgpKey !is OpenPGPKey || openPgpKey.getEncryptionKeys().isEmpty())
+          if (
+            openPgpKey !is OpenPGPKey ||
+              openPgpKey.getKeys().filter { it.isEncryptionKey() }.isEmpty()
+          )
             throw NoDecryptionKeyAvailableException("Key not usable for decryption")
           consumerOptions.addDecryptionKey(openPgpKey, protector)
         }
@@ -102,7 +109,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
     plaintextStream: InputStream,
     outputStream: OutputStream,
     options: PGPEncryptOptions,
-  ): Result<Unit, CryptoHandlerException> =
+  ): Result<List<PGPKey>, CryptoException> =
     runCatching {
         if (keys.isEmpty() && passphrase == null) throw NoKeysProvidedException
 
@@ -115,10 +122,9 @@ public class PGPainlessCryptoHandler @Inject constructor() :
                 else -> certOrKey
               }
             }
-            .filter { !it.getEncryptionKeys().isEmpty() }
-        require(keys.isEmpty() || keys.size == certificates.size) {
-          "Failed to parse all keys: ${keys.size} keys were provided but only ${certificates.size} were valid"
-        }
+            .filter { KeyUtils.isKeyUsable(it) }
+
+        if (certificates.isEmpty() && passphrase == null) throw UnusableKeyException
 
         val encryptionOptions = EncryptionOptions.encryptCommunications(pgpApi)
 
@@ -141,15 +147,11 @@ public class PGPainlessCryptoHandler @Inject constructor() :
         encryptionStream.use { Streams.pipeAll(plaintextStream, it) }
 
         val result = encryptionStream.result
-        certificates.forEach { cert ->
-          require(result.isEncryptedFor(cert)) {
-            "Stream should be encrypted for ${cert.getKeyIdentifier().getKeyId()} but wasn't"
-          }
-        }
+        certificates.filter { result.isEncryptedFor(it) }.map { it.getEncoded().let { PGPKey(it) } }
       }
       .mapError { error ->
         when (error) {
-          is CryptoHandlerException -> error
+          is CryptoException -> error
           else -> UnknownError(error.message, error)
         }
       }

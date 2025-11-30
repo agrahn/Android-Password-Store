@@ -303,10 +303,16 @@
   <string name="preference_custom_public_suffixes_summary">Autofill will distinguish subdomains of these domains.</string>
   <string name="preference_custom_public_suffixes_hint">company.com\npersonal.com</string>
 
-  <!-- Password creation failure -->
+  <!-- Password creation/edit -->
+  <string name="password_creation_edit_file_encryption_success_title">Password item edited</string>
+  <string name="password_creation_new_file_encryption_success_title">New password item</string>
+  <string name="password_creation_file_encryption_partial_success_title">Encryption partially failed</string>
+  <string name="password_creation_file_encryption_succeeded_ids_message">Password item successfully encrypted for\n%1$s</string>
+  <string name="password_creation_file_encryption_failed_ids_message">\n\nEncryption failed for\n%1$s\n\nCheck expiration date and revocation status of the PGP key(s) using an external utility.</string>
   <string name="password_creation_file_fail_title">Error</string>
   <string name="password_creation_file_write_fail_message">Failed to write password file to the store, please try again.</string>
   <string name="password_creation_file_delete_fail_message">Failed to delete password file %1$s from the store, please delete it manually.</string>
+  <string name="password_creation_unusable_encryption_key_error_message">Encryption failure. Check expiration date and revocation status of the PGP key(s) using an external utility.</string>
   <string name="password_creation_duplicate_error">File already exists, please use a different name.</string>
   <string name="add_otp">Add OTP</string>
   <string name="otp_import_success">Successfully imported TOTP configuration</string>
@@ -321,7 +327,7 @@
   <string name="new_folder_set_gpg_key">Set PGP key for directory</string>
 
   <!-- Password decryption failure -->
-  <string name="password_decryption_no_decryption_key">Decryption failed: No suitable secret key found</string>
+  <string name="password_decryption_no_decryption_key">Decryption failed. No suitable secret key found</string>
   <string name="password_decryption_unknown_error">Unknown decryption error</string>
 
   <!-- GitException messages -->
@@ -334,8 +340,8 @@
   <string name="git_push_other_error">Remote rejected non-fast-forward push. Check receive.denyNonFastForwards variable in config file of destination repository.</string>
   <string name="git_unknown_host">Unknown host: %1$s</string>
   <string name="git_operation_running">Running git operation…</string>
-  <string name="git_break_out_of_detached_success">There was a conflict when trying to rebase. Your local %1$s branch was pushed to another branch named %2$s\n Use this branch to resolve conflict on your computer</string>
-  <string name="git_break_out_of_detached_unneeded">The repository is not rebasing, no need to push to another branch</string>
+  <string name="git_break_out_of_detached_success">There was a conflict when trying to rebase. Your local %1$s branch was pushed to another branch named %2$s\n.Use this branch to resolve conflict on your computer.</string>
+  <string name="git_break_out_of_detached_unneeded">The repository is not rebasing, no need to push to another branch.</string>
 
   <!-- PGP key selection in folder creation -->
   <string name="gpg_key_select_mandatory">Selecting a PGP key is necessary to proceed</string>
@@ -381,7 +387,7 @@
   <string name="pgp_key_backupcode_confirmation">I have noted down the backup code and stored it in a safe place.</string>
   <string name="pgp_key_import_failed">Failed to import PGP key</string>
   <string name="pgp_key_import_failed_replace_message">An existing key with this ID was found, do you want to replace it?</string>
-  <string name="pgp_key_import_failed_unusable_message">Given key is not usable for encryption.</string>
+  <string name="pgp_key_import_failed_unusable_message">The given key is not usable for encryption. Please ensure that a subkey for encryption exists and that it has not expired or been revoked.</string>
   <string name="pgp_key_import_succeeded">Successfully imported PGP key</string>
   <string name="pgp_key_import_succeeded_message">The key ID of the imported key is given below, please review it for correctness:\n%1$s</string>
   <string name="pgp_key_export_failed">Failed to export PGP key</string>

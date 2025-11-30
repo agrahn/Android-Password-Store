@@ -12,7 +12,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doOnTextChanged
 import app.passwordstore.R
-import app.passwordstore.crypto.KeyUtils.tryGetId
+import app.passwordstore.crypto.KeyUtils.tryGetKeyId
 import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.data.crypto.CryptoRepository
@@ -174,7 +174,9 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
     if (key != null) {
       MaterialAlertDialogBuilder(this)
         .setTitle(getString(R.string.pgp_key_change_passphrase_succeeded))
-        .setMessage(getString(R.string.pgp_key_change_passphrase_succeeded_message, tryGetId(key)))
+        .setMessage(
+          getString(R.string.pgp_key_change_passphrase_succeeded_message, tryGetKeyId(key))
+        )
         .setPositiveButton(android.R.string.ok) { _, _ ->
           setResult(RESULT_OK)
           finish()

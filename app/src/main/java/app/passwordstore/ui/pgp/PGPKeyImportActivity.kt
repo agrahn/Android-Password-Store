@@ -13,7 +13,7 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.crypto.KeyUtils.isCertificateOrKey
-import app.passwordstore.crypto.KeyUtils.tryGetId
+import app.passwordstore.crypto.KeyUtils.tryGetKeyId
 import app.passwordstore.crypto.PGPKey
 import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.crypto.errors.KeyAlreadyExistsException
@@ -140,7 +140,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
       }
       MaterialAlertDialogBuilder(this)
         .setTitle(getString(R.string.pgp_key_import_succeeded))
-        .setMessage(getString(R.string.pgp_key_import_succeeded_message, tryGetId(key)))
+        .setMessage(getString(R.string.pgp_key_import_succeeded_message, tryGetKeyId(key)))
         .setPositiveButton(android.R.string.ok) { _, _ ->
           setResult(RESULT_OK)
           finish()

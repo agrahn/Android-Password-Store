@@ -21,6 +21,8 @@ object TestUtils {
 
   fun getAEADSecretKey() = this::class.java.classLoader.getResource("aead_sec").readBytes()
 
+  fun getExpiredKey() = this::class.java.classLoader.getResource("expired_key").readBytes()
+
   enum class AllKeys(val keyMaterial: ByteArray) {
     ARMORED_SEC(getArmoredSecretKey()),
     ARMORED_PUB(getArmoredPublicKey()),
