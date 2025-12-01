@@ -1,4 +1,4 @@
-138749
+138928
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -68,6 +68,7 @@
 *.appwrite.run
 *.at.playit.plus
 *.at.ply.gg
+*.auiusercontent.com
 *.awdev.ca
 *.awsapprunner.com
 *.azurecontainer.io
@@ -193,6 +194,7 @@
 *.rds.cn-northwest-1.amazonaws.com.cn
 *.run.app
 *.s.brave.app
+*.s.brave.dev
 *.s.brave.io
 *.sa-east-1.airflow.amazonaws.com
 *.sa-east-1.rds.amazonaws.com
@@ -876,11 +878,13 @@ azimuth.network
 azumino.nagano.jp
 azure
 azure-api.net
+azure-api.us
 azure-mobile.net
 azureedge.net
 azurefd.net
 azurestaticapps.net
 azurewebsites.net
+azurewebsites.us
 aéroport.ci
 b-data.io
 b.bg
@@ -1195,6 +1199,7 @@ bradesco
 brand.se
 brasilia.me
 brave.app
+brave.dev
 brave.io
 bremanger.no
 brescia.it
@@ -3053,6 +3058,8 @@ g.se
 g12.br
 ga
 ga.us
+gadget.app
+gadget.host
 gaivuotna.no
 gal
 gal.ec
@@ -3409,6 +3416,7 @@ gratangen.no
 gratis
 grayjayleagues.com
 greater.jp
+grebedoc.dev
 green
 greta.fr
 grimstad.no
@@ -6378,7 +6386,6 @@ obj.ag
 objects.lp.dev
 objects.lpg.cloudscale.ch
 objects.rma.cloudscale.ch
-obl.ong
 obninsk.su
 observablehq.cloud
 observer
@@ -7966,6 +7973,7 @@ servesarcasm.com
 service.gov.scot
 service.gov.uk
 service.one
+servicebus.usgovcloudapi.net
 servicebus.windows.net
 services
 services.aero
@@ -9141,6 +9149,7 @@ user.party.eus
 user.srcf.net
 user.webaccel.jp
 usercontent.jp
+usgovcloudapp.net
 ushiku.ibaraki.jp
 usr.cloud.muni.cz
 ustka.pl
@@ -9591,6 +9600,7 @@ xj.cn
 xmit.dev
 xnbay.com
 xs4all.space
+xtooldevice.com
 xx.kg
 xxx
 xxx.ec
@@ -9895,6 +9905,7 @@ zw
 ไทย
 ລາວ
 გე
+ᬩᬮᬶ.id
 みんな
 アマゾン
 クラウド
