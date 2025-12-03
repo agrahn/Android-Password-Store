@@ -69,19 +69,19 @@ constructor(
 
   fun getEmailFromKeyId(identifier: PGPIdentifier): String? {
     val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
-    val userId = KeyUtils.tryGetEmail(key)
+    val userId = KeyUtils.tryGetUserId(key)
     if (userId == null) return null
     return PGPIdentifier.splitUserId(userId.email)
   }
 
   fun getUserIdFromKeyId(identifier: PGPIdentifier): String? {
     val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
-    return KeyUtils.tryGetEmail(key).toString()
+    return KeyUtils.tryGetUserId(key).toString()
   }
 
   fun getLongKeyIdFromKeyId(identifier: PGPIdentifier): String? {
     val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
-    return KeyUtils.tryGetId(key).toString()
+    return KeyUtils.tryGetKeyId(key).toString()
   }
 
   fun decrypt(
@@ -151,9 +151,13 @@ constructor(
         .withAsciiArmor(settings.getBoolean(PreferenceKeys.ASCII_ARMOR, false))
         .build()
     val keys = identities.map { id -> pgpKeyManager.getKeyById(id) }.filterValues()
-    pgpCryptoHandler.encrypt(keys, null, message, encryptedMessage, encryptionOptions).map {
-      encryptedMessage
-    }
+    val result = pgpCryptoHandler.encrypt(keys, null, message, encryptedMessage, encryptionOptions)
+    result.getError()?.let { logcat { it.asLog() } }
+    val succeededUserEmails =
+      result.get()?.mapNotNull { key ->
+        KeyUtils.tryGetUserId(key)?.toString()?.let { PGPIdentifier.splitUserId(it) }
+      }
+    Pair(succeededUserEmails, result.map { encryptedMessage })
   }
 
   fun encryptSym(

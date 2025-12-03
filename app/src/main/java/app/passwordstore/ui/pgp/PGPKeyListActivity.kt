@@ -37,6 +37,7 @@ import app.passwordstore.ui.compose.theme.APSTheme
 import app.passwordstore.ui.dialogs.AddPgpKeyBottomSheet
 import app.passwordstore.ui.dialogs.PasswordDialog
 import app.passwordstore.util.extensions.snackbar
+import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.viewmodel.PGPKeyListViewModel
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onFailure
@@ -138,7 +139,7 @@ class PGPKeyListActivity : AppCompatActivity() {
                 { identifier, isSelected ->
                   val keyId = run { // ensure numeric key ID
                     val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
-                    KeyUtils.tryGetId(key) ?: throw NullPointerException()
+                    KeyUtils.tryGetKeyId(key) ?: throw NullPointerException()
                   }
                   if (isSelected) selectedKeyIds.add(keyId.toString())
                   else selectedKeyIds.remove(keyId.toString())
@@ -199,6 +200,7 @@ class PGPKeyListActivity : AppCompatActivity() {
           } else {
             askPassphrase(identifier, isError = true)
           }
+          passphrase.wipe()
         }
       }
     }
@@ -261,7 +263,7 @@ class PGPKeyListActivity : AppCompatActivity() {
         } else {
           KeyUtils.extractPublicKeyData(key)
         }
-      Pair(KeyUtils.tryGetId(key), contents)
+      Pair(KeyUtils.tryGetKeyId(key), contents)
     }
 
     keyNumericId = keyIdAndContent.first?.toString()

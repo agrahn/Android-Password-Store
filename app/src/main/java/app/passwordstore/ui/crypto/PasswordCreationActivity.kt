@@ -24,6 +24,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
+import app.passwordstore.crypto.errors.UnusableKeyException
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.databinding.PasswordCreationActivityBinding
 import app.passwordstore.ui.dialogs.DicewarePasswordGeneratorDialogFragment
@@ -41,9 +42,11 @@ import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.settings.DirectoryStructure
 import app.passwordstore.util.settings.PreferenceKeys
+import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.onSuccess
 import com.github.michaelbull.result.runCatching
+import com.github.michaelbull.result.unwrapError
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.LuminanceSource
@@ -394,7 +397,7 @@ class PasswordCreationActivity : BasePGPActivity() {
 
       lifecycleScope.launch(dispatcherProvider.main()) {
         runCatching {
-            val result =
+            val (succeededUserEmails, result) =
               withContext(dispatcherProvider.io()) {
                 val outputStream = ByteArrayOutputStream()
                 repository.encrypt(
@@ -404,8 +407,16 @@ class PasswordCreationActivity : BasePGPActivity() {
                   ),
                   outputStream,
                 )
-                outputStream
               }
+
+            if (result.isErr) throw result.unwrapError()
+            if (succeededUserEmails.isNullOrEmpty()) throw UnusableKeyException
+
+            val failedUserEmails =
+              gpgIdentifiers
+                .mapNotNull { id -> repository.getEmailFromKeyId(id) }
+                .filter { it !in succeededUserEmails ?: emptyList() }
+
             val passwordFile = Paths.get(path)
             // If we're not editing, this file should not already exist!
             // Additionally, if we were editing and the incoming and outgoing
@@ -424,7 +435,9 @@ class PasswordCreationActivity : BasePGPActivity() {
               return@runCatching
             }
 
-            withContext(dispatcherProvider.io()) { passwordFile.writeBytes(result.toByteArray()) }
+            withContext(dispatcherProvider.io()) {
+              passwordFile.writeBytes(result.getOrThrow().toByteArray())
+            }
 
             // associate the new password name with the last name's timestamp in history
             val preference = getSharedPreferences("recent_password_history", Context.MODE_PRIVATE)
@@ -484,23 +497,53 @@ class PasswordCreationActivity : BasePGPActivity() {
                 )
                 .onSuccess {
                   setResult(RESULT_OK, returnIntent)
-                  finish()
+                  var dialog =
+                    MaterialAlertDialogBuilder(this@PasswordCreationActivity)
+                      .setCancelable(false)
+                      .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
+                  var messageText =
+                    getString(
+                      R.string.password_creation_file_encryption_succeeded_ids_message,
+                      succeededUserEmails.joinToString(),
+                    )
+                  if (!failedUserEmails.isEmpty()) {
+                    dialog.setTitle(
+                      R.string.password_creation_file_encryption_partial_success_title
+                    )
+                    messageText +=
+                      getString(
+                        R.string.password_creation_file_encryption_failed_ids_message,
+                        failedUserEmails.joinToString(),
+                      )
+                  } else {
+                    val title =
+                      if (editing)
+                        getString(R.string.password_creation_edit_file_encryption_success_title)
+                      else getString(R.string.password_creation_new_file_encryption_success_title)
+                    dialog.setTitle(title)
+                  }
+                  dialog.setMessage(messageText)
+                  dialog.show()
                 }
             }
           }
           .onFailure { e ->
-            if (e is IOException) {
-              logcat(ERROR) { e.asLog("Failed to write password file") }
-              setResult(RESULT_CANCELED)
-              MaterialAlertDialogBuilder(this@PasswordCreationActivity)
-                .setTitle(getString(R.string.password_creation_file_fail_title))
-                .setMessage(getString(R.string.password_creation_file_write_fail_message))
-                .setCancelable(false)
-                .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
-                .show()
-            } else {
-              logcat(ERROR) { e.asLog() }
-            }
+            logcat(ERROR) { e.asLog() }
+            setResult(RESULT_CANCELED)
+            val errMessage =
+              when (e) {
+                is IOException -> getString(R.string.password_creation_file_write_fail_message)
+                is UnusableKeyException ->
+                  getString(R.string.password_creation_unusable_encryption_key_error_message)
+                else -> e.message ?: e.toString()
+              }
+            MaterialAlertDialogBuilder(this@PasswordCreationActivity)
+              .setIcon(R.drawable.ic_crossmark_red_24dp)
+              .setTitle(getString(R.string.password_creation_file_fail_title))
+              .setMessage(errMessage)
+              .setCancelable(false)
+              .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
+              .show()
           }
       }
     }

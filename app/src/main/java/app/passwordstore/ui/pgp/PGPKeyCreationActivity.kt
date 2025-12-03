@@ -11,7 +11,7 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doOnTextChanged
 import app.passwordstore.R
-import app.passwordstore.crypto.KeyUtils.tryGetId
+import app.passwordstore.crypto.KeyUtils.tryGetKeyId
 import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.databinding.PgpKeyCreationActivityBinding
 import app.passwordstore.util.extensions.enableEdgeToEdgeView
@@ -137,7 +137,7 @@ class PGPKeyCreationActivity : AppCompatActivity() {
     if (key != null) {
       MaterialAlertDialogBuilder(this)
         .setTitle(getString(R.string.pgp_key_creation_succeeded))
-        .setMessage(getString(R.string.pgp_key_creation_succeeded_message, tryGetId(key)))
+        .setMessage(getString(R.string.pgp_key_creation_succeeded_message, tryGetKeyId(key)))
         .setPositiveButton(android.R.string.ok) { _, _ ->
           setResult(RESULT_OK)
           finish()
