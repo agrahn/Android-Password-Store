@@ -49,10 +49,16 @@ This document assumes that you already have an Android development environment r
 Run the following command to generate a debug APK:
 
 ```shell
-./gradlew collectFreeDebugApks
+./gradlew assembleFreeDebug
 ```
 
 You can find the generated APK at `app/outputs`.
+
+Before installing the debug version, you must enable Developer Options on your Android device and USB debugging. To do this, follow [these steps](https://developer.android.com/studio/debug/dev-options). Then, connect your device to your PC via USB or Wi-Fi and run
+
+```shell
+./gradlew installFreeDebug
+```
 
 ## Pre-push checks
 
