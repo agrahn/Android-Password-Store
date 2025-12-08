@@ -90,7 +90,7 @@ public object KeyUtils {
     }
 
   public fun extractPublicKey(key: PGPKey): PGPKey? =
-    return extractPublicKeyData(key)?.let { PGPKey(it) }
+    extractPublicKeyData(key)?.let { PGPKey(it) }
 
   /**
    * Creates PGPainless SessionKey from decrypted session key data

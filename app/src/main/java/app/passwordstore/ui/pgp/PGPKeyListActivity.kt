@@ -244,7 +244,7 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   private fun deleteKey(identifier: PGPIdentifier) {
     val keyIdPassedIn =
-      KeyUtils.tryGetId(pgpKeyManager.getKeyById(identifier).getOrThrow())
+      KeyUtils.tryGetKeyId(pgpKeyManager.getKeyById(identifier).getOrThrow())
         ?: throw NullPointerException()
     val tokenLinkedIds = settings.getStringSet(TOKEN_LINKED_PGP_IDS, setOf<String>())
     settings.edit {
@@ -357,50 +357,50 @@ class PGPKeyListActivity : AppCompatActivity() {
   private fun linkHwKey(identifier: PGPIdentifier, openPgpSession: OpenPgpSession) {
     matchingKeyNotFoundDialog?.dismiss()
     runCatching {
-        //// retrieve decryption key ID from hardware key
-        //val keyIdHwDec = yubikeyCryptoHandler.getEncKeyIdFromHwKey(openPgpSession).getOrThrow()
+        // retrieve decryption key ID from hardware key
+        val keyIdHwDec = yubikeyCryptoHandler.getEncKeyIdFromHwKey(openPgpSession).getOrThrow()
 
-        ///* Look for public encryption subkey with ID [keyIdHwDec] within keyring with primary ID/User ID [identifier];
-        // * throw if unavailable */
-        //pgpKeyManager.getPublicSubkeyById(keyIdHwDec, identifier).getOrThrow()
+        /* Look for public encryption subkey with ID [keyIdHwDec] within keyring with primary ID/User ID [identifier];
+         * throw if unavailable */
+        pgpKeyManager.getPublicSubkeyById(keyIdHwDec, identifier).getOrThrow()
 
-        //// Get public keyring from Passwordstore by passed-in identifier
-        //val keyPassedIn = pgpKeyManager.getKeyById(identifier).getOrThrow()
-        //val publicKeyPassedIn = requireNotNull(KeyUtils.extractPublicKey(keyPassedIn)) { 
-		//  "Error while trying to get public key from store"
-		//}
+        // Get public keyring from Passwordstore by passed-in identifier
+        val keyPassedIn = pgpKeyManager.getKeyById(identifier).getOrThrow()
+        val publicKeyPassedIn = requireNotNull(KeyUtils.extractPublicKey(keyPassedIn)) { 
+		  "Error while trying to get public key from store"
+		}
 
-		//// Get (numeric) KeyId   
-	    //val keyIdPassedIn = requireNotNull(KeyUtils.tryGetId(keyPassedIn)){
-		//  "Error while trying to get key ID"
-		//}
-        //val tokenLinkedIds = settings.getStringSet(TOKEN_LINKED_PGP_IDS, setOf<String>())
-        //settings.edit {
-        //  putStringSet(
-        //    TOKEN_LINKED_PGP_IDS,
-        //    tokenLinkedIds?.plus(keyIdPassedIn.toString()) ?: setOf<String>(),
-        //  )
-        //}
+		// Get (numeric) KeyId   
+	    val keyIdPassedIn = requireNotNull(KeyUtils.tryGetKeyId(keyPassedIn)){
+		  "Error while trying to get key ID"
+		}
+        val tokenLinkedIds = settings.getStringSet(TOKEN_LINKED_PGP_IDS, setOf<String>())
+        settings.edit {
+          putStringSet(
+            TOKEN_LINKED_PGP_IDS,
+            tokenLinkedIds?.plus(keyIdPassedIn.toString()) ?: setOf<String>(),
+          )
+        }
 
-		//// Replace secret keyring with public keyring
-        //viewModel.deleteKey(keyIdPassedIn)
-        //viewModel.addKey(publicKeyPassedIn)
+		// Replace secret keyring with public keyring
+        viewModel.deleteKey(keyIdPassedIn)
+        viewModel.addKey(publicKeyPassedIn)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-        val keyIdHwDec = yubikeyCryptoHandler.getEncKeyIdFromHwKey(openPgpSession).getOrThrow()
-        val pubKey = pgpKeyManager.getPublicSubkeyById(keyIdHwDec).getOrThrow()
-
-        //val secKey =  pgpKeyManager.getKeyById(identifier).getOrThrow()
-		//val pubKey = KeyUtils.extractPublicKey(secKey)
-        ////val pubKey = pgpKeyManager.getPublicSubkeyById(keyIdHwDec).getOrThrow()
-		//val encKey = KeyUtils.tryParseCertificateOrKey(pubKey)?.getEncryptionKeys()?.first()
-
-        val sessionKey = yubikeyCryptoHandler.decryptSessionKey(
-            "123456".toCharArray(),
-            cipherTextWithArmor.byteInputStream(),
-            openPgpSession,
-            pubKey
-        ).getOrThrow()
+//        val keyIdHwDec = yubikeyCryptoHandler.getEncKeyIdFromHwKey(openPgpSession).getOrThrow()
+//        val pubKey = pgpKeyManager.getPublicSubkeyById(keyIdHwDec).getOrThrow()
+//
+//        //val secKey =  pgpKeyManager.getKeyById(identifier).getOrThrow()
+//		//val pubKey = KeyUtils.extractPublicKey(secKey)
+//        ////val pubKey = pgpKeyManager.getPublicSubkeyById(keyIdHwDec).getOrThrow()
+//		//val encKey = KeyUtils.tryParseCertificateOrKey(pubKey)?.getEncryptionKeys()?.first()
+//
+//        val sessionKey = yubikeyCryptoHandler.decryptSessionKey(
+//            "123456".toCharArray(),
+//            cipherTextWithArmor.byteInputStream(),
+//            openPgpSession,
+//            pubKey
+//        ).getOrThrow()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
       }

@@ -243,35 +243,15 @@ public class YubiKeyCryptoHandler @Inject constructor() {
   ): Result<Unit, CryptoHandlerException> =
     runCatching {}
       .mapError { error -> NoDecryptionKeyAvailableException(error.message, error.cause) }
-      
+
   /**
-   * Get the KeyId from the connected hardware key, using the encryption key fingerprint it contains
+   * Get the encryption KeyId from the connected hardware key
    */
   public fun getEncKeyIdFromHwKey(openPgpSession: OpenPgpSession): Result<KeyId, CryptoHandlerException> =
-    /* Extract the encryption key (DEC) fingerprint (20 bytes) from Application Related
-     * Data (tag 0x6E) array. We use tag 0xC4 that preceedes the combined (SIG+DEC+AUT)
-     * fingerprints within the app related data array to localise and then slice out the
-     * DEC fingerprint.
-     */
     runCatching {
-      val tag0x6EString = openPgpSession.getData(0x6E).toHexString() // Application Related Data
-      val tag0xC4String = "c407" + openPgpSession.getData(0xC4).toHexString() // preceeding data
-      val leadingRegex = "^6e.*${tag0xC4String}".toRegex()
-      val combinedFingerprintsPlus = tag0x6EString.replaceFirst(leadingRegex, "").hexToByteArray()
-      require(combinedFingerprintsPlus[0].toUByte().toInt() == 0xC5) { // tag ID of combined FPs
-        "Combined fingerprint subarray (tag ID 0xC5) not found"
-      }
-      require( // length of combined fingerprints subarray
-        combinedFingerprintsPlus[1].toUByte().toInt() >= 60
-      ) {
-        "Assertion error of fingerprint subarray length"
-      }
-      val fingerPrintBytes =
-        combinedFingerprintsPlus.copyOfRange(
-          2 + 20,
-          2 + 40,
-        ) // skip SIG fingerprint and drop trailing bytes
-      return@runCatching PGPIdentifier.fromString(fingerPrintBytes.toHexString()) as KeyId
+      val fingerPrint = openPgpSession.getApplicationRelatedData().getDiscretionary().getFingerprint(KeyRef.DEC) ?:
+        throw NoDecryptionKeyAvailableException("Hardware token does not provide a decryption key")
+      PGPIdentifier.fromString(fingerPrint.toHexString()) as KeyId
     }  
     .mapError { error -> NoDecryptionKeyAvailableException(error.message, error.cause) }
 
@@ -513,7 +493,7 @@ public class YubiKeyCryptoHandler @Inject constructor() {
    *
    * Throws IllegalArgumentException if the encoding is unrecognized/truncated.
    */
-  fun decodePrefixedNativePoint(blob: ByteArray, offset: Int, x9Params: X9ECParameters): Pair<ECPoint, Int> {
+  private fun decodePrefixedNativePoint(blob: ByteArray, offset: Int, x9Params: X9ECParameters): Pair<ECPoint, Int> {
       var off = offset
       if (off >= blob.size) throw IllegalArgumentException("no data at offset $offset to read length")
       val len = blob[off++].toInt() and 0xff
