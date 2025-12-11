@@ -103,32 +103,6 @@ class GitServerConfigActivity : BaseGitActivity() {
     }
     binding.saveButton.setOnClickListener {
       val newUrl = binding.serverUrl.text.toString().trim()
-      // If url is of type john_doe@example.org:12435/path/to/repo, then not adding `ssh://`
-      // in the beginning will cause the port to be seen as part of the path. Let users know
-      // about it and offer a quickfix.
-      if (newUrl.contains(PORT_REGEX)) {
-        if (newUrl.startsWith("https://")) {
-          BasicBottomSheet.Builder(this)
-            .setTitleRes(R.string.https_scheme_with_port_title)
-            .setMessageRes(R.string.https_scheme_with_port_message)
-            .setPositiveButtonClickListener {
-              binding.serverUrl.setText(newUrl.replace(PORT_REGEX, "/"))
-            }
-            .build()
-            .show(supportFragmentManager, "SSH_SCHEME_WARNING")
-          return@setOnClickListener
-        } else if (!newUrl.startsWith("ssh://")) {
-          BasicBottomSheet.Builder(this)
-            .setTitleRes(R.string.ssh_scheme_needed_title)
-            .setMessageRes(R.string.ssh_scheme_needed_message)
-            .setPositiveButtonClickListener {
-              @Suppress("SetTextI18n") binding.serverUrl.setText("ssh://$newUrl")
-            }
-            .build()
-            .show(supportFragmentManager, "SSH_SCHEME_WARNING")
-          return@setOnClickListener
-        }
-      }
       if (newUrl.startsWith("git://")) {
         BasicBottomSheet.Builder(this)
           .setTitleRes(R.string.git_scheme_disallowed_title)
@@ -140,10 +114,7 @@ class GitServerConfigActivity : BaseGitActivity() {
       }
       when (
         val updateResult =
-          gitSettings.updateConnectionSettingsIfValid(
-            newAuthMode = newAuthMode,
-            newUrl = binding.serverUrl.text.toString().trim(),
-          )
+          gitSettings.updateConnectionSettingsIfValid(newAuthMode = newAuthMode, newUrl = newUrl)
       ) {
         GitSettings.UpdateConnectionSettingsResult.FailedToParseUrl -> {
           Snackbar.make(

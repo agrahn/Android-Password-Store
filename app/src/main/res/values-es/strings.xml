@@ -346,9 +346,6 @@
 
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">URL potencialmente incorrecta</string>
-  <string name="ssh_scheme_needed_message">Parece que la dirección URL contiene un puerto personalizado, pero no especifica el esquema de ssh://.\nEsto puede hacer que el puerto se considere parte de la ruta de acceso. Presione Aceptar aquí para corregir la URL.</string>
-  <string name="https_scheme_with_port_title">URL HTTPS con puerto personalizado</string>
-  <string name="https_scheme_with_port_message">Parece que está utilizando una URL HTTPS con un puerto personalizado. Esto no es compatible y causará problemas en el futuro. Presiona Aceptar para eliminar el puerto de tu URL.</string>
   <string name="git_scheme_disallowed_title">Se desaconseja el uso del protocolo git://</string>
   <string name="git_scheme_disallowed_message">El protocolo Git proporcionado por git-daemon no realiza cifrado de transporte y no es adecuado para operaciones seguras.</string>
 

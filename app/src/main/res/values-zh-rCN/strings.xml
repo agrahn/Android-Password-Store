@@ -295,10 +295,6 @@ personal.com</string>
   <string name="gpg_key_select">选择密钥</string>
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">URL可能不正确</string>
-  <string name="ssh_scheme_needed_message">您的URL似乎包含自定义端口,但未指定ssh://协议
-这可能会导致将端口视为路径的一部分 在此处按\"确定\"修复URL</string>
-  <string name="https_scheme_with_port_title">带有自定义端口的HTTPS URL</string>
-  <string name="https_scheme_with_port_message">看起来您正在使用带有自定义端口的HTTPS URL但这不受支持,并且会导致问题,按确认从您的URL中删除端口</string>
   <string name="git_scheme_disallowed_title">不鼓励使用 git:// 协议</string>
   <string name="git_scheme_disallowed_message">Git-daemon 提供的 git 协议不执行传输加密，不适合安全操作。</string>
   <!-- Proxy configuration activity -->

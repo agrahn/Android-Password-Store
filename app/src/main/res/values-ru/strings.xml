@@ -289,9 +289,6 @@
   <string name="gpg_key_select">Выберите ключ</string>
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">Потенциально неправильный URL</string>
-  <string name="ssh_scheme_needed_message">Указание порта в URL будет работать только при использовании SSH (ssh://), иначе порт будет расцениваться как часть URL. Исправить URL?</string>
-  <string name="https_scheme_with_port_title">URL HTTPS с произвольным портом</string>
-  <string name="https_scheme_with_port_message">Похоже, что вы используете URL HTTPS с произвольным портом. Это не поддерживается, и вызовет проблемы в дальнейшем. Нажмите ОК, чтобы удалить порт из URL.</string>
   <string name="git_scheme_disallowed_title">Использование протокола git нежелательно</string>
   <string name="git_scheme_disallowed_message">Протокол git, предоставляемый демоном, не обеспечивает транспортного шифрования и не подходит для безопасных операций.</string>
   <!-- Proxy configuration activity -->

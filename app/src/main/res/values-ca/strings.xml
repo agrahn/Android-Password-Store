@@ -292,9 +292,6 @@
     <string name="select_gpg_key_message">Selecciona una o múltiple claus PGP per inicialitzar el magatzem.</string>
     <string name="gpg_key_select">Selecciona les claus</string>
     <string name="ssh_scheme_needed_title">URL potencialment incorrecta</string>
-    <string name="ssh_scheme_needed_message">Sembla que la URL conté un port personalitzat, però no s\'especifica el format ssh://. Això pot causar que el port no es consideri correctament. Fixeu la URL.</string>
-    <string name="https_scheme_with_port_title">URL HTTPS amb un port personalitzat</string>
-    <string name="https_scheme_with_port_message">Sembla que la URL HTTPS conté un port personalitzat. Això no és suportat i pot causar problemes. Suprimiu el port de la URL.</string>
     <string name="git_scheme_disallowed_title">L\'ús del protocol git:// està desaconsellat</string>
     <string name="git_scheme_disallowed_message">El protocol Git proveït per git-daemon usa un transport en clar i no és adequat per operacions segures.</string>
     <string name="activity_proxy_label">Configuració del servidor intermediari</string>

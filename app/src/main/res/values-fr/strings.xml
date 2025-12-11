@@ -282,9 +282,6 @@
   <string name="gpg_key_select">Sélectionner la clé</string>
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">URL potentiellement incorrecte</string>
-  <string name="ssh_scheme_needed_message">Il semble que votre URL contienne un port personnalisé, mais ne spécifie pas le schéma ssh:// .\nCela peut faire que le port soit considéré comme une partie de votre chemin. Appuyez sur OK ici pour corriger l\'URL.</string>
-  <string name="https_scheme_with_port_title">URL HTTPS avec port personnalisé</string>
-  <string name="https_scheme_with_port_message">Il semble que vous utilisez une URL HTTPS avec un port personnalisé. Ceci n\'est pas pris en charge et causera des problèmes par la suite. Appuyez sur OK pour supprimer le port de votre URL.</string>
   <!-- Proxy configuration activity -->
   <string name="proxy_hostname">Nom d\'hôte du proxy</string>
   <string name="port">Port</string>

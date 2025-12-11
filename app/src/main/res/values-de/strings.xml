@@ -357,9 +357,6 @@
 
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">Möglicherweise inkorrekte URL</string>
-  <string name="ssh_scheme_needed_message">Es sieht so aus, als ob Sie einen benutzerdefinierten Port in Ihrer URL angegeben haben, aber nicht im ssh://-Schema.\nDas kann dazu führen, dass Ihr Port als Teil des Pfades betrachtet wird. Drücken Sie hier auf OK, um die URL zu korrigieren.</string>
-  <string name="https_scheme_with_port_title">HTTPS-URL mit benutzerdefiniertem Port</string>
-  <string name="https_scheme_with_port_message">Es sieht so aus, als nutzen Sie eine HTTPS-URL mit benutzerdefiniertem Port. Das ist nicht unterstützt und wird auf lange Sicht zu Problemen führen. Drücken Sie OK, um den Port aus der URL zu entfernen.</string>
   <string name="git_scheme_disallowed_title">Es wird davon abgeraten, das git://-Protokoll zu nutzen</string>
   <string name="git_scheme_disallowed_message">Das Git-Protokoll des Git-Daemons unterstützt keine verschlüsselten Verbindungen und ist für einen sicheren Betrieb nicht geeignet.</string>
 

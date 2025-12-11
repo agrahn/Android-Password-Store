@@ -285,9 +285,6 @@
   <string name="gpg_key_select">Wybierz klucz</string>
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">Potencjalnie nieprawidłowy adres URL</string>
-  <string name="ssh_scheme_needed_message">Wygląda na to, że twój adres URL zawiera niestandardowy port, ale nie zawiera schematu \"ssh://\".\nTo może spowodować, że port zostanie uznany za część Twojej ścieżki. Naciśnij OK tutaj, aby naprawić adres URL.</string>
-  <string name="https_scheme_with_port_title">Adres URL HTTPS z niestandardowym portem</string>
-  <string name="https_scheme_with_port_message">Wygląda na to, że używasz adresu URL HTTPS z niestandardowym portem. To nie jest obsługiwane i później spowoduje problemy. Naciśnij OK, aby usunąć port z Twojego adresu URL.</string>
   <string name="git_scheme_disallowed_title">Odradzamy stosowanie protokołu \"git://\"</string>
   <string name="git_scheme_disallowed_message">Protokół git dostarczony przez git-demon nie używa szyfrowania podczas transportu i nie nadaje się do bezpiecznych operacji.</string>
   <!-- Proxy configuration activity -->

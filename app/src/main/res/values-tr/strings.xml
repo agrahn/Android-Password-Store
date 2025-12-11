@@ -341,9 +341,6 @@
 
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">Potansiyel olarak yanlış URL</string>
-  <string name="ssh_scheme_needed_message">URL\'niz özel bir port içeriyor gibi görünüyor, ancak ssh:// şemasını belirtmiyor.\nBu, portun yolunuzun bir parçası olarak kabul edilmesine neden olabilir. URL\'yi düzeltmek için Tamam\'a basın.</string>
-  <string name="https_scheme_with_port_title">Özel portlu HTTPS URL\'si</string>
-  <string name="https_scheme_with_port_message">Özel portlu bir HTTPS URL\'si kullanıyor gibi görünüyorsunuz. Bu desteklenmiyor ve ileride sorunlara neden olacaktır. Portu URL\'nizden kaldırmak için Tamam\'a basın.</string>
   <string name="git_scheme_disallowed_title">git:// protokolünün kullanılması önerilmez</string>
   <string name="git_scheme_disallowed_message">git-daemon tarafından sağlanan git protokolü, taşıma şifrelemesi yapmaz ve güvenli işlemler için uygun değildir.</string>
 

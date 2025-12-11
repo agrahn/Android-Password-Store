@@ -292,9 +292,6 @@
   <string name="gpg_key_select">Selecione a chave</string>
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">URL potencialmente incorreta</string>
-  <string name="ssh_scheme_needed_message">Parece que sua URL contém uma porta personalizada, mas não especifica o esquema ssh://\nIsto pode fazer com que a porta seja considerada uma parte do seu caminho. Pressione OK aqui para corrigir o URL.</string>
-  <string name="https_scheme_with_port_title">URL HTTPS com porta personalizada</string>
-  <string name="https_scheme_with_port_message">Parece que você está usando uma URL HTTPS com uma porta personalizada. Isto não é suportado e causará problemas na linha. Pressione OK para remover a porta da URL.</string>
   <string name="git_scheme_disallowed_title">Usa o protocolo git:// não é recomendado</string>
   <string name="git_scheme_disallowed_message">O protocolo git fornecido pelo git-daemon não produz qualquer encriptação de transporte e não é adequado para operações seguras.</string>
   <!-- Proxy configuration activity -->

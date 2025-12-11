@@ -292,9 +292,6 @@ username@example.com:…</string>
   <string name="gpg_key_select">키 선택</string>
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">잠재적으로 잘못된 URL</string>
-  <string name="ssh_scheme_needed_message">URL에 사용자 지정 포트가 포함되어 있지만 ssh:// scheme를 지정하지 않은 것 같습니다.\n이로 인해 포트가 경로의 일부로 간주될 수 있습니다. 여기에서 확인을 눌러 URL을 수정합니다.</string>
-  <string name="https_scheme_with_port_title">사용자 지정 포트가 포함된 HTTPS URL</string>
-  <string name="https_scheme_with_port_message">사용자 지정 포트가 있는 HTTPS URL을 사용하고 있는 것 같습니다. 이는 지원되지 않으며 나중에 문제를 일으킬 수 있습니다. 확인을 눌러 URL에서 포트를 제거하세요.</string>
   <string name="git_scheme_disallowed_title">git:// 프로토콜 사용은 권장하지 않습니다</string>
   <string name="git_scheme_disallowed_message">git-daemon이 제공하는 git 프로토콜은 전송 암호화를 수행하지 않으므로 보안 작업에 적합하지 않습니다.</string>
   <!-- Proxy configuration activity -->
