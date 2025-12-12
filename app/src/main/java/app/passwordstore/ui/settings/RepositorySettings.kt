@@ -60,11 +60,6 @@ import logcat.logcat
 
 class RepositorySettings(private val activity: FragmentActivity) : SettingsProvider {
 
-  private val generateSshKey =
-    activity.registerForActivityResult(StartActivityForResult()) {
-      showSshKeyPref?.visible = SshKey.canShowSshPublicKey
-    }
-
   private val hiltEntryPoint by unsafeLazy {
     EntryPointAccessors.fromApplication(
       activity.applicationContext,
@@ -151,11 +146,29 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
       }
     }
 
+  private fun Preference.updateProxyPref() {
+    titleRes = R.string.pref_edit_proxy_settings
+    visible =
+      hiltEntryPoint.gitSettings().url?.startsWith("http") == true && PasswordRepository.isGitRepo()
+    requestRebind()
+  }
+
+  private var proxySettingsPref: Preference? = null
+
+  private val configureGitServer =
+    activity.registerForActivityResult(StartActivityForResult()) {
+      proxySettingsPref?.updateProxyPref()
+    }
+
   private var showSshKeyPref: Preference? = null
+
+  private val generateSshKey =
+    activity.registerForActivityResult(StartActivityForResult()) {
+      showSshKeyPref?.visible = SshKey.canShowSshPublicKey
+    }
 
   override fun provideSettings(builder: PreferenceScreen.Builder) {
     val gitOperationSecrets = hiltEntryPoint.gitSecrets()
-    val gitSettings = hiltEntryPoint.gitSettings()
 
     builder.apply {
       switch(PreferenceKeys.REBASE_ON_PULL) {
@@ -168,18 +181,18 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
         titleRes = R.string.pref_edit_git_server_settings
         visible = PasswordRepository.isGitRepo()
         onClick {
-          activity.launchActivity(GitServerConfigActivity::class.java)
+          configureGitServer.launch(Intent(activity, GitServerConfigActivity::class.java))
           true
         }
       }
-      pref(PreferenceKeys.PROXY_SETTINGS) {
-        titleRes = R.string.pref_edit_proxy_settings
-        visible = gitSettings.url?.startsWith("https") == true && PasswordRepository.isGitRepo()
-        onClick {
-          activity.launchActivity(ProxySelectorActivity::class.java)
-          true
+      proxySettingsPref =
+        pref(PreferenceKeys.PROXY_SETTINGS) {
+          onClick {
+            activity.launchActivity(ProxySelectorActivity::class.java)
+            true
+          }
+          updateProxyPref()
         }
-      }
       pref(PreferenceKeys.GIT_CONFIG) {
         titleRes = R.string.pref_edit_git_config
         visible = PasswordRepository.isGitRepo()
@@ -228,6 +241,10 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
           requestRebind()
         }
         onClick {
+          gitOperationSecrets.edit {
+            remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE)
+            remove(PreferenceKeys.HTTPS_PASSWORD)
+          }
           updatePref()
           true
         }
