@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+## [1.15.5] - 2025-12-15
+
 ### Added
 
 - Allow custom port setting for Git via http
@@ -596,7 +598,8 @@ All notable changes to this project will be documented in this file
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.4...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.5...HEAD
+[1.15.5]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.4...v1.15.5
 [1.15.4]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.3...v1.15.4
 [1.15.3]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.2...v1.15.3
 [1.15.2]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.1...v1.15.2
