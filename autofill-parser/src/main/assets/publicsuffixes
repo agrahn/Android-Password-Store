@@ -1,4 +1,4 @@
-138985
+139010
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -1674,6 +1674,7 @@ co.pn
 co.ro
 co.rs
 co.rw
+co.scot
 co.site
 co.ss
 co.st
@@ -5299,6 +5300,7 @@ me.in
 me.it
 me.ke
 me.kr
+me.scot
 me.so
 me.ss
 me.tz
@@ -6691,6 +6693,7 @@ org.rw
 org.sa
 org.sb
 org.sc
+org.scot
 org.sd
 org.se
 org.sg
