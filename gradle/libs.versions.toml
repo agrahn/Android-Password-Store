@@ -1,6 +1,6 @@
 [versions]
 agp = "8.13.2"
-androidxActivity = "1.12.1"
+androidxActivity = "1.12.2"
 bouncycastle = "1.83"
 coroutines = "1.10.2"
 flowbinding = "1.2.0"
@@ -47,7 +47,7 @@ build-r8 = "com.android.tools:r8:8.13.17"
 build-semver = "com.github.zafarkhaja:java-semver:0.10.2"
 build-spotless = "com.diffplug.spotless:spotless-plugin-gradle:8.1.0"
 build-vcu = "nl.littlerobots.version-catalog-update:nl.littlerobots.version-catalog-update.gradle.plugin:1.0.1"
-compose-bom = "androidx.compose:compose-bom:2025.12.00"
+compose-bom = "androidx.compose:compose-bom:2025.12.01"
 compose-foundation-core = { module = "androidx.compose.foundation:foundation" }
 compose-foundation-layout = { module = "androidx.compose.foundation:foundation-layout" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
