@@ -240,30 +240,44 @@ constructor(
     }
 
     val items = mutableMapOf<String, String>()
+
+    var extraContentStarted = false
     passContent.forEach { line ->
       // Split the line at the first ':' into key and value
-      // "ABC : DEF:GHI" --> key = "ABC" value = " DEF:GHI"]
-      val (key, value) =
-        if (String(line).contains(':')) {
-          val keyval = String(line).split(":", limit = 2)
-          if (keyval.first().trim().isEmpty() && keyval.last().isEmpty()) "" to String(line)
-          else keyval.first().trim() to keyval.last()
-        } else {
-          "" to String(line)
-        }
-
-      if (key.isNotEmpty()) {
-        // If key is not empty, we can form a pair with this so add it to the map.
-        items.putOrAppend(key, value)
+      // "ABC : DEF:GHI" --> key = "ABC" value = "DEF:GHI"]
+      // Note the a valid key must not start with space, otherwise it is considered extra content.
+      if (String(line).contains(':')) {
+        val (k, v) = String(line).split(":", limit = 2)
+        if (k.isBlank() || k.startsWith(" ") || k.startsWith('\t') || extraContentStarted)
+          items.putOrAppend(EXTRA_CONTENT, String(line))
+        else items.putOrAppend(k.trimEnd(), v.trimStart())
       } else {
-        // If key is empty, we were not able to form proper key-value pair.
-        // So append the original line to an "EXTRA CONTENT" map entry
-        if (value.isNotEmpty()) items.putOrAppend(EXTRA_CONTENT, String(line))
+        if (String(line).isBlank()) {
+          extraContentStarted = true
+          // Skip blank lines until something non-blank has been added to extra content
+          if (!(items[EXTRA_CONTENT]?.isBlank() ?: true))
+            items.putOrAppend(EXTRA_CONTENT, String(line))
+        } else items.putOrAppend(EXTRA_CONTENT, String(line))
       }
+    }
+
+    // strip trailing spaces from multiline extra content
+    items.get(EXTRA_CONTENT)?.let {
+      items[EXTRA_CONTENT] = it.split("\n").map { it.trimEnd() }.joinToString("\n").trimEnd()
+    }
+
+    // adjust indent of multiline extra content
+    items.get(EXTRA_CONTENT)?.let {
+      items[EXTRA_CONTENT] = adjustIndent(it.split("\n")).joinToString("\n")
     }
 
     return items
   }
+
+  public fun adjustIndent(lines: List<String>): List<String> =
+    if (lines.filter { !it.isBlank() }.all { it.startsWith(" ") || it.startsWith('\t') })
+      adjustIndent(lines.map { line -> if (line.length > 0) line.drop(1) else line })
+    else lines
 
   private fun calculateTotp(secret: String = totpSecret!!): Result<Totp, Throwable> {
     val digits = totpFinder.findDigits(totpString)

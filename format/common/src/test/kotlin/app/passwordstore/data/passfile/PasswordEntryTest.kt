@@ -83,29 +83,29 @@ class PasswordEntryTest {
     var entry = makeEntry("username: abc\npassword: abc\ntest: abcdef")
     assertEquals(1, entry.extraContent.size)
     assertTrue(entry.extraContent.containsKey("test"))
-    assertEquals(" abcdef", entry.extraContent["test"])
+    assertEquals("abcdef", entry.extraContent["test"])
 
     entry = makeEntry("username: abc\npassword: abc\ntest: :abcdef:")
     assertEquals(1, entry.extraContent.size)
     assertTrue(entry.extraContent.containsKey("test"))
-    assertEquals(" :abcdef:", entry.extraContent["test"])
+    assertEquals(":abcdef:", entry.extraContent["test"])
 
     entry = makeEntry("username: abc\npassword: abc\ntest : ::abc:def::")
     assertEquals(1, entry.extraContent.size)
     assertTrue(entry.extraContent.containsKey("test"))
-    assertEquals(" ::abc:def::", entry.extraContent["test"])
+    assertEquals("::abc:def::", entry.extraContent["test"])
 
     entry = makeEntry("username: abc\npassword: abc\ntest: abcdef\ntest2: ghijkl")
     assertEquals(2, entry.extraContent.size)
     assertTrue(entry.extraContent.containsKey("test2"))
-    assertEquals(" ghijkl", entry.extraContent["test2"])
+    assertEquals("ghijkl", entry.extraContent["test2"])
 
     entry = makeEntry("username: abc\npassword: abc\ntest: abcdef\n: ghijkl\n mnopqr:")
-    assertEquals(3, entry.extraContent.size)
+    assertEquals(2, entry.extraContent.size)
     assertTrue(entry.extraContent.containsKey("EXTRA_CONTENT"))
-    assertEquals(": ghijkl", entry.extraContent["EXTRA_CONTENT"])
+    assertEquals(": ghijkl\n mnopqr:", entry.extraContent["EXTRA_CONTENT"])
 
-    entry = makeEntry("username: abc\npassword: abc\n:\n\n")
+    entry = makeEntry("username: abc\npassword: abc\n \n:\n\n")
     assertEquals(1, entry.extraContent.size)
     assertTrue(entry.extraContent.containsKey("EXTRA_CONTENT"))
     assertEquals(":", entry.extraContent["EXTRA_CONTENT"])
@@ -223,7 +223,7 @@ class PasswordEntryTest {
     assertNotNull(entry.username)
     assertEquals("pass", entry.password?.let { String(it) })
     assertEquals("user", entry.username)
-    assertEquals(mapOf("id" to " id"), entry.extraContent)
+    assertEquals(mapOf("id" to "id"), entry.extraContent)
   }
 
   companion object {

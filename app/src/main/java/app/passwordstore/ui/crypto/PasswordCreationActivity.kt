@@ -263,7 +263,7 @@ class PasswordCreationActivity : BasePGPActivity() {
         password.setText(String(it))
         password.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
       }
-      suggestedExtra?.let { extraContent.setText(it) }
+      suggestedExtra?.let { extraContent.setText(it.trimEnd()) }
       if (shouldGeneratePassword) {
         generatePassword()
         password.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
@@ -344,7 +344,7 @@ class PasswordCreationActivity : BasePGPActivity() {
       val editName = filename.text.toString().trim()
       var editUsername = username.text.toString()
       val editPass = password.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
-      val editExtra = extraContent.text.toString()
+      var editExtra = extraContent.text.toString()
 
       if (editName.isEmpty()) {
         snackbar(message = resources.getString(R.string.file_toast_text))
@@ -361,6 +361,11 @@ class PasswordCreationActivity : BasePGPActivity() {
       if (editPass.isEmpty() && editExtra.isEmpty()) {
         snackbar(message = resources.getString(R.string.empty_toast_text))
         return@with
+      }
+
+      // fix extra content formatting
+      if (!editExtra.isEmpty()) {
+        editExtra = editExtra.split("\n").map { it.trimEnd() }.joinToString("\n").trimEnd() + "\n"
       }
 
       if (copy) {
