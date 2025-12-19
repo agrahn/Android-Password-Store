@@ -39,6 +39,7 @@ import app.passwordstore.ui.dialogs.PasswordDialog
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.viewmodel.PGPKeyListViewModel
+import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.onSuccess
@@ -85,6 +86,7 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+
     val isSelecting = intent.extras?.getBoolean(EXTRA_KEY_SELECTION) ?: false
     val selectedKeyIds = mutableSetOf<String>()
     supportFragmentManager.setFragmentResultListener(PGP_KEY_ADD_REQUEST_KEY, this) { _, bundle ->
@@ -93,6 +95,7 @@ class PGPKeyListActivity : AppCompatActivity() {
         ACTION_NEW_PGP_KEY -> keyAction.launch(Intent(this, PGPKeyCreationActivity::class.java))
       }
     }
+
     setContent {
       APSTheme {
         Scaffold(
@@ -127,10 +130,10 @@ class PGPKeyListActivity : AppCompatActivity() {
           },
         ) { paddingValues ->
           KeyList(
-            identifiers = viewModel.keys,
+            identifiers = viewModel.keys, // Pair<KeyId,UserId>
             hasSecretKey = ::hasSecretKey,
             onChangePassphraseClick = ::changeKeyPassphrase,
-            onDeleteItemClick = viewModel::deleteKey,
+            onDeleteItemClick = ::deleteKey,
             onExportItemClick = ::exportKey,
             onExportPublicClick = ::exportPublicKey,
             modifier = Modifier.padding(paddingValues),
@@ -160,13 +163,20 @@ class PGPKeyListActivity : AppCompatActivity() {
     keyAction.launch(intent)
   }
 
+  private fun deleteKey(identifier: PGPIdentifier) {
+    val keyIdPassedIn =
+      KeyUtils.tryGetKeyId(pgpKeyManager.getKeyById(identifier).getOrThrow())
+        ?: throw NullPointerException()
+    viewModel.deleteKey(keyIdPassedIn)
+  }
+
   private fun exportKey(identifier: PGPIdentifier) {
     retries = 0
     lifecycleScope.launch {
       if (cryptoRepository.isPasswordProtected(listOf(identifier))) {
         // export as symmetrically encrypted file after passphrase verification
         askPassphrase(identifier)
-      } else if (cryptoRepository.hasSecretKey(identifier)) {
+      } else if (hasSecretKey(identifier)) {
         // a secret key without passphrase is encrypted and exported without verification
         confirmBackupCode(identifier, generateBackupCode())
       } else {
