@@ -63,7 +63,9 @@ class DecryptActivity : BasePGPActivity() {
       }
     }
     requireKeysExist {
-      val gpgIdentifiers = getPGPIdentifiers(relativeParentPath) ?: return@requireKeysExist
+      val gpgIdentifiers =
+        getPGPIdentifiers(relativeParentPath)?.filter { repository.hasKey(it) }
+          ?: return@requireKeysExist
       getPersistentAndDecrypt(gpgIdentifiers)
     }
   }

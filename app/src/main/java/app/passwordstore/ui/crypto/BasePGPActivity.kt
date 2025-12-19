@@ -251,11 +251,9 @@ open class BasePGPActivity : AppCompatActivity() {
             null
           } else {
             val id = PGPIdentifier.fromString(line)
-            if (id == null || !repository.hasKey(id)) {
-              invalidIdCount++
-              persistentPassphrases.edit { remove(id.toString()) }
-              null
-            } else id
+            if (id == null) invalidIdCount++
+            else if (!repository.hasKey(id)) persistentPassphrases.edit { remove(id.toString()) }
+            id
           }
         }
         .filterIsInstance<PGPIdentifier>()
@@ -607,7 +605,11 @@ open class BasePGPActivity : AppCompatActivity() {
       cachedPassphrases.filterKeys { identifiers.map { it.toString() }.contains(it) }
     lifecycleScope.launch(dispatcherProvider.main()) {
       val identifiersWithSecretKey = identifiers.filter { repository.hasSecretKey(it) }
-      if (!repository.isPasswordProtected(identifiersWithSecretKey) && !isError) {
+      if (
+        identifiersWithSecretKey.size > 0 &&
+          !repository.isPasswordProtected(identifiersWithSecretKey) &&
+          !isError
+      ) {
         // try passphraseless decryption first
         decryptWithPassphrase(mapOf("" to charArrayOf()), identifiersWithSecretKey)
       } else if (!isError && !passphrases.isEmpty()) {

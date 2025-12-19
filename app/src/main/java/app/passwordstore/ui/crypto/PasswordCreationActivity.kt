@@ -24,6 +24,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
+import app.passwordstore.crypto.errors.NoKeysProvidedException
 import app.passwordstore.crypto.errors.UnusableKeyException
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.databinding.PasswordCreationActivityBinding
@@ -417,9 +418,18 @@ class PasswordCreationActivity : BasePGPActivity() {
             if (result.isErr) throw result.unwrapError()
             if (succeededUserEmails.isNullOrEmpty()) throw UnusableKeyException
 
+            var unknownKeyCount = 0
             val failedUserEmails =
               gpgIdentifiers
-                .mapNotNull { id -> repository.getEmailFromKeyId(id) }
+                .map { id ->
+                  repository.getEmailFromKeyId(id)
+                    ?: run {
+                      if (!repository.hasKey(id))
+                        "\n${id}: ${getString(R.string.pgp_unknown_key_identifier)}"
+                      else
+                        "\n${id}: ${getString(R.string.password_creation_file_encryption_failed_expired_key)}"
+                    }
+                }
                 .filter { it !in succeededUserEmails ?: emptyList() }
 
             val passwordFile = Paths.get(path)
@@ -538,6 +548,8 @@ class PasswordCreationActivity : BasePGPActivity() {
             val errMessage =
               when (e) {
                 is IOException -> getString(R.string.password_creation_file_write_fail_message)
+                is NoKeysProvidedException ->
+                  getString(R.string.password_creation_no_keys_provided_message)
                 is UnusableKeyException ->
                   getString(R.string.password_creation_unusable_encryption_key_error_message)
                 else -> e.message ?: e.toString()

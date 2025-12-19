@@ -68,19 +68,18 @@ constructor(
   }
 
   fun getEmailFromKeyId(identifier: PGPIdentifier): String? {
-    val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
-    val userId = KeyUtils.tryGetUserId(key)
-    if (userId == null) return null
+    val key = pgpKeyManager.getKeyById(identifier).get() ?: return null
+    val userId = KeyUtils.tryGetUserId(key) ?: return null
     return PGPIdentifier.splitUserId(userId.email)
   }
 
   fun getUserIdFromKeyId(identifier: PGPIdentifier): String? {
-    val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
+    val key = pgpKeyManager.getKeyById(identifier).get() ?: return null
     return KeyUtils.tryGetUserId(key).toString()
   }
 
   fun getLongKeyIdFromKeyId(identifier: PGPIdentifier): String? {
-    val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
+    val key = pgpKeyManager.getKeyById(identifier).get() ?: return null
     return KeyUtils.tryGetKeyId(key).toString()
   }
 
