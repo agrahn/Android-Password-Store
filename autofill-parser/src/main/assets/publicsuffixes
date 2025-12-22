@@ -1,4 +1,4 @@
-139010
+139574
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -42,6 +42,7 @@
 *.ap-east-1.airflow.amazonaws.com
 *.ap-east-1.rds.amazonaws.com
 *.ap-east-2.rds.amazonaws.com
+*.ap-north-1.r.cloud.int.apple
 *.ap-northeast-1.airflow.amazonaws.com
 *.ap-northeast-1.rds.amazonaws.com
 *.ap-northeast-2.airflow.amazonaws.com
@@ -49,8 +50,10 @@
 *.ap-northeast-3.airflow.amazonaws.com
 *.ap-northeast-3.rds.amazonaws.com
 *.ap-south-1.airflow.amazonaws.com
+*.ap-south-1.r.cloud.int.apple
 *.ap-south-1.rds.amazonaws.com
 *.ap-south-2.airflow.amazonaws.com
+*.ap-south-2.r.cloud.int.apple
 *.ap-south-2.rds.amazonaws.com
 *.ap-southeast-1.airflow.amazonaws.com
 *.ap-southeast-1.rds.amazonaws.com
@@ -81,11 +84,13 @@
 *.ca-west-1.airflow.amazonaws.com
 *.ca-west-1.rds.amazonaws.com
 *.ck
+*.cloud.int.apple
 *.cloud.metacentrum.cz
 *.cloudera.site
 *.clusters.rdpa.co
 *.cn-north-1.airflow.amazonaws.com.cn
 *.cn-northwest-1.airflow.amazonaws.com.cn
+*.cn.st
 *.cns.joyent.com
 *.code.run
 *.compute-1.amazonaws.com
@@ -106,10 +111,12 @@
 *.elb.amazonaws.com.cn
 *.er
 *.eu-central-1.airflow.amazonaws.com
+*.eu-central-1.r.cloud.int.apple
 *.eu-central-1.rds.amazonaws.com
 *.eu-central-2.airflow.amazonaws.com
 *.eu-central-2.rds.amazonaws.com
 *.eu-north-1.airflow.amazonaws.com
+*.eu-north-1.r.cloud.int.apple
 *.eu-south-1.airflow.amazonaws.com
 *.eu-south-2.airflow.amazonaws.com
 *.eu-west-1.airflow.amazonaws.com
@@ -189,6 +196,7 @@
 *.qualyhqportal.com
 *.quipelements.com
 *.r.appspot.com
+*.r.cloud.int.apple
 *.raw.icp0.io
 *.raw.icp1.io
 *.rds.cn-north-1.amazonaws.com.cn
@@ -220,17 +228,24 @@
 *.triton.zone
 *.tst.site
 *.upsun.app
+*.us-central-1.r.cloud.int.apple
+*.us-central-2.r.cloud.int.apple
 *.us-east-1.airflow.amazonaws.com
+*.us-east-1.r.cloud.int.apple
 *.us-east-1.rds.amazonaws.com
 *.us-east-2.airflow.amazonaws.com
+*.us-east-2.r.cloud.int.apple
 *.us-east-2.rds.amazonaws.com
 *.us-gov-east-1.rds.amazonaws.com
 *.us-gov-west-1.rds.amazonaws.com
 *.us-northeast-1.rds.amazonaws.com
 *.us-west-1.airflow.amazonaws.com
+*.us-west-1.r.cloud.int.apple
 *.us-west-1.rds.amazonaws.com
 *.us-west-2.airflow.amazonaws.com
+*.us-west-2.r.cloud.int.apple
 *.us-west-2.rds.amazonaws.com
+*.us-west-3.r.cloud.int.apple
 *.user.fm
 *.user.localcert.dev
 *.usercontent.goog
@@ -619,6 +634,7 @@ ann-arbor.mi.us
 annaka.gunma.jp
 anpachi.gifu.jp
 anquan
+antagonist.cloud
 anz
 ao
 ao.it
@@ -673,6 +689,7 @@ appspaceusercontent.com
 appspot.com
 appudo.net
 appwrite.global
+appwrite.network
 aq
 aq.it
 aquarelle
@@ -1370,6 +1387,7 @@ cc.ar.us
 cc.as.us
 cc.az.us
 cc.ca.us
+cc.cd
 cc.co.us
 cc.ct.us
 cc.dc.us
@@ -1421,6 +1439,7 @@ cc.wi.us
 cc.wv.us
 cc.wy.us
 cci.fr
+ccwu.cc
 cd
 cd.eu.org
 cdn-edges.net
@@ -2283,7 +2302,6 @@ ed.ci
 ed.cr
 ed.jp
 edeka
-edgeapp.net
 edgecompute.app
 edgekey-staging.net
 edgekey.net
@@ -2568,7 +2586,6 @@ emrstudio-prod.us-gov-east-1.amazonaws.com
 emrstudio-prod.us-gov-west-1.amazonaws.com
 emrstudio-prod.us-west-1.amazonaws.com
 emrstudio-prod.us-west-2.amazonaws.com
-en-root.fr
 en.it
 ena.gifu.jp
 encoreapi.com
@@ -3615,6 +3632,8 @@ hemsedal.no
 hepforge.org
 her.jp
 herad.no
+hercules-app.com
+hercules-dev.com
 here
 here-for-more.info
 hermes
@@ -3929,6 +3948,7 @@ ilovecollege.info
 im
 im.it
 imabari.ehime.jp
+imagine-proxy.work
 imakane.hokkaido.jp
 imamat
 imari.saga.jp
@@ -3985,6 +4005,7 @@ independent-panel.uk
 independent-review.uk
 inderoy.no
 inderøy.no
+indevs.in
 indigena.bo
 industria.bo
 industries
@@ -4043,6 +4064,7 @@ insurance
 insurance.aero
 insure
 int
+int.apple
 int.ar
 int.az
 int.bo
@@ -5200,6 +5222,8 @@ madrid
 maebashi.gunma.jp
 mafelo.net
 magazine.aero
+magicpatterns.app
+magicpatternsapp.com
 maibara.shiga.jp
 maif
 mail-box.ne.jp
@@ -6520,6 +6544,7 @@ onfabrica.com
 ong
 ong.br
 onga.fukuoka.jp
+onhercules.app
 onid.ca
 oninferno.net
 onion
@@ -6955,7 +6980,6 @@ pl.eu.org
 pl.ua
 place
 platter-app.dev
-platterp.us
 play
 playit.plus
 playstation
@@ -7832,6 +7856,7 @@ satsumasendai.kagoshima.jp
 satte.saitama.jp
 sauda.no
 sauherad.no
+sav.case
 save
 saves-the-whales.com
 savona.it
@@ -8118,7 +8143,6 @@ showa.fukushima.jp
 showa.gunma.jp
 showa.yamanashi.jp
 shunan.yamaguchi.jp
-shw.io
 si
 si.eu.org
 si.it
@@ -8281,6 +8305,7 @@ sport
 sport.eg
 sport.hu
 spot
+sprites.app
 spydeberg.no
 square.site
 square7.ch
@@ -8352,7 +8377,6 @@ store.st
 store.ve
 storebase.store
 storfjord.no
-storipress.app
 storj.farm
 strand.no
 stranda.no
@@ -9137,6 +9161,7 @@ us-gov-east-1.elasticbeanstalk.com
 us-gov-west-1.elasticbeanstalk.com
 us-west-1.elasticbeanstalk.com
 us-west-2.elasticbeanstalk.com
+us.ci
 us.com
 us.eu.org
 us.gov.pl
