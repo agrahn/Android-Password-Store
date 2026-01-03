@@ -11,6 +11,7 @@ import com.github.michaelbull.result.get
 import com.github.michaelbull.result.runCatching
 import org.bouncycastle.openpgp.PGPKeyRing
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKeyReader
 import org.pgpainless.key.info.KeyRingInfo
 
@@ -18,25 +19,25 @@ import org.pgpainless.key.info.KeyRingInfo
 public object KeyUtils {
   /**
    * Attempts to parse an [OpenPGPCertificate] from a given [PGPKey]. The key is first tried as a
-   * secret key and then as a public one before the method gives up and returns null.
+   * secret keyring and then as a public one before the method gives up and returns null.
    */
   public fun tryParseCertificateOrKey(key: PGPKey): OpenPGPCertificate? =
     runCatching {
         val incoming = OpenPGPKeyReader().parseKeysOrCertificates(key.contents.inputStream())
-        // get first secret key and if there is none, get first certificate (public key)
+        // get first secret key and if there is none, get first certificate (public keyring)
         incoming.filter { it.isSecretKey() }?.firstOrNull() ?: incoming.firstOrNull()
       }
       .get()
 
-  /** Parses an [OpenPGPPrimaryKey] from the given [PGPKey] and calculates its long key ID */
+  /**
+   * Parses an [OpenPGPPrimaryKey] from the given [PGPKey] and calculates its long primary key ID
+   */
   public fun tryGetKeyId(key: PGPKey): KeyId? =
-    tryParseCertificateOrKey(key)?.getPrimaryKey()?.getKeyIdentifier()?.getKeyId()?.let {
-      KeyId(it)
-    }
+    tryParseCertificateOrKey(key)?.let { tryGetKeyId(it) }
 
   /**
-   * Parses an [OpenPGPPrimaryKey] from the given [OpenPGPCertificate] and calculates its long key
-   * ID
+   * Parses an [OpenPGPPrimaryKey] from the given [OpenPGPCertificate] and calculates its long
+   * primary key ID
    */
   public fun tryGetKeyId(cert: OpenPGPCertificate): KeyId =
     cert.getPrimaryKey().getKeyIdentifier().getKeyId().let { KeyId(it) }
@@ -67,12 +68,13 @@ public object KeyUtils {
   public fun isKeyUsable(cert: OpenPGPCertificate): Boolean =
     KeyRingInfo(cert).isUsableForEncryption
 
-  /** Tests if the given [PGPKey] is an OpenPGPKey */
+  /** Tests if the given [PGPKey] provides a decryption subkey */
   public fun hasSecretKey(key: PGPKey): Boolean =
     tryParseCertificateOrKey(key)?.let { hasSecretKey(it) } ?: false
 
-  /** Tests if the given [OpenPGPCertificate] is an OpenPGPKey */
-  public fun hasSecretKey(cert: OpenPGPCertificate): Boolean = cert.isSecretKey
+  /** Tests if the given [OpenPGPCertificate] provides a decryption subkey */
+  public fun hasSecretKey(cert: OpenPGPCertificate): Boolean =
+    if (cert is OpenPGPKey) cert.getSecretKeys().values.any { it.isEncryptionKey() } else false
 
   public fun extractPublicKeyData(key: PGPKey): ByteArray? =
     tryParseCertificateOrKey(key)?.let {

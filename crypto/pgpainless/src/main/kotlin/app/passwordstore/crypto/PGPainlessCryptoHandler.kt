@@ -20,6 +20,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Inject
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags
+import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.util.io.Streams
@@ -57,14 +58,19 @@ public class PGPainlessCryptoHandler @Inject constructor() :
           // ciphertextStream may be symmetrically encrypted
           consumerOptions.addMessagePassphrase(Passphrase(passphrase))
         } else {
-          val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
           val openPgpKey = KeyUtils.tryParseCertificateOrKey(key)
+
           if (
             openPgpKey !is OpenPGPKey ||
               openPgpKey.getKeys().filter { it.isEncryptionKey() }.isEmpty()
           )
             throw NoDecryptionKeyAvailableException("Key not usable for decryption")
-          consumerOptions.addDecryptionKey(openPgpKey, protector)
+
+          val decKey = extractDecKey(openPgpKey, passphrase) ?: openPgpKey
+
+          val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
+
+          consumerOptions.addDecryptionKey(decKey, protector)
         }
 
         val decryptionStream =
@@ -120,7 +126,9 @@ public class PGPainlessCryptoHandler @Inject constructor() :
         val encryptionOptions = EncryptionOptions.encryptCommunications(pgpApi)
 
         if (passphrase == null) { // public key encryption
-          certificates.forEach { encryptionOptions.addRecipient(it) }
+          certificates.forEach {
+            encryptionOptions.addRecipient(it, EncryptionOptions.encryptToAllCapableSubkeys())
+          }
         } else { // symmetric (with password) encryption
           encryptionOptions
             .overrideEncryptionMechanism(
@@ -163,19 +171,25 @@ public class PGPainlessCryptoHandler @Inject constructor() :
               .getSecretKeys()
               .values
               .filter { it.isEncryptionKey() }
-              .first()
-              .isLocked()
+              .all { it.isLocked() }
           }
       }
 
   public override fun passphraseIsCorrect(key: PGPKey, passphrase: CharArray?): Boolean =
     tryParseCertificateOrKey(key)?.let {
       it is OpenPGPKey &&
-        it
-          .getSecretKeys()
-          .values
-          .filter { it.isEncryptionKey() }
-          .first()
-          .isPassphraseCorrect(passphrase)
+        it.getSecretKeys().values.any { it.isEncryptionKey() && it.isPassphraseCorrect(passphrase) }
     } ?: false
+
+  private fun extractDecKey(openPgpKey: OpenPGPKey, passphrase: CharArray?): OpenPGPKey? =
+    openPgpKey
+      .getSecretKeys()
+      .values
+      .filter { it.isEncryptionKey() && it.isPassphraseCorrect(passphrase) }
+      .firstOrNull()
+      ?.let {
+        OpenPGPKey(
+          PGPSecretKeyRing(listOf(openPgpKey.getPGPKeyRing().getSecretKey(), it.getPGPSecretKey()))
+        )
+      }
 }

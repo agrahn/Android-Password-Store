@@ -243,6 +243,9 @@ open class BasePGPActivity : AppCompatActivity() {
         .map { // strip trailing comments
           it.substringBefore(Regex("\\s+#"))
         }
+        .map { // remove GPG subkey ID marker ('!')
+          it.substringBefore('!')
+        }
         .filter { it.isNotBlank() && it != "gpg-id" }
         .map { line ->
           if (line.removePrefix("0x").matches("[a-fA-F0-9]{8}".toRegex())) {
@@ -272,7 +275,8 @@ open class BasePGPActivity : AppCompatActivity() {
   }
 
   private fun getEmailsFromIdentifiers(identifiers: List<PGPIdentifier>): String? {
-    val emails = identifiers.map { repository.getEmailFromKeyId(it) }.filter { it != null }
+    val emails =
+      identifiers.map { repository.getEmailFromKeyId(it) }.filter { it != null }.distinct()
     if (emails.isEmpty()) return null
     val label = if (emails.size > 1) R.string.pgp_id_label_plural else R.string.pgp_id_label
     return "${resources.getString(label)} ${emails.joinToString(", ")}"

@@ -430,6 +430,7 @@ class PasswordCreationActivity : BasePGPActivity() {
                         "\n${id}: ${getString(R.string.password_creation_file_encryption_failed_expired_key)}"
                     }
                 }
+                .distinct()
                 .filter { it !in succeededUserEmails ?: emptyList() }
 
             val passwordFile = Paths.get(path)

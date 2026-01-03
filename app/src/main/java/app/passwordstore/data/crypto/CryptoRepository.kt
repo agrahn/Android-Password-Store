@@ -145,11 +145,17 @@ constructor(
     message: ByteArrayInputStream,
     encryptedMessage: ByteArrayOutputStream,
   ) = run {
+    // get primary key IDs in order to identify and avoid duplicate keys
+    val primaryKeyIds =
+      identities
+        .mapNotNull { getLongKeyIdFromKeyId(it) }
+        .distinct()
+        .mapNotNull { PGPIdentifier.fromString(it) }
+    val keys = primaryKeyIds.map { id -> pgpKeyManager.getKeyById(id) }.filterValues()
     val encryptionOptions =
       PGPEncryptOptions.Builder()
         .withAsciiArmor(settings.getBoolean(PreferenceKeys.ASCII_ARMOR, false))
         .build()
-    val keys = identities.map { id -> pgpKeyManager.getKeyById(id) }.filterValues()
     val result = pgpCryptoHandler.encrypt(keys, null, message, encryptedMessage, encryptionOptions)
     result.getError()?.let { logcat { it.asLog() } }
     val succeededUserEmails =
