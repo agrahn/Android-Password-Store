@@ -240,11 +240,8 @@ open class BasePGPActivity : AppCompatActivity() {
     val gpgIdentifiers =
       gpgIdentifierFile
         .readLines()
-        .map { // strip trailing comments
-          it.substringBefore(Regex("\\s+#"))
-        }
-        .map { // remove GPG subkey ID marker ('!')
-          it.substringBefore('!')
+        .map { // strip trailing comments and GPG subkey ID marker
+          it.substringBefore(Regex("\\s*#|!"))
         }
         .filter { it.isNotBlank() && it != "gpg-id" }
         .map { line ->
@@ -615,7 +612,7 @@ open class BasePGPActivity : AppCompatActivity() {
           !isError
       ) {
         // try passphraseless decryption first
-        decryptWithPassphrase(mapOf("" to charArrayOf()), identifiersWithSecretKey)
+        decryptWithPassphrase(mapOf("" to null), identifiersWithSecretKey)
       } else if (!isError && !passphrases.isEmpty()) {
         // try cached passphrases
         val decryptedCachedPassphrases =
@@ -630,7 +627,7 @@ open class BasePGPActivity : AppCompatActivity() {
 
   /** Subclass-specific implementations */
   open suspend fun decryptWithPassphrase(
-    passphrases: Map<String, CharArray>,
+    passphrases: Map<String, CharArray?>,
     identifiers: List<PGPIdentifier>,
     onSuccess: suspend (String) -> Unit = {},
   ) {}

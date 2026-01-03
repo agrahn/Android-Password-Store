@@ -84,7 +84,7 @@ constructor(
   }
 
   fun decrypt(
-    passphrases: Map<String, CharArray>,
+    passphrases: Map<String, CharArray?>,
     identities: List<PGPIdentifier>,
     encryptedMessage: ByteArrayInputStream,
     message: ByteArrayOutputStream,

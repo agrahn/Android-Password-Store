@@ -71,7 +71,7 @@ class DecryptActivity : BasePGPActivity() {
   }
 
   override suspend fun decryptWithPassphrase(
-    passphrases: Map<String, CharArray>,
+    passphrases: Map<String, CharArray?>,
     identifiers: List<PGPIdentifier>,
     onSuccess: suspend (String) -> Unit,
   ) {
@@ -85,7 +85,7 @@ class DecryptActivity : BasePGPActivity() {
       createPasswordUI(entry)
       onSuccess(lastResult.first) // pass ID for which the entry was successfully decrypted
     } else {
-      passphrases.values.forEach { it.wipe() }
+      passphrases.values.forEach { it?.wipe() }
       if (
         results
           .filter { result ->
