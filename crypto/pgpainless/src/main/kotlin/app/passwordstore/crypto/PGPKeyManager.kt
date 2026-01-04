@@ -107,15 +107,23 @@ public class PGPKeyManager @Inject constructor(filesDir: String) :
   ): Result<PGPKey, Throwable> = runCatching {
     val key = getKeyById(identifier).getOrThrow()
     val openPgpKey = tryParseCertificateOrKey(key) ?: throw InvalidKeyException
-    if (!openPgpKey.isSecretKey()) throw InvalidKeyException
+    if (openPgpKey !is OpenPGPKey) throw InvalidKeyException
 
-    var openPgpKeyModified =
-      pgpApi
-        .modify(openPgpKey as OpenPGPKey)
-        .changePassphraseFromOldPassphrase(Passphrase(oldPassphrase))
-        .withSecureDefaultSettings()
-        .toNewPassphrase(Passphrase(newPassphrase))
-        .done()
+    val secretKeyRingEditor = pgpApi.modify(openPgpKey as OpenPGPKey)
+
+    openPgpKey
+      .getSecretKeys()
+      .values
+      .filter { it.isPassphraseCorrect(oldPassphrase) }
+      .map { it.getKeyIdentifier() }
+      .forEach { subId ->
+        secretKeyRingEditor
+          .changeSubKeyPassphraseFromOldPassphrase(subId, Passphrase(oldPassphrase))
+          .withSecureDefaultSettings()
+          .toNewPassphrase(Passphrase(newPassphrase))
+      }
+
+    val openPgpKeyModified = secretKeyRingEditor.done()
 
     addKey(PGPKey(openPgpKeyModified.getEncoded()), true).getOrThrow()
   }
