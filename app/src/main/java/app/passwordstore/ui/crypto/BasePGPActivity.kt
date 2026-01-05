@@ -605,14 +605,9 @@ open class BasePGPActivity : AppCompatActivity() {
     val passphrases =
       cachedPassphrases.filterKeys { identifiers.map { it.toString() }.contains(it) }
     lifecycleScope.launch(dispatcherProvider.main()) {
-      val identifiersWithSecretKey = identifiers.filter { repository.hasSecretKey(it) }
-      if (
-        identifiersWithSecretKey.size > 0 &&
-          !repository.isPasswordProtected(identifiersWithSecretKey) &&
-          !isError
-      ) {
+      if (!repository.isPasswordProtected(identifiers) && !isError) {
         // try passphraseless decryption first
-        decryptWithPassphrase(mapOf("" to null), identifiersWithSecretKey)
+        decryptWithPassphrase(mapOf("" to null), identifiers)
       } else if (!isError && !passphrases.isEmpty()) {
         // try cached passphrases
         val decryptedCachedPassphrases =
