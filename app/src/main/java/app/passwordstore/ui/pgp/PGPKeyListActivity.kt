@@ -173,7 +173,7 @@ class PGPKeyListActivity : AppCompatActivity() {
   private fun exportKey(identifier: PGPIdentifier) {
     retries = 0
     lifecycleScope.launch {
-      if (cryptoRepository.isPasswordProtected(listOf(identifier))) {
+      if (cryptoRepository.isPasswordProtected(listOf(identifier), anySubkey = true)) {
         // export as symmetrically encrypted file after passphrase verification
         askPassphrase(identifier)
       } else if (hasSecretKey(identifier)) {
@@ -200,10 +200,7 @@ class PGPKeyListActivity : AppCompatActivity() {
     dialog.show(supportFragmentManager, "PASSWORD_DIALOG")
     dialog.setFragmentResultListener(PasswordDialog.PASSWORD_RESULT_KEY) { key, bundle ->
       if (key == PasswordDialog.PASSWORD_RESULT_KEY) {
-        val passphrase =
-          requireNotNull(bundle.getCharArray(PasswordDialog.PASSWORD_PHRASE_KEY)) {
-            "returned passphrase is null"
-          }
+        val passphrase = bundle.getCharArray(PasswordDialog.PASSWORD_PHRASE_KEY) ?: charArrayOf()
         lifecycleScope.launch {
           if (cryptoRepository.isPasswordCorrect(identifier, passphrase)) {
             confirmBackupCode(identifier, generateBackupCode())

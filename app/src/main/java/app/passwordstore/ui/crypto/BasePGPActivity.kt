@@ -519,7 +519,9 @@ open class BasePGPActivity : AppCompatActivity() {
         pinEncrypted != null
     ) {
       verifyPin(pinEncrypted, persistentIds, identifiers)
-    } else decrypt(identifiers)
+    } else {
+      decrypt(identifiers)
+    }
   }
 
   /* Asks for and verifies the user PIN for unlocking a store entry. */

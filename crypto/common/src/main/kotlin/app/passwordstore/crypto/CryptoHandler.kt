@@ -14,6 +14,10 @@ import java.io.OutputStream
 /** Generic interface to implement cryptographic operations on top of. */
 public interface CryptoHandler<Key, EncOpts : CryptoOptions, DecryptOpts : CryptoOptions> {
 
+  /**
+   * Check entered passphrase against primary key and all subkeys; returns true if passphrase is
+   * correct for any of the tested keys
+   */
   public fun passphraseIsCorrect(key: Key, passphrase: CharArray?): Boolean
 
   /**
@@ -49,7 +53,11 @@ public interface CryptoHandler<Key, EncOpts : CryptoOptions, DecryptOpts : Crypt
   public fun canHandle(fileName: String): Boolean
 
   /**
-   * Inspects the given [keys] and returns `false` if none of them require a passphrase to decrypt.
+   * Inspects the encryption subkeys of the given [keys] and returns `true` if all of them require a
+   * passphrase to be unlocked.
+   *
+   * If [anySubkey] is set to `true`, primary keys and signing/authentication subkeys are also
+   * inspected. `true' is returned, if any of them requires a passphrase.
    */
-  public fun isPassphraseProtected(keys: List<Key>): Boolean
+  public fun isPassphraseProtected(keys: List<Key>, anySubkey: Boolean = false): Boolean
 }

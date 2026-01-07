@@ -5,6 +5,7 @@
 
 package app.passwordstore.crypto
 
+import app.passwordstore.crypto.KeyUtils.hasSecretKey
 import app.passwordstore.crypto.KeyUtils.tryParseCertificateOrKey
 import app.passwordstore.crypto.errors.CryptoException
 import app.passwordstore.crypto.errors.CryptoHandlerException
@@ -60,10 +61,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
         } else {
           val openPgpKey = KeyUtils.tryParseCertificateOrKey(key)
 
-          if (
-            openPgpKey !is OpenPGPKey ||
-              openPgpKey.getKeys().filter { it.isEncryptionKey() }.isEmpty()
-          )
+          if (openPgpKey !is OpenPGPKey || !hasSecretKey(openPgpKey))
             throw NoDecryptionKeyAvailableException("Key not usable for decryption")
 
           val decKey = extractDecKey(openPgpKey, passphrase) ?: openPgpKey
@@ -160,25 +158,36 @@ public class PGPainlessCryptoHandler @Inject constructor() :
     return fileName.substringAfterLast('.', "") == "gpg"
   }
 
-  public override fun isPassphraseProtected(keys: List<PGPKey>): Boolean =
+  public override fun isPassphraseProtected(keys: List<PGPKey>, anySubkey: Boolean): Boolean =
     keys
       .mapNotNull { tryParseCertificateOrKey(it) }
       .filter { it.isSecretKey() }
       .let { secretKeys ->
         !secretKeys.isEmpty() &&
-          secretKeys.all {
-            (it as OpenPGPKey)
-              .getSecretKeys()
-              .values
-              .filter { it.isEncryptionKey() }
-              .all { it.isLocked() }
-          }
+          if (anySubkey)
+            secretKeys.any {
+              (it as OpenPGPKey).getSecretKeys().values.any {
+                !it.getPGPSecretKey().isPrivateKeyEmpty() && it.isLocked()
+              }
+            }
+          else
+            secretKeys.all {
+              (it as OpenPGPKey)
+                .getSecretKeys()
+                .values
+                .filter { it.isEncryptionKey() && !it.getPGPSecretKey().isPrivateKeyEmpty() }
+                .all { it.isLocked() }
+            }
       }
 
   public override fun passphraseIsCorrect(key: PGPKey, passphrase: CharArray?): Boolean =
     tryParseCertificateOrKey(key)?.let {
       it is OpenPGPKey &&
-        it.getSecretKeys().values.any { it.isEncryptionKey() && it.isPassphraseCorrect(passphrase) }
+        it
+          .getSecretKeys()
+          .values
+          .filter { !it.getPGPSecretKey().isPrivateKeyEmpty() }
+          .any { it.isPassphraseCorrect(passphrase) }
     } ?: false
 
   private fun extractDecKey(openPgpKey: OpenPGPKey, passphrase: CharArray?): OpenPGPKey? =
@@ -189,7 +198,9 @@ public class PGPainlessCryptoHandler @Inject constructor() :
       .firstOrNull()
       ?.let {
         OpenPGPKey(
-          PGPSecretKeyRing(listOf(openPgpKey.getPGPKeyRing().getSecretKey(), it.getPGPSecretKey()))
+          PGPSecretKeyRing(
+            listOf(openPgpKey.getPrimarySecretKey().getPGPSecretKey(), it.getPGPSecretKey())
+          )
         )
       }
 }

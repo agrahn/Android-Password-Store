@@ -57,9 +57,9 @@ constructor(
     return key != null && KeyUtils.hasSecretKey(key)
   }
 
-  fun isPasswordProtected(identifiers: List<PGPIdentifier>): Boolean {
+  fun isPasswordProtected(identifiers: List<PGPIdentifier>, anySubkey: Boolean = false): Boolean {
     val keys = identifiers.map { pgpKeyManager.getKeyById(it) }.filterValues()
-    return pgpCryptoHandler.isPassphraseProtected(keys)
+    return pgpCryptoHandler.isPassphraseProtected(keys, anySubkey)
   }
 
   fun isPasswordCorrect(identifier: PGPIdentifier, passphrase: CharArray?): Boolean {

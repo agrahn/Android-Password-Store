@@ -62,7 +62,7 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
         passphraseInputLayout.error = null
         repeatPassphraseInputLayout.error = null
       }
-      if (cryptoRepository.isPasswordProtected(listOf(identifier)))
+      if (cryptoRepository.isPasswordProtected(listOf(identifier), anySubkey = true))
         oldPassphraseInputLayout.visibility = View.VISIBLE
     }
   }
@@ -83,8 +83,10 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
           binding.oldPassphrase.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
         val oldPassphraseIsCorrect =
           if (
-            cryptoRepository.isPasswordCorrect(identifier, null) ||
-              cryptoRepository.isPasswordCorrect(identifier, oldPassphrase)
+            cryptoRepository.isPasswordCorrect(
+              identifier,
+              if (oldPassphrase.isEmpty()) null else oldPassphrase,
+            )
           )
             true
           else {

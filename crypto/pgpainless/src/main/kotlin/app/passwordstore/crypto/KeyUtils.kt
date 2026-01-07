@@ -74,7 +74,10 @@ public object KeyUtils {
 
   /** Tests if the given [OpenPGPCertificate] provides a decryption subkey */
   public fun hasSecretKey(cert: OpenPGPCertificate): Boolean =
-    if (cert is OpenPGPKey) cert.getSecretKeys().values.any { it.isEncryptionKey() } else false
+    cert is OpenPGPKey &&
+      cert.getSecretKeys().values.any {
+        it.isEncryptionKey() && !it.getPGPSecretKey().isPrivateKeyEmpty()
+      }
 
   public fun extractPublicKeyData(key: PGPKey): ByteArray? =
     tryParseCertificateOrKey(key)?.let {
