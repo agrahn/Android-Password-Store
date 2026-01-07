@@ -354,8 +354,8 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
     val gpgIds =
       file
         .readLines()
-        .map { // strip trailing comments
-          it.substringBefore(Regex("\\s+#"))
+        .map { // strip trailing comments and GPG subkey ID marker
+          it.substringBefore(Regex("\\s*#|!"))
         }
         .filter { it.isNotBlank() && it != "gpg-id" }
         .map { line ->
