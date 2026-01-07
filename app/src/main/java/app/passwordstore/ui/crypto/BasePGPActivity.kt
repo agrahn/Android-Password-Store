@@ -7,7 +7,6 @@ package app.passwordstore.ui.crypto
 
 import android.content.ClipData
 import android.content.ClipDescription
-import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
@@ -35,6 +34,7 @@ import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.clipboard
+import app.passwordstore.util.extensions.commitChange
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.extensions.snackbar
@@ -54,6 +54,7 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import logcat.asLog
 import logcat.logcat
@@ -72,6 +73,8 @@ open class BasePGPActivity : AppCompatActivity() {
     requireNotNull(intent.getStringExtra("FILE_PATH")) { "FILE_PATH is missing" }
   }
 
+  private val relativeParentPath by unsafeLazy { getParentPath(fullPath, repoPath) }
+
   /**
    * Name of the password file
    *
@@ -82,18 +85,49 @@ open class BasePGPActivity : AppCompatActivity() {
   /* Counter for the user's decryption (with passphrase) attempts */
   private var retries = 0
 
-  var secondsOnPause = 0L // seconds since Epoch upon pause
-  var timeout = 0L
+  private var secondsOnPause = 0L // seconds since Epoch upon pause
+  private var timeout = 0L
 
   @Inject lateinit var pgpKeyManager: PGPKeyManager
 
-  /** Action to invoke if [keyImportAction] succeeds. */
-  private var onKeyImport: (() -> Unit)? = null
+  /**
+   * Callback to invoke if [keyImportAction] or [keySelectAction] succeeds. This allows for
+   * recursion until matching encryption/decryption keys are available for
+   * unlocking/creating/editing the current password item.
+   */
+  private var onKeyListCallback: (() -> Unit)? = null
+
   private val keyImportAction =
     registerForActivityResult(StartActivityForResult()) {
       if (it.resultCode == RESULT_OK) {
-        onKeyImport?.invoke()
-        onKeyImport = null
+        onKeyListCallback?.invoke()
+      } else {
+        finish()
+      }
+    }
+
+  private val keySelectAction =
+    registerForActivityResult(StartActivityForResult()) { result ->
+      if (result.resultCode == RESULT_OK) {
+        val data = result.data ?: return@registerForActivityResult
+        val selectedKeyId =
+          data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
+            ?: return@registerForActivityResult
+
+        val currentDir = File(fullPath).let { if (it.isFile()) it.getParent() else it.getPath() }
+
+        File(currentDir, ".gpg-id")?.let {
+          it.writeText(selectedKeyId + "\n")
+          runBlocking {
+            commitChange(
+              resources.getString(
+                R.string.git_commit_gpg_id,
+                resources.getString(R.string.app_name),
+              )
+            )
+          }
+          onKeyListCallback?.invoke()
+        } ?: return@registerForActivityResult
       } else {
         finish()
       }
@@ -135,26 +169,141 @@ open class BasePGPActivity : AppCompatActivity() {
     super.onPause()
   }
 
+  private fun openKeyManagerDialog(
+    title: String,
+    message: String,
+    onPositiveButtonClick: () -> Unit,
+  ) =
+    MaterialAlertDialogBuilder(this@BasePGPActivity)
+      .setIcon(R.drawable.ic_warning_red_24dp)
+      .setTitle(title)
+      .setMessage(message)
+      .setCancelable(false)
+      .setPositiveButton(resources.getString(R.string.no_keys_imported_dialog_open_key_manager)) {
+        _,
+        _ ->
+        onPositiveButtonClick()
+      }
+      .setNegativeButton(R.string.dialog_cancel) { _, _ -> finish() }
+      .show()
+
   /* Function to execute [onKeysExist] only if there are PGP keys imported in the app's key manager.
    */
   protected fun requireKeysExist(onKeysExist: () -> Unit) {
+    onKeyListCallback = onKeysExist
     lifecycleScope.launch {
       val hasKeys = repository.hasKeys()
       if (!hasKeys) {
         withContext(dispatcherProvider.main()) {
-          MaterialAlertDialogBuilder(this@BasePGPActivity)
-            .setTitle(resources.getString(R.string.no_keys_imported_dialog_title))
-            .setMessage(resources.getString(R.string.no_keys_imported_dialog_message))
-            .setPositiveButton(
-              resources.getString(R.string.no_keys_imported_dialog_open_key_manager)
-            ) { _, _ ->
-              onKeyImport = onKeysExist
-              keyImportAction.launch(Intent(this@BasePGPActivity, PGPKeyListActivity::class.java))
-            }
-            .show()
+          openKeyManagerDialog(
+            resources.getString(R.string.no_keys_imported_dialog_title),
+            resources.getString(R.string.no_keys_imported_dialog_message),
+          ) {
+            keyImportAction.launch(PGPKeyListActivity.newIntent(this@BasePGPActivity))
+          }
         }
       } else {
         onKeysExist()
+      }
+    }
+  }
+
+  protected fun requireEncryptionKeysExist(
+    subDir: String,
+    onKeysExist: (List<PGPIdentifier>) -> Unit,
+  ) {
+    val ids = getPGPIdentifiers(subDir)
+    if (ids.isNullOrEmpty()) {
+      /* Store not initialised properly; open Key Manager in selection mode and
+       * let user choose one or multiple keys */
+      val (title, message) =
+        if (ids == null) {
+          // .gpg-id is missing
+          resources.getString(R.string.missing_gpg_id_dialog_title) to
+            resources.getString(R.string.missing_gpg_id_dialog_message)
+        } else {
+          // .gpg-id contains no or malformed PGP IDs
+          resources.getString(R.string.invalid_gpg_id_dialog_title) to
+            resources.getString(R.string.invalid_gpg_id_dialog_message)
+        }
+      openKeyManagerDialog(title, message) {
+        keySelectAction.launch(
+          PGPKeyListActivity.newIntent(this@BasePGPActivity, keySelection = true)
+        )
+      }
+    } else {
+      val idsWithKey = ids.filter { repository.hasKey(it) }
+
+      if (idsWithKey.isEmpty()) { // No keys at all
+        /**
+         * The app does not provide keys with the requested key IDs; open Key Manager in key
+         * creation/import mode and let the user _import_ the needed PGP keys
+         */
+        val title = resources.getString(R.string.no_pgp_keys_dialog_title)
+        val missingKeysForIds = ids.joinToString(", ")
+        val message = resources.getString(R.string.no_pgp_keys_dialog_message) + missingKeysForIds
+        openKeyManagerDialog(title, message) {
+          keyImportAction.launch(PGPKeyListActivity.newIntent(this@BasePGPActivity))
+        }
+      } else {
+        onKeysExist(ids)
+      }
+    }
+  }
+
+  protected fun requireDecryptionKeysExist(
+    subDir: String,
+    onKeysExist: (List<PGPIdentifier>) -> Unit,
+  ) {
+    val ids = getPGPIdentifiers(subDir)
+    if (ids.isNullOrEmpty()) {
+      /* Store not initialised properly; open Key Manager in selection mode and
+       * let user choose one or multiple keys */
+      val (title, message) =
+        if (ids == null) {
+          // .gpg-id is missing
+          resources.getString(R.string.missing_gpg_id_dialog_title) to
+            resources.getString(R.string.missing_gpg_id_dialog_message)
+        } else {
+          // .gpg-id contains no or malformed PGP IDs
+          resources.getString(R.string.invalid_gpg_id_dialog_title) to
+            resources.getString(R.string.invalid_gpg_id_dialog_message)
+        }
+      openKeyManagerDialog(title, message) {
+        keySelectAction.launch(
+          PGPKeyListActivity.newIntent(this@BasePGPActivity, keySelection = true)
+        )
+      }
+    } else {
+      val idsWithKey = ids.filter { repository.hasKey(it) }
+      val idsWithDecryptionKey = idsWithKey.filter { repository.hasSecretKey(it) }
+
+      if (idsWithDecryptionKey.isEmpty()) {
+        /**
+         * The app does not provide secret decryption keys with the requested key IDs; open Key
+         * Manager in key creation/import mode and let the user _import_ the needed PGP keys
+         */
+        val title = resources.getString(R.string.no_decryption_keys_dialog_title)
+        val missingDecKeysForIds =
+          if (idsWithKey.isNotEmpty()) {
+            // Some keys keys are available, but they are all public
+            ids
+              .map { id ->
+                if (id in idsWithKey) "\n${id}: ${getString(R.string.pgp_public_only)}"
+                else "\n${id}: ${getString(R.string.pgp_unknown)}"
+              }
+              .joinToString()
+          } else {
+            // No keys at all
+            ids.joinToString(", ")
+          }
+        val message =
+          resources.getString(R.string.no_decryption_keys_dialog_message) + missingDecKeysForIds
+        openKeyManagerDialog(title, message) {
+          keyImportAction.launch(PGPKeyListActivity.newIntent(this@BasePGPActivity))
+        }
+      } else {
+        onKeysExist(ids)
       }
     }
   }
@@ -222,21 +371,24 @@ open class BasePGPActivity : AppCompatActivity() {
   }
 
   /**
-   * Get a list of available [PGPIdentifier]s for the current password repository. This method
-   * throws when no identifiers were able to be parsed. If this method returns null, it means that
-   * an invalid identifier was encountered and further execution must stop to let the user correct
-   * the problem.
+   * This method looks for a .gpg-id file starting in the current sub-directory of the password
+   * store, searching upwards through parent directories up to the root directory of the store, and
+   * then tries to parse a list of [PGPIdentifier]s from the first file found.
+   *
+   * It returns `null` if the store has not yet been initialised, that is, when no .gpg-id file was
+   * found; it returns an empty List if no valid identifiers were able to be parsed from the file.
    */
   protected fun getPGPIdentifiers(subDir: String): List<PGPIdentifier>? {
-    PasswordRepository.gpgidChecked = false
     var shortIdCount = 0
     var invalidIdCount = 0
     val repoRoot = PasswordRepository.getRepositoryDirectory()
-    val gpgIdentifierFile = File(repoRoot, subDir).findTillRoot(".gpg-id", repoRoot)
-    if (gpgIdentifierFile == null) { // no file found
-      snackbar(message = resources.getString(R.string.missing_gpg_id))
-      return null
-    }
+    val gpgIdentifierFile =
+      File(repoRoot, subDir).findTillRoot(".gpg-id", repoRoot)
+        ?: run {
+          snackbar(message = resources.getString(R.string.missing_gpg_id))
+          return null
+        }
+
     val gpgIdentifiers =
       gpgIdentifierFile
         .readLines()
@@ -257,7 +409,8 @@ open class BasePGPActivity : AppCompatActivity() {
           }
         }
         .filterIsInstance<PGPIdentifier>()
-    if (gpgIdentifiers.isNullOrEmpty()) {
+
+    if (gpgIdentifiers.isEmpty()) {
       if (shortIdCount == 0 && invalidIdCount == 0) {
         snackbar(message = resources.getString(R.string.empty_gpg_id))
       } else if (shortIdCount > 0 && invalidIdCount == 0) {
@@ -265,15 +418,13 @@ open class BasePGPActivity : AppCompatActivity() {
       } else {
         snackbar(message = resources.getString(R.string.invalid_gpg_id))
       }
-      return null
     }
-    PasswordRepository.gpgidChecked = true
+
     return gpgIdentifiers
   }
 
   private fun getEmailsFromIdentifiers(identifiers: List<PGPIdentifier>): String? {
-    val emails =
-      identifiers.map { repository.getEmailFromKeyId(it) }.filter { it != null }.distinct()
+    val emails = identifiers.map { repository.getEmailFromKeyId(it) }.filterNotNull().distinct()
     if (emails.isEmpty()) return null
     val label = if (emails.size > 1) R.string.pgp_id_label_plural else R.string.pgp_id_label
     return "${resources.getString(label)} ${emails.joinToString(", ")}"

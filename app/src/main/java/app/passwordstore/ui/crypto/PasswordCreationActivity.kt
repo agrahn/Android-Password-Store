@@ -24,6 +24,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
+import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.errors.NoKeysProvidedException
 import app.passwordstore.crypto.errors.UnusableKeyException
 import app.passwordstore.data.passfile.PasswordEntry
@@ -289,11 +290,15 @@ class PasswordCreationActivity : BasePGPActivity() {
       }
       R.id.save_password -> {
         copy = false
-        requireKeysExist { encrypt() }
+        requireKeysExist {
+          requireEncryptionKeysExist(binding.directory.text.toString()) { ids -> encrypt(ids) }
+        }
       }
       R.id.save_and_copy_password -> {
         copy = true
-        requireKeysExist { encrypt() }
+        requireKeysExist {
+          requireEncryptionKeysExist(binding.directory.text.toString()) { ids -> encrypt(ids) }
+        }
       }
       else -> return super.onOptionsItemSelected(item)
     }
@@ -339,7 +344,7 @@ class PasswordCreationActivity : BasePGPActivity() {
   }
 
   /** Encrypts the password and the extra content */
-  private fun encrypt() {
+  private fun encrypt(identifiers: List<PGPIdentifier>) {
     with(binding) {
       val oldName = suggestedName
       val editName = filename.text.toString().trim()
@@ -375,7 +380,8 @@ class PasswordCreationActivity : BasePGPActivity() {
       }
 
       // pass enters the key ID into `.gpg-id`.
-      val gpgIdentifiers = getPGPIdentifiers(directory.text.toString()) ?: return@with
+      val gpgIdentifiers = getPGPIdentifiers(directory.text.toString())
+      if (gpgIdentifiers.isNullOrEmpty()) return@with
       val path =
         when {
           // If we allowed the user to edit the relative path, we have to consider it here
@@ -407,7 +413,7 @@ class PasswordCreationActivity : BasePGPActivity() {
               withContext(dispatcherProvider.io()) {
                 val outputStream = ByteArrayOutputStream()
                 repository.encrypt(
-                  gpgIdentifiers,
+                  identifiers,
                   ByteArrayInputStream(
                     (editPass + "$editUsername\n$editExtra".toCharArray()).encodeToByteArray()
                   ),
@@ -420,7 +426,7 @@ class PasswordCreationActivity : BasePGPActivity() {
 
             var unknownKeyCount = 0
             val failedUserEmails =
-              gpgIdentifiers
+              identifiers
                 .map { id ->
                   repository.getEmailFromKeyId(id)
                     ?: run {

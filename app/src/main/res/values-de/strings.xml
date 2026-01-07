@@ -424,6 +424,16 @@
   <string name="pgp_invalid_key_identifier">ungültig</string>
   <string name="pgp_short_key_identifier">ungültig: Kurz-ID</string>
   <string name="pgp_unknown_key_identifier">unbekannte Schlüssel-ID</string>
+  <string name="no_pgp_keys_dialog_title">Keine PGP-Schlüssel gefunden</string>
+  <string name="no_pgp_keys_dialog_message">Öffnen Sie den PGP-Schlüsselmanager und importieren Sie aus Backups passende PGP-Schlüssel für folgende ID(s):</string>
+  <string name="no_decryption_keys_dialog_title">Keine geheimen Schlüssel</string>
+  <string name="no_decryption_keys_dialog_message">Öffnen Sie den PGP-Schlüsselmanager und importieren Sie aus Backups passende geheime PGP-Schlüssel für folgende ID(s):</string>
+  <string name="pgp_unknown">unbekannt</string>
+  <string name="pgp_public_only">nur öffentlich</string>
+  <string name="invalid_gpg_id_dialog_title">Leere oder fehlerhaft formatierte .gpg-id-Datei</string>
+  <string name="invalid_gpg_id_dialog_message">Die gefundene .gpg-id-Datei enthält keine gültigen PGP-Schlüssel-IDs. Initialisieren Sie die .gpg-id-Datei im aktuellen Ordner neu, indem Sie im Schlüsselmanager einen oder mehrere geeignete PGP-Schlüssel auswählen.</string>
+  <string name="missing_gpg_id_dialog_title">Fehlende .gpg-id-Datei</string>
+  <string name="missing_gpg_id_dialog_message">Initialisieren Sie die .gpg-id-Datei im aktuellen Ordner, indem Sie im Schlüsselmanager einen oder mehrere geeignete PGP-Schlüssel auswählen.</string>
 
   <!-- Passphrase input -->
   <string name="cache_password_until_screen_off">Kennwortsatz bis zum Abschalten des Bildschirms merken</string>

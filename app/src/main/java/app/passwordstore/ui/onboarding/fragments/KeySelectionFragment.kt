@@ -65,7 +65,7 @@ class KeySelectionFragment : Fragment(R.layout.fragment_key_selection) {
     ViewCompat.setOnApplyWindowInsetsListener(view, windowInsetsLambda)
 
     binding.selectKey.setOnClickListener {
-      gpgKeySelectAction.launch(PGPKeyListActivity.newSelectionActivity(requireContext()))
+      gpgKeySelectAction.launch(PGPKeyListActivity.newIntent(requireContext(), keySelection = true))
     }
   }
 

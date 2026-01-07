@@ -385,32 +385,26 @@ class PasswordStore : BaseGitActivity() {
 
   private fun checkLocalRepository(localDir: File?) {
     if (localDir != null && settings.getBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, false)) {
-      if (!PasswordRepository.gpgidChecked) {
-        val intent = PGPKeyListActivity.newSelectionActivity(this)
-        gpgKeySelectAction.launch(intent)
-        PasswordRepository.gpgidChecked = true
-      } else {
-        // do not push the fragment if we already have it
-        if (
-          getPasswordFragment() == null || settings.getBoolean(PreferenceKeys.REPO_CHANGED, false)
-        ) {
-          settings.edit { putBoolean(PreferenceKeys.REPO_CHANGED, false) }
-          val args = Bundle()
-          args.putString(REQUEST_ARG_PATH, PasswordRepository.getRepositoryDirectory().absolutePath)
+      // do not push the fragment if we already have it
+      if (
+        getPasswordFragment() == null || settings.getBoolean(PreferenceKeys.REPO_CHANGED, false)
+      ) {
+        settings.edit { putBoolean(PreferenceKeys.REPO_CHANGED, false) }
+        val args = Bundle()
+        args.putString(REQUEST_ARG_PATH, PasswordRepository.getRepositoryDirectory().absolutePath)
 
-          // if the activity was started from the autofill settings, the
-          // intent is to match a clicked pwd with app. pass this to fragment
-          if (intent.getBooleanExtra("matchWith", false)) {
-            args.putBoolean("matchWith", true)
-          }
-          supportActionBar?.apply {
-            show()
-            setDisplayHomeAsUpEnabled(false)
-          }
-          supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-          supportFragmentManager.commit {
-            replace(R.id.main_layout, PasswordFragment.newInstance(args), PASSWORD_FRAGMENT_TAG)
-          }
+        // if the activity was started from the autofill settings, the
+        // intent is to match a clicked pwd with app. pass this to fragment
+        if (intent.getBooleanExtra("matchWith", false)) {
+          args.putBoolean("matchWith", true)
+        }
+        supportActionBar?.apply {
+          show()
+          setDisplayHomeAsUpEnabled(false)
+        }
+        supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+        supportFragmentManager.commit {
+          replace(R.id.main_layout, PasswordFragment.newInstance(args), PASSWORD_FRAGMENT_TAG)
         }
       }
     } else {

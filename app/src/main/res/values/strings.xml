@@ -427,6 +427,16 @@
   <string name="pgp_invalid_key_identifier">invalid</string>
   <string name="pgp_short_key_identifier">invalid: short ID</string>
   <string name="pgp_unknown_key_identifier">unknown key ID</string>
+  <string name="no_pgp_keys_dialog_title">No PGP keys found</string>
+  <string name="no_pgp_keys_dialog_message">Open the PGP key manager and import matching PGP keys from backups for key ID(s):</string>
+  <string name="no_decryption_keys_dialog_title">No decryption keys found</string>
+  <string name="no_decryption_keys_dialog_message">Open the PGP key manager and import matching secret PGP keys from backups for key ID(s):</string>
+  <string name="pgp_unknown">unknown</string>
+  <string name="pgp_public_only">public only</string>
+  <string name="invalid_gpg_id_dialog_title">Empty or malformatted .gpg-id file</string>
+  <string name="invalid_gpg_id_dialog_message">The .gpg-id file found does not list any valid PGP key IDs. Reinitialise the .gpg-id file in the current folder by selecting one or more suitable PGP keys in the key manager.</string>
+  <string name="missing_gpg_id_dialog_title">Missing .gpg-id file</string>
+  <string name="missing_gpg_id_dialog_message">Initialise .gpg-id in the current folder by selecting one or more suitable PGP keys in the key manager.</string>
 
   <!-- Passphrase input -->
   <string name="cache_password_until_screen_off">Keep passphrase until screen-off</string>

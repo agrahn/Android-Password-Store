@@ -19,7 +19,6 @@ import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.filterValues
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getError
-import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.map
 import com.github.michaelbull.result.mapBoth
 import java.io.ByteArrayInputStream
@@ -63,7 +62,7 @@ constructor(
   }
 
   fun isPasswordCorrect(identifier: PGPIdentifier, passphrase: CharArray?): Boolean {
-    val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
+    val key = pgpKeyManager.getKeyById(identifier).get() ?: return false
     return pgpCryptoHandler.passphraseIsCorrect(key, passphrase)
   }
 
@@ -94,7 +93,7 @@ constructor(
       identities.mapUntil({ it.second.isOk }) { id ->
         encryptedMessage.reset()
         message.reset()
-        val key = pgpKeyManager.getKeyById(id).getOrThrow()
+        val key = pgpKeyManager.getKeyById(id).get()
         val decryptionOptions = PGPDecryptOptions.Builder().build()
         val result =
           pgpCryptoHandler.decrypt(
@@ -113,7 +112,7 @@ constructor(
         message.reset()
         val pgpId = PGPIdentifier.fromString(id)
         requireNotNull(pgpId) { "Error while parsing cached PGP identifier \"${id}\"" }
-        val key = pgpKeyManager.getKeyById(pgpId).getOrThrow()
+        val key = pgpKeyManager.getKeyById(pgpId).get()
         val decryptionOptions = PGPDecryptOptions.Builder().build()
         val result =
           pgpCryptoHandler.decrypt(

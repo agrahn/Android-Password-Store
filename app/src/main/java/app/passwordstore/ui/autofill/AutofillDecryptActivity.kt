@@ -71,15 +71,9 @@ class AutofillDecryptActivity : BasePGPActivity() {
     action = if (isSearchAction) AutofillAction.Search else AutofillAction.Match
     logcat { action.toString() }
     requireKeysExist {
-      val gpgIdentifiers =
-        getPGPIdentifiers(getParentPath(filePath, repositoryPath))?.filter { repository.hasKey(it) }
-          ?: return@requireKeysExist
-      if (gpgIdentifiers.isEmpty()) {
-        PasswordRepository.gpgidChecked = false
-        snackbar(message = resources.getString(R.string.password_decryption_no_decryption_key))
-        return@requireKeysExist
+      requireDecryptionKeysExist(getParentPath(filePath, repositoryPath)) { ids ->
+        getPersistentAndDecrypt(ids)
       }
-      getPersistentAndDecrypt(gpgIdentifiers)
     }
   }
 

@@ -69,12 +69,16 @@ class PGPKeyListActivity : AppCompatActivity() {
   private val keyAction =
     registerForActivityResult(StartActivityForResult()) {
       if (it.resultCode == RESULT_OK) {
+        if (isAddingKeys) keysAdded = true
         viewModel.updateKeySet()
       }
     }
 
   private var keyNumericId: String? = null
   private var keyContentsWithArmor: ByteArray? = null
+
+  var keysAdded = false
+  var isAddingKeys = false
 
   private val keyExportAction =
     registerForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) {
@@ -87,12 +91,19 @@ class PGPKeyListActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    val isSelecting = intent.extras?.getBoolean(EXTRA_KEY_SELECTION) ?: false
+    val isSelectingKeys = intent.extras?.getBoolean(EXTRA_KEY_SELECTION) ?: false
     val selectedKeyIds = mutableSetOf<String>()
+
     supportFragmentManager.setFragmentResultListener(PGP_KEY_ADD_REQUEST_KEY, this) { _, bundle ->
       when (bundle.getString(ACTION_KEY)) {
-        ACTION_IMPORT_FILE -> keyAction.launch(Intent(this, PGPKeyImportActivity::class.java))
-        ACTION_NEW_PGP_KEY -> keyAction.launch(Intent(this, PGPKeyCreationActivity::class.java))
+        ACTION_IMPORT_FILE -> {
+          keyAction.launch(Intent(this, PGPKeyImportActivity::class.java))
+          isAddingKeys = true
+        }
+        ACTION_NEW_PGP_KEY -> {
+          keyAction.launch(Intent(this, PGPKeyCreationActivity::class.java))
+          isAddingKeys = true
+        }
       }
     }
 
@@ -102,14 +113,16 @@ class PGPKeyListActivity : AppCompatActivity() {
           topBar = {
             APSAppBar(
               title =
-                if (isSelecting) stringResource(R.string.activity_label_pgp_key_select)
+                if (isSelectingKeys) stringResource(R.string.activity_label_pgp_key_select)
                 else stringResource(R.string.activity_label_pgp_key_manager),
               navigationIcon = painterResource(R.drawable.ic_arrow_back_24dp),
               onNavigationIconClick = {
-                if (selectedKeyIds.isNotEmpty()) {
+                if (isSelectingKeys && selectedKeyIds.isNotEmpty()) {
                   val result = Intent()
                   result.putExtra(EXTRA_SELECTED_KEY, selectedKeyIds.joinToString(separator = "\n"))
                   setResult(RESULT_OK, result)
+                } else if (isAddingKeys && keysAdded) {
+                  setResult(RESULT_OK, Intent())
                 }
                 finish()
               },
@@ -138,7 +151,7 @@ class PGPKeyListActivity : AppCompatActivity() {
             onExportPublicClick = ::exportPublicKey,
             modifier = Modifier.padding(paddingValues),
             onKeySelected =
-              if (isSelecting) {
+              if (isSelectingKeys) {
                 { identifier, isSelected ->
                   val keyId = run { // ensure numeric key ID
                     val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
@@ -307,9 +320,9 @@ class PGPKeyListActivity : AppCompatActivity() {
     const val ACTION_IMPORT_FILE = "from_file"
     const val ACTION_NEW_PGP_KEY = "generate_new"
 
-    fun newSelectionActivity(context: Context): Intent {
+    fun newIntent(context: Context, keySelection: Boolean = false): Intent {
       val intent = Intent(context, PGPKeyListActivity::class.java)
-      intent.putExtra(EXTRA_KEY_SELECTION, true)
+      intent.putExtra(EXTRA_KEY_SELECTION, keySelection)
       return intent
     }
   }

@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file
 
 - App crashed when dealing with expired PGP keys. From now on, password items can be decrypted and displayed even after the key has expired, but they can no longer be edited, and no new items can be created.
 - Handling of password items that were encrypted to multiple subkeys
+- Enhanced feedback on encryption/decryption success and PGP key availability
 - Extra content: strip leading whitespace when copied to clipboard but preserve indentation of multiline text; append newline character at last line
 
 ## [1.15.4] - 2025-11-27

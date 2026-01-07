@@ -18,7 +18,6 @@ import android.os.StrictMode
 import android.view.View
 import android.view.WindowInsetsController
 import androidx.appcompat.app.AppCompatDelegate
-import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.context.FilesDirPath
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.ui.crypto.BasePGPActivity.Companion.cachedPassphrases
@@ -75,7 +74,7 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
     proxyUtils.setDefaultProxy()
     DynamicColors.applyToActivitiesIfAvailable(this)
     setupScreenOffHandler()
-    PasswordRepository.gpgidChecked = true
+
     /**
      * This way, when the app is restarted, a new AES key is generated to encrypt the passphrase
      * cached in memory.

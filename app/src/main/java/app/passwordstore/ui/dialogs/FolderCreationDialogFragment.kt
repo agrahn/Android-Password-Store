@@ -93,8 +93,7 @@ class FolderCreationDialogFragment : DialogFragment() {
     if (folderNameViewContainer.error != null) return
     newFolder.mkdirs()
     if (dialog.findViewById<MaterialCheckBox>(R.id.set_gpg_key).isChecked) {
-      val intent = PGPKeyListActivity.newSelectionActivity(requireContext())
-      gpgKeySelectAction.launch(intent)
+      gpgKeySelectAction.launch(PGPKeyListActivity.newIntent(requireContext(), keySelection = true))
       return
     }
     (requireActivity() as PasswordStore).refreshPasswordList(newFolder)

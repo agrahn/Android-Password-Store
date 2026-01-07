@@ -113,6 +113,11 @@ fun <T : ComponentActivity> ComponentActivity.launchActivity(clazz: Class<T>) {
   startActivity(Intent(this, clazz).setAction(Intent.ACTION_VIEW))
 }
 
+/** Launch an activity denoted by [intent]. */
+fun ComponentActivity.launchActivity(intent: Intent) {
+  startActivity(intent.setAction(Intent.ACTION_VIEW))
+}
+
 /** Simplifies the common `getString(key, null) ?: defaultValue` case slightly */
 fun SharedPreferences.getString(key: String): String? = getString(key, null)
 
