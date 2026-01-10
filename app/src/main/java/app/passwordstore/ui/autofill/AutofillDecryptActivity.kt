@@ -87,8 +87,9 @@ class AutofillDecryptActivity : BasePGPActivity() {
     val outputStream = ByteArrayOutputStream()
     val results = repository.decrypt(passphrases, identifiers, message, outputStream)
     val lastResult = results.last()
-    if (lastResult.second.isOk) {
-      val entry = passwordEntryFactory.create(lastResult.second.getOrThrow().toByteArray())
+    if (lastResult.isOk) {
+      val entry = passwordEntryFactory.create(lastResult.getOrThrow().second.toByteArray())
+      lastResult.getOrThrow().second.wipe()
       val directoryStructure = AutofillPreferences.directoryStructure(this)
       val credentials =
         AutofillPreferences.credentialsFromStoreEntry(
@@ -123,18 +124,18 @@ class AutofillDecryptActivity : BasePGPActivity() {
           )
         }
       }
-      onSuccess(lastResult.first) // pass ID
+      onSuccess(lastResult.getOrThrow().first) // pass ID
       withContext(dispatcherProvider.main()) { finish() }
     } else {
       passphrases.values.forEach { it?.wipe() }
       if (
         results
           .filter { result ->
-            if (result.second.getError() is IncorrectPassphraseException) {
+            if (result.getError() is IncorrectPassphraseException) {
               /* Remove wrong passphrases from temporary and persistent caches */
-              persistentPassphrases.edit { remove(result.first) }
-              cachedPassphrases[result.first]?.wipe()
-              cachedPassphrases.remove(result.first)
+              persistentPassphrases.edit { remove(result.getOrThrow().first) }
+              cachedPassphrases[result.getOrThrow().first]?.wipe()
+              cachedPassphrases.remove(result.getOrThrow().first)
               true
             } else false
           }
@@ -142,9 +143,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
       ) {
         /* Retry */
         decrypt(identifiers, isError = true)
-      } else if (
-        results.filter { it.second.getError() is NoDecryptionKeyAvailableException }.any()
-      ) {
+      } else if (results.filter { it.getError() is NoDecryptionKeyAvailableException }.any()) {
         snackbar(message = resources.getString(R.string.password_decryption_no_decryption_key))
         val timer = Executors.newSingleThreadScheduledExecutor()
         timer.schedule({ finish() }, 4.toLong(), TimeUnit.SECONDS)

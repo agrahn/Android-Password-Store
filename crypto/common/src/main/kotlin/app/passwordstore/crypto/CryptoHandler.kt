@@ -18,7 +18,11 @@ public interface CryptoHandler<Key, EncOpts : CryptoOptions, DecryptOpts : Crypt
    * Check entered passphrase against primary key and all subkeys; returns true if passphrase is
    * correct for any of the tested keys
    */
-  public fun passphraseIsCorrect(key: Key, passphrase: CharArray?): Boolean
+  public fun passphraseIsCorrect(
+    key: Key,
+    passphrase: CharArray?,
+    anySubkey: Boolean = false,
+  ): Boolean
 
   /**
    * Decrypt the given [ciphertextStream] using a [key] and a [passphrase], and writes the resultant
