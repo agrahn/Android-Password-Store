@@ -24,4 +24,5 @@ dependencies {
   api(libs.compose.ui.core)
   implementation(libs.androidx.core.ktx)
   implementation(libs.compose.ui.tooling)
+  implementation(libs.androidx.material)
 }
