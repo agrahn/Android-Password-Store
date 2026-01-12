@@ -1,4 +1,4 @@
-139631
+139473
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -78,6 +78,7 @@
 *.beget.app
 *.build.run
 *.builder.code.com
+*.bwcloud-os-instance.de
 *.c.ts.net
 *.ca-central-1.airflow.amazonaws.com
 *.ca-central-1.rds.amazonaws.com
@@ -2031,7 +2032,6 @@ daynight.jp
 dazaifu.fukuoka.jp
 dc.us
 dclk
-dd-dns.de
 ddl.fr-par.scw.cloud
 ddl.nl-ams.scw.cloud
 ddl.pl-waw.scw.cloud
@@ -2094,6 +2094,8 @@ det.br
 deta.app
 deta.dev
 deus-canvas.com
+deuxfleurs.eu
+deuxfleurs.page
 dev
 dev-myqnapcloud.com
 dev.br
@@ -2127,9 +2129,7 @@ discourse.group
 discourse.team
 discover
 dish
-diskstation.eu
 diskstation.me
-diskstation.org
 diskussionsbereich.de
 ditchyourip.com
 divtasvuodna.no
@@ -2194,9 +2194,7 @@ dr.in
 dr.tr
 drammen.no
 drangedal.no
-dray-dns.de
 drayddns.com
-draydns.de
 dreamhosters.com
 drive
 drobak.no
@@ -2226,7 +2224,6 @@ dy.fi
 dyn-berlin.de
 dyn-ip24.de
 dyn-o-saur.com
-dyn-vpn.de
 dyn.addr.tools
 dyn.cosidns.de
 dyn.ddnss.de
@@ -2263,7 +2260,6 @@ dynns.com
 dynserv.org
 dynu.net
 dynv6.net
-dynvpn.de
 dyroy.no
 dyrøy.no
 dz
@@ -2471,6 +2467,7 @@ elasticbeanstalk.com
 elblag.pl
 elementor.cloud
 elementor.cool
+eliv-api.kr
 eliv-cdn.kr
 eliv-dns.kr
 elk.pl
@@ -5363,7 +5360,6 @@ medusajs.app
 meet
 meguro.tokyo.jp
 mein-iserv.de
-mein-vigor.de
 meinforum.net
 meiwa.gunma.jp
 meiwa.mie.jp
@@ -5745,8 +5741,6 @@ my
 my-firewall.org
 my-gateway.de
 my-router.de
-my-vigor.de
-my-wan.de
 my.at
 my.canva.site
 my.canvasite.cn
@@ -6542,7 +6536,6 @@ on.biz.ng
 on.ca
 on.crisp.email
 onagawa.miyagi.jp
-onavstack.net
 oncilla.mythic-beasts.com
 ondigitalocean.app
 one
@@ -6922,7 +6915,6 @@ per.la
 per.nf
 perma.jp
 perso.ht
-perso.sn
 perso.tn
 perspecta.cloud
 perugia.it
@@ -8208,7 +8200,6 @@ skodje.no
 skr.jp
 sky
 skydiving.aero
-skygearapp.com
 skype
 skánit.no
 skånland.no
@@ -8501,9 +8492,6 @@ sy
 sydney
 sykkylven.no
 syncloud.it
-syno-ds.de
-synology-diskstation.de
-synology-ds.de
 synology.me
 systems
 sytes.net
@@ -8911,7 +8899,6 @@ transfer-webapp.us-gov-west-1.on.aws
 transfer-webapp.us-west-1.on.aws
 transfer-webapp.us-west-2.on.aws
 translate.goog
-translated.page
 transporte.bo
 tranøy.no
 trapani.it
