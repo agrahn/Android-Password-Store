@@ -89,6 +89,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
     val lastResult = results.last()
     if (lastResult.second.isOk) {
       val entry = passwordEntryFactory.create(lastResult.second.getOrThrow().toByteArray())
+      lastResult.second.getOrThrow().wipe()
       val directoryStructure = AutofillPreferences.directoryStructure(this)
       val credentials =
         AutofillPreferences.credentialsFromStoreEntry(
@@ -109,6 +110,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
           RESULT_OK,
           Intent().apply { putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, fillInDataset) },
         )
+        entry.password?.wipe()
         if (entry.hasTotp()) {
           val otp = entry.currentOtp
           val remainingTime = otp.remainingTime.inWholeSeconds

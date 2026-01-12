@@ -86,6 +86,7 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
             cryptoRepository.isPasswordCorrect(
               identifier,
               if (oldPassphrase.isEmpty()) null else oldPassphrase,
+              anySubkey = true,
             )
           )
             true

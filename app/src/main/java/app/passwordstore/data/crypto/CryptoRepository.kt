@@ -61,9 +61,13 @@ constructor(
     return pgpCryptoHandler.isPassphraseProtected(keys, anySubkey)
   }
 
-  fun isPasswordCorrect(identifier: PGPIdentifier, passphrase: CharArray?): Boolean {
+  fun isPasswordCorrect(
+    identifier: PGPIdentifier,
+    passphrase: CharArray?,
+    anySubkey: Boolean = false,
+  ): Boolean {
     val key = pgpKeyManager.getKeyById(identifier).get() ?: return false
-    return pgpCryptoHandler.passphraseIsCorrect(key, passphrase)
+    return pgpCryptoHandler.passphraseIsCorrect(key, passphrase, anySubkey = anySubkey)
   }
 
   fun getEmailFromKeyId(identifier: PGPIdentifier): String? {

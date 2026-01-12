@@ -66,6 +66,11 @@ class DecryptActivity : BasePGPActivity() {
     }
   }
 
+  override fun onPause() {
+    passwordEntry?.password?.wipe()
+    super.onPause()
+  }
+
   override suspend fun decryptWithPassphrase(
     passphrases: Map<String, CharArray?>,
     identifiers: List<PGPIdentifier>,
@@ -77,6 +82,7 @@ class DecryptActivity : BasePGPActivity() {
     val lastResult = results.last()
     if (lastResult.second.isOk) {
       val entry = passwordEntryFactory.create(lastResult.second.getOrThrow().toByteArray())
+      lastResult.second.getOrThrow().wipe()
       passwordEntry = entry
       createPasswordUI(entry)
       onSuccess(lastResult.first) // pass ID for which the entry was successfully decrypted
@@ -212,7 +218,7 @@ class DecryptActivity : BasePGPActivity() {
 
       val adapter =
         FieldItemAdapter(items, showPassword) { text, isSensitive ->
-          copyPasswordToClipboard(text?.toCharArray(), isSensitive)
+          copyPasswordToClipboard(text, isSensitive)
         }
       binding.recyclerView.adapter = adapter
       binding.recyclerView.itemAnimator = null
