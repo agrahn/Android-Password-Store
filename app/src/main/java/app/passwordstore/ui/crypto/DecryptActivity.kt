@@ -75,21 +75,24 @@ class DecryptActivity : BasePGPActivity() {
     val outputStream = ByteArrayOutputStream()
     val results = repository.decrypt(passphrases, identifiers, message, outputStream)
     val lastResult = results.last()
-    if (lastResult.second.isOk) {
-      val entry = passwordEntryFactory.create(lastResult.second.getOrThrow().toByteArray())
+    if (lastResult.isOk) {
+      val entry = passwordEntryFactory.create(lastResult.getOrThrow().second.toByteArray())
+      lastResult.getOrThrow().second.wipe()
       passwordEntry = entry
       createPasswordUI(entry)
-      onSuccess(lastResult.first) // pass ID for which the entry was successfully decrypted
+      onSuccess(
+        lastResult.getOrThrow().first
+      ) // pass ID for which the entry was successfully decrypted
     } else {
       passphrases.values.forEach { it?.wipe() }
       if (
         results
           .filter { result ->
-            if (result.second.getError() is IncorrectPassphraseException) {
+            if (result.getError() is IncorrectPassphraseException) {
               /* Remove wrong passphrases from temporary and persistent caches */
-              persistentPassphrases.edit { remove(result.first) }
-              cachedPassphrases[result.first]?.wipe()
-              cachedPassphrases.remove(result.first)
+              persistentPassphrases.edit { remove(result.getOrThrow().first) }
+              cachedPassphrases[result.getOrThrow().first]?.wipe()
+              cachedPassphrases.remove(result.getOrThrow().first)
               true
             } else false
           }
@@ -97,9 +100,7 @@ class DecryptActivity : BasePGPActivity() {
       ) {
         /* Retry */
         decrypt(identifiers, isError = true)
-      } else if (
-        results.filter { it.second.getError() is NoDecryptionKeyAvailableException }.any()
-      ) {
+      } else if (results.filter { it.getError() is NoDecryptionKeyAvailableException }.any()) {
         snackbar(message = resources.getString(R.string.password_decryption_no_decryption_key))
       } else {
         snackbar(message = resources.getString(R.string.password_decryption_unknown_error))
@@ -125,7 +126,10 @@ class DecryptActivity : BasePGPActivity() {
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
-      android.R.id.home -> onBackPressedDispatcher.onBackPressed()
+      android.R.id.home -> {
+        passwordEntry?.password?.wipe()
+        onBackPressedDispatcher.onBackPressed()
+      }
       R.id.edit_password -> editPassword()
       R.id.share_password_as_plaintext -> shareAsPlaintext()
       R.id.copy_password -> {
@@ -176,16 +180,16 @@ class DecryptActivity : BasePGPActivity() {
 
       val items = arrayListOf<FieldItem>()
       if (entry.password?.let { !it.isBlank() } ?: false) {
+        if (settings.getBoolean(PreferenceKeys.COPY_ON_DECRYPT, false)) {
+          clearTimer?.shutdownNow()
+          clearTimer = copyPasswordToClipboard(entry.password)
+        }
         items.add(
           FieldItem.createPasswordField(
             getString(R.string.password),
             entry.password ?: throw NullPointerException(),
           )
         )
-        if (settings.getBoolean(PreferenceKeys.COPY_ON_DECRYPT, false)) {
-          clearTimer?.shutdownNow()
-          clearTimer = copyPasswordToClipboard(entry.password)
-        }
       }
 
       if (entry.hasTotp()) {
@@ -212,7 +216,7 @@ class DecryptActivity : BasePGPActivity() {
 
       val adapter =
         FieldItemAdapter(items, showPassword) { text, isSensitive ->
-          copyPasswordToClipboard(text?.toCharArray(), isSensitive)
+          copyPasswordToClipboard(text, isSensitive)
         }
       binding.recyclerView.adapter = adapter
       binding.recyclerView.itemAnimator = null

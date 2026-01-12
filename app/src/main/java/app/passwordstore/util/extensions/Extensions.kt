@@ -6,6 +6,7 @@ package app.passwordstore.util.extensions
 
 import android.util.Base64
 import app.passwordstore.data.repo.PasswordRepository
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.time.Instant
 import logcat.asLog
@@ -72,4 +73,17 @@ fun String.substringBefore(delimiter: Regex, missingDelimiterValue: String = thi
 fun CharArray.wipe() {
   fill('\u0000')
   drop(size)
+}
+
+fun ByteArray.wipe() {
+  fill(0)
+  drop(size)
+}
+
+fun ByteArrayOutputStream.wipe() {
+  size().let {
+    reset()
+    write(ByteArray(it))
+  }
+  reset()
 }

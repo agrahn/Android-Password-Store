@@ -13,6 +13,7 @@ import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.PGPKey
 import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.crypto.PGPainlessCryptoHandler
+import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.settings.PreferenceKeys
@@ -21,6 +22,8 @@ import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.map
 import com.github.michaelbull.result.mapBoth
+import com.github.michaelbull.result.onSuccess
+import com.github.michaelbull.result.runCatching
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
@@ -61,9 +64,13 @@ constructor(
     return pgpCryptoHandler.isPassphraseProtected(keys, anySubkey)
   }
 
-  fun isPasswordCorrect(identifier: PGPIdentifier, passphrase: CharArray?): Boolean {
+  fun isPasswordCorrect(
+    identifier: PGPIdentifier,
+    passphrase: CharArray?,
+    anySubkey: Boolean = false,
+  ): Boolean {
     val key = pgpKeyManager.getKeyById(identifier).get() ?: return false
-    return pgpCryptoHandler.passphraseIsCorrect(key, passphrase)
+    return pgpCryptoHandler.passphraseIsCorrect(key, passphrase, anySubkey)
   }
 
   fun getEmailFromKeyId(identifier: PGPIdentifier): String? {
@@ -88,42 +95,50 @@ constructor(
     encryptedMessage: ByteArrayInputStream,
     message: ByteArrayOutputStream,
   ) = run {
-    if (passphrases.keys.first() == "") { // New passphrase from user input
+    if (passphrases.keys.first().isBlank()) { // New passphrase from user input
       // Test it against the PGP identities of current entry
-      identities.mapUntil({ it.second.isOk }) { id ->
+      identities.mapUntil({ it.isOk }) { id ->
         encryptedMessage.reset()
         message.reset()
         val key = pgpKeyManager.getKeyById(id).get()
-        val decryptionOptions = PGPDecryptOptions.Builder().build()
         val result =
-          pgpCryptoHandler.decrypt(
-            key,
-            passphrases.values.first(),
-            encryptedMessage,
-            message,
-            decryptionOptions,
-          )
-        result.getError()?.let { logcat { it.asLog() } }
-        Pair(id.toString(), result.map { message })
+          runCatching { if (key == null) throw NoDecryptionKeyAvailableException(id.toString()) }
+            .onSuccess {
+              val decryptionOptions = PGPDecryptOptions.Builder().build()
+              val result =
+                pgpCryptoHandler.decrypt(
+                  key,
+                  passphrases.values.first(),
+                  encryptedMessage,
+                  message,
+                  decryptionOptions,
+                )
+              result
+            }
+        result.map { Pair(id.toString(), message) }
       }
     } else { // Get the first working cached passphrase
-      passphrases.keys.toList().mapUntil({ it.second.isOk }) { id ->
+      passphrases.keys.toList().mapUntil({ it.isOk }) { id ->
         encryptedMessage.reset()
         message.reset()
         val pgpId = PGPIdentifier.fromString(id)
         requireNotNull(pgpId) { "Error while parsing cached PGP identifier \"${id}\"" }
         val key = pgpKeyManager.getKeyById(pgpId).get()
-        val decryptionOptions = PGPDecryptOptions.Builder().build()
         val result =
-          pgpCryptoHandler.decrypt(
-            key,
-            passphrases[id],
-            encryptedMessage,
-            message,
-            decryptionOptions,
-          )
-        result.getError()?.let { logcat { it.asLog() } }
-        Pair(id, result.map { message })
+          runCatching { if (key == null) throw NoDecryptionKeyAvailableException(id) }
+            .onSuccess {
+              val decryptionOptions = PGPDecryptOptions.Builder().build()
+              val result =
+                pgpCryptoHandler.decrypt(
+                  key,
+                  passphrases[id],
+                  encryptedMessage,
+                  message,
+                  decryptionOptions,
+                )
+              result
+            }
+        result.map { Pair(id, message) }
       }
     }
   }

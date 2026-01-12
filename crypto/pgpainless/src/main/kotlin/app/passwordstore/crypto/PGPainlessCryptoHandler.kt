@@ -180,13 +180,19 @@ public class PGPainlessCryptoHandler @Inject constructor() :
             }
       }
 
-  public override fun passphraseIsCorrect(key: PGPKey, passphrase: CharArray?): Boolean =
+  public override fun passphraseIsCorrect(
+    key: PGPKey,
+    passphrase: CharArray?,
+    anySubkey: Boolean,
+  ): Boolean =
     tryParseCertificateOrKey(key)?.let {
       it is OpenPGPKey &&
         it
           .getSecretKeys()
           .values
-          .filter { !it.getPGPSecretKey().isPrivateKeyEmpty() }
+          .filter {
+            (anySubkey || it.isEncryptionKey()) && !it.getPGPSecretKey().isPrivateKeyEmpty()
+          }
           .any { it.isPassphraseCorrect(passphrase) }
     } ?: false
 

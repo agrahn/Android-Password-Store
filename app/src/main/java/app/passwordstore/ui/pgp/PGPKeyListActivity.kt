@@ -215,7 +215,7 @@ class PGPKeyListActivity : AppCompatActivity() {
       if (key == PasswordDialog.PASSWORD_RESULT_KEY) {
         val passphrase = bundle.getCharArray(PasswordDialog.PASSWORD_PHRASE_KEY) ?: charArrayOf()
         lifecycleScope.launch {
-          if (cryptoRepository.isPasswordCorrect(identifier, passphrase)) {
+          if (cryptoRepository.isPasswordCorrect(identifier, passphrase, anySubkey = true)) {
             confirmBackupCode(identifier, generateBackupCode())
           } else {
             askPassphrase(identifier, isError = true)

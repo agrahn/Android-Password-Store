@@ -16,12 +16,13 @@ import app.passwordstore.data.passfile.Totp
 import app.passwordstore.data.password.FieldItem
 import app.passwordstore.databinding.ItemFieldBinding
 import app.passwordstore.ui.compose.R as composeR
+import app.passwordstore.util.extensions.wipe
 import com.google.android.material.textfield.TextInputLayout
 
 class FieldItemAdapter(
   private var fieldItemList: List<FieldItem>,
   private val showPassword: Boolean,
-  private val copyToClipboard: (text: String?, isSensitive: Boolean) -> Unit,
+  private val copyToClipboard: (text: CharArray?, isSensitive: Boolean) -> Unit,
 ) : RecyclerView.Adapter<FieldItemAdapter.FieldItemViewHolder>() {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FieldItemViewHolder {
@@ -58,26 +59,34 @@ class FieldItemAdapter(
     fun bind(
       fieldItem: FieldItem,
       showPassword: Boolean,
-      copyToClipboard: (String?, Boolean) -> Unit,
+      copyToClipboard: (CharArray?, Boolean) -> Unit,
     ) {
       with(binding) {
         itemText.hint = fieldItem.label
         itemTextContainer.hint = fieldItem.label
-        itemText.setText(String(fieldItem.value))
+        itemText.setText(fieldItem.value, 0, fieldItem.value.size)
 
         when (fieldItem.action) {
           FieldItem.ActionType.COPY -> {
             itemTextContainer.apply {
               setEndIconMode(TextInputLayout.END_ICON_CUSTOM)
               setEndIconDrawable(R.drawable.ic_content_copy)
-              setEndIconOnClickListener { copyToClipboard(itemText.text.toString(), false) }
+              setEndIconOnClickListener {
+                val chars = itemText.text?.let { CharArray(it.length) { i -> it[i] } }
+                copyToClipboard(chars, false)
+                chars?.wipe()
+              }
             }
             itemText.transformationMethod = null
           }
           FieldItem.ActionType.HIDE -> {
             itemTextContainer.apply {
               setEndIconMode(TextInputLayout.END_ICON_PASSWORD_TOGGLE)
-              setOnClickListener { copyToClipboard(itemText.text.toString(), true) }
+              setOnClickListener {
+                val chars = itemText.text?.let { CharArray(it.length) { i -> it[i] } }
+                copyToClipboard(chars, true)
+                chars?.wipe()
+              }
             }
             itemText.apply {
               transformationMethod =
@@ -94,7 +103,11 @@ class FieldItemAdapter(
                     composeR.font.jetbrainsmono_nl_regular,
                   )
               }
-              setOnClickListener { copyToClipboard(itemText.text.toString(), true) }
+              setOnClickListener {
+                val chars = itemText.text?.let { CharArray(it.length) { i -> it[i] } }
+                copyToClipboard(chars, true)
+                chars?.wipe()
+              }
             }
           }
         }

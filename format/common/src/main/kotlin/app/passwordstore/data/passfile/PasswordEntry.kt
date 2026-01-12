@@ -129,6 +129,7 @@ constructor(
   init {
     val (foundPassword, passContentWithoutPasswords) =
       findAndStripPassword(bytes.splitToCharArrayListAt('\n'))
+    bytes.fill(0)
     password = foundPassword
     val (foundUsername, passContentWithoutPasswordsAndFirstUsername) =
       findAndStripFirstUsername(passContentWithoutPasswords)
