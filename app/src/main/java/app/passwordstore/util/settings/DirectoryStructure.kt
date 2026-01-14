@@ -22,12 +22,12 @@ enum class DirectoryStructure(val value: String) {
    * - work/example.org/john@doe.org/password.gpg --> john@doe.org (DirectoryBased)
    * - Temporary PIN.gpg --> Temporary PIN (DirectoryBased, fallback)
    */
-  fun getUsernameFor(file: File): String? =
+  fun getUsernameFor(file: File): CharArray? =
     when (this) {
       EncryptedUsername -> null
       FileBased -> file.nameWithoutExtension
       DirectoryBased -> file.parentFile?.name ?: file.nameWithoutExtension
-    }
+    }?.toCharArray()
 
   /**
    * Returns the origin identifier associated to [file], following the convention of the current
@@ -92,17 +92,18 @@ enum class DirectoryStructure(val value: String) {
           ?: file.nameWithoutExtension
     }
 
-  fun getSaveFolderName(sanitizedIdentifier: String, username: String?) =
+  fun getSaveFolderName(sanitizedIdentifier: String, username: CharArray?) =
     when (this) {
       EncryptedUsername -> "/"
       FileBased -> sanitizedIdentifier
-      DirectoryBased -> Paths.get(sanitizedIdentifier, username ?: "username").toString()
+      DirectoryBased ->
+        Paths.get(sanitizedIdentifier, username?.let { String(it) } ?: "username").toString()
     }
 
-  fun getSaveFileName(username: String?, identifier: String) =
+  fun getSaveFileName(username: CharArray?, identifier: String) =
     when (this) {
       EncryptedUsername -> identifier
-      FileBased -> username
+      FileBased -> username?.let { String(it) }
       DirectoryBased -> "password"
     }
 

@@ -15,5 +15,5 @@ dependencies {
   testImplementation(libs.bundles.testDependencies)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.testing.turbine)
-  // implementation(libs.thirdparty.logcat)
+  implementation(libs.thirdparty.logcat)
 }

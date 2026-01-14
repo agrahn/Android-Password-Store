@@ -19,9 +19,11 @@ import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.password.FieldItem
 import app.passwordstore.databinding.DecryptLayoutBinding
 import app.passwordstore.ui.adapters.FieldItemAdapter
+import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.snackbar
+import app.passwordstore.util.extensions.toCharArray
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.extensions.wipe
@@ -43,7 +45,9 @@ class DecryptActivity : BasePGPActivity() {
 
   private val binding by viewBinding(DecryptLayoutBinding::inflate)
   private val relativeParentPath by unsafeLazy { getParentPath(fullPath, repoPath) }
-  private var passwordEntry: PasswordEntry? = null
+
+  // temporarily AES-encrypted password entry
+  private var encryptedEntryChars: CharArray? = null // AES encrypted password entry
 
   private fun CharArray.isBlank() = this.isEmpty() || this.all { it.isWhitespace() }
 
@@ -67,7 +71,7 @@ class DecryptActivity : BasePGPActivity() {
   }
 
   override fun onPause() {
-    passwordEntry?.password?.wipe()
+    encryptedEntryChars?.wipe()
     super.onPause()
   }
 
@@ -81,9 +85,13 @@ class DecryptActivity : BasePGPActivity() {
     val results = repository.decrypt(passphrases, identifiers, message, outputStream)
     val lastResult = results.last()
     if (lastResult.second.isOk) {
-      val entry = passwordEntryFactory.create(lastResult.second.getOrThrow().toByteArray())
+      val decryptedEntryBytes = lastResult.second.getOrThrow().toByteArray()
       lastResult.second.getOrThrow().wipe()
-      passwordEntry = entry
+      val decryptedEntryChars = decryptedEntryBytes.toCharArray()
+      decryptedEntryBytes.wipe()
+      val entry = passwordEntryFactory.create(decryptedEntryChars)
+      encryptedEntryChars = AESEncryption.encrypt(decryptedEntryChars)
+      decryptedEntryChars.wipe()
       createPasswordUI(entry)
       onSuccess(lastResult.first) // pass ID for which the entry was successfully decrypted
     } else {
@@ -119,11 +127,16 @@ class DecryptActivity : BasePGPActivity() {
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
     menuInflater.inflate(R.menu.pgp_handler, menu)
-    passwordEntry?.let { entry ->
+    encryptedEntryChars?.let { encrypted ->
       menu.findItem(R.id.edit_password).isVisible = true
-      if (entry.password?.let { !it.isBlank() } ?: false) {
-        menu.findItem(R.id.share_password_as_plaintext).isVisible = true
-        menu.findItem(R.id.copy_password).isVisible = true
+      AESEncryption.decrypt(encrypted)?.let { decrypted ->
+        val entry = passwordEntryFactory.create(decrypted)
+        decrypted.wipe()
+        if (entry.password?.let { !it.isBlank() } ?: false) {
+          menu.findItem(R.id.share_password_as_plaintext).isVisible = true
+          menu.findItem(R.id.copy_password).isVisible = true
+        }
+        entry.clear()
       }
     }
     return true
@@ -135,8 +148,17 @@ class DecryptActivity : BasePGPActivity() {
       R.id.edit_password -> editPassword()
       R.id.share_password_as_plaintext -> shareAsPlaintext()
       R.id.copy_password -> {
-        clearTimer?.shutdownNow()
-        clearTimer = copyPasswordToClipboard(passwordEntry?.password)
+        encryptedEntryChars?.let { encrypted ->
+          AESEncryption.decrypt(encrypted)?.let { decrypted ->
+            val entry = passwordEntryFactory.create(decrypted)
+            decrypted.wipe()
+            if (entry.password?.let { !it.isBlank() } ?: false) {
+              clearTimer?.shutdownNow()
+              clearTimer = copyPasswordToClipboard(entry?.password)
+            }
+            entry.clear()
+          }
+        }
       }
       else -> return super.onOptionsItemSelected(item)
     }
@@ -148,30 +170,40 @@ class DecryptActivity : BasePGPActivity() {
    * result triggers they can be repopulated with new data.
    */
   private fun editPassword() {
-    val intent = Intent(this, PasswordCreationActivity::class.java)
-    intent.action = Intent.ACTION_VIEW
-    intent.putExtra("FILE_PATH", relativeParentPath)
-    intent.putExtra("REPO_PATH", repoPath)
-    intent.putExtra(PasswordCreationActivity.EXTRA_FILE_NAME, name)
-    intent.putExtra(PasswordCreationActivity.EXTRA_USERNAME, passwordEntry?.username)
-    intent.putExtra(PasswordCreationActivity.EXTRA_PASSWORD, passwordEntry?.password)
-    intent.putExtra(PasswordCreationActivity.EXTRA_EXTRA_CONTENT, passwordEntry?.extraContentString)
-    intent.putExtra(PasswordCreationActivity.EXTRA_EDITING, true)
-    startActivity(intent)
-    finish()
+    encryptedEntryChars?.let { encrypted ->
+      val intent = Intent(this, PasswordCreationActivity::class.java)
+      intent.action = Intent.ACTION_VIEW
+      intent.putExtra("FILE_PATH", relativeParentPath)
+      intent.putExtra("REPO_PATH", repoPath)
+      intent.putExtra(PasswordCreationActivity.EXTRA_FILE_NAME, name)
+      intent.putExtra(PasswordCreationActivity.EXTRA_ENTRY, encrypted)
+      intent.putExtra(PasswordCreationActivity.EXTRA_EDITING, true)
+      startActivity(intent)
+      finish()
+    }
   }
 
   private fun shareAsPlaintext() {
-    val sendIntent =
-      Intent().apply {
-        action = Intent.ACTION_SEND
-        putExtra(Intent.EXTRA_TEXT, passwordEntry?.password?.let { String(it) })
-        type = "text/plain"
+    encryptedEntryChars?.let { encrypted ->
+      AESEncryption.decrypt(encrypted)?.let { decrypted ->
+        val entry = passwordEntryFactory.create(decrypted)
+        decrypted.wipe()
+        if (entry.password?.let { !it.isBlank() } ?: false) {
+          val sendIntent =
+            Intent().apply {
+              action = Intent.ACTION_SEND
+              putExtra(Intent.EXTRA_TEXT, entry.password?.let { String(it) })
+              type = "text/plain"
+            }
+          entry.clear()
+          // Always show a picker to give the user a chance to cancel
+          startActivity(
+            Intent.createChooser(sendIntent, resources.getText(R.string.send_plaintext_password_to))
+          )
+        }
+        entry.clear()
       }
-    // Always show a picker to give the user a chance to cancel
-    startActivity(
-      Intent.createChooser(sendIntent, resources.getText(R.string.send_plaintext_password_to))
-    )
+    }
   }
 
   private suspend fun createPasswordUI(entry: PasswordEntry) =
@@ -179,6 +211,8 @@ class DecryptActivity : BasePGPActivity() {
       val labelFormat = resources.getString(R.string.otp_label_format)
       val showPassword = settings.getBoolean(PreferenceKeys.SHOW_PASSWORD, false)
       invalidateOptionsMenu()
+
+      entry.extraContentChars?.wipe() // not used here
 
       val items = arrayListOf<FieldItem>()
       if (entry.password?.let { !it.isBlank() } ?: false) {
@@ -198,7 +232,7 @@ class DecryptActivity : BasePGPActivity() {
         items.add(FieldItem.createOtpField(labelFormat, entry.totp.first()))
       }
 
-      if (!entry.username.isNullOrBlank()) {
+      if (entry.username?.isNotEmpty() ?: false) {
         items.add(
           FieldItem.createUsernameField(
             getString(R.string.username),
@@ -212,7 +246,7 @@ class DecryptActivity : BasePGPActivity() {
       }
 
       entry.extraContent.forEach { (key, value) ->
-        if (key == PasswordEntry.EXTRA_CONTENT)
+        if (key.contentEquals(PasswordEntry.EXTRA_CONTENT))
           items.add(FieldItem.createFreeformField(getString(R.string.crypto_extra_label), value))
       }
 

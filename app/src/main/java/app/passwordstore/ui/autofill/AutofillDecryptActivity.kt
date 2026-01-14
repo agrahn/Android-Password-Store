@@ -22,6 +22,7 @@ import app.passwordstore.ui.crypto.BasePGPActivity
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.autofill.AutofillResponseBuilder
 import app.passwordstore.util.extensions.snackbar
+import app.passwordstore.util.extensions.toCharArray
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.androidpasswordstore.autofillparser.AutofillAction
@@ -88,8 +89,11 @@ class AutofillDecryptActivity : BasePGPActivity() {
     val results = repository.decrypt(passphrases, identifiers, message, outputStream)
     val lastResult = results.last()
     if (lastResult.second.isOk) {
-      val entry = passwordEntryFactory.create(lastResult.second.getOrThrow().toByteArray())
+      val decryptedEntryBytes = lastResult.second.getOrThrow().toByteArray()
       lastResult.second.getOrThrow().wipe()
+      val decryptedEntryChars = decryptedEntryBytes.toCharArray()
+      decryptedEntryBytes.wipe()
+      val entry = passwordEntryFactory.create(decryptedEntryChars)
       val directoryStructure = AutofillPreferences.directoryStructure(this)
       val credentials =
         AutofillPreferences.credentialsFromStoreEntry(
@@ -110,7 +114,6 @@ class AutofillDecryptActivity : BasePGPActivity() {
           RESULT_OK,
           Intent().apply { putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, fillInDataset) },
         )
-        entry.password?.wipe()
         if (entry.hasTotp()) {
           val otp = entry.currentOtp
           val remainingTime = otp.remainingTime.inWholeSeconds

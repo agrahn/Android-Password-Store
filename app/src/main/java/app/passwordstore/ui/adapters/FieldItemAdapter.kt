@@ -18,6 +18,7 @@ import app.passwordstore.databinding.ItemFieldBinding
 import app.passwordstore.ui.compose.R as composeR
 import app.passwordstore.util.extensions.wipe
 import com.google.android.material.textfield.TextInputLayout
+import java.nio.CharBuffer
 
 class FieldItemAdapter(
   private var fieldItemList: List<FieldItem>,
@@ -64,7 +65,8 @@ class FieldItemAdapter(
       with(binding) {
         itemText.hint = fieldItem.label
         itemTextContainer.hint = fieldItem.label
-        itemText.setText(fieldItem.value, 0, fieldItem.value.size)
+        itemText.setText(CharBuffer.wrap(fieldItem.value))
+        fieldItem.value.wipe()
 
         when (fieldItem.action) {
           FieldItem.ActionType.COPY -> {

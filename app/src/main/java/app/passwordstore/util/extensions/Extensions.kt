@@ -8,7 +8,12 @@ import android.util.Base64
 import app.passwordstore.data.repo.PasswordRepository
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.ByteBuffer
+import java.nio.CharBuffer
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 import java.time.Instant
+import java.util.Arrays
 import logcat.asLog
 import org.eclipse.jgit.lib.ObjectId
 import org.eclipse.jgit.revwalk.RevCommit
@@ -73,6 +78,18 @@ fun String.substringBefore(delimiter: Regex, missingDelimiterValue: String = thi
 fun CharArray.wipe() {
   fill('\u0000')
   drop(size)
+}
+
+fun CharArray.toByteArray(charset: Charset = StandardCharsets.UTF_8): ByteArray {
+  val byteBuffer = charset.encode(CharBuffer.wrap(this))
+  val bytes = Arrays.copyOf(byteBuffer.array(), byteBuffer.limit())
+  return bytes
+}
+
+fun ByteArray.toCharArray(charset: Charset = StandardCharsets.UTF_8): CharArray {
+  val charBuffer = charset.decode(ByteBuffer.wrap(this))
+  val chars = Arrays.copyOf(charBuffer.array(), charBuffer.limit())
+  return chars
 }
 
 fun ByteArray.wipe() {
