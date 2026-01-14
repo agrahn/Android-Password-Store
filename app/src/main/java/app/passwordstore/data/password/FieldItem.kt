@@ -40,12 +40,12 @@ private constructor(
       return FieldItem(ItemType.PASSWORD, label, password, ActionType.HIDE)
     }
 
-    fun createUsernameField(label: String, username: String): FieldItem {
-      return FieldItem(ItemType.USERNAME, label, username.toCharArray(), ActionType.COPY)
+    fun createUsernameField(label: String, username: CharArray): FieldItem {
+      return FieldItem(ItemType.USERNAME, label, username, ActionType.COPY)
     }
 
-    fun createFreeformField(label: String, content: String): FieldItem {
-      return FieldItem(ItemType.FREEFORM, label, content.toCharArray(), ActionType.COPY)
+    fun createFreeformField(label: String, content: CharArray): FieldItem {
+      return FieldItem(ItemType.FREEFORM, label, content, ActionType.COPY)
     }
   }
 }

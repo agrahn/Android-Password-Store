@@ -26,7 +26,7 @@ class PasswordEntryTest {
   private val totpFinder = UriTotpFinder()
 
   private fun makeEntry(content: String, clock: UserClock = fakeClock) =
-    PasswordEntry(clock, totpFinder, content.encodeToByteArray())
+    PasswordEntry(clock, totpFinder, content.toCharArray())
 
   @Test
   fun getPassword() {
@@ -57,25 +57,30 @@ class PasswordEntryTest {
 
   @Test
   fun getExtraContent() {
-    assertEquals("bla\n", makeEntry("fooooo\nbla\n").extraContentString)
-    assertEquals("bla", makeEntry("fooooo\nbla").extraContentString)
-    assertEquals("", makeEntry("fooooo\n").extraContentString)
-    assertEquals("", makeEntry("fooooo").extraContentString)
-    assertEquals("blubb\n", makeEntry("\nblubb\n").extraContentString)
-    assertEquals("blubb", makeEntry("\nblubb").extraContentString)
-    assertEquals("", makeEntry("blubb\npassword: foo").extraContentString)
-    assertEquals("blubb", makeEntry("password: foo\nblubb").extraContentString)
-    assertEquals("", makeEntry("blubb\npassword: foo\nusername: bar").extraContentString)
+    assertEquals("bla\n", makeEntry("fooooo\nbla\n").extraContentChars?.let { String(it) })
+    assertEquals("bla", makeEntry("fooooo\nbla").extraContentChars?.let { String(it) })
+    assertEquals("", makeEntry("fooooo\n").extraContentChars?.let { String(it) })
+    assertEquals("", makeEntry("fooooo").extraContentChars?.let { String(it) })
+    assertEquals("blubb\n", makeEntry("\nblubb\n").extraContentChars?.let { String(it) })
+    assertEquals("blubb", makeEntry("\nblubb").extraContentChars?.let { String(it) })
+    assertEquals("", makeEntry("blubb\npassword: foo").extraContentChars?.let { String(it) })
+    assertEquals("blubb", makeEntry("password: foo\nblubb").extraContentChars?.let { String(it) })
     assertEquals(
-      "username: baz",
-      makeEntry("blubb\npassword: foo\nid:bar\nusername: baz").extraContentString,
+      "",
+      makeEntry("blubb\npassword: foo\nusername: bar").extraContentChars?.let { String(it) },
     )
     assertEquals(
       "username: baz",
-      makeEntry("blubb\npassword: foo\nid:bar\npass: 1234 \nusername: baz").extraContentString,
+      makeEntry("blubb\npassword: foo\nid:bar\nusername: baz").extraContentChars?.let { String(it) },
     )
-    assertEquals("", makeEntry("\n").extraContentString)
-    assertEquals("", makeEntry("").extraContentString)
+    assertEquals(
+      "username: baz",
+      makeEntry("blubb\npassword: foo\nid:bar\npass: 1234 \nusername: baz").extraContentChars?.let {
+        String(it)
+      },
+    )
+    assertEquals("", makeEntry("\n").extraContentChars?.let { String(it) })
+    assertEquals("", makeEntry("").extraContentChars?.let { String(it) })
   }
 
   @Test
@@ -83,51 +88,69 @@ class PasswordEntryTest {
     var entry = makeEntry("username: abc\npassword: abc\ntest: abcdef")
     assertEquals(1, entry.extraContent.size)
     assertTrue(entry.extraContent.containsKey("test"))
-    assertEquals("abcdef", entry.extraContent["test"])
+    assertEquals("abcdef", entry.extraContent["test"]?.let { String(it) })
 
     entry = makeEntry("username: abc\npassword: abc\ntest: :abcdef:")
     assertEquals(1, entry.extraContent.size)
     assertTrue(entry.extraContent.containsKey("test"))
-    assertEquals(":abcdef:", entry.extraContent["test"])
+    assertEquals(":abcdef:", entry.extraContent["test"]?.concatToString())
 
     entry = makeEntry("username: abc\npassword: abc\ntest : ::abc:def::")
     assertEquals(1, entry.extraContent.size)
     assertTrue(entry.extraContent.containsKey("test"))
-    assertEquals("::abc:def::", entry.extraContent["test"])
+    assertEquals("::abc:def::", entry.extraContent["test"]?.concatToString())
 
     entry = makeEntry("username: abc\npassword: abc\ntest: abcdef\ntest2: ghijkl")
     assertEquals(2, entry.extraContent.size)
     assertTrue(entry.extraContent.containsKey("test2"))
-    assertEquals("ghijkl", entry.extraContent["test2"])
+    assertEquals("ghijkl", entry.extraContent["test2"]?.concatToString())
 
     entry = makeEntry("username: abc\npassword: abc\ntest: abcdef\n: ghijkl\n mnopqr:")
     assertEquals(2, entry.extraContent.size)
     assertTrue(entry.extraContent.containsKey("EXTRA_CONTENT"))
-    assertEquals(": ghijkl\n mnopqr:", entry.extraContent["EXTRA_CONTENT"])
+    assertEquals(": ghijkl\n mnopqr:", entry.extraContent["EXTRA_CONTENT"]?.concatToString())
 
     entry = makeEntry("username: abc\npassword: abc\n \n:\n\n")
     assertEquals(1, entry.extraContent.size)
     assertTrue(entry.extraContent.containsKey("EXTRA_CONTENT"))
-    assertEquals(":", entry.extraContent["EXTRA_CONTENT"])
+    assertEquals(":", entry.extraContent["EXTRA_CONTENT"]?.concatToString())
   }
 
   @Test
   fun getUsername() {
     for (field in PasswordEntry.USERNAME_FIELDS) {
-      assertEquals("username", makeEntry("\n$field username").username)
+      assertEquals("username", makeEntry("\n$field username").username?.let { String(it) })
       assertEquals(
         "username",
-        makeEntry("\n${field.uppercase(Locale.getDefault())} username").username,
+        makeEntry("\n${field.uppercase(Locale.getDefault())} username").username?.let { String(it) },
       )
     }
-    assertEquals("username", makeEntry("secret\nextra\nlogin: username\ncontent\n").username)
-    assertEquals("username", makeEntry("\nextra\nusername: username\ncontent\n").username)
-    assertEquals("username", makeEntry("\nUSERNaMe:  username\ncontent\n").username)
-    assertEquals("username", makeEntry("\nlogin:    username").username)
-    assertEquals("foo@example.com", makeEntry("\nemail: foo@example.com").username)
-    assertEquals("username", makeEntry("\nidentity: username\nlogin: another_username").username)
-    assertEquals("username", makeEntry("\nLOGiN:username").username)
-    assertEquals("foo@example.com", makeEntry("pass\nmail:    foo@example.com").username)
+    assertEquals(
+      "username",
+      makeEntry("secret\nextra\nlogin: username\ncontent\n").username?.let { String(it) },
+    )
+    assertEquals(
+      "username",
+      makeEntry("\nextra\nusername: username\ncontent\n").username?.let { String(it) },
+    )
+    assertEquals(
+      "username",
+      makeEntry("\nUSERNaMe:  username\ncontent\n").username?.let { String(it) },
+    )
+    assertEquals("username", makeEntry("\nlogin:    username").username?.let { String(it) })
+    assertEquals(
+      "foo@example.com",
+      makeEntry("\nemail: foo@example.com").username?.let { String(it) },
+    )
+    assertEquals(
+      "username",
+      makeEntry("\nidentity: username\nlogin: another_username").username?.let { String(it) },
+    )
+    assertEquals("username", makeEntry("\nLOGiN:username").username?.let { String(it) })
+    assertEquals(
+      "foo@example.com",
+      makeEntry("pass\nmail:    foo@example.com").username?.let { String(it) },
+    )
     assertNull(makeEntry("secret\nextra\ncontent\n").username)
   }
 
@@ -144,7 +167,7 @@ class PasswordEntryTest {
   fun parseUnicode() {
     val entry = makeEntry("मम रहस्यम्\nusername: मूर्ख नाम\n")
     assertEquals("मम रहस्यम्", entry.password?.let { String(it) })
-    assertEquals("मूर्ख नाम", entry.username)
+    assertEquals("मूर्ख नाम", entry.username?.let { String(it) })
   }
 
   @Test
@@ -222,8 +245,8 @@ class PasswordEntryTest {
     assertTrue(entry.hasTotp())
     assertNotNull(entry.username)
     assertEquals("pass", entry.password?.let { String(it) })
-    assertEquals("user", entry.username)
-    assertEquals(mapOf("id" to "id"), entry.extraContent)
+    assertEquals("user", entry.username?.let { String(it) })
+    assertEquals(mapOf("id" to "id"), entry.extraContent.mapValues { String(it.value) })
   }
 
   companion object {

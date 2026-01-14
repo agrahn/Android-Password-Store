@@ -17,8 +17,6 @@ import com.github.michaelbull.result.mapBoth
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets
 import kotlin.collections.set
 import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration.Companion.milliseconds
@@ -36,24 +34,24 @@ constructor(
   private val clock: UserClock,
   /** [TotpFinder] implementation to extract data from a TOTP URI */
   private val totpFinder: TotpFinder,
-  /** The content of this entry, as an array of bytes. */
-  @Assisted bytes: ByteArray,
+  /** The content of this entry, as an array of Chars. */
+  @Assisted chars: CharArray,
 ) {
 
   /** The password text for this entry. Can be null. */
   public val password: CharArray?
 
   /** The username for this entry. Can be null. */
-  public val username: String?
+  public val username: CharArray?
 
   /** The totp entry extracted from the decrypted password file */
   private val totpString: String
 
-  /** String representation of [bytes] but with passwords and first username stripped. */
-  public val extraContentString: String?
+  /** content of [chars] but with passwords and first username stripped. */
+  public val extraContentChars: CharArray?
 
-  /** A [String] to [String] [Map] of the extra content of this entry, in a key:value fashion. */
-  public val extraContent: Map<String, String>
+  /** A [String] to [CharArray] [Map] of the extra content of this entry, in a key:value fashion. */
+  public val extraContent: Map<String, CharArray>
 
   /**
    * A [Flow] providing the current TOTP. It will start emitting only when collected. If this entry
@@ -80,7 +78,42 @@ constructor(
 
   private val totpSecret: String?
 
-  /** Implements startsWith and trimStart methods known from the String class for CharArray. */
+  private val allLines: List<CharArray>
+
+  public fun clear() {
+    password?.fill('\u0000')
+    username?.fill('\u0000')
+    allLines.forEach { it?.fill('\u0000') }
+    extraContent.values.forEach { it?.fill('\u0000') }
+    extraContentChars?.fill('\u0000')
+  }
+
+  init {
+    allLines = chars.splitToCharArrayListAt('\n')
+    val (foundPassword, passContentWithoutPasswords) = findAndStripPassword(allLines)
+    password = foundPassword
+    val (foundUsername, passContentWithoutPasswordsAndFirstUsername) =
+      findAndStripFirstUsername(passContentWithoutPasswords)
+    username = foundUsername
+    extraContentChars = passContentWithoutPasswordsAndFirstUsername.joinToCharArray('\n')
+    val (foundTotp, extraContentWithoutAuthData) =
+      findAndStripTotp(passContentWithoutPasswordsAndFirstUsername)
+    totpString = foundTotp?.let { String(it) } ?: ""
+    foundTotp?.fill('\u0000')
+    extraContent = generateExtraContentPairs(extraContentWithoutAuthData)
+    // Verify the TOTP secret is valid and disable TOTP if not.
+    val secret = totpFinder.findSecret(totpString)
+    totpSecret =
+      if (secret != null && calculateTotp(secret).isOk) {
+        secret
+      } else {
+        null
+      }
+  }
+
+  /**
+   * Implements startsWith, trimStart and trimEnd methods known from the String class for CharArray.
+   */
   private fun CharArray.startsWith(prefix: String, ignoreCase: Boolean = false): Boolean {
     if (this.size < prefix.length) return false
     val prefixIterator = prefix.iterator()
@@ -94,22 +127,59 @@ constructor(
   }
 
   private fun CharArray.trimStart(): CharArray {
-    val firstNonWhitespaceIndex = this.indexOfFirst { !it.isWhitespace() }
+    val firstNonWhitespaceIndex = indexOfFirst { !it.isWhitespace() }
     if (firstNonWhitespaceIndex == -1) return charArrayOf() // All whitespace or empty array
 
-    return this.copyOfRange(firstNonWhitespaceIndex, this.size)
+    val retValue = copyOfRange(firstNonWhitespaceIndex, size)
+    fill('\u0000')
+    return retValue
+  }
+
+  private fun CharArray.trimEnd(): CharArray {
+    var last = size - 1
+    while (last >= 0 && this[last].isWhitespace()) last--
+    return when {
+      last == size - 1 -> this
+      last < 0 -> CharArray(0)
+      else -> {
+        val retValue = copyOfRange(0, last + 1)
+        fill('\u0000')
+        retValue
+      }
+    }
+  }
+
+  private fun CharArray.isBlank(): Boolean = all { it.isWhitespace() }
+
+  private fun List<CharArray>.joinToCharArray(separator: Char): CharArray {
+    if (isEmpty()) return CharArray(0)
+
+    val totalChars = sumOf { it.size } + (size - 1)
+    val result = CharArray(totalChars)
+    var pos = 0
+
+    forEachIndexed { index, chunk ->
+      if (chunk.isNotEmpty()) {
+        chunk.copyInto(result, destinationOffset = pos)
+        pos += chunk.size
+      }
+      if (index != lastIndex) {
+        result[pos++] = separator
+      }
+    }
+
+    return result
   }
 
   /**
    * Decodes and splits a ByteArray at [c] into a list of CharArray, avoiding String as an
    * intermediate.
    */
-  private fun ByteArray.splitToCharArrayListAt(c: Char): List<CharArray> {
-    val charBuffer = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(this))
+  private fun CharArray.splitToCharArrayListAt(c: Char): List<CharArray> {
     val result = mutableListOf<CharArray>()
     val currentLine = mutableListOf<Char>()
 
-    for (ch in charBuffer) {
+    for (ch in this) {
       if (ch == c) {
         result.add(currentLine.toCharArray())
         currentLine.fill('\u0000')
@@ -121,33 +191,7 @@ constructor(
     result.add(currentLine.toCharArray()) // last line
     currentLine.fill('\u0000')
 
-    charBuffer.array().fill('\u0000')
-
     return result
-  }
-
-  init {
-    val (foundPassword, passContentWithoutPasswords) =
-      findAndStripPassword(bytes.splitToCharArrayListAt('\n'))
-    bytes.fill(0)
-    password = foundPassword
-    val (foundUsername, passContentWithoutPasswordsAndFirstUsername) =
-      findAndStripFirstUsername(passContentWithoutPasswords)
-    username = foundUsername?.let { String(it) }
-    extraContentString =
-      passContentWithoutPasswordsAndFirstUsername.map { String(it) }.joinToString("\n")
-    val (foundTotp, extraContentWithoutAuthData) =
-      findAndStripTotp(passContentWithoutPasswordsAndFirstUsername)
-    totpString = foundTotp?.let { String(it) } ?: ""
-    extraContent = generateExtraContentPairs(extraContentWithoutAuthData)
-    // Verify the TOTP secret is valid and disable TOTP if not.
-    val secret = totpFinder.findSecret(foundTotp?.let { String(it) } ?: "")
-    totpSecret =
-      if (secret != null && calculateTotp(secret).isOk) {
-        secret
-      } else {
-        null
-      }
   }
 
   public fun hasTotp(): Boolean {
@@ -229,56 +273,73 @@ constructor(
     return Pair(totp, lines)
   }
 
-  private fun generateExtraContentPairs(passContent: List<CharArray>): Map<String, String> {
-    fun MutableMap<String, String>.putOrAppend(key: String, value: String) {
+  private fun generateExtraContentPairs(passContent: List<CharArray>): Map<String, CharArray> {
+
+    fun MutableMap<String, CharArray>.putOrAppend(key: String, value: CharArray) {
       val existing = this[key]
       this[key] =
         if (existing == null) {
           value
         } else {
-          "$existing\n$value"
+          charArrayOf(*existing, '\n', *value).let {
+            existing.fill('\u0000')
+            value.fill('\u0000')
+            it
+          }
         }
     }
 
-    val items = mutableMapOf<String, String>()
+    val items = mutableMapOf<String, CharArray>()
+    var extraContentLines = mutableListOf<CharArray>()
 
     var extraContentStarted = false
+
     passContent.forEach { line ->
       // Split the line at the first ':' into key and value
       // "ABC : DEF:GHI" --> key = "ABC" value = "DEF:GHI"]
-      // Note the a valid key must not start with space, otherwise it is considered extra content.
-      if (String(line).contains(':')) {
-        val (k, v) = String(line).split(":", limit = 2)
-        if (k.isBlank() || k.startsWith(" ") || k.startsWith('\t') || extraContentStarted)
-          items.putOrAppend(EXTRA_CONTENT, String(line))
-        else items.putOrAppend(k.trimEnd(), v.trimStart())
+      // Note a valid key must not start with space, otherwise it is considered extra content.
+      if (line.contains(':')) {
+        val colonIndex = line.indexOf(':')
+        val k = line.copyOfRange(0, colonIndex)
+        val v =
+          if (colonIndex + 2 < line.size) line.copyOfRange(colonIndex + 1, line.size)
+          else charArrayOf()
+        if (k.isBlank() || k.startsWith(" ") || k.startsWith("\\t") || extraContentStarted)
+          extraContentLines.add(line.trimEnd())
+        else items.putOrAppend(String(k).trimEnd(), v.trimStart().trimEnd())
       } else {
-        if (String(line).isBlank()) {
+        if (line.isBlank()) {
           extraContentStarted = true
           // Skip blank lines until something non-blank has been added to extra content
-          if (!(items[EXTRA_CONTENT]?.isBlank() ?: true))
-            items.putOrAppend(EXTRA_CONTENT, String(line))
-        } else items.putOrAppend(EXTRA_CONTENT, String(line))
+          if (!extraContentLines.isEmpty()) extraContentLines.add(line.trimEnd())
+        } else extraContentLines.add(line.trimEnd())
       }
     }
 
-    // strip trailing spaces from multiline extra content
-    items.get(EXTRA_CONTENT)?.let {
-      items[EXTRA_CONTENT] = it.split("\n").map { it.trimEnd() }.joinToString("\n").trimEnd()
-    }
+    // Strip trailing empty lines from extra content
+    while (extraContentLines.size > 0 && extraContentLines.last().isEmpty()) extraContentLines
+      .removeAt(extraContentLines.size - 1)
 
-    // adjust indent of multiline extra content
-    items.get(EXTRA_CONTENT)?.let {
-      items[EXTRA_CONTENT] = adjustIndent(it.split("\n")).joinToString("\n")
+    // adjust indent
+    while (
+      !extraContentLines.isEmpty() &&
+        (extraContentLines.filter { !it.isBlank() }.all { it.startsWith(" ") } ||
+          extraContentLines.filter { !it.isBlank() }.all { it.startsWith("\\t") })
+    ) {
+      extraContentLines.forEach { l ->
+        if (l.size > 1) {
+          System.arraycopy(l, 1, l, 0, l.size - 1)
+          l[l.size - 1] = ' '
+        }
+      }
     }
+    val extraContentLinesAdjusted = extraContentLines.map { it.trimEnd() }
+
+    // Add extra content as a single item `EXTRA_CONTENT`
+    extraContentLinesAdjusted.forEach { items.putOrAppend(EXTRA_CONTENT, it) }
 
     return items
   }
-
-  public fun adjustIndent(lines: List<String>): List<String> =
-    if (lines.filter { !it.isBlank() }.all { it.startsWith(" ") || it.startsWith('\t') })
-      adjustIndent(lines.map { line -> if (line.length > 0) line.drop(1) else line })
-    else lines
 
   private fun calculateTotp(secret: String = totpSecret!!): Result<Totp, Throwable> {
     val digits = totpFinder.findDigits(totpString)
@@ -299,7 +360,7 @@ constructor(
 
   @AssistedFactory
   public interface Factory {
-    public fun create(bytes: ByteArray): PasswordEntry
+    public fun create(chars: CharArray): PasswordEntry
   }
 
   public companion object {
@@ -320,6 +381,7 @@ constructor(
         "id:",
         "identity:",
       )
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public val PASSWORD_FIELDS: Array<String> = arrayOf("password:", "secret:", "pass:")
     private const val THOUSAND_MILLIS = 1000L

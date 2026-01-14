@@ -48,6 +48,7 @@ import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
+import java.nio.CharBuffer
 import java.time.Instant
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -63,14 +64,14 @@ import logcat.logcat
 @AndroidEntryPoint
 open class BasePGPActivity : AppCompatActivity() {
 
-  /** Full path to the repository */
-  val repoPath by unsafeLazy {
-    requireNotNull(intent.getStringExtra("REPO_PATH")) { "REPO_PATH is missing" }
-  }
-
   /** Full path to the password file being worked on */
   val fullPath by unsafeLazy {
     requireNotNull(intent.getStringExtra("FILE_PATH")) { "FILE_PATH is missing" }
+  }
+
+  /** Full path to the repository */
+  val repoPath by unsafeLazy {
+    requireNotNull(intent.getStringExtra("REPO_PATH")) { "REPO_PATH is missing" }
   }
 
   private val relativeParentPath by unsafeLazy { getParentPath(fullPath, repoPath) }
@@ -106,6 +107,7 @@ open class BasePGPActivity : AppCompatActivity() {
       }
     }
 
+  private var destDir: String? = null
   private val keySelectAction =
     registerForActivityResult(StartActivityForResult()) { result ->
       if (result.resultCode == RESULT_OK) {
@@ -114,9 +116,13 @@ open class BasePGPActivity : AppCompatActivity() {
           data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
 
-        val currentDir = File(fullPath).let { if (it.isFile()) it.getParent() else it.getPath() }
+        val repoRoot = PasswordRepository.getRepositoryDirectory()
+        val subPath = data.getStringExtra("SUB_PATH") ?: return@registerForActivityResult
 
-        File(currentDir, ".gpg-id")?.let {
+        val gpgIdDir =
+          File(repoRoot, subPath).let { if (it.isFile()) it.getParent() else it.getPath() }
+
+        File(gpgIdDir, ".gpg-id")?.let {
           it.writeText(selectedKeyId + "\n")
           runBlocking {
             commitChange(
@@ -227,9 +233,9 @@ open class BasePGPActivity : AppCompatActivity() {
             resources.getString(R.string.invalid_gpg_id_dialog_message)
         }
       openKeyManagerDialog(title, message) {
-        keySelectAction.launch(
-          PGPKeyListActivity.newIntent(this@BasePGPActivity, keySelection = true)
-        )
+        val intent = PGPKeyListActivity.newIntent(this@BasePGPActivity, keySelection = true)
+        intent.putExtra("SUB_PATH", subDir)
+        keySelectAction.launch(intent)
       }
     } else {
       val idsWithKey = ids.filter { repository.hasKey(it) }
@@ -270,9 +276,9 @@ open class BasePGPActivity : AppCompatActivity() {
             resources.getString(R.string.invalid_gpg_id_dialog_message)
         }
       openKeyManagerDialog(title, message) {
-        keySelectAction.launch(
-          PGPKeyListActivity.newIntent(this@BasePGPActivity, keySelection = true)
-        )
+        val intent = PGPKeyListActivity.newIntent(this@BasePGPActivity, keySelection = true)
+        intent.putExtra("SUB_PATH", subDir)
+        keySelectAction.launch(intent)
       }
     } else {
       val idsWithKey = ids.filter { repository.hasKey(it) }
@@ -357,7 +363,8 @@ open class BasePGPActivity : AppCompatActivity() {
     @StringRes snackbarTextRes: Int = R.string.clipboard_copied_text,
   ) {
     val clipboard = clipboard ?: return
-    val clip = ClipData.newPlainText((100000..999999).random().toString(), text?.let { String(it) })
+    val charBuf = text?.let { CharBuffer.wrap(it) }
+    val clip = ClipData.newPlainText((100000..999999).random().toString(), charBuf)
     clip.description.extras =
       PersistableBundle().apply {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2)
@@ -365,6 +372,7 @@ open class BasePGPActivity : AppCompatActivity() {
         else putBoolean("android.content.extra.IS_SENSITIVE", isSensitive)
       }
     clipboard.setPrimaryClip(clip)
+    charBuf?.array()?.wipe()
     if (showSnackbar && Build.VERSION.SDK_INT < Build.VERSION_CODES.S_V2) {
       snackbar(message = resources.getString(snackbarTextRes))
     }

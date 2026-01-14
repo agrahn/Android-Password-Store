@@ -37,6 +37,7 @@ public object Otp {
     val algo = "Hmac${algorithm.uppercase(Locale.ROOT)}"
     val decodedSecret = BASE_32.decode(secret)
     val secretKey = SecretKeySpec(decodedSecret, algo)
+    decodedSecret.fill(0)
     val digest =
       Mac.getInstance(algo).run {
         init(secretKey)

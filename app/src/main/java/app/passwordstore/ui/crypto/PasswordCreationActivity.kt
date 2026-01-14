@@ -28,11 +28,13 @@ import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.errors.NoKeysProvidedException
 import app.passwordstore.crypto.errors.UnusableKeyException
 import app.passwordstore.data.passfile.PasswordEntry
+import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.PasswordCreationActivityBinding
 import app.passwordstore.ui.dialogs.DicewarePasswordGeneratorDialogFragment
 import app.passwordstore.ui.dialogs.OtpImportDialogFragment
 import app.passwordstore.ui.dialogs.PasswordGeneratorDialogFragment
 import app.passwordstore.util.autofill.AutofillPreferences
+import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.asLog
 import app.passwordstore.util.extensions.base64
 import app.passwordstore.util.extensions.commitChange
@@ -40,8 +42,10 @@ import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.extensions.snackbar
+import app.passwordstore.util.extensions.toByteArray
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
+import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.DirectoryStructure
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.getOrThrow
@@ -60,9 +64,9 @@ import com.google.zxing.qrcode.QRCodeReader
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.IOException
 import java.nio.CharBuffer
-import java.nio.charset.Charset
 import java.nio.file.Paths
 import javax.inject.Inject
 import kotlin.io.path.absolutePathString
@@ -87,9 +91,7 @@ class PasswordCreationActivity : BasePGPActivity() {
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
 
   private val suggestedName by unsafeLazy { intent.getStringExtra(EXTRA_FILE_NAME) }
-  private val suggestedUsername by unsafeLazy { intent.getStringExtra(EXTRA_USERNAME) }
-  private val suggestedPass by unsafeLazy { intent.getCharArrayExtra(EXTRA_PASSWORD) }
-  private val suggestedExtra by unsafeLazy { intent.getStringExtra(EXTRA_EXTRA_CONTENT) }
+  private val suggestedEntryChars by unsafeLazy { intent.getCharArrayExtra(EXTRA_ENTRY) }
   private val shouldGeneratePassword by unsafeLazy {
     intent.getBooleanExtra(EXTRA_GENERATE_PASSWORD, false)
   }
@@ -203,8 +205,17 @@ class PasswordCreationActivity : BasePGPActivity() {
         }
       }
 
+      val suggestedEntry: PasswordEntry? =
+        suggestedEntryChars?.let { encrypted ->
+          AESEncryption.decrypt(encrypted)?.let { decrypted ->
+            val entry = passwordEntryFactory.create(decrypted)
+            decrypted.wipe()
+            entry
+          }
+        }
+
       directoryInputLayout.apply {
-        if (suggestedName != null || suggestedPass != null || shouldGeneratePassword) {
+        if (suggestedName != null || suggestedEntry?.password != null || shouldGeneratePassword) {
           isEnabled = true
         } else {
           setBackgroundColor(getColor(android.R.color.transparent))
@@ -225,11 +236,14 @@ class PasswordCreationActivity : BasePGPActivity() {
 
       if (
         AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
-          DirectoryStructure.EncryptedUsername || suggestedUsername != null
+          DirectoryStructure.EncryptedUsername || suggestedEntry?.username != null
       ) {
         usernameInputLayout.visibility = View.VISIBLE
-        if (suggestedUsername != null) username.setText(suggestedUsername)
-        else if (suggestedName != null) username.requestFocus()
+        if (suggestedEntry?.username != null) {
+          val charBuf = CharBuffer.wrap(suggestedEntry?.username)
+          username.setText(charBuf)
+          charBuf.array().wipe()
+        } else if (suggestedName != null) username.requestFocus()
       }
 
       // Allow the user to quickly switch between storing the username as the filename or
@@ -261,11 +275,20 @@ class PasswordCreationActivity : BasePGPActivity() {
           }
         }
       }
-      suggestedPass?.let {
-        password.setText(String(it))
+      suggestedEntry?.password?.let {
+        val charBuf = CharBuffer.wrap(it)
+        password.setText(charBuf)
+        charBuf.array()?.wipe()
         password.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
       }
-      suggestedExtra?.let { extraContent.setText(it.trimEnd()) }
+      suggestedEntry?.extraContentChars?.let {
+        val charBuf =
+          if (it.last() == '\n') CharBuffer.wrap(it.copyOfRange(0, it.size - 1))
+          else CharBuffer.wrap(it)
+        extraContent.setText(charBuf)
+        charBuf.array().wipe()
+      }
+      suggestedEntry?.clear()
       if (shouldGeneratePassword) {
         generatePassword()
         password.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
@@ -291,6 +314,9 @@ class PasswordCreationActivity : BasePGPActivity() {
       R.id.save_password -> {
         copy = false
         requireKeysExist {
+          val destDir =
+            File(PasswordRepository.getRepositoryDirectory(), binding.directory.text.toString())
+          if (!destDir.isDirectory() && !destDir.isFile()) destDir.mkdirs()
           requireEncryptionKeysExist(binding.directory.text.toString()) { ids -> encrypt(ids) }
         }
       }
@@ -331,17 +357,9 @@ class PasswordCreationActivity : BasePGPActivity() {
         isChecked = usernameIsEncrypted
       }
       // Use PasswordEntry to parse extras for OTP
-      val entry =
-        passwordEntryFactory.create("PLACEHOLDER\n${extraContent.text}".encodeToByteArray())
+      val entry = passwordEntryFactory.create("PLACEHOLDER\n${extraContent.text}".toCharArray())
       otpImportButton.isVisible = !entry.hasTotp()
     }
-
-  private fun CharArray.encodeToByteArray(charset: Charset = Charsets.UTF_8): ByteArray {
-    val byteBuffer = charset.encode(CharBuffer.wrap(this))
-    val byteArray = ByteArray(byteBuffer.remaining())
-    byteBuffer.get(byteArray)
-    return byteArray
-  }
 
   /** Encrypts the password and the extra content */
   private fun encrypt(identifiers: List<PGPIdentifier>) {
@@ -415,7 +433,7 @@ class PasswordCreationActivity : BasePGPActivity() {
                 repository.encrypt(
                   identifiers,
                   ByteArrayInputStream(
-                    (editPass + "$editUsername\n$editExtra".toCharArray()).encodeToByteArray()
+                    (editPass + "$editUsername\n$editExtra".toCharArray()).toByteArray()
                   ),
                   outputStream,
                 )
@@ -480,9 +498,7 @@ class PasswordCreationActivity : BasePGPActivity() {
             if (shouldGeneratePassword) {
               val directoryStructure = AutofillPreferences.directoryStructure(applicationContext)
               val entry =
-                passwordEntryFactory.create(
-                  (editPass + "$editUsername\n$editExtra".toCharArray()).encodeToByteArray()
-                )
+                passwordEntryFactory.create(editPass + "$editUsername\n$editExtra".toCharArray())
               returnIntent.putExtra(RETURN_EXTRA_PASSWORD, entry.password)
               val username =
                 entry.username ?: directoryStructure.getUsernameFor(passwordFile.toFile())
@@ -586,9 +602,7 @@ class PasswordCreationActivity : BasePGPActivity() {
     const val RETURN_EXTRA_USERNAME = "USERNAME"
     const val RETURN_EXTRA_PASSWORD = "PASSWORD"
     const val EXTRA_FILE_NAME = "FILENAME"
-    const val EXTRA_USERNAME = "USERNAME"
-    const val EXTRA_PASSWORD = "PASSWORD"
-    const val EXTRA_EXTRA_CONTENT = "EXTRA_CONTENT"
+    const val EXTRA_ENTRY = "ENTRY"
     const val EXTRA_GENERATE_PASSWORD = "GENERATE_PASSWORD"
     const val EXTRA_EDITING = "EDITING"
   }

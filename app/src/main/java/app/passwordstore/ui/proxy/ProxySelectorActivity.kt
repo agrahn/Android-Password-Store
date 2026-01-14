@@ -23,10 +23,12 @@ import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.viewBinding
+import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.proxy.ProxyUtils
 import app.passwordstore.util.settings.GitSettings
 import app.passwordstore.util.settings.PreferenceKeys
 import dagger.hilt.android.AndroidEntryPoint
+import java.nio.CharBuffer
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -49,7 +51,11 @@ class ProxySelectorActivity : AppCompatActivity() {
         .getInt(PreferenceKeys.PROXY_PORT, -1)
         .takeIf { it != -1 }
         ?.let { proxyPort.setText("$it") }
-      gitSettings.proxyPassword?.let { proxyPassword.setText(String(it)) }
+      gitSettings.proxyPassword?.let {
+        val charBuf = CharBuffer.wrap(it)
+        proxyPassword.setText(charBuf)
+        charBuf.array().wipe()
+      }
       save.setOnClickListener { saveSettings() }
       proxyHost.setOnFocusChangeListener { v, hasFocus ->
         if (!hasFocus) {

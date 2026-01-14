@@ -5,6 +5,7 @@
 
 package app.passwordstore.util.proxy
 
+import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.GitSettings
 import java.io.IOException
 import java.net.Authenticator
@@ -49,6 +50,7 @@ class ProxyUtils @Inject constructor(private val gitSettings: GitSettings) {
       System.setProperty(HTTP_PROXY_USER_PROPERTY, user)
       System.setProperty(HTTP_PROXY_PASSWORD_PROPERTY, String(password))
     }
+    password.wipe()
     Authenticator.setDefault(
       object : Authenticator() {
         override fun getPasswordAuthentication(): PasswordAuthentication? {

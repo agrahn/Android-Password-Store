@@ -244,11 +244,12 @@ public fun Dataset.Builder.fillWith(
   action: AutofillAction,
   credentials: Credentials?,
 ) {
-  val credentialsToFill = credentials ?: Credentials("USERNAME", "PASSWORD".toCharArray(), "OTP")
+  val credentialsToFill =
+    credentials ?: Credentials("USERNAME".toCharArray(), "PASSWORD".toCharArray(), "OTP")
   for (field in scenario.fieldsToFillOn(action)) {
     val value =
       when (field) {
-        scenario.username -> credentialsToFill.username?.toCharArray()
+        scenario.username -> credentialsToFill.username
         scenario.otp -> credentialsToFill.otp?.toCharArray()
         else -> credentialsToFill.password
       }
@@ -316,10 +317,10 @@ public fun AutofillScenario<AutofillId>.recoverNodes(
   return map { autofillId -> structure.findNodeByAutofillId(autofillId) ?: return null }
 }
 
-public val AutofillScenario<AssistStructure.ViewNode>.usernameValue: String?
+public val AutofillScenario<AssistStructure.ViewNode>.usernameValue: CharArray?
   get() {
     val value = username?.autofillValue ?: return null
-    return if (value.isText) value.textValue.toString() else null
+    return if (value.isText) value.textValue?.let { CharArray(it.length) { i -> it[i] } } else null
   }
 public val AutofillScenario<AssistStructure.ViewNode>.passwordValue: CharArray?
   get() {

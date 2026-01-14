@@ -115,7 +115,8 @@ class AutofillSaveActivity : AppCompatActivity() {
                 .resolve(intent.getStringExtra(EXTRA_FOLDER_NAME) ?: throw NullPointerException())
                 .absolutePath,
             PasswordCreationActivity.EXTRA_FILE_NAME to intent.getStringExtra(EXTRA_NAME),
-            PasswordCreationActivity.EXTRA_PASSWORD to intent.getStringExtra(EXTRA_PASSWORD),
+            // PasswordCreationActivity.EXTRA_PASSWORD to intent.getCharArrayExtra(EXTRA_PASSWORD),
+            "EXTRA_PASSWORD" to intent.getCharArrayExtra(EXTRA_PASSWORD),
             PasswordCreationActivity.EXTRA_GENERATE_PASSWORD to
               intent.getBooleanExtra(EXTRA_GENERATE_PASSWORD, false),
           )
@@ -130,7 +131,7 @@ class AutofillSaveActivity : AppCompatActivity() {
           val resultIntent =
             if (password != null) {
               // Password was generated and should be filled into a form.
-              val username = data.getStringExtra("USERNAME")
+              val username = data.getCharArrayExtra("USERNAME")
               val clientState =
                 intent?.getBundleExtra(AutofillManager.EXTRA_CLIENT_STATE)
                   ?: run {

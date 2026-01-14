@@ -120,6 +120,8 @@ class PGPKeyListActivity : AppCompatActivity() {
                 if (isSelectingKeys && selectedKeyIds.isNotEmpty()) {
                   val result = Intent()
                   result.putExtra(EXTRA_SELECTED_KEY, selectedKeyIds.joinToString(separator = "\n"))
+                  val gpgIdDest = intent.getStringExtra("SUB_PATH")
+                  gpgIdDest?.let { result.putExtra("SUB_PATH", it) }
                   setResult(RESULT_OK, result)
                 } else if (isAddingKeys && keysAdded) {
                   setResult(RESULT_OK, Intent())
