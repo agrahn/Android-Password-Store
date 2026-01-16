@@ -30,6 +30,10 @@ android {
   packaging { resources.excludes.add("META-INF/versions/**") }
 }
 
+// This seems to fix a release build failure after updating
+// kotlin-2.3.0
+composeCompiler { includeComposeMappingFile.set(false) }
+
 dependencies {
   implementation(platform(libs.compose.bom))
   kapt(libs.dagger.hilt.compiler)
