@@ -7,11 +7,12 @@
 plugins {
   id("com.github.android-password-store.android-application")
   id("com.github.android-password-store.kotlin-android")
-  id("com.github.android-password-store.kotlin-kapt")
+  id("com.github.android-password-store.kotlin-ksp")
   id("com.github.android-password-store.versioning-plugin")
   id("com.github.android-password-store.rename-artifacts")
   alias(libs.plugins.hilt)
   alias(libs.plugins.kotlin.composeCompiler)
+  alias(libs.plugins.ksp)
 }
 
 android {
@@ -36,7 +37,7 @@ composeCompiler { includeComposeMappingFile.set(false) }
 
 dependencies {
   implementation(platform(libs.compose.bom))
-  kapt(libs.dagger.hilt.compiler)
+  ksp(libs.dagger.hilt.compiler)
   implementation(libs.androidx.annotation)
   coreLibraryDesugaring(libs.android.desugarJdkLibs)
   implementation(projects.autofillParser)
