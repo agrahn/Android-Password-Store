@@ -5,7 +5,7 @@
 
 package app.passwordstore.gradle.signing
 
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import com.android.build.api.dsl.ApplicationExtension
 import java.util.Properties
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -17,7 +17,7 @@ private const val KEYSTORE_CONFIG_PATH = "keystore.properties"
 internal fun Project.configureBuildSigning() {
   val keystoreConfigFile = rootProject.layout.projectDirectory.file(KEYSTORE_CONFIG_PATH)
   if (keystoreConfigFile.asFile.exists()) {
-    extensions.configure<BaseAppModuleExtension> {
+    extensions.configure<ApplicationExtension> {
       val contents = providers.fileContents(keystoreConfigFile).asText
       val keystoreProperties = Properties()
       keystoreProperties.load(contents.get().byteInputStream())
@@ -29,8 +29,7 @@ internal fun Project.configureBuildSigning() {
           storePassword = keystoreProperties["storePassword"] as String
         }
       }
-      val signingConfig = signingConfigs.getByName("release")
-      buildTypes.all { setSigningConfig(signingConfig) }
+      buildTypes.all { signingConfig = signingConfigs.getByName("release") }
     }
   }
 }
