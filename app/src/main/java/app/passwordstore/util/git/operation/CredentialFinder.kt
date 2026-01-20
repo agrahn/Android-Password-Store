@@ -5,6 +5,7 @@
 
 package app.passwordstore.util.git.operation
 
+import logcat.logcat
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.view.LayoutInflater
@@ -109,8 +110,8 @@ class CredentialFinder(
             }
             cont.resume(credential)
           }
-          setNegativeButton(R.string.dialog_cancel) { _, _ -> cont.resume(null) }
           setOnCancelListener { cont.resume(null) }
+          setOnDismissListener { editCredential.text?.clear() }
           create()
         }
         .run {

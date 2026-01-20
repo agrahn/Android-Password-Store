@@ -257,6 +257,7 @@ class PasswordStore : BaseGitActivity() {
   override fun onResume() {
     super.onResume()
     checkLocalRepository()
+    refreshPasswordList()
     if (settings.getBoolean(PreferenceKeys.SEARCH_ON_START, false) && ::searchItem.isInitialized) {
       if (!searchItem.isActionViewExpanded) {
         searchItem.expandActionView()

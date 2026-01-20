@@ -78,15 +78,23 @@ constructor(
 
   private val totpSecret: String?
 
-  private val allLines: List<CharArray>
-
   public fun clear() {
     password?.fill('\u0000')
     username?.fill('\u0000')
-    allLines.forEach { it?.fill('\u0000') }
     extraContent.values.forEach { it?.fill('\u0000') }
     extraContentChars?.fill('\u0000')
   }
+
+  public fun clearExtra() {
+    extraContent.values.forEach { it?.fill('\u0000') }
+    extraContentChars?.fill('\u0000')
+  }
+
+  public fun clearExtraChars() {
+    extraContentChars?.fill('\u0000')
+  }
+
+  private val allLines: List<CharArray>
 
   init {
     allLines = chars.splitToCharArrayListAt('\n')
@@ -101,6 +109,7 @@ constructor(
     totpString = foundTotp?.let { String(it) } ?: ""
     foundTotp?.fill('\u0000')
     extraContent = generateExtraContentPairs(extraContentWithoutAuthData)
+    allLines.forEach { it?.fill('\u0000') }
     // Verify the TOTP secret is valid and disable TOTP if not.
     val secret = totpFinder.findSecret(totpString)
     totpSecret =
@@ -139,7 +148,6 @@ constructor(
     var last = size - 1
     while (last >= 0 && this[last].isWhitespace()) last--
     return when {
-      last == size - 1 -> this
       last < 0 -> CharArray(0)
       else -> {
         val retValue = copyOfRange(0, last + 1)
@@ -151,8 +159,8 @@ constructor(
 
   private fun CharArray.isBlank(): Boolean = all { it.isWhitespace() }
 
-  private fun List<CharArray>.joinToCharArray(separator: Char): CharArray {
-    if (isEmpty()) return CharArray(0)
+  private fun List<CharArray>.joinToCharArray(separator: Char): CharArray? {
+    if (isEmpty() || size == 1 && last().isEmpty()) return null
 
     val totalChars = sumOf { it.size } + (size - 1)
     val result = CharArray(totalChars)
@@ -172,7 +180,7 @@ constructor(
   }
 
   /**
-   * Decodes and splits a ByteArray at [c] into a list of CharArray, avoiding String as an
+   * Decodes and splits a CharArray at [c] into a list of CharArray, avoiding String as an
    * intermediate.
    */
   private fun CharArray.splitToCharArrayListAt(c: Char): List<CharArray> {
@@ -210,14 +218,15 @@ constructor(
         lines[0].startsWith(it, ignoreCase = true)
       }
     ) {
-      password = lines[0]
+      password = lines[0].copyOf(lines[0].size)
       lines = lines.minus(lines[0])
     }
     for (line in lines) {
-      for (prefix in PASSWORD_FIELDS) {
+      for (prefix in PASSWORD_FIELDS) {// Last line with prefixed password wins
         if (line.startsWith(prefix, ignoreCase = true)) {
-          // Last line with prefixed password wins
-          password = line.copyOfRange(prefix.length, line.size)
+          // Skip first space after password prefix
+          val startsAt = prefix.length.let { if(line[it] == ' ') it+1 else it }
+          password = line.copyOfRange(startsAt, line.size)
           lines = lines.minus(line)
           break
         }
@@ -305,14 +314,14 @@ constructor(
           if (colonIndex + 2 < line.size) line.copyOfRange(colonIndex + 1, line.size)
           else charArrayOf()
         if (k.isBlank() || k.startsWith(" ") || k.startsWith("\\t") || extraContentStarted)
-          extraContentLines.add(line.trimEnd())
+          extraContentLines.add(line)
         else items.putOrAppend(String(k).trimEnd(), v.trimStart().trimEnd())
       } else {
         if (line.isBlank()) {
           extraContentStarted = true
           // Skip blank lines until something non-blank has been added to extra content
-          if (!extraContentLines.isEmpty()) extraContentLines.add(line.trimEnd())
-        } else extraContentLines.add(line.trimEnd())
+          if (!extraContentLines.isEmpty()) extraContentLines.add(line)
+        } else extraContentLines.add(line)
       }
     }
 
@@ -320,7 +329,7 @@ constructor(
     while (extraContentLines.size > 0 && extraContentLines.last().isEmpty()) extraContentLines
       .removeAt(extraContentLines.size - 1)
 
-    // adjust indent
+    // adjust indent, trim ends
     while (
       !extraContentLines.isEmpty() &&
         (extraContentLines.filter { !it.isBlank() }.all { it.startsWith(" ") } ||
