@@ -12,6 +12,7 @@ import android.service.autofill.Field
 import android.view.autofill.AutofillId
 import android.view.autofill.AutofillValue
 import androidx.core.os.BundleCompat
+import java.nio.CharBuffer
 import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
@@ -253,13 +254,11 @@ public fun Dataset.Builder.fillWith(
         scenario.otp -> credentialsToFill.otp?.toCharArray()
         else -> credentialsToFill.password
       }
+    var charBuf = value?.let { CharBuffer.wrap(it) }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      setField(
-        field,
-        Field.Builder().setValue(AutofillValue.forText(value?.let { String(it) })).build(),
-      )
+      setField(field, Field.Builder().setValue(AutofillValue.forText(charBuf)).build())
     } else {
-      @Suppress("DEPRECATION") setValue(field, AutofillValue.forText(value?.let { String(it) }))
+      @Suppress("DEPRECATION") setValue(field, AutofillValue.forText(charBuf))
     }
   }
 }

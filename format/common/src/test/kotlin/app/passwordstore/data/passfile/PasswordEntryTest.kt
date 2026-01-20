@@ -34,23 +34,24 @@ class PasswordEntryTest {
     assertEquals("fooooo", makeEntry("fooooo\nbla").password?.let { String(it) })
     assertEquals("fooooo", makeEntry("fooooo\n").password?.let { String(it) })
     assertEquals("fooooo", makeEntry("fooooo").password?.let { String(it) })
+    assertEquals("  fooooo  ", makeEntry("  fooooo  \n").password?.let { String(it) })
     assertEquals("", makeEntry("\nblubb\n").password?.let { String(it) })
     assertEquals("", makeEntry("\nblubb").password?.let { String(it) })
     assertEquals("", makeEntry("\n").password?.let { String(it) })
     assertEquals("", makeEntry("").password?.let { String(it) })
     for (field in PasswordEntry.PASSWORD_FIELDS) {
-      assertEquals(" fooooo", makeEntry("\n$field fooooo").password?.let { String(it) })
+      assertEquals("fooooo", makeEntry("\n$field fooooo").password?.let { String(it) })
       assertEquals(
-        " fooooo",
+        "fooooo",
         makeEntry("\n${field.uppercase(Locale.getDefault())} fooooo").password?.let { String(it) },
       )
       assertEquals(
-        " fooooo",
+        "fooooo",
         makeEntry("GOPASS-SECRET-1.0\n$field fooooo").password?.let { String(it) },
       )
       assertEquals(
         " fooooo",
-        makeEntry("someFirstLine\nUsername: bar\n$field fooooo").password?.let { String(it) },
+        makeEntry("someFirstLine\nUsername: bar\n$field  fooooo").password?.let { String(it) },
       )
     }
   }
@@ -59,15 +60,14 @@ class PasswordEntryTest {
   fun getExtraContent() {
     assertEquals("bla\n", makeEntry("fooooo\nbla\n").extraContentChars?.let { String(it) })
     assertEquals("bla", makeEntry("fooooo\nbla").extraContentChars?.let { String(it) })
-    assertEquals("", makeEntry("fooooo\n").extraContentChars?.let { String(it) })
-    assertEquals("", makeEntry("fooooo").extraContentChars?.let { String(it) })
+    assertNull(makeEntry("fooooo\n").extraContentChars?.let { String(it) })
+    assertNull(makeEntry("fooooo").extraContentChars?.let { String(it) })
     assertEquals("blubb\n", makeEntry("\nblubb\n").extraContentChars?.let { String(it) })
     assertEquals("blubb", makeEntry("\nblubb").extraContentChars?.let { String(it) })
-    assertEquals("", makeEntry("blubb\npassword: foo").extraContentChars?.let { String(it) })
+    assertNull(makeEntry("blubb\npassword: foo").extraContentChars?.let { String(it) })
     assertEquals("blubb", makeEntry("password: foo\nblubb").extraContentChars?.let { String(it) })
-    assertEquals(
-      "",
-      makeEntry("blubb\npassword: foo\nusername: bar").extraContentChars?.let { String(it) },
+    assertNull(
+      makeEntry("blubb\npassword: foo\nusername: bar").extraContentChars?.let { String(it) }
     )
     assertEquals(
       "username: baz",
@@ -79,8 +79,8 @@ class PasswordEntryTest {
         String(it)
       },
     )
-    assertEquals("", makeEntry("\n").extraContentChars?.let { String(it) })
-    assertEquals("", makeEntry("").extraContentChars?.let { String(it) })
+    assertNull(makeEntry("\n").extraContentChars?.let { String(it) })
+    assertNull(makeEntry("").extraContentChars?.let { String(it) })
   }
 
   @Test

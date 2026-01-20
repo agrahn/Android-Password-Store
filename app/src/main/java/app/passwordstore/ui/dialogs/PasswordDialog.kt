@@ -89,6 +89,7 @@ class PasswordDialog : DialogFragment() {
 
   private fun setPasswordAndDismiss() {
     val password = binding.passwordEditText.text?.let { CharArray(it.length) { i -> it[i] } }
+    binding.passwordEditText.text?.clear()
     setFragmentResult(
       PASSWORD_RESULT_KEY,
       bundleOf(PASSWORD_PHRASE_KEY to password, PASSWORD_CACHE_KEY to cacheEnabledChecked),

@@ -14,6 +14,7 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import kotlin.experimental.and
 import org.apache.commons.codec.binary.Base32
+import logcat.logcat
 
 public object Otp {
 

@@ -5,6 +5,7 @@
 
 package app.passwordstore.ui.crypto
 
+import logcat.logcat
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.KeyEvent
@@ -75,8 +76,9 @@ class PinDialog : DialogFragment() {
   }
 
   override fun onDismiss(dialog: DialogInterface) {
-    super.onDismiss(dialog)
     requireArguments().getCharArray(CLEAR_ON_DISMISS_TEXT_EXTRA)?.wipe()
+    binding.pinEditText.text?.clear()
+    super.onDismiss(dialog)
   }
 
   override fun onCancel(dialog: DialogInterface) {

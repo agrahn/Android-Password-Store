@@ -92,6 +92,7 @@ class DecryptActivity : BasePGPActivity() {
       val entry = passwordEntryFactory.create(decryptedEntryChars)
       encryptedEntryChars = AESEncryption.encrypt(decryptedEntryChars)
       decryptedEntryChars.wipe()
+      entry.clearExtraChars()
       createPasswordUI(entry)
       onSuccess(lastResult.first) // pass ID for which the entry was successfully decrypted
     } else {

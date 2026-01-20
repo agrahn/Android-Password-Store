@@ -94,6 +94,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
       val decryptedEntryChars = decryptedEntryBytes.toCharArray()
       decryptedEntryBytes.wipe()
       val entry = passwordEntryFactory.create(decryptedEntryChars)
+      entry.clearExtra()
       val directoryStructure = AutofillPreferences.directoryStructure(this)
       val credentials =
         AutofillPreferences.credentialsFromStoreEntry(
