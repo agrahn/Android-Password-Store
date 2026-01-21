@@ -373,6 +373,7 @@ open class BasePGPActivity : AppCompatActivity() {
       }
     clipboard.setPrimaryClip(clip)
     charBuf?.array()?.wipe()
+    text?.wipe()
     if (showSnackbar && Build.VERSION.SDK_INT < Build.VERSION_CODES.S_V2) {
       snackbar(message = resources.getString(snackbarTextRes))
     }

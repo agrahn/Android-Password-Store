@@ -26,12 +26,19 @@ class FieldItemAdapter(
   private val copyToClipboard: (text: CharArray?, isSensitive: Boolean) -> Unit,
 ) : RecyclerView.Adapter<FieldItemAdapter.FieldItemViewHolder>() {
 
+  private val itemFieldBindings = mutableSetOf<ItemFieldBinding>()
+
+  public fun clearItems() {
+    itemFieldBindings.forEach { it.itemText.text?.clear() }
+  }
+
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FieldItemViewHolder {
     val binding = ItemFieldBinding.inflate(LayoutInflater.from(parent.context), parent, false)
     return FieldItemViewHolder(binding.root, binding)
   }
 
   override fun onBindViewHolder(holder: FieldItemViewHolder, position: Int) {
+    itemFieldBindings.add(holder.binding)
     holder.bind(fieldItemList[position], showPassword, copyToClipboard)
   }
 
@@ -76,7 +83,6 @@ class FieldItemAdapter(
               setEndIconOnClickListener {
                 val chars = itemText.text?.let { CharArray(it.length) { i -> it[i] } }
                 copyToClipboard(chars, false)
-                chars?.wipe()
               }
             }
             itemText.transformationMethod = null
@@ -87,7 +93,6 @@ class FieldItemAdapter(
               setOnClickListener {
                 val chars = itemText.text?.let { CharArray(it.length) { i -> it[i] } }
                 copyToClipboard(chars, true)
-                chars?.wipe()
               }
             }
             itemText.apply {
@@ -108,7 +113,6 @@ class FieldItemAdapter(
               setOnClickListener {
                 val chars = itemText.text?.let { CharArray(it.length) { i -> it[i] } }
                 copyToClipboard(chars, true)
-                chars?.wipe()
               }
             }
           }

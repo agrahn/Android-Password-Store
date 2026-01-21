@@ -105,10 +105,11 @@ class PasswordCreationActivity : BasePGPActivity() {
         binding.otpImportButton.isVisible = false
         val intentResult = IntentIntegrator.parseActivityResult(RESULT_OK, result.data)
         val contents = "${intentResult.contents}\n"
-        val currentExtras = binding.extraContent.text.toString()
-        if (currentExtras.isNotEmpty() && currentExtras.last() != '\n')
-          binding.extraContent.append("\n$contents")
-        else binding.extraContent.append(contents)
+        binding.extraContent.text?.let { currentExtras ->
+          if (currentExtras.isNotEmpty() && currentExtras.last() != '\n')
+            binding.extraContent.append("\n$contents")
+          else binding.extraContent.append(contents)
+        }
         snackbar(message = getString(R.string.otp_import_success))
       } else {
         snackbar(message = getString(R.string.otp_import_failure_generic))
@@ -138,15 +139,25 @@ class PasswordCreationActivity : BasePGPActivity() {
       runCatching {
           val result = reader.decode(binaryBitmap)
           val text = result.text
-          val currentExtras = binding.extraContent.text.toString()
-          if (currentExtras.isNotEmpty() && currentExtras.last() != '\n')
-            binding.extraContent.append("\n$text")
-          else binding.extraContent.append(text)
+          binding.extraContent.text?.let { currentExtras ->
+            if (currentExtras.isNotEmpty() && currentExtras.last() != '\n')
+              binding.extraContent.append("\n$text")
+            else binding.extraContent.append(text)
+          }
           snackbar(message = getString(R.string.otp_import_success))
           binding.otpImportButton.isVisible = false
         }
         .onFailure { snackbar(message = getString(R.string.otp_import_failure_generic)) }
     }
+
+  override fun onDestroy() {
+    with(binding) {
+      username.text?.clear()
+      password.text?.clear()
+      extraContent.text?.clear()
+    }
+    super.onDestroy()
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -164,10 +175,11 @@ class PasswordCreationActivity : BasePGPActivity() {
         ) { requestKey, bundle ->
           if (requestKey == OTP_RESULT_REQUEST_KEY) {
             val contents = bundle.getString(RESULT)
-            val currentExtras = binding.extraContent.text.toString()
-            if (currentExtras.isNotEmpty() && currentExtras.last() != '\n')
-              binding.extraContent.append("\n$contents")
-            else binding.extraContent.append(contents)
+            binding.extraContent.text?.let { currentExtras ->
+              if (currentExtras.isNotEmpty() && currentExtras.last() != '\n')
+                binding.extraContent.append("\n$contents")
+              else binding.extraContent.append(contents)
+            }
           }
         }
         val hasCamera = packageManager?.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) == true
@@ -336,7 +348,7 @@ class PasswordCreationActivity : BasePGPActivity() {
       requestKey,
       bundle ->
       if (requestKey == PASSWORD_RESULT_REQUEST_KEY) {
-        binding.password.setText(bundle.getString(RESULT))
+        binding.password.setText(bundle.getCharSequence(RESULT))
       }
     }
     when (settings.getString(PreferenceKeys.PREF_KEY_PWGEN_TYPE) ?: KEY_PWGEN_TYPE_DICEWARE) {
@@ -394,7 +406,7 @@ class PasswordCreationActivity : BasePGPActivity() {
 
       if (copy) {
         clearTimer?.shutdownNow()
-        clearTimer = copyPasswordToClipboard(editPass)
+        clearTimer = copyPasswordToClipboard(editPass.copyOf(editPass.size))
       }
 
       // pass enters the key ID into `.gpg-id`.

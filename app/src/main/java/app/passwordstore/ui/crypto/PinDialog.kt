@@ -5,7 +5,6 @@
 
 package app.passwordstore.ui.crypto
 
-import logcat.logcat
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.KeyEvent
