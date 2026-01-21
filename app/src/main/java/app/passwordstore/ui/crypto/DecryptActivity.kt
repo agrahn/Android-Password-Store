@@ -43,6 +43,7 @@ class DecryptActivity : BasePGPActivity() {
 
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
 
+  private lateinit var adapter: FieldItemAdapter
   private val binding by viewBinding(DecryptLayoutBinding::inflate)
   private val relativeParentPath by unsafeLazy { getParentPath(fullPath, repoPath) }
 
@@ -70,9 +71,10 @@ class DecryptActivity : BasePGPActivity() {
     }
   }
 
-  override fun onPause() {
+  override fun onDestroy() {
     encryptedEntryChars?.wipe()
-    super.onPause()
+    adapter.clearItems()
+    super.onDestroy()
   }
 
   override suspend fun decryptWithPassphrase(
@@ -224,8 +226,10 @@ class DecryptActivity : BasePGPActivity() {
           )
         )
         if (settings.getBoolean(PreferenceKeys.COPY_ON_DECRYPT, false)) {
-          clearTimer?.shutdownNow()
-          clearTimer = copyPasswordToClipboard(entry.password)
+          entry.password?.let {
+            clearTimer?.shutdownNow()
+            clearTimer = copyPasswordToClipboard(it.copyOf(it.size))
+          }
         }
       }
 
@@ -251,7 +255,7 @@ class DecryptActivity : BasePGPActivity() {
           items.add(FieldItem.createFreeformField(getString(R.string.crypto_extra_label), value))
       }
 
-      val adapter =
+      adapter =
         FieldItemAdapter(items, showPassword) { text, isSensitive ->
           copyPasswordToClipboard(text, isSensitive)
         }

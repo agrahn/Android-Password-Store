@@ -222,10 +222,10 @@ constructor(
       lines = lines.minus(lines[0])
     }
     for (line in lines) {
-      for (prefix in PASSWORD_FIELDS) {// Last line with prefixed password wins
+      for (prefix in PASSWORD_FIELDS) { // Last line with prefixed password wins
         if (line.startsWith(prefix, ignoreCase = true)) {
           // Skip first space after password prefix
-          val startsAt = prefix.length.let { if(line[it] == ' ') it+1 else it }
+          val startsAt = prefix.length.let { if (line[it] == ' ') it + 1 else it }
           password = line.copyOfRange(startsAt, line.size)
           lines = lines.minus(line)
           break

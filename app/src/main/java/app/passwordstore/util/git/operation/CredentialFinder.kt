@@ -5,7 +5,6 @@
 
 package app.passwordstore.util.git.operation
 
-import logcat.logcat
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.view.LayoutInflater
