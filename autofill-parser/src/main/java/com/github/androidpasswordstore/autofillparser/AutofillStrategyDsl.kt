@@ -4,14 +4,11 @@
  */
 package com.github.androidpasswordstore.autofillparser
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import logcat.LogPriority.WARN
 import logcat.logcat
 
 @DslMarker internal annotation class AutofillDsl
 
-@RequiresApi(Build.VERSION_CODES.O)
 internal interface FieldMatcher {
 
   fun match(fields: List<FormField>, alreadyMatched: List<FormField>): List<FormField>?
@@ -72,7 +69,6 @@ internal interface FieldMatcher {
   }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 internal class SingleFieldMatcher(
   private val take: (FormField, List<FormField>) -> Boolean,
   private val tieBreakers: List<(FormField, List<FormField>) -> Boolean>,
@@ -136,7 +132,6 @@ internal class SingleFieldMatcher(
   }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 private class PairOfFieldsMatcher(
   private val take: (Pair<FormField, FormField>, List<FormField>) -> Boolean,
   private val tieBreakers: List<(Pair<FormField, FormField>, List<FormField>) -> Boolean>,
@@ -174,7 +169,6 @@ private class PairOfFieldsMatcher(
   }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 internal class AutofillRule
 private constructor(
   private val matchers: List<AutofillRuleMatcher>,
@@ -388,7 +382,6 @@ private constructor(
   }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 internal class AutofillStrategy private constructor(private val rules: List<AutofillRule>) {
 
   @AutofillDsl
@@ -440,6 +433,5 @@ internal class AutofillStrategy private constructor(private val rules: List<Auto
   }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 internal fun strategy(block: AutofillStrategy.Builder.() -> Unit) =
   AutofillStrategy.Builder().apply(block).build()

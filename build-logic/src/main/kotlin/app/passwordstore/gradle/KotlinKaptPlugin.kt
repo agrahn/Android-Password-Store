@@ -3,6 +3,10 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
+/*
+ * Notice: Not used anymore as Kapt has been superseeded by KSP; kept for reference
+ */
+
 package app.passwordstore.gradle
 
 import org.gradle.api.Plugin

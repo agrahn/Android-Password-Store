@@ -5,11 +5,9 @@
 package com.github.androidpasswordstore.autofillparser
 
 import android.app.assist.AssistStructure
-import android.os.Build
 import android.text.InputType
 import android.view.View
 import android.view.autofill.AutofillId
-import androidx.annotation.RequiresApi
 import androidx.autofill.HintConstants
 import java.util.Locale
 
@@ -24,7 +22,6 @@ internal enum class CertaintyLevel {
  * Represents a single potentially fillable or saveable field together with all meta data extracted
  * from its [AssistStructure.ViewNode].
  */
-@RequiresApi(Build.VERSION_CODES.O)
 internal class FormField(
   node: AssistStructure.ViewNode,
   private val index: Int,
@@ -91,7 +88,6 @@ internal class FormField(
         .toSet()
         .toList()
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun isSupportedHint(hint: String?) = hint in HINTS_FILLABLE
 
     private val EXCLUDED_TERMS =

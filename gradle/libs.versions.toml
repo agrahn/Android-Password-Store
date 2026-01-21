@@ -1,11 +1,12 @@
 [versions]
-agp = "8.13.2"
+agp = "9.0.0"
 androidxActivity = "1.12.2"
 bouncycastle = "1.83"
 coroutines = "1.10.2"
 flowbinding = "1.2.0"
-hilt = "2.58"
+hilt = "2.59"
 kotlin = "2.3.0"
+ksp = "2.3.4"
 kotlinResult = "2.1.0"
 lifecycle = "2.10.0"
 moshi = "1.15.2"
@@ -102,4 +103,4 @@ testDependencies = [
 [plugins]
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

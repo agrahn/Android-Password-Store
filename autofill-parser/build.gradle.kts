@@ -12,10 +12,10 @@ plugins {
 
 android {
   defaultConfig {
-    minSdk = 23
+    minSdk = 26
     consumerProguardFiles("consumer-rules.pro")
   }
-  sourceSets { getByName("test") { resources.srcDir("src/main/assets") } }
+  sourceSets { getByName("test") { resources.directories.add("src/main/assets") } }
   namespace = "com.github.androidpasswordstore.autofillparser"
 }
 

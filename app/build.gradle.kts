@@ -20,6 +20,7 @@ android {
   namespace = "app.passwordstore"
 
   defaultConfig {
+    minSdk = 26
     applicationId = "app.passwordstore.agrahn"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

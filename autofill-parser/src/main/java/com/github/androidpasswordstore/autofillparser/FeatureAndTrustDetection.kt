@@ -11,7 +11,6 @@ import android.content.pm.PackageManager.ResolveInfoFlags
 import android.os.Build
 import android.provider.Settings
 import android.service.autofill.SaveInfo
-import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 
 /**
@@ -153,7 +152,6 @@ private fun getBrowserMultiOriginMethod(appPackage: String): BrowserMultiOriginM
  * Some browsers may not issue save requests automatically and thus need
  * `FLAG_SAVE_ON_ALL_VIEW_INVISIBLE` to be set.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 private val BROWSER_SAVE_FLAG =
   mapOf(
     "com.duckduckgo.mobile.android" to 0,
@@ -167,7 +165,6 @@ private val BROWSER_SAVE_FLAG =
     "com.opera.touch" to 0,
   )
 
-@RequiresApi(Build.VERSION_CODES.O)
 private val BROWSER_SAVE_FLAG_IF_NO_ACCESSIBILITY =
   mapOf(
     "com.android.chrome" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
@@ -188,7 +185,6 @@ private fun isNoAccessibilityServiceEnabled(context: Context): Boolean {
     .isNullOrEmpty()
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 private fun getBrowserSaveFlag(context: Context, appPackage: String): Int? =
   BROWSER_SAVE_FLAG[appPackage]
     ?: BROWSER_SAVE_FLAG_IF_NO_ACCESSIBILITY[appPackage]?.takeIf {
@@ -200,7 +196,6 @@ internal data class BrowserAutofillSupportInfo(
   val saveFlags: Int?,
 )
 
-@RequiresApi(Build.VERSION_CODES.O)
 internal fun getBrowserAutofillSupportInfoIfTrusted(
   context: Context,
   appPackage: String,
@@ -223,7 +218,6 @@ public enum class BrowserAutofillSupportLevel {
   GeneralFillAndSave,
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 private fun getBrowserAutofillSupportLevel(
   context: Context,
   appPackage: String,
@@ -250,7 +244,6 @@ private fun getBrowserAutofillSupportLevel(
   } ?: BrowserAutofillSupportLevel.None
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 public fun getInstalledBrowsersWithAutofillSupportLevel(
   context: Context
 ): List<Pair<String, BrowserAutofillSupportLevel>> {

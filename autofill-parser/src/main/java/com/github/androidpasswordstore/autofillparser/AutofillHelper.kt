@@ -14,7 +14,6 @@ import android.service.autofill.SaveCallback
 import android.util.Base64
 import android.view.autofill.AutofillId
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import java.security.MessageDigest
 import logcat.LogPriority.ERROR
 import logcat.logcat
@@ -81,7 +80,6 @@ public fun computeCertificatesHash(context: Context, appPackage: String): String
  * its `webDomain` and `webScheme`, if available.
  */
 internal val AssistStructure.ViewNode.webOrigin: String?
-  @RequiresApi(Build.VERSION_CODES.O)
   get() =
     webDomain?.let { domain ->
       val scheme =
@@ -89,7 +87,6 @@ internal val AssistStructure.ViewNode.webOrigin: String?
       "$scheme://$domain"
     }
 
-@RequiresApi(Build.VERSION_CODES.O)
 public class FixedSaveCallback(private val context: Context, private val callback: SaveCallback) {
 
   private val applicationContext = context.applicationContext
@@ -132,7 +129,6 @@ private fun visitViewNode(
   }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 internal fun AssistStructure.findNodeByAutofillId(
   autofillId: AutofillId
 ): AssistStructure.ViewNode? {

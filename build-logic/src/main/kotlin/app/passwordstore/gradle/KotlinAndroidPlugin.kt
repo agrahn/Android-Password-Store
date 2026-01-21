@@ -11,16 +11,12 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
-import org.jetbrains.kotlin.gradle.plugin.KotlinAndroidPluginWrapper
 
 @Suppress("Unused")
 class KotlinAndroidPlugin : Plugin<Project> {
 
   override fun apply(project: Project) {
-    project.pluginManager.run {
-      apply(KotlinAndroidPluginWrapper::class)
-      apply(KotlinCommonPlugin::class)
-    }
+    project.pluginManager.run { apply(KotlinCommonPlugin::class) }
     project.extensions.getByType<KotlinProjectExtension>().jvmToolchain(JVM_TOOLCHAIN_ACTION)
   }
 }

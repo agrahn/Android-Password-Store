@@ -13,25 +13,24 @@ import org.gradle.kotlin.dsl.apply
 class KotlinKspPlugin : Plugin<Project> {
 
   override fun apply(project: Project) {
-    // Apply the KSP plugin by id. The version can come from the version catalog's plugin alias
-    // (gradle/libs.versions.toml) or pluginManagement. If you didn't add the catalog alias,
-    // you can replace this by applying the plugin with a version in module build files.
-    project.pluginManager.apply("com.google.devtools.ksp")
+    project.pluginManager.apply("com.github.android-password-store.kotlin-ksp")
     /* project.afterEvaluate {
-      javacOptions {
-        if (hasDaggerCompilerDependency()) {
-          ksp {
+      project.extensions.configure<KaptExtension> {
+        javacOptions {
+          if (hasDaggerCompilerDependency()) {
             // https://dagger.dev/dev-guide/compiler-options#fastinit-mode
-            arg("dagger.fastInit", "enabled")
+            option("-Adagger.fastInit=enabled")
             // Enable the better, experimental error messages
             // https://github.com/google/dagger/commit/0d2505a727b54f47b8677f42dd4fc5c1924e37f5
-            arg("dagger.experimentalDaggerErrorMessages", "enabled")
+            option("-Adagger.experimentalDaggerErrorMessages=enabled")
             // Share test components for when we start leveraging Hilt for tests
             // https://github.com/google/dagger/releases/tag/dagger-2.34
-            arg("dagger.hilt.shareTestComponents", "true")
+            option("-Adagger.hilt.shareTestComponents=true")
+            // KAPT nests errors causing real issues to be suppressed in CI logs
+            option("-Xmaxerrs", "500")
             // Enables per-module validation for faster error detection
             // https://github.com/google/dagger/commit/325b516ac6a53d3fc973d247b5231fafda9870a2
-            arg("dagger.moduleBindingValidation", "ERROR")
+            option("-Adagger.moduleBindingValidation=ERROR")
           }
         }
       }
