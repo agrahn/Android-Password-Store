@@ -31,6 +31,7 @@ import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.getOrElse
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.nio.CharBuffer
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import reactivecircus.flowbinding.android.widget.afterTextChanges
@@ -95,7 +96,7 @@ class PasswordGeneratorDialogFragment : DialogFragment() {
     val passwordLength = getLength()
     setPrefs(requireContext(), passwordOptions, passwordLength)
     passwordField.text =
-      runCatching { PasswordGenerator.generate(passwordOptions, passwordLength) }
+      runCatching { CharBuffer.wrap(PasswordGenerator.generate(passwordOptions, passwordLength)) }
         .getOrElse { exception ->
           val errorText =
             when (exception) {

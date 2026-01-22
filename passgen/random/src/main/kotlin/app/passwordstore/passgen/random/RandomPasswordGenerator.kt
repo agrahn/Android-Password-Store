@@ -22,7 +22,7 @@ internal object RandomPasswordGenerator {
    * - [PasswordGenerator.NO_AMBIGUOUS]: If set, the password will not contain any ambiguous
    *   characters.
    */
-  fun generate(targetLength: Int, pwFlags: Int): String? {
+  fun generate(targetLength: Int, pwFlags: Int): CharArray? {
     val bank =
       listOfNotNull(
           PasswordGenerator.DIGITS_STR.takeIf { pwFlags hasFlag PasswordGenerator.DIGITS },
@@ -32,8 +32,9 @@ internal object RandomPasswordGenerator {
         )
         .joinToString("")
 
-    var password = ""
-    while (password.length < targetLength) {
+    var password = CharArray(targetLength)
+    var pos = 0
+    while (pos < targetLength) {
       val candidate = bank.secureRandomCharacter()
       if (
         pwFlags hasFlag PasswordGenerator.NO_AMBIGUOUS &&
@@ -41,7 +42,7 @@ internal object RandomPasswordGenerator {
       ) {
         continue
       }
-      password += candidate
+      password.set(pos++, candidate)
     }
     return password.takeIf { PasswordGenerator.isValidPassword(it, pwFlags) }
   }
