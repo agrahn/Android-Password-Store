@@ -31,8 +31,9 @@ android {
   packaging { resources.excludes.add("META-INF/versions/**") }
 }
 
-// This seems to fix a release build failure after updating
-// kotlin-2.3.0
+// This works around a release build failure after updating
+// kotlin-2.3.0; to be fixed in kotlin-2.3.10
+// https://youtrack.jetbrains.com/issue/KT-83266
 composeCompiler { includeComposeMappingFile.set(false) }
 
 dependencies {

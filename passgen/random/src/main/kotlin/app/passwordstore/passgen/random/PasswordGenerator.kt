@@ -23,7 +23,7 @@ public object PasswordGenerator {
   internal const val SYMBOLS_STR = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
   internal const val AMBIGUOUS_STR = "B8G6I1l0OQDS5Z2"
 
-  internal fun isValidPassword(password: String, pwFlags: Int): Boolean {
+  internal fun isValidPassword(password: CharArray, pwFlags: Int): Boolean {
     if (pwFlags hasFlag DIGITS && password.none { it in DIGITS_STR }) return false
     if (pwFlags hasFlag UPPERS && password.none { it in UPPERS_STR }) return false
     if (pwFlags hasFlag LOWERS && password.none { it in LOWERS_STR }) return false
@@ -34,7 +34,10 @@ public object PasswordGenerator {
 
   /** Generates a password using the given [passwordOptions] and [length]. */
   @Throws(PasswordGeneratorException::class)
-  public fun generate(passwordOptions: List<PasswordOption>, length: Int = DEFAULT_LENGTH): String {
+  public fun generate(
+    passwordOptions: List<PasswordOption>,
+    length: Int = DEFAULT_LENGTH,
+  ): CharArray {
     var numCharacterCategories = 0
     var phonemes = true
     var pwgenFlags = DIGITS or UPPERS or LOWERS
@@ -84,7 +87,7 @@ public object PasswordGenerator {
       phonemes = false
     }
 
-    var password: String?
+    var password: CharArray?
     var iterations = 0
     do {
       if (iterations++ > 1000) throw MaxIterationsExceededException()

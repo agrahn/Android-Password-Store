@@ -81,16 +81,16 @@ internal object RandomPhonemesGenerator {
    * - [PasswordGenerator.NO_AMBIGUOUS]: If set, the password will not contain any ambiguous
    *   characters.
    */
-  fun generate(targetLength: Int, pwFlags: Int): String? {
+  fun generate(targetLength: Int, pwFlags: Int): CharArray? {
     require(pwFlags hasFlag PasswordGenerator.UPPERS || pwFlags hasFlag PasswordGenerator.LOWERS)
 
-    var password = ""
+    var password = charArrayOf()
 
     var isStartOfPart = true
     var nextBasicType = if (secureRandomBoolean()) VOWEL else CONSONANT
     var previousFlags = 0
 
-    while (password.length < targetLength) {
+    while (password.size < targetLength) {
       // First part: Add a single letter or pronounceable pair of letters in varying case.
 
       val candidate = elements.secureRandomElement()
@@ -104,7 +104,7 @@ internal object RandomPhonemesGenerator {
             candidate.flags hasFlag VOWEL &&
             candidate.flags hasFlag DIPHTHONG) ||
           // Don't add multi-character candidates if we would go over the targetLength.
-          (password.length + candidate.length > targetLength) ||
+          (password.size + candidate.length > targetLength) ||
           (pwFlags hasFlag PasswordGenerator.NO_AMBIGUOUS && candidate.isAmbiguous)
       ) {
         continue
@@ -120,14 +120,14 @@ internal object RandomPhonemesGenerator {
           pwFlags hasFlag PasswordGenerator.UPPERS &&
             (!(pwFlags hasFlag PasswordGenerator.LOWERS) || useUpperIfBothCasesAllowed)
         ) {
-          candidate.upperCase
+          candidate.upperCase.toCharArray()
         } else {
-          candidate.lowerCase
+          candidate.lowerCase.toCharArray()
         }
 
       // We ensured above that we will not go above the target length.
-      check(password.length <= targetLength)
-      if (password.length == targetLength) break
+      check(password.size <= targetLength)
+      if (password.size == targetLength) break
 
       // Second part: Add digits and symbols with a certain probability (if requested) if
       // they would not directly follow the first character in a pronounceable part.
