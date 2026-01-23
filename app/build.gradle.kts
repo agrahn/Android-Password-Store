@@ -7,7 +7,6 @@
 plugins {
   id("com.github.android-password-store.android-application")
   id("com.github.android-password-store.kotlin-android")
-  id("com.github.android-password-store.kotlin-ksp")
   id("com.github.android-password-store.versioning-plugin")
   id("com.github.android-password-store.rename-artifacts")
   alias(libs.plugins.hilt)
