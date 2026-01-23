@@ -28,6 +28,9 @@ import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.errors.NoKeysProvidedException
 import app.passwordstore.crypto.errors.UnusableKeyException
 import app.passwordstore.data.passfile.PasswordEntry
+import app.passwordstore.data.passfile.joinToCharArray
+import app.passwordstore.data.passfile.splitToCharArrayListAt
+import app.passwordstore.data.passfile.trimEnd
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.PasswordCreationActivityBinding
 import app.passwordstore.ui.dialogs.DicewarePasswordGeneratorDialogFragment
@@ -370,7 +373,9 @@ class PasswordCreationActivity : BasePGPActivity() {
       }
       // Use PasswordEntry to parse extras for OTP
       val entry = passwordEntryFactory.create("PLACEHOLDER\n${extraContent.text}".toCharArray())
-      otpImportButton.isVisible = !entry.hasTotp()
+      val hasTotp = entry.hasTotp()
+      entry.clear()
+      otpImportButton.isVisible = !hasTotp
     }
 
   /** Encrypts the password and the extra content */
@@ -378,9 +383,10 @@ class PasswordCreationActivity : BasePGPActivity() {
     with(binding) {
       val oldName = suggestedName
       val editName = filename.text.toString().trim()
-      var editUsername = username.text.toString()
+      var editUsername = username.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
       val editPass = password.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
-      var editExtra = extraContent.text.toString()
+      var editExtra =
+        extraContent.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
 
       if (editName.isEmpty()) {
         snackbar(message = resources.getString(R.string.file_toast_text))
@@ -391,7 +397,12 @@ class PasswordCreationActivity : BasePGPActivity() {
       }
 
       if (!editUsername.isEmpty()) {
-        editUsername = "\nusername:$editUsername"
+        editUsername =
+          editUsername.let {
+            val withPrefix = "\nusername: ".toCharArray() + it
+            it.wipe()
+            withPrefix
+          }
       }
 
       if (editPass.isEmpty() && editExtra.isEmpty()) {
@@ -401,10 +412,18 @@ class PasswordCreationActivity : BasePGPActivity() {
 
       // fix extra content formatting
       if (!editExtra.isEmpty()) {
-        editExtra = editExtra.split("\n").map { it.trimEnd() }.joinToString("\n").trimEnd() + "\n"
+        editExtra =
+          editExtra.let {
+            val extraLines = it.splitToCharArrayListAt('\n').map { it.trimEnd() }
+            it?.wipe()
+            val editExtra = extraLines.joinToCharArray('\n')?.trimEnd()
+            val editExtraPlusLineFeed = editExtra?.let { it + '\n' }
+            editExtra?.wipe()
+            editExtraPlusLineFeed ?: charArrayOf()
+          }
       }
 
-      if (copy) {
+      if (copy && editPass.isNotEmpty()) {
         clearTimer?.shutdownNow()
         clearTimer = copyPasswordToClipboard(editPass.copyOf(editPass.size))
       }
@@ -439,17 +458,19 @@ class PasswordCreationActivity : BasePGPActivity() {
 
       lifecycleScope.launch(dispatcherProvider.main()) {
         runCatching {
+            val contentChars = (editPass + editUsername + '\n' + editExtra)
+            val contentBytes = contentChars.toByteArray()
+            contentChars.wipe()
+
             val (succeededUserEmails, result) =
               withContext(dispatcherProvider.io()) {
-                val outputStream = ByteArrayOutputStream()
                 repository.encrypt(
                   identifiers,
-                  ByteArrayInputStream(
-                    (editPass + "$editUsername\n$editExtra".toCharArray()).toByteArray()
-                  ),
-                  outputStream,
+                  ByteArrayInputStream(contentBytes),
+                  ByteArrayOutputStream(),
                 )
               }
+            contentBytes.wipe()
 
             if (result.isErr) throw result.unwrapError()
             if (succeededUserEmails.isNullOrEmpty()) throw UnusableKeyException
@@ -509,13 +530,24 @@ class PasswordCreationActivity : BasePGPActivity() {
 
             if (shouldGeneratePassword) {
               val directoryStructure = AutofillPreferences.directoryStructure(applicationContext)
-              val entry =
-                passwordEntryFactory.create(editPass + "$editUsername\n$editExtra".toCharArray())
-              returnIntent.putExtra(RETURN_EXTRA_PASSWORD, entry.password)
+              val entry = passwordEntryFactory.create(editPass + editUsername + '\n' + editExtra)
+
+              entry.password?.let {
+                val password = it.copyOf(it.size)
+                returnIntent.putExtra(RETURN_EXTRA_PASSWORD, password)
+              }
+
               val username =
-                entry.username ?: directoryStructure.getUsernameFor(passwordFile.toFile())
+                entry.username?.let { it.copyOf(it.size) }
+                  ?: directoryStructure.getUsernameFor(passwordFile.toFile())
               returnIntent.putExtra(RETURN_EXTRA_USERNAME, username)
+
+              entry.clear()
             }
+
+            editPass?.wipe()
+            editUsername?.wipe()
+            editExtra?.wipe()
 
             if (
               directoryInputLayout.isVisible &&

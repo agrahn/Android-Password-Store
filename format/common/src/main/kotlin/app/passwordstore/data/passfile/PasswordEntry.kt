@@ -120,88 +120,6 @@ constructor(
       }
   }
 
-  /**
-   * Implements startsWith, trimStart and trimEnd methods known from the String class for CharArray.
-   */
-  private fun CharArray.startsWith(prefix: String, ignoreCase: Boolean = false): Boolean {
-    if (this.size < prefix.length) return false
-    val prefixIterator = prefix.iterator()
-    val thisIterator = this.iterator()
-    while (prefixIterator.hasNext() && thisIterator.hasNext()) {
-      if (!thisIterator.next().equals(prefixIterator.next(), ignoreCase)) {
-        return false
-      }
-    }
-    return true
-  }
-
-  private fun CharArray.trimStart(): CharArray {
-    val firstNonWhitespaceIndex = indexOfFirst { !it.isWhitespace() }
-    if (firstNonWhitespaceIndex == -1) return charArrayOf() // All whitespace or empty array
-
-    val retValue = copyOfRange(firstNonWhitespaceIndex, size)
-    fill('\u0000')
-    return retValue
-  }
-
-  private fun CharArray.trimEnd(): CharArray {
-    var last = size - 1
-    while (last >= 0 && this[last].isWhitespace()) last--
-    return when {
-      last < 0 -> CharArray(0)
-      else -> {
-        val retValue = copyOfRange(0, last + 1)
-        fill('\u0000')
-        retValue
-      }
-    }
-  }
-
-  private fun CharArray.isBlank(): Boolean = all { it.isWhitespace() }
-
-  private fun List<CharArray>.joinToCharArray(separator: Char): CharArray? {
-    if (isEmpty() || size == 1 && last().isEmpty()) return null
-
-    val totalChars = sumOf { it.size } + (size - 1)
-    val result = CharArray(totalChars)
-    var pos = 0
-
-    forEachIndexed { index, chunk ->
-      if (chunk.isNotEmpty()) {
-        chunk.copyInto(result, destinationOffset = pos)
-        pos += chunk.size
-      }
-      if (index != lastIndex) {
-        result[pos++] = separator
-      }
-    }
-
-    return result
-  }
-
-  /**
-   * Decodes and splits a CharArray at [c] into a list of CharArray, avoiding String as an
-   * intermediate.
-   */
-  private fun CharArray.splitToCharArrayListAt(c: Char): List<CharArray> {
-    val result = mutableListOf<CharArray>()
-    val currentLine = mutableListOf<Char>()
-
-    for (ch in this) {
-      if (ch == c) {
-        result.add(currentLine.toCharArray())
-        currentLine.fill('\u0000')
-        currentLine.clear()
-      } else {
-        currentLine.add(ch)
-      }
-    }
-    result.add(currentLine.toCharArray()) // last line
-    currentLine.fill('\u0000')
-
-    return result
-  }
-
   public fun hasTotp(): Boolean {
     return totpSecret != null
   }
@@ -395,4 +313,87 @@ constructor(
     public val PASSWORD_FIELDS: Array<String> = arrayOf("password:", "secret:", "pass:")
     private const val THOUSAND_MILLIS = 1000L
   }
+}
+
+/** CharArray extension */
+
+/** Implements startsWith, trimStart, trimEnd and isBlank methods known from the String */
+public fun CharArray.startsWith(prefix: String, ignoreCase: Boolean = false): Boolean {
+  if (this.size < prefix.length) return false
+  val prefixIterator = prefix.iterator()
+  val thisIterator = this.iterator()
+  while (prefixIterator.hasNext() && thisIterator.hasNext()) {
+    if (!thisIterator.next().equals(prefixIterator.next(), ignoreCase)) {
+      return false
+    }
+  }
+  return true
+}
+
+public fun CharArray.trimStart(): CharArray {
+  val firstNonWhitespaceIndex = indexOfFirst { !it.isWhitespace() }
+  if (firstNonWhitespaceIndex == -1) return charArrayOf() // All whitespace or empty array
+
+  val retValue = copyOfRange(firstNonWhitespaceIndex, size)
+  fill('\u0000')
+  return retValue
+}
+
+public fun CharArray.trimEnd(): CharArray {
+  var last = lastIndex
+  while (last >= 0 && this[last].isWhitespace()) last--
+  return when {
+    last < 0 -> CharArray(0)
+    else -> {
+      val retValue = copyOfRange(0, last + 1)
+      fill('\u0000')
+      retValue
+    }
+  }
+}
+
+public fun CharArray.isBlank(): Boolean = all { it.isWhitespace() }
+
+/** Splits a CharArray at [c] into a list of CharArray, avoiding String as an intermediate. */
+public fun CharArray.splitToCharArrayListAt(c: Char): List<CharArray> {
+  val result = mutableListOf<CharArray>()
+  val currentLine = mutableListOf<Char>()
+
+  for (ch in this) {
+    if (ch == c) {
+      result.add(currentLine.toCharArray())
+      currentLine.fill('\u0000')
+      currentLine.clear()
+    } else {
+      currentLine.add(ch)
+    }
+  }
+  result.add(currentLine.toCharArray()) // last line
+  currentLine.fill('\u0000')
+
+  return result
+}
+
+/**
+ * Joins a list of CharArray at [c] into a list of CharArray, avoiding String as an intermediate.
+ */
+public fun List<CharArray>.joinToCharArray(separator: Char? = null): CharArray? {
+  if (isEmpty() || size == 1 && last().isEmpty()) return null
+
+  val totalChars = sumOf { it.size } + (separator?.let { size - 1 } ?: 0)
+
+  val result = CharArray(totalChars)
+  var pos = 0
+
+  forEachIndexed { index, chunk ->
+    if (chunk.isNotEmpty()) {
+      chunk.copyInto(result, destinationOffset = pos)
+      pos += chunk.size
+    }
+    if (index != lastIndex && separator != null) {
+      result[pos++] = separator
+    }
+  }
+
+  return result
 }
