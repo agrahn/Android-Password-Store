@@ -19,11 +19,16 @@ import com.github.michaelbull.result.mapError
 import com.github.michaelbull.result.runCatching
 import java.io.InputStream
 import java.io.OutputStream
+import java.security.KeyPair
+import java.util.Date
 import javax.inject.Inject
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags
+import org.bouncycastle.bcpg.sig.KeyFlags
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
 import org.bouncycastle.openpgp.api.OpenPGPKey
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyConverter
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.ConsumerOptions
@@ -35,7 +40,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 
 public class PGPainlessCryptoHandler @Inject constructor() :
-  CryptoHandler<PGPKey, PGPEncryptOptions, PGPDecryptOptions> {
+  CryptoHandler<PGPKey, KeyPair, PGPEncryptOptions, PGPDecryptOptions> {
 
   private val pgpApi = PGPainless.getInstance()
 
@@ -198,6 +203,57 @@ public class PGPainlessCryptoHandler @Inject constructor() :
           }
           .any { it.isPassphraseCorrect(passphrase) }
     } ?: false
+
+  public override fun unlockAuthKeyPair(
+    key: PGPKey,
+    passphrase: CharArray?,
+  ): Result<KeyPair, CryptoHandlerException> =
+    runCatching {
+        val openPgpKey = KeyUtils.tryParseCertificateOrKey(key)
+        if (openPgpKey !is OpenPGPKey)
+          throw NoDecryptionKeyAvailableException("Key not usable for authentication")
+
+        /* A and S subkeys as well as the primary C key are equally suitable for authentication;
+         * we pick the first one matching one of the capabilities in the given ranking order */
+        val authFlags = listOf(KeyFlags.AUTHENTICATION, KeyFlags.SIGN_DATA, KeyFlags.CERTIFY_OTHER)
+        val subkeys = openPgpKey.getSecretKeys().values.reversed() // newest first?
+        val authKeys =
+          authFlags
+            .map { flag ->
+              subkeys
+                .filter {
+                  it.hasKeyFlags(Date(), flag) && !it.getPGPSecretKey().isPrivateKeyEmpty()
+                }
+                .firstOrNull()
+            }
+            .filterNotNull()
+
+        if (authKeys.isEmpty())
+          throw NoDecryptionKeyAvailableException(
+            "Key does not provide a usable authentication subkey"
+          )
+
+        if (!authKeys.first().isPassphraseCorrect(passphrase))
+          throw IncorrectPassphraseException(
+            "Wrong passphrase; authentication key cannot be unlocked"
+          )
+
+        val pgpKeyPair = authKeys.first().unlock(passphrase).getKeyPair()
+        return@runCatching KeyPair(
+          JcaPGPKeyConverter()
+            .setProvider(BouncyCastleProvider())
+            .getPublicKey(pgpKeyPair.getPublicKey()),
+          JcaPGPKeyConverter()
+            .setProvider(BouncyCastleProvider())
+            .getPrivateKey(pgpKeyPair.getPrivateKey()),
+        )
+      }
+      .mapError { error ->
+        when (error) {
+          is CryptoHandlerException -> error
+          else -> UnknownError(error.message, error)
+        }
+      }
 
   private fun extractDecKey(openPgpKey: OpenPGPKey, passphrase: CharArray?): OpenPGPKey? =
     openPgpKey

@@ -12,7 +12,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 /** Generic interface to implement cryptographic operations on top of. */
-public interface CryptoHandler<Key, EncOpts : CryptoOptions, DecryptOpts : CryptoOptions> {
+public interface CryptoHandler<Key, KeyPair, EncOpts : CryptoOptions, DecryptOpts : CryptoOptions> {
 
   /**
    * Check entered passphrase against primary key and all subkeys; returns true if passphrase is
@@ -64,4 +64,10 @@ public interface CryptoHandler<Key, EncOpts : CryptoOptions, DecryptOpts : Crypt
    * inspected. `true' is returned, if any of them requires a passphrase.
    */
   public fun isPassphraseProtected(keys: List<Key>, anySubkey: Boolean = false): Boolean
+
+  /** Returns an unlocked authentication-capable public/private keypair */
+  public fun unlockAuthKeyPair(
+    key: Key,
+    passphrase: CharArray?,
+  ): Result<KeyPair, CryptoHandlerException>
 }
