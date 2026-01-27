@@ -146,6 +146,53 @@ public object KeyUtils {
         .getPublicKey(authKeys.first().getPGPSecretKey().getPublicKey())
   }
 
+//  public fun unlockAuthKeyPair(
+//    key: PGPKey,
+//    passphrase: CharArray?,
+//  ): KeyPair? =
+//    tryParseCertificateOrKey(key)?.let { unlockAuthKeyPair(it, passphrase) } ?: null
+//
+//  public fun unlockAuthKeyPair(cert: OpenPGPCertificate): KeyPair? {
+//    val openPgpKey = KeyUtils.tryParseCertificateOrKey(key)
+//    if (openPgpKey !is OpenPGPKey)
+//      throw NoDecryptionKeyAvailableException("Key not usable for authentication")
+//
+//    /* A and S subkeys as well as the primary C key are equally suitable for authentication;
+//     * we pick the first one matching one of the capabilities in the given ranking order */
+//    val authFlags = listOf(KeyFlags.AUTHENTICATION, KeyFlags.SIGN_DATA, KeyFlags.CERTIFY_OTHER)
+//    val subkeys = openPgpKey.getSecretKeys().values.reversed() // newest first?
+//    val authKeys =
+//      authFlags
+//        .map { flag ->
+//          subkeys
+//            .filter {
+//              it.hasKeyFlags(Date(), flag) && !it.getPGPSecretKey().isPrivateKeyEmpty()
+//            }
+//            .firstOrNull()
+//        }
+//        .filterNotNull()
+//
+//    if (authKeys.isEmpty())
+//      throw NoDecryptionKeyAvailableException(
+//        "Key does not provide a usable authentication subkey"
+//      )
+//
+//    if (!authKeys.first().isPassphraseCorrect(passphrase))
+//      throw IncorrectPassphraseException(
+//        "Wrong passphrase; authentication key cannot be unlocked"
+//      )
+//
+//    val pgpKeyPair = authKeys.first().unlock(passphrase).getKeyPair()
+//    return KeyPair(
+//      JcaPGPKeyConverter()
+//        .setProvider(BouncyCastleProvider())
+//        .getPublicKey(pgpKeyPair.getPublicKey()),
+//      JcaPGPKeyConverter()
+//        .setProvider(BouncyCastleProvider())
+//        .getPrivateKey(pgpKeyPair.getPrivateKey()),
+//    )
+//  }
+
   public fun extractPublicKeyData(key: PGPKey): ByteArray? =
     tryParseCertificateOrKey(key)?.let {
       OpenPGPCertificate(it.getPGPPublicKeyRing() as PGPKeyRing)

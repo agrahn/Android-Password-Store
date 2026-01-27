@@ -44,8 +44,8 @@ import org.eclipse.jgit.util.FS
 
 sealed class SshAuthMethod(val activity: AppCompatActivity) {
   class Password(activity: AppCompatActivity) : SshAuthMethod(activity)
-
   class SshKey(activity: AppCompatActivity) : SshAuthMethod(activity)
+  class PgpKey(activity: AppCompatActivity) : SshAuthMethod(activity)
 }
 
 abstract class InteractivePasswordFinder(private val dispatcherProvider: DispatcherProvider) :
@@ -164,6 +164,16 @@ private class SshjSession(
         ssh.auth(username, passwordAuth)
       }
       is SshAuthMethod.SshKey -> {
+        val pubkeyAuth =
+          AuthPublickey(
+            SshKey.provide(
+              ssh,
+              CredentialFinder(authMethod.activity, AuthMode.SshKey, dispatcherProvider),
+            )
+          )
+        ssh.auth(username, pubkeyAuth, passwordAuth)
+      }
+      is SshAuthMethod.PgpKey -> {
         val pubkeyAuth =
           AuthPublickey(
             SshKey.provide(
