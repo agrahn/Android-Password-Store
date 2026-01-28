@@ -21,7 +21,6 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
-import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.prefs.PGPPassphrases
@@ -89,7 +88,7 @@ open class BasePGPActivity : AppCompatActivity() {
   private var secondsOnPause = 0L // seconds since Epoch upon pause
   private var timeout = 0L
 
-//  @Inject lateinit var pgpKeyManager: PGPKeyManager
+  //  @Inject lateinit var pgpKeyManager: PGPKeyManager
 
   /**
    * Callback to invoke if [keyImportAction] or [keySelectAction] succeeds. This allows for

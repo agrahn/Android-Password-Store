@@ -16,6 +16,8 @@ import android.util.Base64
 import androidx.core.content.edit
 import app.passwordstore.Application
 import app.passwordstore.R
+import app.passwordstore.crypto.KeyUtils
+import app.passwordstore.crypto.PGPKey
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.extensions.unsafeLazy
@@ -25,6 +27,7 @@ import com.github.michaelbull.result.runCatching
 import java.io.File
 import java.io.IOException
 import java.security.KeyFactory
+import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
@@ -37,10 +40,6 @@ import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.common.Buffer
 import net.schmizz.sshj.common.KeyType
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider
-import app.passwordstore.crypto.PGPIdentifier
-import app.passwordstore.crypto.KeyUtils
-import app.passwordstore.crypto.PGPKey
-import java.security.KeyPair
 
 private const val PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore"
 private const val KEYSTORE_ALIAS = "sshkey"
@@ -84,22 +83,26 @@ object SshKey {
   val mustAuthenticate: Boolean
     get() {
       return runCatching {
-	      when(type) {
+          when (type) {
             Type.ImportedPGP -> return@runCatching true
             Type.KeystoreNative ->
               when (val key = androidKeystore.getKey(KEYSTORE_ALIAS, null)) {
                 is PrivateKey -> {
                   val factory = KeyFactory.getInstance(key.algorithm, PROVIDER_ANDROID_KEY_STORE)
-                  return@runCatching factory.getKeySpec(key, KeyInfo::class.java).isUserAuthenticationRequired
+                  return@runCatching factory
+                    .getKeySpec(key, KeyInfo::class.java)
+                    .isUserAuthenticationRequired
                 }
                 is SecretKey -> {
-                  val factory = SecretKeyFactory.getInstance(key.algorithm, PROVIDER_ANDROID_KEY_STORE)
-                  return@runCatching (factory.getKeySpec(key, KeyInfo::class.java) as KeyInfo).isUserAuthenticationRequired
+                  val factory =
+                    SecretKeyFactory.getInstance(key.algorithm, PROVIDER_ANDROID_KEY_STORE)
+                  return@runCatching (factory.getKeySpec(key, KeyInfo::class.java) as KeyInfo)
+                    .isUserAuthenticationRequired
                 }
                 else -> throw IllegalStateException("SSH key does not exist in Keystore")
               }
-			else -> return@runCatching false  
-		  }	
+            else -> return@runCatching false
+          }
         }
         .getOrElse { error ->
           // It is fine to swallow the exception here since it will reappear when the key
@@ -131,11 +134,8 @@ object SshKey {
 
   private enum class Type(val value: String) {
     Imported("imported"),
-
     KeystoreNative("keystore_native"),
-
     LegacyGenerated("legacy_generated"),
-
     ImportedPGP("imported_pgp");
 
     companion object {
@@ -267,42 +267,14 @@ object SshKey {
   }
 
   fun useImportedPGPKey(key: PGPKey) {
-//    // First check whether the content at uri is likely an SSH private key.
-//    val fileSize =
-//      context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use {
-//        cursor ->
-//        // Cursor returns only a single row.
-//        cursor.moveToFirst()
-//        cursor.getInt(0)
-//      } ?: throw IOException(context.getString(R.string.ssh_key_does_not_exist))
-//
-//    // We assume that an SSH key's ideal size is > 0 bytes && < 100 kilobytes.
-//    if (fileSize > 100_000 || fileSize == 0)
-//      throw IllegalArgumentException(
-//        context.getString(R.string.ssh_key_import_error_not_an_ssh_key_message)
-//      )
-//
-//    val sshKeyInputStream =
-//      context.contentResolver.openInputStream(uri)
-//        ?: throw IOException(context.getString(R.string.ssh_key_does_not_exist))
-//    val lines = sshKeyInputStream.use { `is` -> `is`.bufferedReader().readLines() }
-//
-//    // The file must have more than 2 lines, and the first and last line must have private key
-//    // markers.
-//    if (
-//      lines.size < 2 ||
-//        !Regex("BEGIN .* PRIVATE KEY").containsMatchIn(lines.first()) ||
-//        !Regex("END .* PRIVATE KEY").containsMatchIn(lines.last())
-//    )
-//      throw IllegalArgumentException(
-//        context.getString(R.string.ssh_key_import_error_not_an_ssh_key_message)
-//      )
-//
-//    // At this point, we are reasonably confident that we have actually been provided a private
-//    // key and delete the old key.
-//    delete()
-//    // Canonicalize line endings to '\n'.
-//    privateKeyFile.writeText(lines.joinToString("\n"))
+    val publicAuthKey =
+      KeyUtils.extractPublicAuthKey(key)
+        ?: throw IllegalArgumentException(
+          context.getString(R.string.ssh_key_import_error_not_an_ssh_key_message)
+        )
+
+    delete()
+    publicKeyFile.writeText(toSshPublicKey(publicAuthKey))
 
     type = Type.ImportedPGP
   }
@@ -312,7 +284,7 @@ object SshKey {
       Type.LegacyGenerated,
       Type.Imported -> client.loadKeys(privateKeyFile.absolutePath, passphraseFinder)
       Type.KeystoreNative -> KeystoreNativeKeyProvider
-	  Type.ImportedPGP -> KeystoreNativeKeyProvider
+      Type.ImportedPGP -> KeystoreNativeKeyProvider
       null -> null
     }
 
@@ -347,20 +319,14 @@ object SshKey {
       runCatching { authKeyPair.getPublic() ?: throw NullPointerException() }
         .getOrElse { error ->
           logcat { error.asLog() }
-          throw IOException(
-            "Failed to get public authentication subkey from PGP key",
-            error,
-          )
+          throw IOException("Failed to get public authentication subkey from PGP key", error)
         }
 
     override fun getPrivate(): PrivateKey =
       runCatching { authKeyPair.getPrivate() ?: throw NullPointerException() }
         .getOrElse { error ->
           logcat { error.asLog() }
-          throw IOException(
-            "Failed to access private authentication subkey from PGP key",
-            error,
-          )
+          throw IOException("Failed to access private authentication subkey from PGP key", error)
         }
 
     override fun getType(): KeyType = KeyType.fromKey(public)

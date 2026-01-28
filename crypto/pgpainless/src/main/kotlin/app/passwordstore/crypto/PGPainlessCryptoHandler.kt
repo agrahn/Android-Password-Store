@@ -204,6 +204,8 @@ public class PGPainlessCryptoHandler @Inject constructor() :
           .any { it.isPassphraseCorrect(passphrase) }
     } ?: false
 
+  /* Unlocks the first authentication-capable subkey of the given PGP key with its passphrase and
+   * returns the key pair in the java.security.KeyPair format, which can be used by sshj */
   public override fun unlockAuthKeyPair(
     key: PGPKey,
     passphrase: CharArray?,

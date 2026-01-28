@@ -91,6 +91,7 @@ class PGPKeyListActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
+    val forSshAuthentication = intent.extras?.getBoolean(EXTRA_KEY_FOR_SSH) ?: false
     val isSelectingKeys = intent.extras?.getBoolean(EXTRA_KEY_SELECTION) ?: false
     val selectedKeyIds = mutableSetOf<String>()
 
@@ -316,15 +317,21 @@ class PGPKeyListActivity : AppCompatActivity() {
 
     const val EXTRA_SELECTED_KEY = "SELECTED_KEY"
     const val EXTRA_KEY_SELECTION = "KEY_SELECTION_MODE"
+    const val EXTRA_KEY_FOR_SSH = "EXTRA_KEY_FOR_SSH"
 
     const val PGP_KEY_ADD_REQUEST_KEY = "add_pgp_key"
     const val ACTION_KEY = "action"
     const val ACTION_IMPORT_FILE = "from_file"
     const val ACTION_NEW_PGP_KEY = "generate_new"
 
-    fun newIntent(context: Context, keySelection: Boolean = false): Intent {
+    fun newIntent(
+      context: Context,
+      keySelection: Boolean = false,
+      forSshAuth: Boolean = false,
+    ): Intent {
       val intent = Intent(context, PGPKeyListActivity::class.java)
-      intent.putExtra(EXTRA_KEY_SELECTION, keySelection)
+      intent.putExtra(EXTRA_KEY_SELECTION, forSshAuth || keySelection)
+      intent.putExtra(EXTRA_KEY_FOR_SSH, forSshAuth)
       return intent
     }
   }
