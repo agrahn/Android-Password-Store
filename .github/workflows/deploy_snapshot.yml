@@ -33,7 +33,7 @@ jobs:
 
     - name: Build release app
       shell: bash
-      run: ./gradlew collectFreeReleaseApks bundleFreeRelease
+      run: ./gradlew collectReleaseApks bundleRelease
       env:
         SNAPSHOT: "true"
 

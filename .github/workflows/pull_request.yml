@@ -64,7 +64,7 @@ jobs:
 
       - name: Build debug APKs
         shell: bash
-        run: ./gradlew assembleFreeDebug
+        run: ./gradlew assembleDebug
 
       - name: Upload Kotlin build report
         if: "${{ always() }}"

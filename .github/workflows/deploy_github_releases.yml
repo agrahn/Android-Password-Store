@@ -22,13 +22,13 @@ jobs:
 
     - name: Build release binaries
       shell: bash
-      run: ./gradlew :app:assembleFreeRelease
+      run: ./gradlew :app:assembleRelease
 
-    - name: Upload free release APK
+    - name: Upload release APK
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
-        name: APS Free Release APK
-        path: app/build/outputs/apk/free/release/app-free-release.apk
+        name: APS Release APK
+        path: app/build/outputs/apk/release/app-release.apk
 
     - name: Clean secrets
       if: "${{ always() }}"
@@ -42,11 +42,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Get Free Release APK
+      - name: Get Release APK
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: APS Free Release APK
-          path: artifacts/free
+          name: APS Release APK
+          path: artifacts
 
 #      - name: Get Changelog Entry
 #        id: changelog_reader
@@ -72,12 +72,12 @@ jobs:
         shell: bash
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Upload Free Release Apk
+      - name: Upload Release Apk
         uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5 # v1.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./artifacts/free/app-free-release.apk
-          asset_name: APS-free_${{ steps.get_version.outputs.VERSION }}.apk
+          asset_path: ./artifacts/app-release.apk
+          asset_name: APS_${{ steps.get_version.outputs.VERSION }}.apk
           asset_content_type: application/vnd.android.package-archive
