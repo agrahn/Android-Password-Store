@@ -91,7 +91,7 @@ class PGPKeyListActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    val forSshAuthentication = intent.extras?.getBoolean(EXTRA_KEY_FOR_SSH) ?: false
+    val singleSelection = intent.extras?.getBoolean(EXTRA_KEY_FOR_SSH) ?: false
     val isSelectingKeys = intent.extras?.getBoolean(EXTRA_KEY_SELECTION) ?: false
     val selectedKeyIds = mutableSetOf<String>()
 
@@ -114,7 +114,12 @@ class PGPKeyListActivity : AppCompatActivity() {
           topBar = {
             APSAppBar(
               title =
-                if (isSelectingKeys) stringResource(R.string.activity_label_pgp_key_select)
+                if (isSelectingKeys) {
+                  if(singleSelection)  
+                    stringResource(R.string.activity_label_pgp_key_single_select)
+                  else  
+                    stringResource(R.string.activity_label_pgp_key_select)
+                }    
                 else stringResource(R.string.activity_label_pgp_key_manager),
               navigationIcon = painterResource(R.drawable.ic_arrow_back_24dp),
               onNavigationIconClick = {
@@ -160,10 +165,12 @@ class PGPKeyListActivity : AppCompatActivity() {
                     val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
                     KeyUtils.tryGetKeyId(key) ?: throw NullPointerException()
                   }
+                  if (singleSelection) selectedKeyIds.clear()
                   if (isSelected) selectedKeyIds.add(keyId.toString())
                   else selectedKeyIds.remove(keyId.toString())
                 }
               } else null,
+            singleSelection = singleSelection,
           )
         }
       }
@@ -327,11 +334,11 @@ class PGPKeyListActivity : AppCompatActivity() {
     fun newIntent(
       context: Context,
       keySelection: Boolean = false,
-      forSshAuth: Boolean = false,
+      singleSelection: Boolean = false,
     ): Intent {
       val intent = Intent(context, PGPKeyListActivity::class.java)
-      intent.putExtra(EXTRA_KEY_SELECTION, forSshAuth || keySelection)
-      intent.putExtra(EXTRA_KEY_FOR_SSH, forSshAuth)
+      intent.putExtra(EXTRA_KEY_SELECTION, singleSelection || keySelection)
+      intent.putExtra(EXTRA_KEY_FOR_SSH, singleSelection)
       return intent
     }
   }

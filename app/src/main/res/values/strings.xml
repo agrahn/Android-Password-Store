@@ -411,6 +411,7 @@
   <string name="git_run_gc_job">Run garbage collection job</string>
   <string name="activity_label_pgp_key_manager">PGP key manager</string>
   <string name="activity_label_pgp_key_select">Select one or more PGP keys</string>
+  <string name="activity_label_pgp_key_single_select">Choose a PGP key</string>
   <string name="pgp_key_manager_delete_secret_key_confirmation_dialog_title">Delete secret key?</string>
   <string name="pgp_key_manager_delete_key_confirmation_dialog_title">Delete key?</string>
   <string name="pgp_key_manager_delete_confirmation_dialog_message">Be sure to keep a backup of the PGP key. Without it, you will lose access to any password items encrypted with that key.</string>

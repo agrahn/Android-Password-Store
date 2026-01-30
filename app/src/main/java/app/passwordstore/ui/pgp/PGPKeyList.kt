@@ -5,6 +5,7 @@
 
 package app.passwordstore.ui.pgp
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -61,7 +62,9 @@ fun KeyList(
   onExportPublicClick: (identifier: PGPIdentifier) -> Unit,
   modifier: Modifier = Modifier,
   onKeySelected: ((identifier: PGPIdentifier, isSelected: Boolean) -> Unit)? = null,
+  singleSelection: Boolean = false,
 ) {
+  var selectedId by remember { mutableStateOf(KeyId(0L)) }
   if (identifiers.isEmpty()) {
     Column(
       modifier = modifier.fillMaxSize(),
@@ -85,12 +88,22 @@ fun KeyList(
           onExportItemClick = onExportItemClick,
           onExportPublicClick = onExportPublicClick,
           onKeySelected = onKeySelected,
+          /* For single key selection mode: The next two arguments serve to
+           * detect key selection and to recompose whole list of keys */
+          selectedId = selectedId,
+          /* A Lambda passed to KeyItem that changes mutable state var `selectedId`
+           * in the outer function `KeyList` which then triggers recomposition */
+          onSelectedChange =
+            if (singleSelection) {
+              { id, checked -> selectedId = if (checked) id else KeyId(0L) }
+            } else null,
         )
       }
     }
   }
 }
 
+@SuppressLint("ComposeParameterOrder")
 @Composable
 private fun KeyItem(
   identifier: Pair<KeyId?, UserId?>,
@@ -101,6 +114,8 @@ private fun KeyItem(
   onExportPublicClick: (identifier: PGPIdentifier) -> Unit,
   modifier: Modifier = Modifier,
   onKeySelected: ((identifier: PGPIdentifier, isSelected: Boolean) -> Unit)? = null,
+  selectedId: KeyId,
+  onSelectedChange: ((KeyId, Boolean) -> Unit)? = null,
 ) {
   var isDeleting by remember { mutableStateOf(false) }
   var keyId = identifier.first ?: throw NullPointerException()
@@ -121,10 +136,11 @@ private fun KeyItem(
         .fillMaxWidth()
         .conditional(onKeySelected != null) {
           toggleable(
-            value = checked,
+            value = checked, // set value to the current checked status
             onValueChange = {
-              checked = it
+              onSelectedChange?.invoke(keyId, it)
               onKeySelected?.invoke(keyId, it)
+              checked = it
             },
           )
         },
@@ -189,7 +205,14 @@ private fun KeyItem(
           )
         }
       }
-    } else if (checked) {
+    } else if ( // checkmark visibility
+      checked &&
+        (
+        // single-key selection mode
+        onSelectedChange != null && selectedId == keyId ||
+          // multi-key selection mode
+          onSelectedChange == null)
+    ) {
       Box() {
         Icon(
           painter = painterResource(id = R.drawable.ic_check_24dp),
