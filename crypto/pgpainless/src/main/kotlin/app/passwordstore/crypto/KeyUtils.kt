@@ -51,8 +51,16 @@ public object KeyUtils {
     cert.getPrimaryKey().getUserIDs().firstOrNull()?.let { UserId(it.getUserId()) }
 
   /** Tests if the given [PGPKey] content is a PGP certificate or key at all */
-  public fun isCertificateOrKey(key: PGPKey): Boolean =
-    tryParseCertificateOrKey(key)?.let { true } ?: false
+  public fun isCertificateOrKey(key: PGPKey): Boolean = tryParseCertificateOrKey(key) != null
+
+  /** Tests if the given [PGPKey] provides any secret non-stripped subkey */
+  public fun isSecretKey(key: PGPKey): Boolean =
+    tryParseCertificateOrKey(key)?.let { isSecretKey(it) } ?: false
+
+  /** Tests if the given [OpenPGPCertificate] provides any secret non-stripped subkey */
+  public fun isSecretKey(cert: OpenPGPCertificate): Boolean =
+    cert is OpenPGPKey &&
+      cert.getSecretKeys().values.any { !it.getPGPSecretKey().isPrivateKeyEmpty() }
 
   /**
    * Tests if the given [PGPKey] can be used for encryption, which is a bare minimum necessity for
@@ -68,12 +76,12 @@ public object KeyUtils {
   public fun isKeyUsable(cert: OpenPGPCertificate): Boolean =
     KeyRingInfo(cert).isUsableForEncryption
 
-  /** Tests if the given [PGPKey] provides a decryption subkey */
-  public fun hasSecretKey(key: PGPKey): Boolean =
-    tryParseCertificateOrKey(key)?.let { hasSecretKey(it) } ?: false
+  /** Tests if the given [PGPKey] provides a decryption-capable secret subkey */
+  public fun hasDecKey(key: PGPKey): Boolean =
+    tryParseCertificateOrKey(key)?.let { hasDecKey(it) } ?: false
 
-  /** Tests if the given [OpenPGPCertificate] provides a decryption subkey */
-  public fun hasSecretKey(cert: OpenPGPCertificate): Boolean =
+  /** Tests if the given [OpenPGPCertificate] provides a decryption-capable secret subkey */
+  public fun hasDecKey(cert: OpenPGPCertificate): Boolean =
     cert is OpenPGPKey &&
       cert.getSecretKeys().values.any {
         it.isEncryptionKey() && !it.getPGPSecretKey().isPrivateKeyEmpty()

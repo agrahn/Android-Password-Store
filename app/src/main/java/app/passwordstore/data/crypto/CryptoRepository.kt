@@ -51,9 +51,14 @@ constructor(
 
   fun hasKey(id: PGPIdentifier): Boolean = pgpKeyManager.getKeyById(id).isOk
 
-  fun hasSecretKey(id: PGPIdentifier): Boolean {
+  fun isSecretKey(id: PGPIdentifier): Boolean {
     val key = pgpKeyManager.getKeyById(id).get()
-    return key != null && KeyUtils.hasSecretKey(key)
+    return key != null && KeyUtils.isSecretKey(key)
+  }
+
+  fun hasDecKey(id: PGPIdentifier): Boolean {
+    val key = pgpKeyManager.getKeyById(id).get()
+    return key != null && KeyUtils.hasDecKey(key)
   }
 
   fun isPasswordProtected(identifiers: List<PGPIdentifier>, anySubkey: Boolean = false): Boolean {

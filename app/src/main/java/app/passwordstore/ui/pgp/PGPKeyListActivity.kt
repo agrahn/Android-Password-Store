@@ -146,7 +146,7 @@ class PGPKeyListActivity : AppCompatActivity() {
         ) { paddingValues ->
           KeyList(
             identifiers = viewModel.keys, // Pair<KeyId,UserId>
-            hasSecretKey = ::hasSecretKey,
+            isSecretKey = ::isSecretKey,
             onChangePassphraseClick = ::changeKeyPassphrase,
             onDeleteItemClick = ::deleteKey,
             onExportItemClick = ::exportKey,
@@ -169,8 +169,8 @@ class PGPKeyListActivity : AppCompatActivity() {
     }
   }
 
-  private fun hasSecretKey(identifier: PGPIdentifier): Boolean =
-    cryptoRepository.hasSecretKey(identifier)
+  private fun isSecretKey(identifier: PGPIdentifier): Boolean =
+    cryptoRepository.isSecretKey(identifier)
 
   private fun changeKeyPassphrase(identifier: PGPIdentifier) {
     val intent = Intent(this, PGPKeyChangePassphraseActivity::class.java)
@@ -191,8 +191,8 @@ class PGPKeyListActivity : AppCompatActivity() {
       if (cryptoRepository.isPasswordProtected(listOf(identifier), anySubkey = true)) {
         // export as symmetrically encrypted file after passphrase verification
         askPassphrase(identifier)
-      } else if (hasSecretKey(identifier)) {
-        // a secret key without passphrase is encrypted and exported without verification
+      } else if (isSecretKey(identifier)) {
+        // a secret key without passphrase is symm. encrypted and exported without verification
         confirmBackupCode(identifier, generateBackupCode())
       } else {
         // write public key to file unencrypted

@@ -54,7 +54,7 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 fun KeyList(
   identifiers: ImmutableList<Pair<KeyId?, UserId?>>,
-  hasSecretKey: (identifier: PGPIdentifier) -> Boolean,
+  isSecretKey: (identifier: PGPIdentifier) -> Boolean,
   onChangePassphraseClick: (identifier: PGPIdentifier) -> Unit,
   onDeleteItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportItemClick: (identifier: PGPIdentifier) -> Unit,
@@ -79,7 +79,7 @@ fun KeyList(
       items(identifiers) { identifier ->
         KeyItem(
           identifier = identifier,
-          hasSecretKey = hasSecretKey,
+          isSecretKey = isSecretKey,
           onChangePassphraseClick = onChangePassphraseClick,
           onDeleteItemClick = onDeleteItemClick,
           onExportItemClick = onExportItemClick,
@@ -94,7 +94,7 @@ fun KeyList(
 @Composable
 private fun KeyItem(
   identifier: Pair<KeyId?, UserId?>,
-  hasSecretKey: (identifier: PGPIdentifier) -> Boolean,
+  isSecretKey: (identifier: PGPIdentifier) -> Boolean,
   onChangePassphraseClick: (identifier: PGPIdentifier) -> Unit,
   onDeleteItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportItemClick: (identifier: PGPIdentifier) -> Unit,
@@ -106,7 +106,7 @@ private fun KeyItem(
   var keyId = identifier.first ?: throw NullPointerException()
   DeleteConfirmationDialog(
     isDeleting = isDeleting,
-    isSecretKey = hasSecretKey(keyId),
+    isSecretKey = isSecretKey(keyId),
     onDismiss = { isDeleting = false },
     onConfirm = {
       onDeleteItemClick(keyId)
@@ -149,7 +149,7 @@ private fun KeyItem(
         }
 
         DropdownMenu(expanded = isMenuExpanded, onDismissRequest = { isMenuExpanded = false }) {
-          if (hasSecretKey(keyId)) {
+          if (isSecretKey(keyId)) {
             DropdownMenuItem(
               text = { Text(stringResource(id = R.string.pref_pgp_key_manager_change_passphrase)) },
               onClick = {
@@ -253,7 +253,7 @@ private fun KeyListPreview() {
     Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
       KeyList(
         identifiers = persistentListOf(),
-        hasSecretKey = { _ -> true },
+        isSecretKey = { _ -> true },
         onChangePassphraseClick = {},
         onDeleteItemClick = {},
         onExportItemClick = {},
@@ -270,7 +270,7 @@ private fun EmptyKeyListPreview() {
     Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
       KeyList(
         identifiers = persistentListOf(),
-        hasSecretKey = { _ -> true },
+        isSecretKey = { _ -> true },
         onChangePassphraseClick = {},
         onDeleteItemClick = {},
         onExportItemClick = {},

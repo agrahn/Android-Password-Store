@@ -5,8 +5,8 @@
 
 package app.passwordstore.crypto
 
-import app.passwordstore.crypto.KeyUtils.hasSecretKey
 import app.passwordstore.crypto.KeyUtils.isKeyUsable
+import app.passwordstore.crypto.KeyUtils.isSecretKey
 import app.passwordstore.crypto.KeyUtils.tryGetKeyId
 import app.passwordstore.crypto.KeyUtils.tryParseCertificateOrKey
 import app.passwordstore.crypto.TestUtils.AllKeys
@@ -43,7 +43,7 @@ class KeyUtilsTest {
     }
 
     val expiredKey = PGPKey(getExpiredKey())
-    assertTrue(hasSecretKey(expiredKey))
+    assertTrue(isSecretKey(expiredKey))
     assertFalse(isKeyUsable(expiredKey))
   }
 }

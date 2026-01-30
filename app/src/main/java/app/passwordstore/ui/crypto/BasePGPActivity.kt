@@ -282,7 +282,7 @@ open class BasePGPActivity : AppCompatActivity() {
       }
     } else {
       val idsWithKey = ids.filter { repository.hasKey(it) }
-      val idsWithDecryptionKey = idsWithKey.filter { repository.hasSecretKey(it) }
+      val idsWithDecryptionKey = idsWithKey.filter { repository.hasDecKey(it) }
 
       if (idsWithDecryptionKey.isEmpty()) {
         /**

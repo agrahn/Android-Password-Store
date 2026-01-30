@@ -5,7 +5,7 @@
 
 package app.passwordstore.crypto
 
-import app.passwordstore.crypto.KeyUtils.hasSecretKey
+import app.passwordstore.crypto.KeyUtils.hasDecKey
 import app.passwordstore.crypto.KeyUtils.tryParseCertificateOrKey
 import app.passwordstore.crypto.errors.CryptoException
 import app.passwordstore.crypto.errors.CryptoHandlerException
@@ -61,7 +61,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
         } else {
           val openPgpKey = KeyUtils.tryParseCertificateOrKey(key)
 
-          if (openPgpKey !is OpenPGPKey || !hasSecretKey(openPgpKey))
+          if (openPgpKey !is OpenPGPKey || !hasDecKey(openPgpKey))
             throw NoDecryptionKeyAvailableException("Key not usable for decryption")
 
           val decKey = extractDecKey(openPgpKey, passphrase) ?: openPgpKey
@@ -158,6 +158,9 @@ public class PGPainlessCryptoHandler @Inject constructor() :
     return fileName.substringAfterLast('.', "") == "gpg"
   }
 
+  /* Tests whether all decryption subkeys of the provided list of PGP keys are passphrase protected,
+   * unless option anySubkey = true is given in which case it tests for the existence of at least one
+   * protected subkey */
   public override fun isPassphraseProtected(keys: List<PGPKey>, anySubkey: Boolean): Boolean =
     keys
       .mapNotNull { tryParseCertificateOrKey(it) }
