@@ -10,7 +10,6 @@ import androidx.core.content.edit
 import app.passwordstore.R
 import app.passwordstore.injection.prefs.GitSecrets
 import app.passwordstore.util.coroutines.DispatcherProvider
-import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.git.ErrorMessages
 import app.passwordstore.util.git.operation.BreakOutOfDetached
 import app.passwordstore.util.git.operation.CloneOperation
@@ -104,7 +103,6 @@ abstract class BaseGitActivity : AppCompatActivity() {
     val error = rootCauseException(err)
     if (!isExplicitlyUserInitiatedError(error)) {
       gitSecrets.edit { remove(PreferenceKeys.HTTPS_PASSWORD) }
-      sharedPrefs.edit { remove(PreferenceKeys.SSH_OPENKEYSTORE_KEYID) }
       logcat { error.asLog() }
       withContext(dispatcherProvider.main()) {
         MaterialAlertDialogBuilder(this@BaseGitActivity).run {

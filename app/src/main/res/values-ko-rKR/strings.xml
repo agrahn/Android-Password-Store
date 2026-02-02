@@ -212,7 +212,6 @@
   <string name="pref_biometric_auth_title">생체 인증 사용</string>
   <string name="pref_biometric_auth_summary">비밀번호 저장소를 활성화하면 앱을 시작할 때 지문을 입력하라는 메시지가 표시됩니다</string>
   <string name="pref_biometric_auth_summary_error">지문 하드웨어에 액세스할 수 없거나 누락된 경우</string>
-  <string name="pref_title_openkeystore_clear_keyid">저장된 OpenKeyStore SSH 키 ID 지우기</string>
   <string name="your_public_key">공개 키</string>
   <string name="error_generate_ssh_key">Ssh 키를 생성하는 동안 오류가 발생했습니다.</string>
   <string name="pref_show_hidden_title">모든 파일 및 폴더 표시</string>

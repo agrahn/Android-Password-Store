@@ -251,17 +251,6 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
         }
         updatePref()
       }
-      pref(PreferenceKeys.SSH_OPENKEYSTORE_CLEAR_KEY_ID) {
-        titleRes = R.string.pref_title_openkeystore_clear_keyid
-        visible =
-          activity.sharedPrefs.getString(PreferenceKeys.SSH_OPENKEYSTORE_KEYID)?.isNotEmpty()
-            ?: false
-        onClick {
-          activity.sharedPrefs.edit { putString(PreferenceKeys.SSH_OPENKEYSTORE_KEYID, null) }
-          visible = false
-          true
-        }
-      }
       pref(PreferenceKeys.EXPORT_PASSWORDS) {
         titleRes = R.string.prefs_export_passwords_title
         summaryRes = R.string.prefs_export_passwords_summary

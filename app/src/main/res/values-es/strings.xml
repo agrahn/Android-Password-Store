@@ -253,7 +253,6 @@
   <string name="pref_biometric_auth_summary">El almacén de contraseñas le pide que verifique su huella digital o el PIN del dispositivo al iniciar</string>
   <string name="pref_biometric_auth_summary_error">La pantalla de bloqueo segura no está configurada</string>
   <string name="check_devicelock_settings_dialog_message">Verifique la configuración del dispositivo (bloqueo del dispositivo)</string>
-  <string name="pref_title_openkeystore_clear_keyid">Borrar el ID de clave SSH de OpenKeystore recordado</string>
   <string name="your_public_key">Su clave pública</string>
   <string name="error_generate_ssh_key">Error al intentar generar la clave SSH</string>
   <string name="pref_show_hidden_title">Mostrar todos los archivos y carpetas</string>

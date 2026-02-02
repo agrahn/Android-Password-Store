@@ -256,7 +256,6 @@
   <string name="pref_biometric_auth_summary">Password Store fordert Sie beim Start auf, Ihren Fingerabdruck oder die Geräte-PIN zu bestätigen.</string>
   <string name="pref_biometric_auth_summary_error">Bildschirmsperre ist nicht konfiguriert.</string>
   <string name="check_devicelock_settings_dialog_message">Überprüfen Sie die Geräteeinstellungen (Gerätesperre).</string>
-  <string name="pref_title_openkeystore_clear_keyid">Lösche gespeicherte OpenKeystore SSH-Schlüssel-ID</string>
   <string name="your_public_key">Ihr öffentlicher Schlüssel</string>
   <string name="error_generate_ssh_key">Fehler beim Erstellen des SSH-Schlüssels</string>
   <string name="pref_show_hidden_title">Alle Dateien und Ordner anzeigen</string>

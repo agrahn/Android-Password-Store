@@ -212,7 +212,6 @@
     <string name="pref_biometric_auth_summary">Password Store requreix la verificació de les teves emprentes digitals o el PIN del dispositiu al inici</string>
     <string name="pref_biometric_auth_summary_error">El bloqueig de pantall segur no està configurat</string>
     <string name="check_devicelock_settings_dialog_message">Comprova la configuració del dispositiu (bloqueig del dispositiu)</string>
-    <string name="pref_title_openkeystore_clear_keyid">Esborra el ID de la clau SSH de OpenKeystore</string>
     <string name="your_public_key">Clau pública</string>
     <string name="error_generate_ssh_key">Error mentre es generava la clau SSH</string>
     <string name="pref_show_hidden_title">Mostra tots els fitxers i carpetes</string>
