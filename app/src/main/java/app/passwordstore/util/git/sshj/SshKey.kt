@@ -20,6 +20,7 @@ import app.passwordstore.crypto.KeyUtils
 import app.passwordstore.crypto.PGPKey
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.sharedPrefs
+import app.passwordstore.util.extensions.gitSecrets
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.getOrElse
@@ -40,10 +41,15 @@ import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.common.Buffer
 import net.schmizz.sshj.common.KeyType
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+import app.passwordstore.injection.prefs.GitSecrets
+import android.content.SharedPreferences
 
 private const val PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore"
 private const val KEYSTORE_ALIAS = "sshkey"
-private const val ANDROIDX_SECURITY_KEYSET_PREF_NAME = "androidx_sshkey_keyset_prefs"
 
 private val androidKeystore: KeyStore by unsafeLazy {
   KeyStore.getInstance(PROVIDER_ANDROID_KEY_STORE).apply { load(null) }
@@ -70,7 +76,6 @@ fun toSshPublicKey(publicKey: PublicKey): String {
 private lateinit var authKeyPair: KeyPair
 
 object SshKey {
-
   val sshPublicKey
     get() = if (publicKeyFile.exists()) publicKeyFile.readText() else null
 
@@ -175,16 +180,16 @@ object SshKey {
 
   private fun delete() {
     androidKeystore.deleteEntry(KEYSTORE_ALIAS)
-    // Remove Tink key set used by AndroidX's EncryptedFile.
-    context.getSharedPreferences(ANDROIDX_SECURITY_KEYSET_PREF_NAME, Context.MODE_PRIVATE).edit {
-      clear()
-    }
+    context.sharedPrefs.edit { remove(PreferenceKeys.SSH_PGP_KEY_ID) }
+    context.gitSecrets.edit { remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE) }
+
     if (privateKeyFile.isFile) {
       privateKeyFile.delete()
     }
     if (publicKeyFile.isFile) {
       publicKeyFile.delete()
     }
+
     type = null
   }
 
@@ -266,15 +271,19 @@ object SshKey {
     type = Type.KeystoreNative
   }
 
-  fun useImportedPGPKey(key: PGPKey) {
+  fun usePgpAuthKey(key: PGPKey) {
     val publicAuthKey =
       KeyUtils.extractPublicAuthKey(key)
         ?: throw IllegalArgumentException(
           context.getString(R.string.ssh_key_import_error_not_an_ssh_key_message)
         )
 
+    val authKeyId = KeyUtils.tryGetKeyId(key) ?: throw NullPointerException("Could not retrieve key ID from PGP certificate")
+
     delete()
+
     publicKeyFile.writeText(toSshPublicKey(publicAuthKey))
+    context.sharedPrefs.edit { putLong(PreferenceKeys.SSH_PGP_KEY_ID, authKeyId.id) }
 
     type = Type.ImportedPGP
   }

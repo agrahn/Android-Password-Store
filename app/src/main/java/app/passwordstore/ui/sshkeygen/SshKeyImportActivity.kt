@@ -19,6 +19,11 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
+import android.content.SharedPreferences
+import androidx.core.content.edit
+import app.passwordstore.util.settings.PreferenceKeys
+import javax.inject.Inject
+import app.passwordstore.injection.prefs.GitSecrets
 
 class SshKeyImportActivity : AppCompatActivity() {
 
@@ -52,11 +57,14 @@ class SshKeyImportActivity : AppCompatActivity() {
     super.onCreate(savedInstanceState)
     if (SshKey.exists) {
       MaterialAlertDialogBuilder(this).run {
+        setCancelable(false)  
         setTitle(R.string.ssh_keygen_existing_title)
         setMessage(R.string.ssh_keygen_existing_message)
         setPositiveButton(R.string.ssh_keygen_existing_replace) { _, _ -> importSshKey() }
-        setNegativeButton(R.string.ssh_keygen_existing_keep) { _, _ -> finish() }
-        setOnCancelListener { finish() }
+        setNegativeButton(R.string.ssh_keygen_existing_keep) { _, _ ->
+          setResult(RESULT_CANCELED)
+          finish()
+        }
         show()
       }
     } else {

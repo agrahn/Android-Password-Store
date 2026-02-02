@@ -5,6 +5,9 @@
 
 package app.passwordstore.ui.settings
 
+import app.passwordstore.ui.pgp.PGPKeyListActivity
+import androidx.appcompat.app.AppCompatActivity.RESULT_OK
+import de.Maxr1998.modernpreferences.helpers.subScreen
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ShortcutManager
@@ -23,6 +26,7 @@ import app.passwordstore.ui.proxy.ProxySelectorActivity
 import app.passwordstore.ui.sshkeygen.ShowSshKeyFragment
 import app.passwordstore.ui.sshkeygen.SshKeyGenActivity
 import app.passwordstore.ui.sshkeygen.SshKeyImportActivity
+import app.passwordstore.ui.sshkeygen.PgpAuthKeySelectionActivity
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.gitSecrets
 import app.passwordstore.util.extensions.launchActivity
@@ -183,14 +187,67 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
           true
         }
       }
-      proxySettingsPref =
-        pref(PreferenceKeys.PROXY_SETTINGS) {
+      subScreen {
+        collapseIcon = true
+        titleRes = R.string.pref_git_server_authentication
+
+        pref(PreferenceKeys.SSH_USE_PGP_KEY) {
+          titleRes = R.string.pref_ssh_use_pgp_key_title
           onClick {
-            activity.launchActivity(ProxySelectorActivity::class.java)
+            sshKeyAction.launch(Intent(activity, PgpAuthKeySelectionActivity::class.java))
             true
           }
-          updateProxyPref()
         }
+        pref(PreferenceKeys.SSH_KEYGEN) {
+          titleRes = R.string.pref_ssh_keygen_title
+          onClick {
+            sshKeyAction.launch(Intent(activity, SshKeyGenActivity::class.java))
+            true
+          }
+        }
+        showSshKeyPref =
+          pref(PreferenceKeys.SSH_SEE_KEY) {
+            titleRes = R.string.pref_ssh_see_key_title
+            visible = SshKey.canShowSshPublicKey
+            onClick {
+              ShowSshKeyFragment().show(activity.supportFragmentManager, "public_key")
+              true
+            }
+          }
+        pref(PreferenceKeys.SSH_KEY) {
+          titleRes = R.string.pref_import_ssh_key_title
+          onClick {
+            sshKeyAction.launch(Intent(activity, SshKeyImportActivity::class.java))
+            true
+          }
+        }
+        pref(PreferenceKeys.CLEAR_SAVED_PASS) {
+          fun Preference.updatePref() {
+            val sshPass = gitOperationSecrets.getString(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE)
+            val httpsPass = gitOperationSecrets.getString(PreferenceKeys.HTTPS_PASSWORD)
+            if (sshPass == null && httpsPass == null) {
+              visible = false
+              return
+            }
+            titleRes =
+              when {
+                httpsPass != null -> R.string.clear_saved_passphrase_https
+                else -> R.string.clear_saved_passphrase_ssh
+              }
+            visible = true
+            requestRebind()
+          }
+          onClick {
+            gitOperationSecrets.edit {
+              remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE)
+              remove(PreferenceKeys.HTTPS_PASSWORD)
+            }
+            updatePref()
+            true
+          }
+          updatePref()
+        }
+      }
       pref(PreferenceKeys.GIT_CONFIG) {
         titleRes = R.string.pref_edit_git_config
         visible = PasswordRepository.isGitRepo()
@@ -199,28 +256,13 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
           true
         }
       }
-      pref(PreferenceKeys.SSH_KEY) {
-        titleRes = R.string.pref_import_ssh_key_title
-        onClick {
-          sshKeyAction.launch(Intent(activity, SshKeyImportActivity::class.java))
-          true
-        }
-      }
-      pref(PreferenceKeys.SSH_KEYGEN) {
-        titleRes = R.string.pref_ssh_keygen_title
-        onClick {
-          sshKeyAction.launch(Intent(activity, SshKeyGenActivity::class.java))
-          true
-        }
-      }
-      showSshKeyPref =
-        pref(PreferenceKeys.SSH_SEE_KEY) {
-          titleRes = R.string.pref_ssh_see_key_title
-          visible = SshKey.canShowSshPublicKey
+      proxySettingsPref =
+        pref(PreferenceKeys.PROXY_SETTINGS) {
           onClick {
-            ShowSshKeyFragment().show(activity.supportFragmentManager, "public_key")
+            activity.launchActivity(ProxySelectorActivity::class.java)
             true
           }
+          updateProxyPref()
         }
       pref(PreferenceKeys.CLEAR_SAVED_PASS) {
         fun Preference.updatePref() {

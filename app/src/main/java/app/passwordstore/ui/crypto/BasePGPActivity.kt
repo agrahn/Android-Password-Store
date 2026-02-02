@@ -88,8 +88,6 @@ open class BasePGPActivity : AppCompatActivity() {
   private var secondsOnPause = 0L // seconds since Epoch upon pause
   private var timeout = 0L
 
-  //  @Inject lateinit var pgpKeyManager: PGPKeyManager
-
   /**
    * Callback to invoke if [keyImportAction] or [keySelectAction] succeeds. This allows for
    * recursion until matching encryption/decryption keys are available for
@@ -106,7 +104,6 @@ open class BasePGPActivity : AppCompatActivity() {
       }
     }
 
-  private var destDir: String? = null
   private val keySelectAction =
     registerForActivityResult(StartActivityForResult()) { result ->
       if (result.resultCode == RESULT_OK) {

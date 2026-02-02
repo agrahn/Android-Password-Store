@@ -82,6 +82,8 @@ object PreferenceKeys {
   const val BIOMETRICS_AND_PIN_LAST_USE = "biometrics_and_pin_last_use"
   const val SSH_KEY = "ssh_key"
   const val SSH_KEYGEN = "ssh_keygen"
+  const val SSH_USE_PGP_KEY = "ssh_use_pgp_key"
+  const val SSH_PGP_KEY_ID = "ssh_pgp_key_id"
 
   const val SSH_KEY_LOCAL_PASSPHRASE = "ssh_key_local_passphrase"
 

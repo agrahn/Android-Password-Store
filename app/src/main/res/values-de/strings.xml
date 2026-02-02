@@ -96,10 +96,12 @@
   <!-- Preferences -->
   <string name="pref_category_repository_title">Repository</string>
   <string name="pref_edit_git_server_settings">Git-Server-Einstellungen</string>
+  <string name="pref_git_server_authentication">Authentifizierung</string>
   <string name="pref_edit_git_config">Lokale Git-Konfiguration &amp; Dienstprogramme</string>
-  <string name="pref_import_ssh_key_title">Importiere SSH-Schlüssel</string>
+  <string name="pref_ssh_use_pgp_key_title">PGP-Schlüssel verwenden</string>
   <string name="pref_ssh_keygen_title">Erstelle SSH-Schlüsselpaar</string>
-  <string name="pref_ssh_see_key_title">Zeige erstellten öffentlichen SSH-Schlüssel an</string>
+  <string name="pref_import_ssh_key_title">Importiere SSH-Schlüssel</string>
+  <string name="pref_ssh_see_key_title">Zeige den öffentlichen SSH-Schlüssel an</string>
   <string name="pref_git_delete_repo_title">Repository löschen</string>
   <string name="pref_dialog_delete_title">Repository löschen</string>
   <string name="pref_category_general_title">Allgemein</string>
@@ -112,6 +114,7 @@
   <string name="pref_copy_summary">Kopiert das Passwort in die Zwischenablage, nachdem es entschlüsselt wurde.</string>
   <string name="ssh_key_import_error_not_an_ssh_key_message">Die ausgewählte Datei scheint kein privater SSH-Schlüssel zu sein.</string>
   <string name="ssh_key_success_dialog_title">SSH-Schlüssel importiert</string>
+  <string name="ssh_pgp_keyselect_success_dialog_title">Authentifizierung per PGP-Schlüssel konfiguriert</string>
   <string name="ssh_key_error_dialog_title">Schlüssel-Importfehler</string>
   <string name="ssh_key_error_dialog_text">Nachricht : \n</string>
   <string name="pref_recursive_filter_title">Suche in Unterordnern</string>
@@ -180,9 +183,11 @@
 
   <string name="ssh_keygen_explanation_rsa"><b>RSA (3072 Bit)</b>\nWird von allen Servern unterstützt, allerdings ist die Authentifizierung recht langsam.</string>
   <string name="ssh_keygen_explanation_ecdsa"><b>ECDSA (NIST P-256)</b>\nSchnelle Authentifizierung, unterstützt von den meisten Servern, die noch Updates erhalten.</string>
-  <string name="ssh_keygen_existing_title">SSH-Schlüssel</string>
+  <string name="ssh_keygen_existing_title">SSH-Schlüssel ersetzen</string>
   <string name="ssh_keygen_existing_message">Existierenden SSH-Schlüssel ersetzen? Möglicherweise verlieren Sie den Zugriff auf Ihren Server.</string>
+  <string name="ssh_keygen_replace_with_pgp_key_message">Es existiert bereits ein SSH-Schlüssel. Möchten Sie diesen entfernen und stattdessen einen PGP-Schlüssel zur Authentifizierung verwenden? Möglicherweise verlieren Sie den Zugriff auf Ihren Server.</string>
   <string name="ssh_keygen_existing_replace">Ersetzen</string>
+  <string name="ssh_keygen_replace_with_pgp_key">Durch PGP-Schlüssel ersetzen</string>
   <string name="ssh_keygen_existing_keep">Behalten</string>
 
 
@@ -284,8 +289,8 @@
   <string name="git_server_config_save_auth_mode_mismatch">Gültige Authentifizierungsarten für %1$s: %2$s</string>
   <string name="git_operation_wrong_passphrase">Falscher Kennwortsatz</string>
   <string name="git_operation_wrong_password">Falsches Passwort</string>
-  <string name="clear_saved_passphrase_ssh">Gespeicherten Kennwortsatz für lokalen SSH-Schlüssel löschen</string>
-  <string name="clear_saved_passphrase_https">Gespeichertes HTTPS-Passwort löschen</string>
+  <string name="clear_saved_passphrase_ssh">Lösche Kennwortsatz für Authentifizierungsschlüssel</string>
+  <string name="clear_saved_passphrase_https">Lösche Server-Passwort</string>
   <string name="bottom_sheet_create_new_folder">Neuen Ordner erstellen</string>
   <string name="bottom_sheet_create_new_password">Neues Passwort erstellen</string>
   <string name="bottom_sheet_import_pgp_key">Aus Datei/Backup importieren</string>

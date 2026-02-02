@@ -49,7 +49,6 @@ class SshKeyGenActivity : AppCompatActivity() {
 
   private var keyGenType = KeyGenType.Ecdsa
   private val binding by viewBinding(ActivitySshKeygenBinding::inflate)
-  @GitSecrets @Inject lateinit var gitSecrets: SharedPreferences
   @Inject lateinit var dispatcherProvider: DispatcherProvider
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -139,7 +138,6 @@ class SshKeyGenActivity : AppCompatActivity() {
         keyGenType.generateKey(requireAuthentication)
       }
     }
-    gitSecrets.edit { remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE) }
     binding.generate.apply {
       text = getString(R.string.ssh_keygen_generate)
       isEnabled = true

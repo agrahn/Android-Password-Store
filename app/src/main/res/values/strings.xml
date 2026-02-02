@@ -97,10 +97,12 @@
   <!-- Preferences -->
   <string name="pref_category_repository_title">Repository</string>
   <string name="pref_edit_git_server_settings">Edit Git server settings</string>
+  <string name="pref_git_server_authentication">Authentication</string>
   <string name="pref_edit_git_config">Local Git config &amp; utilities</string>
-  <string name="pref_import_ssh_key_title">Import SSH key</string>
+  <string name="pref_ssh_use_pgp_key_title">Use PGP key</string>
   <string name="pref_ssh_keygen_title">Generate SSH key pair</string>
-  <string name="pref_ssh_see_key_title">View generated public SSH key</string>
+  <string name="pref_import_ssh_key_title">Import SSH key</string>
+  <string name="pref_ssh_see_key_title">View public SSH key</string>
   <string name="pref_git_delete_repo_title">Delete repository</string>
   <string name="pref_dialog_delete_title">Clear repository</string>
   <string name="pref_category_general_title">General</string>
@@ -113,6 +115,7 @@
   <string name="pref_copy_summary">Automatically copy the password to the clipboard after decryption was successful.</string>
   <string name="ssh_key_import_error_not_an_ssh_key_message">Selected file does not appear to be an SSH private key.</string>
   <string name="ssh_key_success_dialog_title">SSH-key imported</string>
+  <string name="ssh_pgp_keyselect_success_dialog_title">Authentication via PGP key configured</string>
   <string name="ssh_key_error_dialog_title">Key import error</string>
   <string name="ssh_key_error_dialog_text">Message : \n</string>
   <string name="pref_recursive_filter_title">Recursive filtering</string>
@@ -181,9 +184,11 @@
   <string name="ssh_keygen_label_ecdsa">ECDSA</string>
   <string name="ssh_keygen_explanation_rsa"><b>RSA (3072 bit)</b>\nSupported by all servers, but authentication is comparatively slow.</string>
   <string name="ssh_keygen_explanation_ecdsa"><b>ECDSA (NIST P-256)</b>\nFast authentication and supported by most servers that are still receiving updates.</string>
-  <string name="ssh_keygen_existing_title">SSH key</string>
+  <string name="ssh_keygen_existing_title">Replace SSH key</string>
   <string name="ssh_keygen_existing_message">Replace existing SSH key? You might lose access to your server.</string>
+  <string name="ssh_keygen_replace_with_pgp_key_message">An SSH key already exists. Do you want to remove it and use a PGP key for authentication instead? You might lose access to your server.</string>
   <string name="ssh_keygen_existing_replace">Replace</string>
+  <string name="ssh_keygen_replace_with_pgp_key">Replace with PGP key</string>
   <string name="ssh_keygen_existing_keep">Keep</string>
 
 
@@ -287,8 +292,8 @@
   <string name="git_operation_wrong_passphrase">Wrong passphrase</string>
   <string name="git_operation_remember_password">Remember password</string>
   <string name="git_operation_wrong_password">Wrong password</string>
-  <string name="clear_saved_passphrase_ssh">Clear saved passphrase for local SSH key</string>
-  <string name="clear_saved_passphrase_https">Clear saved HTTPS password</string>
+  <string name="clear_saved_passphrase_ssh">Clear passphrase for authentication key</string>
+  <string name="clear_saved_passphrase_https">Clear server password</string>
   <string name="bottom_sheet_create_new_folder">Create new folder</string>
   <string name="bottom_sheet_create_new_password">Create new password</string>
   <string name="bottom_sheet_import_pgp_key">Restore backup/import from file</string>

@@ -46,7 +46,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
    * the replacement case where we do not want users to have to pick the file again.
    */
   private var lastBytes: ByteArray? = null
-  @Inject lateinit var keyManager: PGPKeyManager
+  @Inject lateinit var pgpKeyManager: PGPKeyManager
   @Inject lateinit var repository: CryptoRepository
   @Inject lateinit var dispatcherProvider: DispatcherProvider
 
@@ -89,7 +89,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
 
   private fun importKey(bytes: ByteArray, replace: Boolean): PGPKey? {
     lastBytes = bytes
-    val (key, error) = keyManager.addKey(PGPKey(bytes), replace = replace)
+    val (key, error) = pgpKeyManager.addKey(PGPKey(bytes), replace = replace)
     if (replace) {
       lastBytes = null
     }
