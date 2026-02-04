@@ -86,11 +86,17 @@ class GitConfigActivity : BaseGitActivity() {
     val repo = PasswordRepository.repository
     if (repo != null) {
       binding.gitHeadStatus.text = headStatusMsg(repo)
+      binding.gitLog.isEnabled = PasswordRepository.isGitRepo()
+      binding.gitLog.alpha = if (binding.gitLog.isEnabled) 1.0f else 0.5f
       // enable the abort button only if we're rebasing or merging
       val needsAbort =
         repo.repositoryState.isRebasing || repo.repositoryState == RepositoryState.MERGING
       binding.gitAbortRebase.isEnabled = needsAbort
       binding.gitAbortRebase.alpha = if (needsAbort) 1.0f else 0.5f
+      binding.gitResetToRemote.isEnabled = PasswordRepository.isGitRepo() && gitSettings.url != null
+      binding.gitResetToRemote.alpha = if (binding.gitResetToRemote.isEnabled) 1.0f else 0.5f
+      binding.gitGc.isEnabled = binding.gitResetToRemote.isEnabled
+      binding.gitGc.alpha = if (binding.gitGc.isEnabled) 1.0f else 0.5f
     }
     binding.gitLog.setOnClickListener {
       runCatching { launchActivity(GitLogActivity::class.java) }

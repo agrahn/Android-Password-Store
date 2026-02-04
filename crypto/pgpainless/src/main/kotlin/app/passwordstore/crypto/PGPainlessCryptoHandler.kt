@@ -205,8 +205,8 @@ public class PGPainlessCryptoHandler @Inject constructor() :
     } ?: false
 
   /* Unlocks the first authentication-capable subkey of the given PGP key with its passphrase and
-   * returns the key pair in the java.security.KeyPair format, which can be used by sshj */
-  public override fun unlockAuthKeyPair(
+   * returns the key pair as java.security.KeyPair, which can be used by sshj */
+  public override fun unlockJcaAuthKeyPair(
     key: PGPKey,
     passphrase: CharArray?,
   ): Result<KeyPair, CryptoHandlerException> =
@@ -218,7 +218,8 @@ public class PGPainlessCryptoHandler @Inject constructor() :
         /* A and S subkeys as well as the primary C key are equally suitable for authentication;
          * we pick the first one matching one of the capabilities in the given ranking order */
         val authFlags = listOf(KeyFlags.AUTHENTICATION, KeyFlags.SIGN_DATA, KeyFlags.CERTIFY_OTHER)
-        val subkeys = openPgpKey.getSecretKeys().values.reversed() // newest first?
+        val subkeys = openPgpKey.getSecretKeys().values.toMutableList()
+        subkeys.sortByDescending { it.getCreationTime() } // newest first
         val authKeys =
           authFlags
             .map { flag ->
@@ -237,7 +238,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
 
         if (!authKeys.first().isPassphraseCorrect(passphrase))
           throw IncorrectPassphraseException(
-            "Wrong passphrase; authentication key cannot be unlocked"
+            "Wrong passphrase; authentication subkey cannot be unlocked"
           )
 
         val pgpKeyPair = authKeys.first().unlock(passphrase).getKeyPair()

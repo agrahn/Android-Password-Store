@@ -248,7 +248,6 @@
   <string name="preference_custom_public_suffixes_title">Domeny niestandardowe</string>
   <string name="preference_custom_public_suffixes_summary">Autouzupełnianie rozróżni subdomeny tych domen</string>
   <!-- Password creation failure -->
-  <string name="password_creation_file_fail_title">Błąd</string>
   <string name="password_creation_file_write_fail_message">Nie udało się zapisać pliku z hasłem do repozytorium, spróbuj ponownie.</string>
   <string name="password_creation_file_delete_fail_message">Nie udało się usunąć pliku hasła %1$s z repozytorium, usuń go ręcznie.</string>
   <string name="password_creation_duplicate_error">Plik o tej nazwie już istnieje, użyj innej nazwy</string>

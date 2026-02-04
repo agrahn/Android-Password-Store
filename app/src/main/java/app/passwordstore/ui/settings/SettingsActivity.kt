@@ -27,9 +27,9 @@ class SettingsActivity : AppCompatActivity() {
   private val miscSettings = MiscSettings(this)
   private val autofillSettings = AutofillSettings(this)
   private val passwordSettings = PasswordSettings(this)
-  private val repositorySettings = RepositorySettings(this)
+  val repositorySettings = RepositorySettings(this)
   private val generalSettings = GeneralSettings(this)
-  private lateinit var pgpSettings: PGPSettings
+  private val pgpSettings = PGPSettings(this)
 
   private val binding by viewBinding(ActivityPreferenceRecyclerviewBinding::inflate)
   private val preferencesAdapter: PreferencesAdapter
@@ -40,7 +40,6 @@ class SettingsActivity : AppCompatActivity() {
     enableEdgeToEdgeView(binding.root)
     setContentView(binding.root)
     Preference.Config.dialogBuilderFactory = { context -> MaterialAlertDialogBuilder(context) }
-    pgpSettings = PGPSettings(this)
     val screen =
       screen(this) {
         subScreen {

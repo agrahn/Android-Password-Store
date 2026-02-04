@@ -129,7 +129,8 @@ public object KeyUtils {
     /* A and S subkeys as well as the primary C key are equally suitable for authentication;
      * we pick the first subkey matching one of the capabilities in the given ranking order: */
     val authFlags = listOf(KeyFlags.AUTHENTICATION, KeyFlags.SIGN_DATA, KeyFlags.CERTIFY_OTHER)
-    val subkeys = cert.getSecretKeys().values.reversed() // newest first?
+    val subkeys = cert.getSecretKeys().values.toMutableList()
+    subkeys.sortByDescending { it.getCreationTime() } // newest first
     val authKeys =
       authFlags
         .map { flag ->

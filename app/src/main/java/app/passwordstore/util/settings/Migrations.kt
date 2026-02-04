@@ -16,7 +16,6 @@ import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.unsafeLazy
-import app.passwordstore.util.git.sshj.SshKey
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.runCatching
 import java.io.File
@@ -37,7 +36,6 @@ fun runMigrations(
 ) {
   migrateToGitUrlBasedConfig(sharedPrefs, gitSettings)
   migrateToHideAll(sharedPrefs)
-  migrateToSshKey(filesDirPath, sharedPrefs)
   migrateToClipboardHistory(sharedPrefs)
   migrateToDiceware(sharedPrefs)
   removeExternalStorageProperties(sharedPrefs)
@@ -245,22 +243,6 @@ private fun migrateToHideAll(sharedPrefs: SharedPreferences) {
   sharedPrefs.edit {
     remove(PreferenceKeys.SHOW_HIDDEN_FOLDERS)
     putBoolean(PreferenceKeys.SHOW_HIDDEN_CONTENTS, isHidden)
-  }
-}
-
-private fun migrateToSshKey(filesDirPath: String, sharedPrefs: SharedPreferences) {
-  val privateKeyFile = File(filesDirPath, ".ssh_key")
-  if (
-    sharedPrefs.contains(PreferenceKeys.USE_GENERATED_KEY) &&
-      !SshKey.exists &&
-      privateKeyFile.exists()
-  ) {
-    // Currently uses a private key imported or generated with an old version of Password Store.
-    // Generated keys come with a public key which the user should still be able to view after
-    // the migration (not possible for regular imported keys), hence the special case.
-    val isGeneratedKey = sharedPrefs.getBoolean(PreferenceKeys.USE_GENERATED_KEY, false)
-    SshKey.useLegacyKey(isGeneratedKey)
-    sharedPrefs.edit { remove(PreferenceKeys.USE_GENERATED_KEY) }
   }
 }
 

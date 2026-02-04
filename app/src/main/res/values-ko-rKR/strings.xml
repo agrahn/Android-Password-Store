@@ -253,7 +253,6 @@ username@example.com:…</string>
   <string name="preference_custom_public_suffixes_summary">자동 완성은 다음 도메인의 하위 도메인을 구분합니다.</string>
   <string name="preference_custom_public_suffixes_hint">company.com\npersonal.com</string>
   <!-- Password creation failure -->
-  <string name="password_creation_file_fail_title">오류</string>
   <string name="password_creation_file_write_fail_message">스토어에 비밀번호 파일을 작성하지 못했습니다. 다시 시도해 주세요.</string>
   <string name="password_creation_file_delete_fail_message">스토어에서 비밀번호 파일 %1$s를 삭제하지 못했습니다. 수동으로 삭제하세요.</string>
   <string name="password_creation_duplicate_error">파일이 이미 존재합니다. 다른 이름을 사용하세요</string>

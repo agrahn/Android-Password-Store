@@ -8,6 +8,7 @@ import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import app.passwordstore.R
+import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.injection.prefs.GitSecrets
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.git.ErrorMessages
@@ -53,6 +54,7 @@ abstract class BaseGitActivity : AppCompatActivity() {
     GC,
   }
 
+  @Inject lateinit var repository: CryptoRepository
   @Inject lateinit var gitSettings: GitSettings
   @Inject lateinit var dispatcherProvider: DispatcherProvider
   @GitSecrets @Inject lateinit var gitSecrets: SharedPreferences

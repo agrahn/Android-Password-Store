@@ -6,6 +6,7 @@
 
 package app.passwordstore.ui.pgp
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.appcompat.app.AppCompatActivity
@@ -138,11 +139,12 @@ class PGPKeyImportActivity : AppCompatActivity() {
         terminates here and allows for a smart cast below. */
         return
       }
+      val keyId = tryGetKeyId(key)
       MaterialAlertDialogBuilder(this)
         .setTitle(getString(R.string.pgp_key_import_succeeded))
-        .setMessage(getString(R.string.pgp_key_import_succeeded_message, tryGetKeyId(key)))
+        .setMessage(getString(R.string.pgp_key_import_succeeded_message, keyId))
         .setPositiveButton(android.R.string.ok) { _, _ ->
-          setResult(RESULT_OK)
+          setResult(RESULT_OK, Intent().putExtra("PGP_KEY_ID", keyId?.id ?: 0L))
           finish()
         }
         .setCancelable(false)

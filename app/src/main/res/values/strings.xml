@@ -32,6 +32,7 @@
   <string name="move">Move</string>
   <string name="edit">Edit</string>
   <string name="delete">Delete</string>
+  <string name="error">Error</string>
   <string name="password_exists_title">Password already exists!</string>
   <string name="password_exists_message">This will overwrite %1$s with %2$s.</string>
   <string name="password_move_error_title">Error while moving passwords</string>
@@ -55,10 +56,11 @@
   <string name="jgit_error_dialog_title">An error occurred during a Git operation</string>
 
   <!-- Git Handler -->
-  <string name="ssh_preferences_dialog_text">Please import or generate your SSH key file in the preferences.</string>
-  <string name="ssh_preferences_dialog_title">No SSH key</string>
-  <string name="button_label_import">Import</string>
-  <string name="ssh_preferences_dialog_generate">Generate</string>
+  <string name="ssh_preferences_dialog_title">Set up authentication key</string>
+  <string name="ssh_preferences_dialog_text">Public-key authentication requires a PGP or SSH key. These can be generated within the app or imported from a file.</string>
+  <string name="button_label_import">Import SSH key</string>
+  <string name="ssh_preferences_dialog_generate">Generate SSH key</string>
+  <string name="ssh_preferences_dialog_pgp_key">Select a PGP key</string>
   <string name="passphrase_dialog_title">Authenticate</string>
   <string name="passphrase_dialog_text">Please provide the passphrase for your SSH key.</string>
   <string name="password_dialog_text">Please provide the password for this repository.</string>
@@ -67,7 +69,7 @@
 
   <string name="server_url">Repository URL</string>
 
-  <string name="connection_mode">Authentication Mode</string>
+  <string name="connection_mode">Authentication method</string>
 
   <!-- Git Config fragment -->
   <string name="git_user_name_hint">Username</string>
@@ -96,13 +98,13 @@
 
   <!-- Preferences -->
   <string name="pref_category_repository_title">Repository</string>
-  <string name="pref_edit_git_server_settings">Edit Git server settings</string>
-  <string name="pref_git_server_authentication">Authentication</string>
+  <string name="pref_edit_git_server_settings">Git server settings</string>
+  <string name="pref_git_server_auth_key">Authentication key</string>
   <string name="pref_edit_git_config">Local Git config &amp; utilities</string>
   <string name="pref_ssh_use_pgp_key_title">Use PGP key</string>
   <string name="pref_ssh_keygen_title">Generate SSH key pair</string>
   <string name="pref_import_ssh_key_title">Import SSH key</string>
-  <string name="pref_ssh_see_key_title">View public SSH key</string>
+  <string name="pref_ssh_see_key_title">View public key</string>
   <string name="pref_git_delete_repo_title">Delete repository</string>
   <string name="pref_dialog_delete_title">Clear repository</string>
   <string name="pref_category_general_title">General</string>
@@ -113,9 +115,9 @@
   <string name="pref_clipboard_timeout_summary">Set the time (in seconds) you want the password to stay in the clipboard. 0 means forever. Current value: %1$s</string>
   <string name="pref_copy_title">Automatically copy password</string>
   <string name="pref_copy_summary">Automatically copy the password to the clipboard after decryption was successful.</string>
-  <string name="ssh_key_import_error_not_an_ssh_key_message">Selected file does not appear to be an SSH private key.</string>
+  <string name="ssh_key_import_error_not_an_ssh_key_message">The selected file does not appear to be an SSH private key.</string>
+  <string name="ssh_use_pgp_key_error_no_authkey_message">The selected PGP key does not provide an authentication-capable subkey.</string>
   <string name="ssh_key_success_dialog_title">SSH-key imported</string>
-  <string name="ssh_pgp_keyselect_success_dialog_title">Authentication via PGP key configured</string>
   <string name="ssh_key_error_dialog_title">Key import error</string>
   <string name="ssh_key_error_dialog_text">Message : \n</string>
   <string name="pref_recursive_filter_title">Recursive filtering</string>
@@ -281,7 +283,7 @@
   <string name="pref_app_theme_value_dark">Dark</string>
   <string name="pref_app_theme_value_battery_saver">Set by Battery Saver</string>
   <string name="pref_app_theme_value_follow_system">System default</string>
-  <string name="connection_mode_ssh_key">SSH key</string>
+  <string name="connection_mode_ssh_key">Public-key</string>
   <string name="connection_mode_basic_authentication">Password</string>
   <string name="git_server_config_save_success">Successfully saved configuration</string>
   <string name="git_server_config_save_error">The provided repository URL is not valid.</string>
@@ -314,7 +316,6 @@
   <string name="password_creation_file_encryption_succeeded_ids_message">Password item successfully encrypted for %1$s</string>
   <string name="password_creation_file_encryption_failed_ids_message">\n\nEncryption failed for%1$s</string>
   <string name="password_creation_file_encryption_failed_expired_key">expired key</string>
-  <string name="password_creation_file_fail_title">Error</string>
   <string name="password_creation_file_write_fail_message">Failed to write password file to the store, please try again.</string>
   <string name="password_creation_file_delete_fail_message">Failed to delete password file %1$s from the store, please delete it manually.</string>
   <string name="password_creation_unusable_encryption_key_error_message">Encryption failure. Check expiration date and revocation status of the PGP key(s) using an external utility.</string>
@@ -363,6 +364,7 @@
   <string name="select_gpg_key_title">Select\nPGP key(s)</string>
   <string name="select_gpg_key_message">Select one or multiple PGP keys that you want to initialise the store with.</string>
   <string name="gpg_key_select">Select key(s)</string>
+  <string name="gpg_key_single_select">Select key</string>
 
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">Potentially incorrect URL</string>
@@ -426,6 +428,7 @@
   <string name="pgp_new_passphrase_repeated">Repeat new passphrase</string>
   <string name="git_utils_reset_remote_branch_title">Remote branch name</string>
   <string name="pgp_key_manager_no_keys_guidance">Add a key using the \"+\" button below</string>
+  <string name="no_keys_selected_dialog_title">No key selected</string>
   <string name="no_keys_imported_dialog_title">No keys available</string>
   <string name="no_keys_imported_dialog_message">No PGP keys have been added to the app yet. Import a key file or create a new key in the PGP key manager.</string>
   <string name="no_keys_imported_dialog_open_key_manager">Open PGP key manager</string>

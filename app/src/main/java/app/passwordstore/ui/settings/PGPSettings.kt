@@ -5,10 +5,10 @@
 
 package app.passwordstore.ui.settings
 
+import android.content.Intent
 import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
 import app.passwordstore.ui.pgp.PGPKeyListActivity
-import app.passwordstore.util.extensions.launchActivity
 import app.passwordstore.util.settings.PreferenceKeys
 import de.Maxr1998.modernpreferences.PreferenceScreen
 import de.Maxr1998.modernpreferences.helpers.onClick
@@ -23,7 +23,10 @@ class PGPSettings(private val activity: FragmentActivity) : SettingsProvider {
         titleRes = R.string.pref_pgp_key_manager_title
         persistent = false
         onClick {
-          activity.launchActivity(PGPKeyListActivity::class.java)
+          (activity as SettingsActivity)
+            .repositorySettings
+            .sshKeyAction
+            .launch(Intent(activity, PGPKeyListActivity::class.java))
           false
         }
       }

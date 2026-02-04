@@ -560,7 +560,7 @@ class PasswordCreationActivity : BasePGPActivity() {
               ) {
                 setResult(RESULT_CANCELED)
                 MaterialAlertDialogBuilder(this@PasswordCreationActivity)
-                  .setTitle(R.string.password_creation_file_fail_title)
+                  .setTitle(R.string.error)
                   .setMessage(
                     getString(R.string.password_creation_file_delete_fail_message, oldName)
                   )
@@ -623,7 +623,7 @@ class PasswordCreationActivity : BasePGPActivity() {
               }
             MaterialAlertDialogBuilder(this@PasswordCreationActivity)
               .setIcon(R.drawable.ic_crossmark_red_24dp)
-              .setTitle(getString(R.string.password_creation_file_fail_title))
+              .setTitle(getString(R.string.error))
               .setMessage(errMessage)
               .setCancelable(false)
               .setPositiveButton(android.R.string.ok) { _, _ -> finish() }

@@ -17,11 +17,13 @@ import androidx.core.content.edit
 import app.passwordstore.Application
 import app.passwordstore.R
 import app.passwordstore.crypto.KeyUtils
+import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.PGPKey
 import app.passwordstore.util.extensions.getString
-import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.extensions.gitSecrets
+import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.extensions.unsafeLazy
+import app.passwordstore.util.git.operation.CredentialFinder
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.getOrElse
 import com.github.michaelbull.result.runCatching
@@ -41,12 +43,7 @@ import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.common.Buffer
 import net.schmizz.sshj.common.KeyType
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
-import app.passwordstore.injection.prefs.GitSecrets
-import android.content.SharedPreferences
+import net.schmizz.sshj.userauth.password.PasswordFinder
 
 private const val PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore"
 private const val KEYSTORE_ALIAS = "sshkey"
@@ -80,16 +77,18 @@ object SshKey {
     get() = if (publicKeyFile.exists()) publicKeyFile.readText() else null
 
   val canShowSshPublicKey
-    get() = type in listOf(Type.LegacyGenerated, Type.KeystoreNative, Type.ImportedPGP)
+    get() = type in listOf(Type.KeystoreNative, Type.ImportedPGP)
 
   val exists
     get() = type != null
+
+  val pgpLongKeyId
+    get() = context.sharedPrefs.getLong(PreferenceKeys.SSH_PGP_KEY_ID, 0L)
 
   val mustAuthenticate: Boolean
     get() {
       return runCatching {
           when (type) {
-            Type.ImportedPGP -> return@runCatching true
             Type.KeystoreNative ->
               when (val key = androidKeystore.getKey(KEYSTORE_ALIAS, null)) {
                 is PrivateKey -> {
@@ -126,9 +125,9 @@ object SshKey {
   private val publicKeyFile
     get() = File(context.filesDir, ".ssh_key.pub")
 
-  private var type: Type?
+  var type: Type?
     get() = Type.fromValue(context.sharedPrefs.getString(PreferenceKeys.GIT_REMOTE_KEY_TYPE))
-    set(value) =
+    private set(value) =
       context.sharedPrefs.edit { putString(PreferenceKeys.GIT_REMOTE_KEY_TYPE, value?.value) }
 
   private val isStrongBoxSupported by unsafeLazy {
@@ -137,10 +136,9 @@ object SshKey {
     else false
   }
 
-  private enum class Type(val value: String) {
+  public enum class Type(val value: String) {
     Imported("imported"),
     KeystoreNative("keystore_native"),
-    LegacyGenerated("legacy_generated"),
     ImportedPGP("imported_pgp");
 
     companion object {
@@ -178,7 +176,7 @@ object SshKey {
     ),
   }
 
-  private fun delete() {
+  fun delete() {
     androidKeystore.deleteEntry(KEYSTORE_ALIAS)
     context.sharedPrefs.edit { remove(PreferenceKeys.SSH_PGP_KEY_ID) }
     context.gitSecrets.edit { remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE) }
@@ -225,23 +223,19 @@ object SshKey {
         context.getString(R.string.ssh_key_import_error_not_an_ssh_key_message)
       )
 
+    val userId = context.sharedPrefs.getString(PreferenceKeys.GIT_CONFIG_AUTHOR_EMAIL) ?: "nn@aps"
+
     // At this point, we are reasonably confident that we have actually been provided a private
     // key and delete the old key.
     delete()
+
     // Canonicalize line endings to '\n'.
     privateKeyFile.writeText(lines.joinToString("\n"))
 
     type = Type.Imported
   }
 
-  @Deprecated("To be used only in Migrations.kt")
-  fun useLegacyKey(isGenerated: Boolean) {
-    type = if (isGenerated) Type.LegacyGenerated else Type.Imported
-  }
-
   fun generateKeystoreNativeKey(algorithm: Algorithm, requireAuthentication: Boolean) {
-    delete()
-
     // Generate Keystore-backed private key.
     val parameterSpec =
       KeyGenParameterSpec.Builder(KEYSTORE_ALIAS, KeyProperties.PURPOSE_SIGN).run {
@@ -265,8 +259,12 @@ object SshKey {
         generateKeyPair()
       }
 
+    val userId = context.sharedPrefs.getString(PreferenceKeys.GIT_CONFIG_AUTHOR_EMAIL) ?: "nn@aps"
+
+    delete()
+
     // Write public key in SSH format to .ssh_key.pub.
-    publicKeyFile.writeText(toSshPublicKey(keyPair.public))
+    publicKeyFile.writeText(toSshPublicKey(keyPair.public) + " " + userId)
 
     type = Type.KeystoreNative
   }
@@ -275,25 +273,29 @@ object SshKey {
     val publicAuthKey =
       KeyUtils.extractPublicAuthKey(key)
         ?: throw IllegalArgumentException(
-          context.getString(R.string.ssh_key_import_error_not_an_ssh_key_message)
+          context.getString(R.string.ssh_use_pgp_key_error_no_authkey_message)
         )
 
-    val authKeyId = KeyUtils.tryGetKeyId(key) ?: throw NullPointerException("Could not retrieve key ID from PGP certificate")
+    val authKeyId =
+      KeyUtils.tryGetKeyId(key)
+        ?: throw NullPointerException("Could not retrieve key ID from PGP certificate")
+    val userId =
+      KeyUtils.tryGetUserId(key)?.let { PGPIdentifier.splitUserId(it.email) }
+        ?: authKeyId.toString()
 
     delete()
 
-    publicKeyFile.writeText(toSshPublicKey(publicAuthKey))
+    publicKeyFile.writeText(toSshPublicKey(publicAuthKey) + " " + userId)
     context.sharedPrefs.edit { putLong(PreferenceKeys.SSH_PGP_KEY_ID, authKeyId.id) }
 
     type = Type.ImportedPGP
   }
 
-  fun provide(client: SSHClient, passphraseFinder: InteractivePasswordFinder): KeyProvider? =
+  fun provide(client: SSHClient, passphraseFinder: PasswordFinder): KeyProvider? =
     when (type) {
-      Type.LegacyGenerated,
       Type.Imported -> client.loadKeys(privateKeyFile.absolutePath, passphraseFinder)
       Type.KeystoreNative -> KeystoreNativeKeyProvider
-      Type.ImportedPGP -> KeystoreNativeKeyProvider
+      Type.ImportedPGP -> PGPAuthenticationKeyProvider(passphraseFinder)
       null -> null
     }
 
@@ -322,17 +324,21 @@ object SshKey {
     override fun getType(): KeyType = KeyType.fromKey(public)
   }
 
-  private object PGPAuthenticationKeyProvider : KeyProvider {
+  private class PGPAuthenticationKeyProvider(private val passphraseFinder: PasswordFinder) :
+    KeyProvider {
 
     override fun getPublic(): PublicKey =
-      runCatching { authKeyPair.getPublic() ?: throw NullPointerException() }
+      runCatching { sshPublicKey?.let { parseSshPublicKey(it) } ?: throw NullPointerException() }
         .getOrElse { error ->
           logcat { error.asLog() }
           throw IOException("Failed to get public authentication subkey from PGP key", error)
         }
 
     override fun getPrivate(): PrivateKey =
-      runCatching { authKeyPair.getPrivate() ?: throw NullPointerException() }
+      runCatching {
+          (passphraseFinder as CredentialFinder).unlockAuthKeyPair()?.getPrivate()
+            ?: throw NullPointerException()
+        }
         .getOrElse { error ->
           logcat { error.asLog() }
           throw IOException("Failed to access private authentication subkey from PGP key", error)

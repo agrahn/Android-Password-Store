@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.ui.sshkeygen.PgpAuthKeySelectionActivity
 import app.passwordstore.ui.sshkeygen.SshKeyGenActivity
 import app.passwordstore.ui.sshkeygen.SshKeyImportActivity
 import app.passwordstore.util.auth.BiometricAuthenticator
@@ -114,6 +115,11 @@ abstract class GitOperation(protected val callingActivity: FragmentActivity) {
       .onFailure { e -> logcat(ERROR) { e.asLog() } }
   }
 
+  private fun usePgpKey() {
+    runCatching { callingActivity.launchActivity(PgpAuthKeySelectionActivity::class.java) }
+      .onFailure { e -> logcat(ERROR) { e.asLog() } }
+  }
+
   private fun registerAuthProviders(
     authMethod: SshAuthMethod,
     credentialsProvider: CredentialsProvider? = null,
@@ -141,21 +147,11 @@ abstract class GitOperation(protected val callingActivity: FragmentActivity) {
 
   private fun onMissingSshKeyFile() {
     MaterialAlertDialogBuilder(callingActivity)
-      .setMessage(callingActivity.resources.getString(R.string.ssh_preferences_dialog_text))
-      .setTitle(callingActivity.resources.getString(R.string.ssh_preferences_dialog_title))
-      .setPositiveButton(callingActivity.resources.getString(R.string.button_label_import)) { _, _
-        ->
-        getSshKey(false)
-      }
-      .setNegativeButton(
-        callingActivity.resources.getString(R.string.ssh_preferences_dialog_generate)
-      ) { _, _ ->
-        getSshKey(true)
-      }
-      .setNeutralButton(callingActivity.resources.getString(R.string.dialog_cancel)) { _, _ ->
-        // Finish the blank GitActivity so user doesn't have to press back
-        callingActivity.finish()
-      }
+      .setTitle(R.string.ssh_preferences_dialog_title)
+      .setMessage(R.string.ssh_preferences_dialog_text)
+      .setNeutralButton(R.string.button_label_import) { _, _ -> getSshKey(false) }
+      .setNegativeButton(R.string.ssh_preferences_dialog_generate) { _, _ -> getSshKey(true) }
+      .setPositiveButton(R.string.ssh_preferences_dialog_pgp_key) { _, _ -> usePgpKey() }
       .show()
   }
 

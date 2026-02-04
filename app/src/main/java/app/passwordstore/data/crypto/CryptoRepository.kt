@@ -19,8 +19,10 @@ import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.filterValues
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getError
+import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.map
 import com.github.michaelbull.result.mapBoth
+import com.github.michaelbull.result.runCatching
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
@@ -94,6 +96,11 @@ constructor(
   fun getLongKeyIdFromKeyId(identifier: PGPIdentifier): String? {
     val key = pgpKeyManager.getKeyById(identifier).get() ?: return null
     return KeyUtils.tryGetKeyId(key).toString()
+  }
+
+  fun unlockAuthKeyPair(passphrase: CharArray?, identifier: PGPIdentifier) = runCatching {
+    val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
+    pgpCryptoHandler.unlockJcaAuthKeyPair(key, passphrase).getOrThrow()
   }
 
   fun decrypt(

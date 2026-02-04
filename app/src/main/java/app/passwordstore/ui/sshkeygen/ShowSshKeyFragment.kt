@@ -22,6 +22,7 @@ class ShowSshKeyFragment : DialogFragment() {
       setTitle(R.string.your_public_key)
       setNegativeButton(R.string.ssh_keygen_later) { _, _ ->
         (activity as? SshKeyGenActivity)?.finish()
+        (activity as? PgpAuthKeySelectionActivity)?.finish()
       }
       setPositiveButton(R.string.ssh_keygen_share) { _, _ ->
         val sendIntent =
@@ -32,6 +33,7 @@ class ShowSshKeyFragment : DialogFragment() {
           }
         startActivity(Intent.createChooser(sendIntent, null))
         (activity as? SshKeyGenActivity)?.finish()
+        (activity as? PgpAuthKeySelectionActivity)?.finish()
       }
       create()
     }

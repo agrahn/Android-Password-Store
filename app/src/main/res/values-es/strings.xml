@@ -295,7 +295,6 @@
   <string name="preference_custom_public_suffixes_hint">company.com\npersonal.com</string>
 
   <!-- Password creation failure -->
-  <string name="password_creation_file_fail_title">Error</string>
   <string name="password_creation_file_write_fail_message">No se pudo escribir el archivo de contraseña en el almacén, inténtelo de nuevo.</string>
   <string name="password_creation_file_delete_fail_message">No se pudo eliminar el archivo de contraseña %1$s del almacén, elimínelo manualmente.</string>
   <string name="password_creation_duplicate_error">El archivo ya existe, por favor use un nombre diferente</string>

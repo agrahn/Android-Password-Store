@@ -130,8 +130,7 @@
     <activity
       android:name=".ui.sshkeygen.PgpAuthKeySelectionActivity"
       android:exported="false"
-      android:label="@string/pref_ssh_use_pgp_key_title"
-      android:windowSoftInputMode="adjustResize" />
+      android:theme="@style/NoBackgroundThemeM3" />
     <activity
       android:name=".ui.sshkeygen.SshKeyImportActivity"
       android:exported="false"
@@ -170,6 +169,7 @@
       android:theme="@style/NoBackgroundThemeM3"
       android:exported="false"
       android:label="@string/activity_label_pgp_key_manager"
+      android:configChanges="screenSize|smallestScreenSize|orientation|screenLayout"
       android:parentActivityName=".ui.settings.SettingsActivity" />
     <activity
       android:name=".ui.pgp.PGPKeyCreationActivity"

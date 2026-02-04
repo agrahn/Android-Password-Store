@@ -19,11 +19,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
-import android.content.SharedPreferences
-import androidx.core.content.edit
-import app.passwordstore.util.settings.PreferenceKeys
-import javax.inject.Inject
-import app.passwordstore.injection.prefs.GitSecrets
 
 class SshKeyImportActivity : AppCompatActivity() {
 
@@ -46,18 +41,19 @@ class SshKeyImportActivity : AppCompatActivity() {
         }
         .onFailure { e ->
           MaterialAlertDialogBuilder(this)
-            .setTitle(resources.getString(R.string.ssh_key_error_dialog_title))
+            .setCancelable(false)
+            .setTitle(R.string.ssh_key_error_dialog_title)
             .setMessage(e.message)
-            .setPositiveButton(resources.getString(R.string.dialog_ok)) { _, _ -> finish() }
+            .setPositiveButton(R.string.dialog_ok) { _, _ -> finish() }
             .show()
         }
     }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    if (SshKey.exists) {
+    if (SshKey.exists && SshKey.type != SshKey.Type.ImportedPGP) {
       MaterialAlertDialogBuilder(this).run {
-        setCancelable(false)  
+        setCancelable(false)
         setTitle(R.string.ssh_keygen_existing_title)
         setMessage(R.string.ssh_keygen_existing_message)
         setPositiveButton(R.string.ssh_keygen_existing_replace) { _, _ -> importSshKey() }

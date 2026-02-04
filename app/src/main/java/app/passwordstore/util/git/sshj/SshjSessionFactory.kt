@@ -18,15 +18,10 @@ import java.io.OutputStream
 import java.security.PublicKey
 import java.util.Collections
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.suspendCoroutine
-import kotlinx.coroutines.runBlocking
 import logcat.LogPriority.WARN
 import logcat.logcat
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.common.Buffer.PlainBuffer
-import net.schmizz.sshj.common.DisconnectReason
-import net.schmizz.sshj.common.SSHException
 import net.schmizz.sshj.common.SSHRuntimeException
 import net.schmizz.sshj.common.SecurityUtils
 import net.schmizz.sshj.connection.channel.direct.Session
@@ -34,8 +29,6 @@ import net.schmizz.sshj.transport.verification.FingerprintVerifier
 import net.schmizz.sshj.transport.verification.HostKeyVerifier
 import net.schmizz.sshj.userauth.method.AuthPassword
 import net.schmizz.sshj.userauth.method.AuthPublickey
-import net.schmizz.sshj.userauth.password.PasswordFinder
-import net.schmizz.sshj.userauth.password.Resource
 import org.eclipse.jgit.transport.CredentialsProvider
 import org.eclipse.jgit.transport.RemoteSession
 import org.eclipse.jgit.transport.SshSessionFactory
@@ -46,27 +39,6 @@ sealed class SshAuthMethod(val activity: AppCompatActivity) {
   class Password(activity: AppCompatActivity) : SshAuthMethod(activity)
 
   class SshKey(activity: AppCompatActivity) : SshAuthMethod(activity)
-
-  class PgpKey(activity: AppCompatActivity) : SshAuthMethod(activity)
-}
-
-abstract class InteractivePasswordFinder(private val dispatcherProvider: DispatcherProvider) :
-  PasswordFinder {
-
-  private var isRetry = false
-
-  abstract fun askForPassword(cont: Continuation<CharArray?>, isRetry: Boolean)
-
-  override fun reqPassword(resource: Resource<*>?): CharArray {
-    val password =
-      runBlocking(dispatcherProvider.main()) {
-        suspendCoroutine { cont -> askForPassword(cont, isRetry) }
-      }
-    isRetry = true
-    return password ?: throw SSHException(DisconnectReason.AUTH_CANCELLED_BY_USER)
-  }
-
-  final override fun shouldRetry(resource: Resource<*>?) = true
 }
 
 class SshjSessionFactory(
@@ -159,10 +131,10 @@ private class SshjSession(
     ssh.addHostKeyVerifier(makeTofuHostKeyVerifier(hostKeyFile))
     ssh.connect(uri.host, uri.port.takeUnless { it == -1 } ?: 22)
     if (!ssh.isConnected) throw IOException()
-    val passwordAuth =
-      AuthPassword(CredentialFinder(authMethod.activity, AuthMode.Password, dispatcherProvider))
     when (authMethod) {
       is SshAuthMethod.Password -> {
+        val passwordAuth =
+          AuthPassword(CredentialFinder(authMethod.activity, AuthMode.Password, dispatcherProvider))
         ssh.auth(username, passwordAuth)
       }
       is SshAuthMethod.SshKey -> {
@@ -173,17 +145,7 @@ private class SshjSession(
               CredentialFinder(authMethod.activity, AuthMode.SshKey, dispatcherProvider),
             )
           )
-        ssh.auth(username, pubkeyAuth, passwordAuth)
-      }
-      is SshAuthMethod.PgpKey -> {
-        val pubkeyAuth =
-          AuthPublickey(
-            SshKey.provide(
-              ssh,
-              CredentialFinder(authMethod.activity, AuthMode.SshKey, dispatcherProvider),
-            )
-          )
-        ssh.auth(username, pubkeyAuth, passwordAuth)
+        ssh.auth(username, pubkeyAuth)
       }
     }
     return this

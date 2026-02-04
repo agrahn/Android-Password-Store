@@ -66,7 +66,7 @@ public interface CryptoHandler<Key, KeyPair, EncOpts : CryptoOptions, DecryptOpt
   public fun isPassphraseProtected(keys: List<Key>, anySubkey: Boolean = false): Boolean
 
   /** Returns an unlocked authentication-capable public/private keypair */
-  public fun unlockAuthKeyPair(
+  public fun unlockJcaAuthKeyPair(
     key: Key,
     passphrase: CharArray?,
   ): Result<KeyPair, CryptoHandlerException>

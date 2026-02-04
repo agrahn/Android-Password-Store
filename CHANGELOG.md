@@ -6,11 +6,12 @@ All notable changes to this project will be documented in this file
 
 ### Added
 
+- PGP key option for authenticating and connecting via SSH. The PGP key does not need to provide a dedicated authentication subkey; the signing subkey and even the primary certification key are equally usable for that purpose. However, the authentication key is picked, if available, while the signing subkey and the primary key serve as fallbacks.
 - Allow custom port setting for Git via http
 
 ### Fixed
 
-- App crashed when dealing with expired PGP keys. From now on, password items can be decrypted and displayed even after the key has expired, but they can no longer be edited, and no new items can be created.
+- App crashed when dealing with expired PGP keys. From now on, password items can be decrypted and displayed even after the key has expired, but they can no longer be edited, and no new items can be created
 - Handling of password items that were encrypted to multiple subkeys
 - Enhanced feedback on encryption/decryption success and PGP key availability
 - Extra content: strip leading whitespace when copied to clipboard but preserve indentation of multiline text; append newline character at last line

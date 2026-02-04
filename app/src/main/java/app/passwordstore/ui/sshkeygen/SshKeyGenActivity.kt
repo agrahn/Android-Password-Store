@@ -4,19 +4,16 @@
  */
 package app.passwordstore.ui.sshkeygen
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.security.keystore.UserNotAuthenticatedException
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.databinding.ActivitySshKeygenBinding
-import app.passwordstore.injection.prefs.GitSecrets
 import app.passwordstore.util.auth.BiometricAuthenticator
 import app.passwordstore.util.auth.BiometricAuthenticator.Result
 import app.passwordstore.util.coroutines.DispatcherProvider
@@ -24,7 +21,6 @@ import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.keyguardManager
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.git.sshj.SshKey
-import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -58,7 +54,7 @@ class SshKeyGenActivity : AppCompatActivity() {
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
     with(binding) {
       generate.setOnClickListener {
-        if (SshKey.exists) {
+        if (SshKey.exists && SshKey.type != SshKey.Type.ImportedPGP) {
           MaterialAlertDialogBuilder(this@SshKeyGenActivity).run {
             setTitle(R.string.ssh_keygen_existing_title)
             setMessage(R.string.ssh_keygen_existing_message)
@@ -109,10 +105,7 @@ class SshKeyGenActivity : AppCompatActivity() {
   }
 
   private suspend fun generate() {
-    binding.generate.apply {
-      text = getString(R.string.ssh_key_gen_generating_progress)
-      isEnabled = false
-    }
+    binding.generate.isEnabled = false
     binding.generate.text = getString(R.string.ssh_key_gen_generating_progress)
     val result = runCatching {
       withContext(dispatcherProvider.io()) {
@@ -138,18 +131,17 @@ class SshKeyGenActivity : AppCompatActivity() {
         keyGenType.generateKey(requireAuthentication)
       }
     }
-    binding.generate.apply {
-      text = getString(R.string.ssh_keygen_generate)
-      isEnabled = true
-    }
+    binding.generate.text = getString(R.string.ssh_keygen_generate)
+    binding.generate.isEnabled = true
     result.fold(
       success = { ShowSshKeyFragment().show(supportFragmentManager, "public_key") },
       failure = { e ->
         e.printStackTrace()
         MaterialAlertDialogBuilder(this)
-          .setTitle(getString(R.string.error_generate_ssh_key))
+          .setCancelable(false)
+          .setTitle(R.string.error_generate_ssh_key)
           .setMessage(getString(R.string.ssh_key_error_dialog_text) + e.message)
-          .setPositiveButton(getString(R.string.dialog_ok)) { _, _ ->
+          .setPositiveButton(R.string.dialog_ok) { _, _ ->
             setResult(RESULT_OK)
             finish()
           }
