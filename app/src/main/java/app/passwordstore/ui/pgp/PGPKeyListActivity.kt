@@ -92,7 +92,7 @@ class PGPKeyListActivity : AppCompatActivity() {
     super.onCreate(savedInstanceState)
 
     val isSelectingKeys = intent.extras?.getBoolean(EXTRA_KEY_SELECTION) ?: false
-    val selectedKeyIds = mutableSetOf<String>()
+    val selectedKeyIds = mutableSetOf<Long>()
 
     supportFragmentManager.setFragmentResultListener(PGP_KEY_ADD_REQUEST_KEY, this) { _, bundle ->
       when (bundle.getString(ACTION_KEY)) {
@@ -119,7 +119,7 @@ class PGPKeyListActivity : AppCompatActivity() {
               onNavigationIconClick = {
                 if (isSelectingKeys && selectedKeyIds.isNotEmpty()) {
                   val result = Intent()
-                  result.putExtra(EXTRA_SELECTED_KEY, selectedKeyIds.joinToString(separator = "\n"))
+                  result.putExtra(EXTRA_SELECTED_KEY, selectedKeyIds.toTypedArray())
                   val gpgIdDest = intent.getStringExtra("SUB_PATH")
                   gpgIdDest?.let { result.putExtra("SUB_PATH", it) }
                   setResult(RESULT_OK, result)
@@ -159,8 +159,7 @@ class PGPKeyListActivity : AppCompatActivity() {
                     val key = pgpKeyManager.getKeyById(identifier).getOrThrow()
                     KeyUtils.tryGetKeyId(key) ?: throw NullPointerException()
                   }
-                  if (isSelected) selectedKeyIds.add(keyId.toString())
-                  else selectedKeyIds.remove(keyId.toString())
+                  if (isSelected) selectedKeyIds.add(keyId.id) else selectedKeyIds.remove(keyId.id)
                 }
               } else null,
           )

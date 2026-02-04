@@ -113,7 +113,7 @@ open class BasePGPActivity : AppCompatActivity() {
       if (result.resultCode == RESULT_OK) {
         val data = result.data ?: return@registerForActivityResult
         val selectedKeyId =
-          data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
+          data.getLongArrayExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
 
         val repoRoot = PasswordRepository.getRepositoryDirectory()
@@ -123,7 +123,7 @@ open class BasePGPActivity : AppCompatActivity() {
           File(repoRoot, subPath).let { if (it.isFile()) it.getParent() else it.getPath() }
 
         File(gpgIdDir, ".gpg-id")?.let {
-          it.writeText(selectedKeyId + "\n")
+          it.writeText(selectedKeyId.joinToString("\n") + "\n")
           runBlocking {
             commitChange(
               resources.getString(

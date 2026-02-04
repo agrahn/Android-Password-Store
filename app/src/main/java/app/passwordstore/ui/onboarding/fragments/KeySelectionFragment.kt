@@ -41,11 +41,11 @@ class KeySelectionFragment : Fragment(R.layout.fragment_key_selection) {
       if (result.resultCode == AppCompatActivity.RESULT_OK) {
         val data = result.data ?: return@registerForActivityResult
         val selectedKeyId =
-          data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
+          data.getLongArrayExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
         lifecycleScope.launch {
           val gpgIdentifierFile = File(PasswordRepository.getRepositoryDirectory(), ".gpg-id")
-          gpgIdentifierFile.writeText(selectedKeyId + "\n")
+          gpgIdentifierFile.writeText(selectedKeyId.joinToString("\n") + "\n")
           settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
           requireActivity()
             .commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))
