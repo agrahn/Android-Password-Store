@@ -6,7 +6,6 @@
 package app.passwordstore.util.git.operation
 
 import android.annotation.SuppressLint
-import android.content.SharedPreferences
 import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.annotation.StringRes
@@ -14,10 +13,10 @@ import androidx.core.content.edit
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
-import app.passwordstore.injection.prefs.GitSecrets
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
+import app.passwordstore.util.extensions.gitSecrets
 import app.passwordstore.util.git.sshj.InteractivePasswordFinder
 import app.passwordstore.util.settings.AuthMode
 import app.passwordstore.util.settings.PreferenceKeys
@@ -25,10 +24,6 @@ import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
@@ -38,14 +33,7 @@ class CredentialFinder(
   dispatcherProvider: DispatcherProvider,
 ) : InteractivePasswordFinder(dispatcherProvider) {
 
-  private val hiltEntryPoint =
-    EntryPointAccessors.fromApplication(
-      callingActivity.applicationContext,
-      CredentialFinderEntryPoint::class.java,
-    )
-
   override fun askForPassword(cont: Continuation<CharArray?>, isRetry: Boolean) {
-    val gitOperationSecrets = hiltEntryPoint.gitSecrets()
     val credentialPref: String
     @StringRes val messageRes: Int
     @StringRes val hintRes: Int
@@ -70,10 +58,10 @@ class CredentialFinder(
       else ->
         throw IllegalStateException("Only SshKey and Password connection mode ask for passwords")
     }
-    if (isRetry) gitOperationSecrets.edit { remove(credentialPref) }
+    if (isRetry) callingActivity.gitSecrets.edit { remove(credentialPref) }
     val storedCredential =
       AESEncryption.decrypt(
-        gitOperationSecrets.getString(credentialPref, null)?.toCharArray(),
+        callingActivity.gitSecrets.getString(credentialPref, null)?.toCharArray(),
         keyType = KeyType.PERSISTENT,
       )
     if (storedCredential == null) {
@@ -104,7 +92,7 @@ class CredentialFinder(
               editCredential.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
             if (rememberCredential.isChecked) {
               AESEncryption.encrypt(credential, keyType = KeyType.PERSISTENT)?.let { encrypted ->
-                gitOperationSecrets.edit { putString(credentialPref, String(encrypted)) }
+                callingActivity.gitSecrets.edit { putString(credentialPref, String(encrypted)) }
               }
             }
             cont.resume(credential)
@@ -120,11 +108,5 @@ class CredentialFinder(
     } else {
       cont.resume(storedCredential)
     }
-  }
-
-  @EntryPoint
-  @InstallIn(SingletonComponent::class)
-  interface CredentialFinderEntryPoint {
-    @GitSecrets fun gitSecrets(): SharedPreferences
   }
 }

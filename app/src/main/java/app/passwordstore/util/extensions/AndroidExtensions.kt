@@ -53,6 +53,10 @@ val Context.sharedPrefs: SharedPreferences
 val Context.persistentPassphrases: SharedPreferences
   get() = getSharedPreferences("${BuildConfig.APPLICATION_ID}_passphrases", 0)
 
+/** Get the persistent Git server secrets [SharedPreferences] instance */
+val Context.gitSecrets: SharedPreferences
+  get() = getSharedPreferences("${BuildConfig.APPLICATION_ID}_git_secrets", 0)
+
 /** Resolve [attr] from the [Context]'s theme */
 fun Context.resolveAttribute(attr: Int): Int {
   val typedValue = TypedValue()

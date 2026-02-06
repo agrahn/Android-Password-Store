@@ -7,7 +7,6 @@ package app.passwordstore.ui.settings
 
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.ShortcutManager
 import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,7 +17,6 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
-import app.passwordstore.injection.prefs.GitSecrets
 import app.passwordstore.ui.git.config.GitConfigActivity
 import app.passwordstore.ui.git.config.GitServerConfigActivity
 import app.passwordstore.ui.proxy.ProxySelectorActivity
@@ -26,6 +24,7 @@ import app.passwordstore.ui.sshkeygen.ShowSshKeyFragment
 import app.passwordstore.ui.sshkeygen.SshKeyGenActivity
 import app.passwordstore.ui.sshkeygen.SshKeyImportActivity
 import app.passwordstore.util.extensions.getString
+import app.passwordstore.util.extensions.gitSecrets
 import app.passwordstore.util.extensions.launchActivity
 import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.extensions.snackbar
@@ -169,8 +168,6 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
     }
 
   override fun provideSettings(builder: PreferenceScreen.Builder) {
-    val gitOperationSecrets = hiltEntryPoint.gitSecrets()
-
     builder.apply {
       switch(PreferenceKeys.REBASE_ON_PULL) {
         titleRes = R.string.pref_rebase_on_pull_title
@@ -227,8 +224,8 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
         }
       pref(PreferenceKeys.CLEAR_SAVED_PASS) {
         fun Preference.updatePref() {
-          val sshPass = gitOperationSecrets.getString(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE)
-          val httpsPass = gitOperationSecrets.getString(PreferenceKeys.HTTPS_PASSWORD)
+          val sshPass = activity.gitSecrets.getString(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE)
+          val httpsPass = activity.gitSecrets.getString(PreferenceKeys.HTTPS_PASSWORD)
           if (sshPass == null && httpsPass == null) {
             visible = false
             return
@@ -242,7 +239,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
           requestRebind()
         }
         onClick {
-          gitOperationSecrets.edit {
+          activity.gitSecrets.edit {
             remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE)
             remove(PreferenceKeys.HTTPS_PASSWORD)
           }
@@ -386,7 +383,5 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
   @InstallIn(SingletonComponent::class)
   interface RepositorySettingsEntryPoint {
     fun gitSettings(): GitSettings
-
-    @GitSecrets fun gitSecrets(): SharedPreferences
   }
 }
