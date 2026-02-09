@@ -1,4 +1,4 @@
-140082
+140342
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -99,7 +99,6 @@
 *.cn-north-1.airflow.amazonaws.com.cn
 *.cn-northwest-1.airflow.amazonaws.com.cn
 *.cn.st
-*.cns.joyent.com
 *.code.run
 *.compute-1.amazonaws.com
 *.compute.amazonaws.com
@@ -300,15 +299,13 @@
 123website.ch
 123website.lu
 123website.nl
-12chars.dev
-12chars.it
-12chars.pro
 12hp.at
 12hp.ch
 12hp.de
 1337.pictures
 16-b.it
 180r.com
+1cooldns.com
 1kapp.com
 2-d.jp
 2.azurestaticapps.net
@@ -1150,6 +1147,7 @@ bl.it
 black
 blackbaudcdn.net
 blackfriday
+blob.core.usgovcloudapi.net
 blob.core.windows.net
 blockbuster
 blog
@@ -1273,6 +1271,7 @@ bulsan-sudtirol.it
 bulsan-suedtirol.it
 bulsan-südtirol.it
 bulsan.it
+bumbleshrimp.com
 bungoono.oita.jp
 bungotakada.oita.jp
 bunkyo.tokyo.jp
@@ -2057,6 +2056,7 @@ ddns.me
 ddns.net
 ddnsfree.com
 ddnsgeek.com
+ddnsguru.com
 ddnsking.com
 ddnss.de
 ddnss.org
@@ -2277,6 +2277,9 @@ dyndns1.de
 dynns.com
 dynserv.org
 dynu.net
+dynuddns.com
+dynuddns.net
+dynuhosting.com
 dynv6.net
 dyroy.no
 dyrøy.no
@@ -2806,6 +2809,8 @@ fido
 fie.ee
 figma-gov.site
 figma.site
+file.core.usgovcloudapi.net
+file.core.windows.net
 filegear-sg.me
 filegear.me
 film
@@ -3268,7 +3273,6 @@ golf
 golffan.us
 gonna.jp
 gonohe.aomori.jp
-goo
 goodyear
 goog
 google
@@ -5841,6 +5845,7 @@ myspreadshop.nl
 myspreadshop.no
 myspreadshop.pl
 myspreadshop.se
+mysynology.net
 mytabit.co.il
 mytabit.com
 mytis.ru
@@ -6598,6 +6603,7 @@ open
 opencraft.hosting
 opensocial.site
 operaunite.com
+opik.net
 opoczno.pl
 opole.pl
 oppdal.no
@@ -6996,6 +7002,7 @@ pippu.hokkaido.jp
 pisa.it
 pistoia.it
 pisz.pl
+pivohosting.com
 piw.gov.pl
 pixolino.com
 pizza
@@ -7400,6 +7407,7 @@ routingthecloud.net
 routingthecloud.org
 rovigo.it
 rovno.ua
+roxa.org
 royal-commission.uk
 royken.no
 royrvik.no
@@ -8336,6 +8344,7 @@ sport.eg
 sport.hu
 spot
 sprites.app
+spryt.net
 spydeberg.no
 square.site
 square7.ch
@@ -9210,6 +9219,7 @@ user.srcf.net
 user.webaccel.jp
 usercontent.jp
 usgovcloudapp.net
+usgovtrafficmanager.net
 ushiku.ibaraki.jp
 usr.cloud.muni.cz
 ustka.pl
@@ -9479,6 +9489,8 @@ weather
 weatherchannel
 web.app
 web.bo
+web.core.usgovcloudapi.net
+web.core.windows.net
 web.do
 web.erp.dev
 web.gu
@@ -9591,6 +9603,7 @@ windsurf.build
 wine
 winners
 wios.gov.pl
+wiredbladehosting.com
 witd.gov.pl
 with.playit.plus
 withgoogle.com
