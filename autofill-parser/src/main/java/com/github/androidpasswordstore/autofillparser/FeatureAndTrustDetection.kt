@@ -65,6 +65,11 @@ private val TRUSTED_BROWSER_CERTIFICATE_HASH =
     "com.opera.mini.native" to arrayOf("V6y8Ul8bLr0ZGWzW8BQ5fMkQ/RiEHgroUP68Ph5ZP/I="),
     "com.opera.mini.native.beta" to arrayOf("V6y8Ul8bLr0ZGWzW8BQ5fMkQ/RiEHgroUP68Ph5ZP/I="),
     "com.opera.touch" to arrayOf("qtjiBNJNF3k0yc0MY8xqo4779CxKaVcJfiIQ9X+qZ6o="),
+    "io.github.forkmaintainers.iceraven" to // IceRaven (Firefox fork)
+      arrayOf(
+        "nA0iN59Ie3Ck+fi+wBc8+RoWRPCPkzhbW3gs43ZguoE=", // Original (GitHub release)
+        "eRN80/UC/Z35sLtql9UY+ig0XwP/8M76QJ9omrs54hQ=", // GoodyOG's OLED fork (GitHub release)
+      ),
     "org.bromite.bromite" to arrayOf("4e5c0HbXsNyEyytF+3i4bfLrOaO2xWuj3CkqXgw7lQQ="),
     "org.cromite.cromite" to arrayOf("Yz+kHYIR1tCRaoGbiWaMbekuZCMtpn+dFv2Bw7fpI/8="),
     "org.gnu.icecat" to arrayOf("wi2iuVvK/WYZUzd2g0Qzn9ef3kAisQURZ8U1WSMTkcM="),
