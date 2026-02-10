@@ -131,6 +131,7 @@ private val BROWSER_MULTI_ORIGIN_METHOD =
     "com.opera.mini.native" to BrowserMultiOriginMethod.WebView,
     "com.opera.mini.native.beta" to BrowserMultiOriginMethod.WebView,
     "com.opera.touch" to BrowserMultiOriginMethod.WebView,
+    "io.github.forkmaintainers.iceraven" to BrowserMultiOriginMethod.WebView,
     "org.gnu.icecat" to BrowserMultiOriginMethod.WebView,
     "org.mozilla.fenix" to BrowserMultiOriginMethod.Field,
     "org.mozilla.fenix.nightly" to BrowserMultiOriginMethod.Field,
@@ -160,6 +161,7 @@ private fun getBrowserMultiOriginMethod(appPackage: String): BrowserMultiOriginM
 private val BROWSER_SAVE_FLAG =
   mapOf(
     "com.duckduckgo.mobile.android" to 0,
+    "io.github.forkmaintainers.iceraven" to 0,
     "org.mozilla.klar" to 0,
     "org.mozilla.focus" to 0,
     "org.mozilla.fenix" to 0,
