@@ -181,9 +181,7 @@ open class BasePGPActivity : AppCompatActivity() {
       .setTitle(title)
       .setMessage(message)
       .setCancelable(false)
-      .setPositiveButton(resources.getString(R.string.no_keys_imported_dialog_open_key_manager)) {
-        _,
-        _ ->
+      .setPositiveButton(R.string.no_keys_imported_dialog_open_key_manager) { _, _ ->
         onPositiveButtonClick()
       }
       .setNegativeButton(R.string.dialog_cancel) { _, _ -> finish() }
@@ -610,10 +608,10 @@ open class BasePGPActivity : AppCompatActivity() {
         AESEncryption.getCipher(KeyType.PERSISTENT_WITH_AUTHENTICATION) == null
     ) {
       MaterialAlertDialogBuilder(this@BasePGPActivity)
-        .setTitle(resources.getString(R.string.aes_key_invalidated_dialog_title))
-        .setMessage(resources.getString(R.string.aes_key_invalidated_dialog_message))
+        .setTitle(R.string.aes_key_invalidated_dialog_title)
+        .setMessage(R.string.aes_key_invalidated_dialog_message)
         .setIcon(R.drawable.ic_warning_red_24dp)
-        .setPositiveButton(getString(R.string.dialog_ok)) { _, _ -> decrypt(identifiers) }
+        .setPositiveButton(R.string.dialog_ok) { _, _ -> decrypt(identifiers) }
         .setCancelable(false)
         .show()
       return
@@ -650,16 +648,15 @@ open class BasePGPActivity : AppCompatActivity() {
         cipher = cipher,
       ) { result ->
         if (result is BiometricResult.Success) {
-          val pass =
-            // re-encrypt passphrase without biometrics for use until screen-off
-            AESEncryption.encrypt(
-              // decrypt persistently cached passphrase with biometrics
-              AESEncryption.decrypt(
-                passEncrypted,
-                keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION,
-                cipher = result.cryptoObject?.cipher,
-              )
+          val passDecrypted = // decrypt persistently cached passphrase with biometrics
+            AESEncryption.decrypt(
+              passEncrypted,
+              keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION,
+              cipher = result.cryptoObject?.cipher,
             )
+          // re-encrypt passphrase without biometrics for use until screen-off
+          val pass = AESEncryption.encrypt(passDecrypted)
+          passDecrypted?.wipe()
           if (pass != null) cachedPassphrases.put(id, pass)
           persistentPassphrases.edit {
             putLong(PreferenceKeys.BIOMETRICS_AND_PIN_LAST_USE, Instant.now().toEpochMilli())

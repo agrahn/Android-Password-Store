@@ -229,6 +229,7 @@ private fun migrateToGitUrlBasedConfig(sharedPrefs: SharedPreferences, gitSettin
   if (
     url == null ||
       gitSettings.updateConnectionSettingsIfValid(
+        oldAuthMode = gitSettings.authMode,
         newAuthMode = gitSettings.authMode,
         newUrl = url,
       ) != GitSettings.UpdateConnectionSettingsResult.Valid

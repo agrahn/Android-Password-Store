@@ -449,11 +449,12 @@
   <string name="cache_password_until_screen_off">Kennwortsatz bis zum Abschalten des Bildschirms merken</string>
   <string name="biometric_prompt_description_persistently_cache_password">Den PGP-Kennwortsatz auf dem Gerät verschlüsselt ablegen</string>
   <string name="biometric_prompt_description_unlock_entry">Zum Anzeigen des Eintrags müssen Sie sich authentisieren</string>
+  <string name="biometric_prompt_description_unlock_authentication_key">Entsperren Sie den Authentifizierungsschlüssel mit Ihren Geräteanmeldeinformationen</string>
   <string name="pgp_wrong_passphrase_input">Falsche Eingabe</string>
   <string name="pgp_id_label">PGP-ID:</string>
   <string name="pgp_id_label_plural">PGP-IDs:</string>
   <string name="aes_key_invalidated_dialog_title">Achtung! Neuer Fingerabdruck hinzugefügt</string>
-  <string name="aes_key_invalidated_dialog_message">Seit der letzten Verwendung wurde in den Gerätesperreinstellungen ein neuer Fingerabdruck registriert. Stellen Sie sicher, dass er von Ihnen und nicht von jemand anderem hinzugefügt wurde.</string>
+  <string name="aes_key_invalidated_dialog_message">Seit der letzten Verwendung wurde in den Geräteanmeldeinformationen ein neuer Fingerabdruck registriert. Stellen Sie sicher, dass er von Ihnen und nicht von jemand anderem hinzugefügt wurde.</string>
 
   <!-- PIN input -->
 

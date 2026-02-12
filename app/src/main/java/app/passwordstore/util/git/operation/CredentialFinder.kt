@@ -7,6 +7,7 @@ package app.passwordstore.util.git.operation
 
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
+import android.view.View
 import android.view.WindowManager
 import androidx.annotation.StringRes
 import androidx.core.content.edit
@@ -15,10 +16,11 @@ import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.ui.git.base.BaseGitActivity
+import app.passwordstore.util.auth.BiometricAuthenticator
+import app.passwordstore.util.auth.BiometricAuthenticator.Result as BiometricResult
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
-import app.passwordstore.util.extensions.gitSecrets
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.git.sshj.SshKey
 import app.passwordstore.util.settings.AuthMode
@@ -46,9 +48,14 @@ class CredentialFinder(
 ) : PasswordFinder {
 
   private val repository = (callingActivity as BaseGitActivity).repository
+  private val gitSecrets = (callingActivity as BaseGitActivity).gitSecrets
 
   private var isRetry = false
   private var retries = 0
+
+  private var rememberPassphraseVisible = View.VISIBLE
+  private var rememberPassphrase = true
+  private var cachedPassphrase: CharArray? = null
 
   val credentialPref: String? =
     when (authMode) {
@@ -58,17 +65,17 @@ class CredentialFinder(
     }
 
   override fun reqPassword(resource: Resource<*>?): CharArray {
-    val password =
+    val passphrase =
       runBlocking(dispatcherProvider.main()) {
         suspendCoroutine { cont -> askForPassword(cont, isRetry) }
       }
     isRetry = true
-    return password ?: throw SSHException(DisconnectReason.AUTH_CANCELLED_BY_USER)
+    return passphrase ?: throw SSHException(DisconnectReason.AUTH_CANCELLED_BY_USER)
   }
 
   override fun shouldRetry(resource: Resource<*>?) =
     if (++retries > 2) {
-      credentialPref?.let { callingActivity.gitSecrets.edit { remove(it) } }
+      credentialPref?.let { gitSecrets.edit { remove(it) } }
       throw UserAuthException("Too many authentication attempts")
       false
     } else true
@@ -78,20 +85,45 @@ class CredentialFinder(
 
     var kp: KeyPair? = null
 
+    cachedPassphrase =
+      runBlocking(dispatcherProvider.main()) {
+        suspendCoroutine { cont ->
+          decryptPassphraseWithAuthentication(
+            cont,
+            gitSecrets.getString(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE, null)?.toCharArray(),
+          )
+        }
+      }
+
     while (retries++ < 3 && kp == null) {
       val passphrase =
         runBlocking(dispatcherProvider.main()) {
           suspendCoroutine { cont -> askForPassword(cont, isRetry) }
         }
       passphrase ?: break // user cancels
-      isRetry = true
       kp = repository.unlockAuthKeyPair(passphrase, KeyId(SshKey.pgpLongKeyId)).get()
+      if (
+        rememberPassphrase &&
+          kp != null &&
+          passphrase.isNotEmpty() &&
+          !passphrase.contentEquals(cachedPassphrase)
+      ) {
+        runBlocking(dispatcherProvider.main()) {
+          suspendCoroutine { cont -> updateCachedPassphraseWithAuthentication(cont, passphrase) }
+        }
+      }
+      isRetry = true
+      cachedPassphrase?.let {
+        retries--
+        isRetry = false
+        it.wipe()
+      }
+      cachedPassphrase = null
       passphrase.wipe()
     }
 
     // user cancelled, or too many failed attempts
-    if (kp == null)
-      callingActivity.gitSecrets.edit { remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE) }
+    if (kp == null) gitSecrets.edit { remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE) }
 
     return kp
   }
@@ -119,17 +151,28 @@ class CredentialFinder(
         throw IllegalStateException("Only SshKey and Password connection mode ask for passwords")
     }
 
-    val storedCredential =
-      if (isRetry) {
-        callingActivity.gitSecrets.edit { remove(credentialPref) }
-        null
-      } else
-        AESEncryption.decrypt(
-          callingActivity.gitSecrets.getString(credentialPref, null)?.toCharArray(),
-          keyType = KeyType.PERSISTENT,
-        )
+    if (SshKey.pgpLongKeyId == 0L) {
+      // retrieve here in case of non-PGP authentication
+      cachedPassphrase =
+        if (isRetry) {
+          gitSecrets.edit { remove(credentialPref) }
+          null
+        } else {
+          if (AESEncryption.isHardwareBacked(KeyType.PERSISTENT)) {
+            AESEncryption.decrypt(
+              gitSecrets.getString(credentialPref, null)?.toCharArray(),
+              keyType = KeyType.PERSISTENT,
+            )
+          } else {
+            rememberPassphraseVisible = View.GONE
+            rememberPassphrase = false
+            gitSecrets.edit { remove(credentialPref) }
+            null
+          }
+        }
+    }
 
-    if (storedCredential == null) {
+    if (cachedPassphrase == null) {
       val layoutInflater = LayoutInflater.from(callingActivity)
 
       @SuppressLint("InflateParams")
@@ -139,28 +182,38 @@ class CredentialFinder(
       val editCredential = dialogView.findViewById<TextInputEditText>(R.id.git_auth_credential)
       credentialLayout.setHint(hintRes)
       editCredential.setHint(hintRes)
-      val rememberCredential =
+      val rememberCredentialCheckBox =
         dialogView.findViewById<MaterialCheckBox>(R.id.git_auth_remember_credential)
-      rememberCredential.setText(rememberRes)
+      rememberCredentialCheckBox.setVisibility(rememberPassphraseVisible)
+      rememberCredentialCheckBox.isChecked = rememberPassphrase
+      rememberCredentialCheckBox.setText(rememberRes)
       if (isRetry) {
         credentialLayout.error = callingActivity.resources.getString(errorRes)
         // Reset error when user starts entering a password
         editCredential.doOnTextChanged { _, _, _, _ -> credentialLayout.error = null }
       }
+      val message =
+        callingActivity.resources.getString(messageRes) +
+          if (SshKey.pgpLongKeyId != 0L)
+            "\n${callingActivity.resources.getString(R.string.pgp_id_label)} ${repository.getEmailFromKeyId(KeyId(SshKey.pgpLongKeyId))}"
+          else ""
       MaterialAlertDialogBuilder(callingActivity)
         .run {
           setTitle(R.string.passphrase_dialog_title)
-          setMessage(messageRes)
+          setMessage(message)
           setView(dialogView)
           setPositiveButton(R.string.dialog_ok) { _, _ ->
-            val credential =
+            val passphrase =
               editCredential.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
-            if (rememberCredential.isChecked) {
-              AESEncryption.encrypt(credential, keyType = KeyType.PERSISTENT)?.let { encrypted ->
-                callingActivity.gitSecrets.edit { putString(credentialPref, String(encrypted)) }
+            rememberPassphrase = rememberCredentialCheckBox.isChecked
+            /* non-PGP authentication (server passwd, imported ssh key):
+             * we need to update cached passphrase on every attempt as we cannot verify correctness here */
+            if (rememberPassphrase && passphrase.isNotEmpty() && SshKey.pgpLongKeyId == 0L) {
+              AESEncryption.encrypt(passphrase, keyType = KeyType.PERSISTENT)?.let { encrypted ->
+                gitSecrets.edit { putString(credentialPref, String(encrypted)) }
               }
             }
-            cont.resume(credential)
+            cont.resume(passphrase)
           }
           setCancelable(false)
           setNegativeButton(R.string.dialog_cancel) { _, _ -> cont.resume(null) }
@@ -172,7 +225,64 @@ class CredentialFinder(
           show()
         }
     } else {
-      cont.resume(storedCredential)
+      cont.resume(cachedPassphrase)
     }
+  }
+
+  private fun decryptPassphraseWithAuthentication(
+    cont: Continuation<CharArray?>,
+    passEncrypted: CharArray?,
+  ) {
+    if (
+      BiometricAuthenticator.canAuthenticate(callingActivity, allowPin = true) &&
+        AESEncryption.isHardwareBacked(KeyType.PERSISTENT_WITH_PIN)
+    )
+      if (passEncrypted != null)
+        BiometricAuthenticator.authenticate(
+          callingActivity,
+          dialogDescriptionRes = R.string.biometric_prompt_description_unlock_authentication_key,
+          allowPin = true,
+        ) { result ->
+          if (result is BiometricResult.Success) {
+            val pass = AESEncryption.decrypt(passEncrypted, keyType = KeyType.PERSISTENT_WITH_PIN)
+            cont.resume(pass)
+          } else if (result !is BiometricResult.Retry) {
+            cont.resume(null)
+          }
+        }
+      else cont.resume(null)
+    else {
+      rememberPassphraseVisible = View.GONE
+      rememberPassphrase = false
+      gitSecrets.edit { remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE) }
+      cont.resume(null)
+    }
+  }
+
+  private fun updateCachedPassphraseWithAuthentication(
+    cont: Continuation<Unit?>,
+    passphrase: CharArray,
+  ) {
+    if (
+      BiometricAuthenticator.canAuthenticate(callingActivity, allowPin = true) &&
+        AESEncryption.isHardwareBacked(KeyType.PERSISTENT_WITH_PIN)
+    )
+      BiometricAuthenticator.authenticate(
+        callingActivity,
+        dialogDescriptionRes = R.string.biometric_prompt_description_persistently_cache_password,
+        allowPin = true,
+      ) { result ->
+        if (result is BiometricResult.Success) {
+          gitSecrets.edit {
+            putString(
+              PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE,
+              AESEncryption.encrypt(passphrase, keyType = KeyType.PERSISTENT_WITH_PIN)
+                ?.concatToString(),
+            )
+          }
+        }
+        if (result !is BiometricResult.Retry) cont.resume(null)
+      }
+    else cont.resume(null)
   }
 }

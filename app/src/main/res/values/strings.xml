@@ -62,7 +62,7 @@
   <string name="ssh_preferences_dialog_generate">Generate SSH key</string>
   <string name="ssh_preferences_dialog_pgp_key">Select a PGP key</string>
   <string name="passphrase_dialog_title">Authenticate</string>
-  <string name="passphrase_dialog_text">Please provide the passphrase for your SSH key.</string>
+  <string name="passphrase_dialog_text">Please provide the passphrase for your authentication key.</string>
   <string name="password_dialog_text">Please provide the password for this repository.</string>
 
   <!-- Clone fragment -->
@@ -450,6 +450,7 @@
   <string name="cache_password_until_screen_off">Keep passphrase until screen-off</string>
   <string name="biometric_prompt_description_persistently_cache_password">Encrypt and cache the PGP passphrase on the device</string>
   <string name="biometric_prompt_description_unlock_entry">Unlock entry with your fingerprint</string>
+  <string name="biometric_prompt_description_unlock_authentication_key">Unlock authentication key with your device credentials</string>
   <string name="pgp_wrong_passphrase_input">Wrong passphrase</string>
   <string name="pgp_id_label">PGP ID: </string>
   <string name="pgp_id_label_plural">PGP IDs: </string>

@@ -45,6 +45,7 @@ class GitServerConfigActivity : BaseGitActivity() {
 
   private val binding by viewBinding(ActivityGitCloneBinding::inflate)
 
+  private lateinit var oldAuthMode: AuthMode
   private lateinit var newAuthMode: AuthMode
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,10 +58,11 @@ class GitServerConfigActivity : BaseGitActivity() {
     setContentView(binding.root)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+    oldAuthMode = gitSettings.authMode
     newAuthMode = gitSettings.authMode
 
     binding.authModeGroup.apply {
-      when (newAuthMode) {
+      when (oldAuthMode) {
         AuthMode.SshKey -> check(binding.authModeSshKey.id)
         AuthMode.Password -> check(binding.authModePassword.id)
         AuthMode.None -> clearChecked()
@@ -114,7 +116,11 @@ class GitServerConfigActivity : BaseGitActivity() {
       }
       when (
         val updateResult =
-          gitSettings.updateConnectionSettingsIfValid(newAuthMode = newAuthMode, newUrl = newUrl)
+          gitSettings.updateConnectionSettingsIfValid(
+            oldAuthMode = oldAuthMode,
+            newAuthMode = newAuthMode,
+            newUrl = newUrl,
+          )
       ) {
         GitSettings.UpdateConnectionSettingsResult.FailedToParseUrl -> {
           Snackbar.make(

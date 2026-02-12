@@ -159,6 +159,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
   private val configureGitServer =
     activity.registerForActivityResult(StartActivityForResult()) {
       proxySettingsPref?.updateProxyPref()
+      clearSavedPassPref?.updateClearSavedPassPref()
     }
 
   private fun Preference.updateShowSshKeyPref() {

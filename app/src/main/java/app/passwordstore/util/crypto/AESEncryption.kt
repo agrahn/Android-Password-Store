@@ -33,13 +33,21 @@ object AESEncryption {
   enum class KeyType {
     TEMPORARY,
     PERSISTENT,
+    /* requires at least PIN authentication (or biometrics, if available/enrolled);
+     * considered "medium strong" authentication */
+    PERSISTENT_WITH_PIN,
+    // requires biometric auth; considered "strong" authentication
     PERSISTENT_WITH_AUTHENTICATION,
   }
 
   private const val KEYSTORE_ALIAS = "AESKey" // valid during the lifetime of the app process
   // persistent, but without authentication (used for sensitive preferences and PIN caching)
   private const val KEYSTORE_ALIAS_NO_AUTHENTICATION = "AESKeyNoAuth"
-  // persistent, with authentication (used for persistent passphrase caching)
+  // persistent, with authentication (PIN or biometric, for persistent PGP authentication key
+  // passphrase
+  private const val KEYSTORE_ALIAS_WITH_PIN = "AESKeyWithPin"
+  /* persistent, with biometric-only authentication (for persistent caching of PGP decryption key
+   * passphrases) */
   private const val KEYSTORE_ALIAS_WITH_AUTHENTICATION = "AESKeyWithAuth"
   private const val PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore"
   private const val TRANSFORMATION = "AES/GCM/NoPadding"
@@ -63,6 +71,7 @@ object AESEncryption {
       when (keyType) {
         KeyType.TEMPORARY -> KEYSTORE_ALIAS
         KeyType.PERSISTENT -> KEYSTORE_ALIAS_NO_AUTHENTICATION
+        KeyType.PERSISTENT_WITH_PIN -> KEYSTORE_ALIAS_WITH_PIN
         KeyType.PERSISTENT_WITH_AUTHENTICATION -> KEYSTORE_ALIAS_WITH_AUTHENTICATION
       }
 
@@ -80,6 +89,16 @@ object AESEncryption {
             setKeySize(256)
             if (keyType == KeyType.PERSISTENT_WITH_AUTHENTICATION) {
               setUserAuthenticationRequired(true)
+            } else if (keyType == KeyType.PERSISTENT_WITH_PIN) {
+              setUserAuthenticationRequired(true)
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                setUserAuthenticationParameters(
+                  30,
+                  KeyProperties.AUTH_BIOMETRIC_STRONG or KeyProperties.AUTH_DEVICE_CREDENTIAL,
+                )
+              } else {
+                @Suppress("DEPRECATION") setUserAuthenticationValidityDurationSeconds(30)
+              }
             }
             /* disabled due to platform or firmware bug;
              * see https://github.com/agrahn/Android-Password-Store/issues/206#issuecomment-2783212156
@@ -100,6 +119,7 @@ object AESEncryption {
       when (keyType) {
         KeyType.TEMPORARY -> KEYSTORE_ALIAS
         KeyType.PERSISTENT -> KEYSTORE_ALIAS_NO_AUTHENTICATION
+        KeyType.PERSISTENT_WITH_PIN -> KEYSTORE_ALIAS_WITH_PIN
         KeyType.PERSISTENT_WITH_AUTHENTICATION -> KEYSTORE_ALIAS_WITH_AUTHENTICATION
       }
     return androidKeystore.getKey(keyStoreAlias, null) as SecretKey
@@ -199,6 +219,7 @@ object AESEncryption {
       when (keyType) {
         KeyType.TEMPORARY -> KEYSTORE_ALIAS
         KeyType.PERSISTENT -> KEYSTORE_ALIAS_NO_AUTHENTICATION
+        KeyType.PERSISTENT_WITH_PIN -> KEYSTORE_ALIAS_WITH_PIN
         KeyType.PERSISTENT_WITH_AUTHENTICATION -> KEYSTORE_ALIAS_WITH_AUTHENTICATION
       }
     if (androidKeystore.containsAlias(keyStoreAlias)) androidKeystore.deleteEntry(keyStoreAlias)

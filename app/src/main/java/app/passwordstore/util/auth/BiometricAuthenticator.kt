@@ -71,12 +71,10 @@ object BiometricAuthenticator {
     if (canAuthenticate(activity, allowPin = allowPin) || deviceHasKeyguard) {
       val promptInfoBuilder =
         BiometricPrompt.PromptInfo.Builder().setTitle(activity.getString(dialogTitleRes))
-      if (cipher == null) { // fallback for non-CryptoObject based authentication
-        promptInfoBuilder.setAllowedAuthenticators(
-          if (allowPin) Authenticators.BIOMETRIC_STRONG or Authenticators.DEVICE_CREDENTIAL
-          else Authenticators.BIOMETRIC_STRONG
-        )
-      }
+      promptInfoBuilder.setAllowedAuthenticators(
+        if (allowPin) Authenticators.BIOMETRIC_STRONG or Authenticators.DEVICE_CREDENTIAL
+        else Authenticators.BIOMETRIC_STRONG
+      )
       if (!allowPin)
         promptInfoBuilder.setNegativeButtonText(activity.getString(R.string.dialog_cancel))
       if (dialogSubTitleRes != 0)

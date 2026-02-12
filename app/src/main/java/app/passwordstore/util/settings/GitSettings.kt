@@ -143,6 +143,7 @@ constructor(
   }
 
   fun updateConnectionSettingsIfValid(
+    oldAuthMode: AuthMode,
     newAuthMode: AuthMode,
     newUrl: String,
   ): UpdateConnectionSettingsResult {
@@ -175,8 +176,16 @@ constructor(
       }
     }
 
-    url = newUrl
+    if (newAuthMode != oldAuthMode) {
+      gitSecrets.edit {
+        remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE)
+        remove(PreferenceKeys.HTTPS_PASSWORD)
+      }
+    }
     authMode = newAuthMode
+
+    url = newUrl
+
     return UpdateConnectionSettingsResult.Valid
   }
 
