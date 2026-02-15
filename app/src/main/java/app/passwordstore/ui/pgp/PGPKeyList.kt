@@ -49,6 +49,7 @@ import app.passwordstore.ui.compose.theme.APSTheme
 import app.passwordstore.ui.compose.theme.SpacingLarge
 import app.passwordstore.ui.compose.theme.SpacingSmall
 import app.passwordstore.util.extensions.conditional
+import app.passwordstore.util.git.sshj.SshKey
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -64,7 +65,9 @@ fun KeyList(
   onKeySelected: ((identifier: PGPIdentifier, isSelected: Boolean) -> Unit)? = null,
   singleSelection: Boolean = false,
 ) {
-  var selectedId by remember { mutableStateOf(KeyId(0L)) }
+  var selectedId by remember {
+    mutableStateOf(if (singleSelection) KeyId(SshKey.pgpLongKeyId) else KeyId(0L))
+  }
   if (identifiers.isEmpty()) {
     Column(
       modifier = modifier.fillMaxSize(),
@@ -128,7 +131,7 @@ private fun KeyItem(
       isDeleting = false
     },
   )
-  var checked by remember { mutableStateOf(false) }
+  var checked by remember { mutableStateOf(keyId.id == selectedId.id) }
   Row(
     modifier =
       modifier

@@ -32,6 +32,7 @@ import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.crypto.KeyUtils
 import app.passwordstore.crypto.PGPIdentifier
+import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.ui.APSAppBar
@@ -107,6 +108,10 @@ class PGPKeyListActivity : AppCompatActivity() {
     val isSelectingKeys = intent.extras?.getBoolean(EXTRA_KEY_SELECTION) ?: false
     val selectedKeyIds = mutableSetOf<String>()
 
+    // initial selection of a PGP key for authentication
+    if (singleSelection && SshKey.pgpLongKeyId != 0L)
+      selectedKeyIds.add(KeyId(SshKey.pgpLongKeyId).toString())
+
     supportFragmentManager.setFragmentResultListener(PGP_KEY_ADD_REQUEST_KEY, this) { _, bundle ->
       when (bundle.getString(ACTION_KEY)) {
         ACTION_IMPORT_FILE -> {
@@ -153,6 +158,7 @@ class PGPKeyListActivity : AppCompatActivity() {
                       .setNegativeButton(
                         R.string.pgp_key_insecure_passphrase_warning_confirm // continue anyway
                       ) { _, _ ->
+                        if (singleSelection && SshKey.pgpLongKeyId != 0L) SshKey.delete()
                         setResult(RESULT_CANCELED)
                         finish()
                       }
