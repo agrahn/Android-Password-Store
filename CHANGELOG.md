@@ -6,7 +6,8 @@ All notable changes to this project will be documented in this file
 
 ### Added
 
-- PGP key option for authenticating and connecting via SSH. The PGP key does not need to provide a dedicated authentication subkey; the signing subkey and even the primary certification key are equally usable for that purpose. However, the authentication key is picked, if available, while the signing subkey and the primary key serve as fallbacks.
+- PGP key option for authenticating and connecting via SSH. The PGP key does not need to provide a dedicated authentication subkey; the signing subkey and even the primary certification key are equally usable for that purpose. The authentication key is always picked first, if available, while the signing subkey and the primary key serve as fallbacks
+- The PGP key manager now lets you set individual passphrases for the subkeys of a PGP key
 - Allow custom port setting for Git via http
 
 ### Fixed

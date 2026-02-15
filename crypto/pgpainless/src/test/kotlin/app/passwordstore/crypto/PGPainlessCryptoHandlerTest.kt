@@ -255,9 +255,13 @@ class PGPainlessCryptoHandlerTest {
           .encodeToByteArray()
       )
     assertFalse(cryptoHandler.isPassphraseProtected(listOf(unprotectedKey)))
-    assertTrue(cryptoHandler.passphraseIsCorrect(unprotectedKey, null))
+    assertTrue(cryptoHandler.passphraseIsCorrect(unprotectedKey, null, null))
     assertFalse(
-      cryptoHandler.passphraseIsCorrect(unprotectedKey, "obviously wrong passphrase".toCharArray())
+      cryptoHandler.passphraseIsCorrect(
+        unprotectedKey,
+        null,
+        "obviously wrong passphrase".toCharArray(),
+      )
     )
   }
 

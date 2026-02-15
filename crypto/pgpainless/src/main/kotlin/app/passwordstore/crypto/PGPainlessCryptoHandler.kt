@@ -7,6 +7,7 @@ package app.passwordstore.crypto
 
 import app.passwordstore.crypto.KeyUtils.hasDecKey
 import app.passwordstore.crypto.KeyUtils.tryParseCertificateOrKey
+import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.errors.CryptoException
 import app.passwordstore.crypto.errors.CryptoHandlerException
 import app.passwordstore.crypto.errors.IncorrectPassphraseException
@@ -40,7 +41,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 
 public class PGPainlessCryptoHandler @Inject constructor() :
-  CryptoHandler<PGPKey, KeyPair, PGPEncryptOptions, PGPDecryptOptions> {
+  CryptoHandler<PGPKey, KeyId, KeyPair, PGPEncryptOptions, PGPDecryptOptions> {
 
   private val pgpApi = PGPainless.getInstance()
 
@@ -188,8 +189,12 @@ public class PGPainlessCryptoHandler @Inject constructor() :
             }
       }
 
+  /* Tests [passphrase] correctness for a specific subkey with ID [subkeyIdentifier]; if no subkey ID is given,
+   * [passphrase] correctness is tested for any encryption subkey unless [anySubkey] is set to true, in which
+   * case it is tested for any subkey in [PGPKey] */
   public override fun passphraseIsCorrect(
     key: PGPKey,
+    subkeyIdentifier: KeyId?,
     passphrase: CharArray?,
     anySubkey: Boolean,
   ): Boolean =
@@ -197,11 +202,14 @@ public class PGPainlessCryptoHandler @Inject constructor() :
       it is OpenPGPKey &&
         it
           .getSecretKeys()
-          .values
-          .filter {
-            (anySubkey || it.isEncryptionKey()) && !it.getPGPSecretKey().isPrivateKeyEmpty()
+          .filter { (id, sk) ->
+            if (subkeyIdentifier != null) {
+              id.getKeyId() == subkeyIdentifier.id
+            } else {
+              (anySubkey || sk.isEncryptionKey())
+            } && !sk.getPGPSecretKey().isPrivateKeyEmpty()
           }
-          .any { it.isPassphraseCorrect(passphrase) }
+          .any { (_, sk) -> sk.isPassphraseCorrect(passphrase) }
     } ?: false
 
   /* Unlocks the first authentication-capable subkey of the given PGP key with its passphrase and

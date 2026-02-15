@@ -22,6 +22,7 @@ import org.pgpainless.key.info.KeyRingInfo
 
 /** Utility methods to deal with [PGPKey]s. */
 public object KeyUtils {
+
   /**
    * Attempts to parse an [OpenPGPCertificate] from a given [PGPKey]. The key is first tried as a
    * secret keyring and then as a public one before the method gives up and returns null.
@@ -46,6 +47,37 @@ public object KeyUtils {
    */
   public fun tryGetKeyId(cert: OpenPGPCertificate): KeyId =
     cert.getPrimaryKey().getKeyIdentifier().getKeyId().let { KeyId(it) }
+
+  /**
+   * Queries all secret subkey IDs of a given [OpenPGPCertificate] along with their usages (C,E,S,A)
+   * and whether the private key was stripped
+   */
+  public fun tryGetSecretSubkeyIdsUsagesIsStripped(
+    key: PGPKey
+  ): List<Triple<KeyId, String, Boolean>>? =
+    tryParseCertificateOrKey(key)?.let { tryGetSecretSubkeyIdsUsagesIsStripped(it) }
+
+  /**
+   * Queries all secret subkey IDs of a given [PGPKey] along with their usages (C,E,S,A) and whether
+   * the private key was stripped
+   */
+  public fun tryGetSecretSubkeyIdsUsagesIsStripped(
+    cert: OpenPGPCertificate
+  ): List<Triple<KeyId, String, Boolean>>? {
+    if (cert !is OpenPGPKey) return null
+    return cert.getSecretKeys().entries.map {
+      val keyId = KeyId(it.key.getKeyId())
+      val usages =
+        "[" +
+          (if (it.value.isSigningKey(Date())) "S" else "") +
+          (if (it.value.isCertificationKey(Date())) "C" else "") +
+          (if (it.value.isEncryptionKey(Date())) "E" else "") +
+          (if (it.value.hasKeyFlags(Date(), KeyFlags.AUTHENTICATION)) "A" else "") +
+          "]"
+      val isStripped = it.value.getPGPSecretKey().isPrivateKeyEmpty()
+      Triple(keyId, usages, isStripped)
+    }
+  }
 
   /** Parses an [OpenPGPPrimaryKey] from the given [PGPKey] and attempts to obtain the [UserId] */
   public fun tryGetUserId(key: PGPKey): UserId? =

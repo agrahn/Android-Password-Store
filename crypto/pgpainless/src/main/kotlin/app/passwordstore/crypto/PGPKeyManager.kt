@@ -9,6 +9,7 @@ import androidx.annotation.VisibleForTesting
 import app.passwordstore.crypto.KeyUtils.isKeyUsable
 import app.passwordstore.crypto.KeyUtils.tryGetKeyId
 import app.passwordstore.crypto.KeyUtils.tryParseCertificateOrKey
+import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.errors.InvalidKeyException
 import app.passwordstore.crypto.errors.KeyAlreadyExistsException
 import app.passwordstore.crypto.errors.KeyDeletionFailedException
@@ -28,7 +29,7 @@ import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 
 public class PGPKeyManager @Inject constructor(filesDir: String) :
-  KeyManager<PGPKey, PGPIdentifier> {
+  KeyManager<PGPKey, PGPIdentifier, KeyId> {
 
   private val pgpApi = PGPainless.getInstance()
 
@@ -102,6 +103,7 @@ public class PGPKeyManager @Inject constructor(filesDir: String) :
 
   override fun changeKeyPassphrase(
     identifier: PGPIdentifier,
+    subkeyIdentifier: KeyId?,
     oldPassphrase: CharArray?,
     newPassphrase: CharArray?,
   ): Result<PGPKey, Throwable> = runCatching {
@@ -114,7 +116,10 @@ public class PGPKeyManager @Inject constructor(filesDir: String) :
     openPgpKey
       .getSecretKeys()
       .values
-      .filter { it.isPassphraseCorrect(oldPassphrase) }
+      .filter { sk ->
+        (subkeyIdentifier?.let { it.id == sk.getKeyIdentifier().getKeyId() } ?: true) &&
+          sk.isPassphraseCorrect(oldPassphrase)
+      }
       .map { it.getKeyIdentifier() }
       .forEach { subId ->
         secretKeyRingEditor
@@ -139,8 +144,7 @@ public class PGPKeyManager @Inject constructor(filesDir: String) :
       for (key in keys) {
         val certificateOrKey = tryParseCertificateOrKey(key) ?: continue
         if (
-          id is PGPIdentifier.KeyId &&
-            certificateOrKey.getAllKeyIdentifiers().any { id.id == it.getKeyId() } ||
+          id is KeyId && certificateOrKey.getAllKeyIdentifiers().any { id.id == it.getKeyId() } ||
             id is PGPIdentifier.UserId &&
               certificateOrKey.getAllUserIds().any {
                 id.email == it.getUserId() || id.email == PGPIdentifier.splitUserId(it.getUserId())

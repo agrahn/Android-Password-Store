@@ -406,7 +406,8 @@
   <string name="pgp_key_creation_succeeded_message">The ID of the new key is:\n%1$s</string>
   <string name="pgp_key_creation_error">PGP key creation failure</string>
   <string name="pgp_key_change_passphrase_succeeded">Passphrase changed</string>
-  <string name="pgp_key_change_passphrase_succeeded_message">The passphrase of the key with the ID %1$s was successfully changed.</string>
+  <string name="pgp_key_change_passphrase_succeeded_message">The passphrase of the key with ID %1$s was successfully changed.</string>
+  <string name="pgp_subkey_change_passphrase_succeeded_message">The passphrase of the subkey with ID %1$s was successfully changed.</string>
   <string name="pgp_key_change_passphrase_error">Error while setting the passphrase.</string>
   <string name="pgp_key_empty_passphrase_warning">Empty passphrase</string>
   <string name="pgp_key_empty_passphrase_warning_message">With an empty passphrase, the PGP key is completely unprotected. This is generally discouraged.</string>
@@ -422,7 +423,8 @@
   <string name="pgp_key_manager_delete_secret_key_confirmation_dialog_title">Delete secret key?</string>
   <string name="pgp_key_manager_delete_key_confirmation_dialog_title">Delete key?</string>
   <string name="pgp_key_manager_delete_confirmation_dialog_message">Be sure to keep a backup of the PGP key. Without it, you will lose access to any password items encrypted with that key.</string>
-  <string name="pgp_change_passphrase_title">Change PGP key passphrase</string>
+  <string name="pgp_change_passphrase_title">Change PGP passphrase</string>
+  <string name="pgp_change_passphrase_matching_subkeys">all matching subkeys</string>
   <string name="pgp_old_passphrase">Current passphrase</string>
   <string name="pgp_new_passphrase">New passphrase</string>
   <string name="pgp_new_passphrase_repeated">Repeat new passphrase</string>

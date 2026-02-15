@@ -121,10 +121,10 @@ class PGPKeyManagerTest {
     val keyId = tryGetKeyId(key)
     assertNotNull(keyId)
     keyManager
-      .changeKeyPassphrase(keyId, KEY_PASSPHRASE.toCharArray(), "pa55w0rD".toCharArray())
+      .changeKeyPassphrase(keyId, null, KEY_PASSPHRASE.toCharArray(), "pa55w0rD".toCharArray())
       .unwrap()
     val returnedKey = keyManager.getKeyById(keyId).unwrap()
-    assertTrue(cryptoHandler.passphraseIsCorrect(returnedKey, "pa55w0rD".toCharArray()))
+    assertTrue(cryptoHandler.passphraseIsCorrect(returnedKey, null, "pa55w0rD".toCharArray()))
   }
 
   @Test

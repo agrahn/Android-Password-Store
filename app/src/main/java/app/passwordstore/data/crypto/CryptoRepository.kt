@@ -10,6 +10,7 @@ import app.passwordstore.crypto.KeyUtils
 import app.passwordstore.crypto.PGPDecryptOptions
 import app.passwordstore.crypto.PGPEncryptOptions
 import app.passwordstore.crypto.PGPIdentifier
+import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPKey
 import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.crypto.PGPainlessCryptoHandler
@@ -75,11 +76,17 @@ constructor(
 
   fun isPasswordCorrect(
     identifier: PGPIdentifier,
+    subkeyIdentifier: KeyId?,
     passphrase: CharArray?,
     anySubkey: Boolean = false,
   ): Boolean {
     val key = pgpKeyManager.getKeyById(identifier).get() ?: return false
-    return pgpCryptoHandler.passphraseIsCorrect(key, passphrase, anySubkey = anySubkey)
+    return pgpCryptoHandler.passphraseIsCorrect(
+      key,
+      subkeyIdentifier,
+      passphrase,
+      anySubkey = anySubkey,
+    )
   }
 
   fun getEmailFromKeyId(identifier: PGPIdentifier): String? {

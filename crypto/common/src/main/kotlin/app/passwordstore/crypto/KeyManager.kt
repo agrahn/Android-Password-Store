@@ -12,7 +12,7 @@ import com.github.michaelbull.result.Result
  * used by an implementation of [CryptoHandler] to obtain eligible public or private keys as
  * required.
  */
-public interface KeyManager<Key, KeyIdentifier> {
+public interface KeyManager<Key, KeyIdentifier, SubkeyIdentifier> {
 
   /**
    * Inserts a [key] into the store. If the key already exists, this method will return
@@ -22,7 +22,7 @@ public interface KeyManager<Key, KeyIdentifier> {
 
   /**
    * Creates a new EC-based OpenPGP key and inserts it into the store. [userId] is used as primary
-   * user-id, the generated secret key is encrypted with [passphrase]
+   * user-id, the generated secret key with all its subkeys is protected with [passphrase]
    */
   public fun generateKey(userId: String, passphrase: CharArray?): Result<Key, Throwable>
 
@@ -39,8 +39,11 @@ public interface KeyManager<Key, KeyIdentifier> {
   /** Returns all keys currently in the store as a [List]. */
   public fun getAllKeys(): Result<List<Key>, Throwable>
 
+  /* Change passphrase of all subkeys of a key identified by [identifier], or of a single subkey
+   * with ID [subkeyIdentifier], if specified */
   public fun changeKeyPassphrase(
     identifier: KeyIdentifier,
+    subkeyIdentifier: SubkeyIdentifier?,
     oldPassphrase: CharArray?,
     newPassphrase: CharArray?,
   ): Result<Key, Throwable>

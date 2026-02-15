@@ -12,14 +12,24 @@ import java.io.InputStream
 import java.io.OutputStream
 
 /** Generic interface to implement cryptographic operations on top of. */
-public interface CryptoHandler<Key, KeyPair, EncOpts : CryptoOptions, DecryptOpts : CryptoOptions> {
+public interface CryptoHandler<
+  Key,
+  Identifier,
+  KeyPair,
+  EncOpts : CryptoOptions,
+  DecryptOpts : CryptoOptions,
+> {
 
   /**
    * Check entered passphrase against primary key and all subkeys; returns true if passphrase is
    * correct for any of the tested keys
    */
+  /* Tests [passphrase] correctness for a specific subkey with ID [subkeyIdentifier]; if no subkey ID is given,
+   * [passphrase] correctness is tested for any encryption subkey unless [anySubkey] is set to true, in which
+   * case it is tested for any subkey in [PGPKey] */
   public fun passphraseIsCorrect(
     key: Key,
+    subkeyIdentifier: Identifier?,
     passphrase: CharArray?,
     anySubkey: Boolean = false,
   ): Boolean
