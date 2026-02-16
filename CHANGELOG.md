@@ -8,13 +8,18 @@ All notable changes to this project will be documented in this file
 
 - PGP key option for authenticating and connecting via SSH. The PGP key does not need to provide a dedicated authentication subkey; the signing subkey and even the primary certification key are equally usable for that purpose. The authentication key is always picked first, if available, while the signing subkey and the primary key serve as fallbacks
 - The PGP key manager now lets you set individual passphrases for the subkeys of a PGP key
-- Declare sensitive fields of extra content using `gopass` syntax or by marking keys up with asterisks: `*key 4*: sensitive content`. Such fields will by displayed like password fields with masked content
-````
-unsafe-keys: key 1, key_2, key-3, ...,
-key 1: something
-key_2: more stuff
-...
-````
+- Declare sensitive fields of extra content by adding asterisks around keys
+
+      *key 1*: sensitive content
+
+  or by using `gopass` syntax
+
+      unsafe-keys: key 2, key_3, ...
+      key 2: something
+      key_3: more stuff
+      ...
+
+  Such fields will by displayed like password fields with masked content
 - Allow custom port setting for Git via http
 
 ### Fixed

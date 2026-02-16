@@ -142,41 +142,33 @@ constructor(
   ): Pair<CharArray?, List<CharArray>> {
     var lines = passContent
     var password: CharArray? = null
+
     // First line looks like a password
     if (
-      !USERNAME_FIELDS.plus(TotpFinder.TOTP_FIELDS).any {
-        lines[0].startsWith(it, ignoreCase = true)
-      }
+      !lines[0].isBlank() &&
+        !USERNAME_FIELDS.plus(TotpFinder.TOTP_FIELDS).any {
+          lines[0].startsWith(it, ignoreCase = true)
+        }
     ) {
       password = lines[0].copyOf(lines[0].size)
       lines = lines.minus(lines[0])
+      return Pair(password, lines)
     }
+
+    if (lines[0].isBlank()) lines = lines.minus(lines[0])
+
     for (line in lines) {
-      if (line.isBlank()) break
+      if (line.isBlank()) break // extra content starts
       for (prefix in PASSWORD_FIELDS) {
         if (line.startsWith(prefix, ignoreCase = true)) {
           password = line.copyOfRange(prefix.length, line.size).trimStart()
           lines = lines.minus(line)
-          break
+          return Pair(password, lines)
         }
       }
-      password?.let { break } // TODO: comment this out if last password sould win
     }
-    password?.let {
-      return Pair(it, lines)
-    }
-    /**
-     * If the first line contains any of the other known prefixes, we assume that no password is
-     * present
-     */
-    if (
-      USERNAME_FIELDS.plus(TotpFinder.TOTP_FIELDS).any {
-        passContent[0].startsWith(it, ignoreCase = true)
-      }
-    )
-      return Pair(null, passContent)
-    // Otherwise, we assume that the first line is the (un-prefixed) password
-    return Pair(passContent[0], passContent.minus(passContent[0]))
+
+    return Pair(null, lines)
   }
 
   private fun findAndStripFirstUsername(
@@ -190,12 +182,11 @@ constructor(
         if (line.startsWith(prefix, ignoreCase = true)) {
           username = line.copyOfRange(prefix.length, line.size).trimStart()
           lines = lines.minus(line)
-          break
+          return Pair(username, lines)
         }
       }
-      username?.let { break }
     }
-    return Pair(username, lines)
+    return Pair(null, lines)
   }
 
   /* gopass-way of declaring sensitive extra-content keys denoting fields that should be displayed
@@ -213,7 +204,7 @@ constructor(
       if (line.isBlank()) break
       if (line.startsWith(UNSAFE_KEYS, ignoreCase = true)) {
         unsafe.addAll(
-          line.copyOfRange("unsafe-keys:".length, line.size).splitToCharArrayListAt(',').map {
+          line.copyOfRange(UNSAFE_KEYS.length, line.size).splitToCharArrayListAt(',').map {
             String(it).trim()
           }
         )
@@ -246,10 +237,9 @@ constructor(
         if (existing == null) {
           value
         } else {
-          charArrayOf(*existing, '\n', *value).let {
+          charArrayOf(*existing, '\n', *value).also {
             existing.fill('\u0000')
             value.fill('\u0000')
-            it
           }
         }
     }
