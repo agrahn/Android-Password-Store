@@ -44,6 +44,9 @@ constructor(
   /** The username for this entry. Can be null. */
   public val username: CharArray?
 
+  /** The username for this entry. Can be null. */
+  public lateinit var unsafeKeys: MutableSet<String>
+
   /** The totp entry extracted from the decrypted password file */
   private val totpString: String
 
@@ -103,13 +106,22 @@ constructor(
     val (foundUsername, passContentWithoutPasswordsAndFirstUsername) =
       findAndStripFirstUsername(passContentWithoutPasswords)
     username = foundUsername
+
     extraContentChars = passContentWithoutPasswordsAndFirstUsername.joinToCharArray('\n')
+
     val (foundTotp, extraContentWithoutAuthData) =
       findAndStripTotp(passContentWithoutPasswordsAndFirstUsername)
     totpString = foundTotp?.let { String(it) } ?: ""
     foundTotp?.fill('\u0000')
-    extraContent = generateExtraContentPairs(extraContentWithoutAuthData)
+
+    val (unsafe, extraContentWithoutAuthDataAndUnsafeKeywords) =
+      findAndStripUnsafeKeys(extraContentWithoutAuthData)
+    unsafeKeys = unsafe
+
+    extraContent = generateExtraContentPairs(extraContentWithoutAuthDataAndUnsafeKeywords)
+
     allLines.forEach { it?.fill('\u0000') }
+
     // Verify the TOTP secret is valid and disable TOTP if not.
     val secret = totpFinder.findSecret(totpString)
     totpSecret =
@@ -140,6 +152,7 @@ constructor(
       lines = lines.minus(lines[0])
     }
     for (line in lines) {
+      if (line.isBlank()) break
       for (prefix in PASSWORD_FIELDS) {
         if (line.startsWith(prefix, ignoreCase = true)) {
           password = line.copyOfRange(prefix.length, line.size).trimStart()
@@ -172,6 +185,7 @@ constructor(
     var lines = passContent
     var username: CharArray? = null
     for (line in passContent) {
+      if (line.isBlank()) break
       for (prefix in USERNAME_FIELDS) {
         if (line.startsWith(prefix, ignoreCase = true)) {
           username = line.copyOfRange(prefix.length, line.size).trimStart()
@@ -182,6 +196,31 @@ constructor(
       username?.let { break }
     }
     return Pair(username, lines)
+  }
+
+  /* gopass-way of declaring sensitive extra-content keys denoting fields that should be displayed
+   * as passwords:
+   *
+   *   unsafe-keys: key_1, key_2, ...
+   *
+   * such keys are placed in the returned string list */
+  private fun findAndStripUnsafeKeys(
+    passContent: List<CharArray>
+  ): Pair<MutableSet<String>, List<CharArray>> {
+    var lines = passContent
+    val unsafe = mutableSetOf<String>()
+    for (line in passContent) {
+      if (line.isBlank()) break
+      if (line.startsWith(UNSAFE_KEYS, ignoreCase = true)) {
+        unsafe.addAll(
+          line.copyOfRange("unsafe-keys:".length, line.size).splitToCharArrayListAt(',').map {
+            String(it).trim()
+          }
+        )
+        lines = lines.minus(line)
+      }
+    }
+    return Pair(unsafe, lines)
   }
 
   private fun findAndStripTotp(passContent: List<CharArray>): Pair<CharArray?, List<CharArray>> {
@@ -232,7 +271,17 @@ constructor(
           else charArrayOf()
         if (k.isBlank() || k.startsWith(" ") || k.startsWith("\\t") || extraContentStarted)
           extraContentLines.add(line)
-        else items.putOrAppend(String(k).trimEnd(), v.trimStart().trimEnd())
+        else {
+          val kk = String(k).trimEnd()
+          val key =
+            if (kk.startsWith("*") && kk.endsWith("*")) {
+              kk.substring(1, kk.length - 1).let {
+                unsafeKeys.add(it)
+                it
+              }
+            } else kk
+          items.putOrAppend(key, v.trimStart().trimEnd())
+        }
       } else {
         if (line.isBlank()) {
           extraContentStarted = true
@@ -308,8 +357,11 @@ constructor(
         "identity:",
       )
 
+    private val UNSAFE_KEYS: String = "unsafe-keys:"
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public val PASSWORD_FIELDS: Array<String> = arrayOf("password:", "secret:", "pass:")
+
     private const val THOUSAND_MILLIS = 1000L
   }
 }

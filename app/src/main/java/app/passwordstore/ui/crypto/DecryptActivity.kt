@@ -247,9 +247,11 @@ class DecryptActivity : BasePGPActivity() {
       }
 
       entry.extraContent.forEach { (key, value) ->
-        /* TODO: for keys denoting sensitive content, like additional passwords, "PIN",
-         * "CVC" and such, create masked items with FieldItem.createPasswordField */
-        if (key != PasswordEntry.EXTRA_CONTENT) items.add(FieldItem.createFreeformField(key, value))
+        if (key != PasswordEntry.EXTRA_CONTENT) {
+          if (key in entry.unsafeKeys || key.lowercase() in listOf("password", "secret", "pass"))
+            items.add(FieldItem.createPasswordField(key, value))
+          else items.add(FieldItem.createFreeformField(key, value))
+        }
       }
 
       entry.extraContent.forEach { (key, value) ->
