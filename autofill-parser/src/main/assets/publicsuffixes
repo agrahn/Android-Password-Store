@@ -1,4 +1,4 @@
-140342
+140468
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -2675,6 +2675,8 @@ eu-central-1.elasticbeanstalk.com
 eu-north-1.elasticbeanstalk.com
 eu-south-1.elasticbeanstalk.com
 eu-south-2.elasticbeanstalk.com
+eu-west-1.convex.cloud
+eu-west-1.convex.site
 eu-west-1.elasticbeanstalk.com
 eu-west-2.elasticbeanstalk.com
 eu-west-3.elasticbeanstalk.com
@@ -3853,6 +3855,7 @@ httpbin.org
 hu
 hu.eu.org
 hu.net
+hue.vn
 hughes
 huissier-justice.fr
 hungry.jp
@@ -3973,6 +3976,7 @@ im
 im.it
 imabari.ehime.jp
 imagine-proxy.work
+imagine.diy
 imakane.hokkaido.jp
 imamat
 imari.saga.jp
@@ -7848,6 +7852,7 @@ samsung
 samukawa.kanagawa.jp
 sanagochi.tokushima.jp
 sanda.hyogo.jp
+sandbox.deno.net
 sandcats.io
 sande.more-og-romsdal.no
 sande.møre-og-romsdal.no
@@ -9193,6 +9198,8 @@ us-2.evennode.com
 us-3.evennode.com
 us-4.evennode.com
 us-east-1.amazonaws.com
+us-east-1.convex.cloud
+us-east-1.convex.site
 us-east-1.elasticbeanstalk.com
 us-east-2.elasticbeanstalk.com
 us-gov-east-1.elasticbeanstalk.com
