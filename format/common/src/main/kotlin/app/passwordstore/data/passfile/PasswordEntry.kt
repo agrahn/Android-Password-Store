@@ -140,18 +140,17 @@ constructor(
       lines = lines.minus(lines[0])
     }
     for (line in lines) {
-      for (prefix in PASSWORD_FIELDS) { // Last line with prefixed password wins
+      for (prefix in PASSWORD_FIELDS) {
         if (line.startsWith(prefix, ignoreCase = true)) {
-          // Skip first space after password prefix
-          val startsAt = prefix.length.let { if (line[it] == ' ') it + 1 else it }
-          password = line.copyOfRange(startsAt, line.size)
+          password = line.copyOfRange(prefix.length, line.size).trimStart()
           lines = lines.minus(line)
           break
         }
       }
+      password?.let { break } // TODO: comment this out if last password sould win
     }
     password?.let {
-      return Pair(password, lines)
+      return Pair(it, lines)
     }
     /**
      * If the first line contains any of the other known prefixes, we assume that no password is
@@ -180,7 +179,7 @@ constructor(
           break
         }
       }
-      if (username != null) break
+      username?.let { break }
     }
     return Pair(username, lines)
   }

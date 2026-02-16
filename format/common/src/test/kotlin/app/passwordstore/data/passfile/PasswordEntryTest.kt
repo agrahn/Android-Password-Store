@@ -49,8 +49,12 @@ class PasswordEntryTest {
         "fooooo",
         makeEntry("GOPASS-SECRET-1.0\n$field fooooo").password?.let { String(it) },
       )
-      assertEquals(
+      /* assertEquals(
         " fooooo",
+        makeEntry("someFirstLine\nUsername: bar\n$field  fooooo").password?.let { String(it) },
+      ) */
+      assertEquals(
+        "someFirstLine",
         makeEntry("someFirstLine\nUsername: bar\n$field  fooooo").password?.let { String(it) },
       )
     }
@@ -73,8 +77,14 @@ class PasswordEntryTest {
       "username: baz",
       makeEntry("blubb\npassword: foo\nid:bar\nusername: baz").extraContentChars?.let { String(it) },
     )
-    assertEquals(
+    /* assertEquals(
       "username: baz",
+      makeEntry("blubb\npassword: foo\nid:bar\npass: 1234 \nusername: baz").extraContentChars?.let {
+        String(it)
+      },
+    ) */
+    assertEquals(
+      "pass: 1234 \nusername: baz",
       makeEntry("blubb\npassword: foo\nid:bar\npass: 1234 \nusername: baz").extraContentChars?.let {
         String(it)
       },
