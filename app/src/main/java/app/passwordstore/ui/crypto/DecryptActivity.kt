@@ -248,7 +248,10 @@ class DecryptActivity : BasePGPActivity() {
 
       entry.extraContent.forEach { (key, value) ->
         if (key != PasswordEntry.EXTRA_CONTENT) {
-          if (key in entry.unsafeKeys || key.lowercase() in listOf("password", "secret", "pass"))
+          if (
+            key.lowercase() in entry.unsafeKeys ||
+              key.lowercase() in PasswordEntry.PASSWORD_FIELDS.map { it.dropLast(1) }
+          )
             items.add(FieldItem.createPasswordField(key, value))
           else items.add(FieldItem.createFreeformField(key, value))
         }

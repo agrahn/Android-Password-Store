@@ -19,7 +19,7 @@ All notable changes to this project will be documented in this file
       key_3: more stuff
       ...
 
-  Such fields will by displayed like password fields with masked content
+  Such fields will be displayed like password fields with masked content. Search for keys listed in the `unsafe-keys` entry is case-insensitive.
 - Allow custom port setting for Git via http
 
 ### Fixed

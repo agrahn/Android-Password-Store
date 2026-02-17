@@ -205,7 +205,7 @@ constructor(
       if (line.startsWith(UNSAFE_KEYS, ignoreCase = true)) {
         unsafe.addAll(
           line.copyOfRange(UNSAFE_KEYS.length, line.size).splitToCharArrayListAt(',').map {
-            String(it).trim()
+            String(it).trim().lowercase()
           }
         )
         lines = lines.minus(line)
@@ -265,10 +265,7 @@ constructor(
           val kk = String(k).trimEnd()
           val key =
             if (kk.startsWith("*") && kk.endsWith("*")) {
-              kk.substring(1, kk.length - 1).let {
-                unsafeKeys.add(it)
-                it
-              }
+              kk.substring(1, kk.length - 1).also { unsafeKeys.add(it) }
             } else kk
           items.putOrAppend(key, v.trimStart().trimEnd())
         }
@@ -349,7 +346,6 @@ constructor(
 
     private val UNSAFE_KEYS: String = "unsafe-keys:"
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public val PASSWORD_FIELDS: Array<String> = arrayOf("password:", "secret:", "pass:")
 
     private const val THOUSAND_MILLIS = 1000L
