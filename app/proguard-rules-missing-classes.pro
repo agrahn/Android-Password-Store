@@ -28,3 +28,4 @@
 -dontwarn org.ietf.jgss.GSSManager
 -dontwarn org.ietf.jgss.GSSName
 -dontwarn org.ietf.jgss.Oid
+-dontwarn sun.security.x509.X509Key
