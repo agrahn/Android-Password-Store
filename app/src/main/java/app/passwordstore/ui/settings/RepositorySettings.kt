@@ -212,17 +212,17 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
         collapseIcon = true
         titleRes = R.string.pref_git_server_auth_key
 
-        pref(PreferenceKeys.SSH_USE_PGP_KEY) {
-          titleRes = R.string.pref_ssh_use_pgp_key_title
-          onClick {
-            sshKeyAction.launch(Intent(activity, PgpAuthKeySelectionActivity::class.java))
-            true
-          }
-        }
         pref(PreferenceKeys.SSH_KEYGEN) {
           titleRes = R.string.pref_ssh_keygen_title
           onClick {
             sshKeyAction.launch(Intent(activity, SshKeyGenActivity::class.java))
+            true
+          }
+        }
+        pref(PreferenceKeys.SSH_USE_PGP_KEY) {
+          titleRes = R.string.pref_ssh_use_pgp_key_title
+          onClick {
+            sshKeyAction.launch(Intent(activity, PgpAuthKeySelectionActivity::class.java))
             true
           }
         }

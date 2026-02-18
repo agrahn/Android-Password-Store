@@ -41,7 +41,6 @@ import logcat.asLog
 import logcat.logcat
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.common.Buffer
-import net.schmizz.sshj.common.KeyType
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider
 import net.schmizz.sshj.userauth.password.PasswordFinder
 
@@ -65,12 +64,11 @@ fun parseSshPublicKey(sshPublicKey: String): PublicKey? {
 }
 
 fun toSshPublicKey(publicKey: PublicKey): String {
-  val rawPublicKey = Buffer.PlainBuffer().putPublicKey(publicKey).compactData
-  val keyType = KeyType.fromKey(publicKey)
-  return "$keyType ${Base64.encodeToString(rawPublicKey, Base64.NO_WRAP)}"
+  /* val rawPublicKey = Buffer.PlainBuffer().putPublicKey(publicKey).compactData
+   * val keyType = KeyType.fromKey(publicKey)
+   * return "$keyType ${Base64.encodeToString(rawPublicKey, Base64.NO_WRAP)}" */
+  return publicKeyToOpenSsh(publicKey)
 }
-
-private lateinit var authKeyPair: KeyPair
 
 object SshKey {
   val sshPublicKey
@@ -236,6 +234,8 @@ object SshKey {
   }
 
   fun generateKeystoreNativeKey(algorithm: Algorithm, requireAuthentication: Boolean) {
+    delete()
+
     // Generate Keystore-backed private key.
     val parameterSpec =
       KeyGenParameterSpec.Builder(KEYSTORE_ALIAS, KeyProperties.PURPOSE_SIGN).run {
@@ -260,8 +260,6 @@ object SshKey {
       }
 
     val userId = context.sharedPrefs.getString(PreferenceKeys.GIT_CONFIG_AUTHOR_EMAIL) ?: "nn@aps"
-
-    delete()
 
     // Write public key in SSH format to .ssh_key.pub.
     publicKeyFile.writeText(toSshPublicKey(keyPair.public) + " " + userId)
@@ -294,56 +292,32 @@ object SshKey {
   fun provide(client: SSHClient, passphraseFinder: PasswordFinder): KeyProvider? =
     when (type) {
       Type.Imported -> client.loadKeys(privateKeyFile.absolutePath, passphraseFinder)
-      Type.KeystoreNative -> KeystoreNativeKeyProvider
-      Type.ImportedPGP -> PGPAuthenticationKeyProvider(passphraseFinder)
+      Type.KeystoreNative -> KeystoreNativeKeyProvider(client)
+      Type.ImportedPGP -> PGPAuthenticationKeyProvider(client, passphraseFinder)
       null -> null
     }
 
-  private object KeystoreNativeKeyProvider : KeyProvider {
+  private fun KeystoreNativeKeyProvider(client: SSHClient): KeyProvider =
+    runCatching {
+        val publicKey = androidKeystore.sshPublicKey ?: throw NullPointerException()
+        val privateKey = androidKeystore.sshPrivateKey ?: throw NullPointerException()
+        client.loadKeys(KeyPair(publicKey, privateKey))
+      }
+      .getOrElse { error ->
+        logcat { error.asLog() }
+        throw IOException("Failed to unlock authentication keypair from Android Keystore", error)
+      }
 
-    override fun getPublic(): PublicKey =
-      runCatching { androidKeystore.sshPublicKey ?: throw NullPointerException() }
-        .getOrElse { error ->
-          logcat { error.asLog() }
-          throw IOException(
-            "Failed to get public key '$KEYSTORE_ALIAS' from Android Keystore",
-            error,
-          )
-        }
-
-    override fun getPrivate(): PrivateKey =
-      runCatching { androidKeystore.sshPrivateKey ?: throw NullPointerException() }
-        .getOrElse { error ->
-          logcat { error.asLog() }
-          throw IOException(
-            "Failed to access private key '$KEYSTORE_ALIAS' from Android Keystore",
-            error,
-          )
-        }
-
-    override fun getType(): KeyType = KeyType.fromKey(public)
-  }
-
-  private class PGPAuthenticationKeyProvider(private val passphraseFinder: PasswordFinder) :
-    KeyProvider {
-
-    override fun getPublic(): PublicKey =
-      runCatching { sshPublicKey?.let { parseSshPublicKey(it) } ?: throw NullPointerException() }
-        .getOrElse { error ->
-          logcat { error.asLog() }
-          throw IOException("Failed to get public authentication subkey from PGP key", error)
-        }
-
-    override fun getPrivate(): PrivateKey =
-      runCatching {
-          (passphraseFinder as CredentialFinder).unlockAuthKeyPair()?.getPrivate()
-            ?: throw NullPointerException()
-        }
-        .getOrElse { error ->
-          logcat { error.asLog() }
-          throw IOException("Failed to access private authentication subkey from PGP key", error)
-        }
-
-    override fun getType(): KeyType = KeyType.fromKey(public)
-  }
+  private fun PGPAuthenticationKeyProvider(
+    client: SSHClient,
+    passphraseFinder: PasswordFinder,
+  ): KeyProvider =
+    runCatching {
+        (passphraseFinder as CredentialFinder).unlockAuthKeyPair()?.let { client.loadKeys(it) }
+          ?: throw NullPointerException()
+      }
+      .getOrElse { error ->
+        logcat { error.asLog() }
+        throw IOException("Failed to unlock authentication subkey from PGP key", error)
+      }
 }
