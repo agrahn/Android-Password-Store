@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-02-20
+
 ### Added
 
 - PGP key option for authenticating and connecting via SSH. The PGP key does not need to provide a dedicated authentication subkey; the signing subkey and even the primary certification key are equally usable for that purpose. Of course, the authentication key is always picked first, if available, while the signing subkey and the primary key only serve as fallback keys
@@ -614,7 +616,8 @@ All notable changes to this project will be documented in this file
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.4...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.0...HEAD
+[1.16.0]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.4...v1.16.0
 [1.15.4]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.3...v1.15.4
 [1.15.3]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.2...v1.15.3
 [1.15.2]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.1...v1.15.2
