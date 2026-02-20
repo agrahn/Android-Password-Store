@@ -50,7 +50,6 @@
       description: 'Packages to be excluded from updates',
       matchPackageNames: [
         'org.eclipse.jgit', // Android 13+ required for JGit v6.3+
-        'com.hierynomus',
       ],
     },
   ],

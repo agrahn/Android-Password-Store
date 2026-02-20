@@ -41,6 +41,7 @@ import logcat.asLog
 import logcat.logcat
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.common.Buffer
+import net.schmizz.sshj.common.KeyType
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider
 import net.schmizz.sshj.userauth.password.PasswordFinder
 
@@ -64,10 +65,9 @@ fun parseSshPublicKey(sshPublicKey: String): PublicKey? {
 }
 
 fun toSshPublicKey(publicKey: PublicKey): String {
-  /* val rawPublicKey = Buffer.PlainBuffer().putPublicKey(publicKey).compactData
-   * val keyType = KeyType.fromKey(publicKey)
-   * return "$keyType ${Base64.encodeToString(rawPublicKey, Base64.NO_WRAP)}" */
-  return publicKeyToOpenSsh(publicKey)
+  val rawPublicKey = Buffer.PlainBuffer().putPublicKey(publicKey).compactData
+  val keyType = KeyType.fromKey(publicKey)
+  return "$keyType ${Base64.encodeToString(rawPublicKey, Base64.NO_WRAP)}"
 }
 
 object SshKey {
@@ -292,12 +292,12 @@ object SshKey {
   fun provide(client: SSHClient, passphraseFinder: PasswordFinder): KeyProvider? =
     when (type) {
       Type.Imported -> client.loadKeys(privateKeyFile.absolutePath, passphraseFinder)
-      Type.KeystoreNative -> KeystoreNativeKeyProvider(client)
-      Type.ImportedPGP -> PGPAuthenticationKeyProvider(client, passphraseFinder)
+      Type.KeystoreNative -> provideKeystoreNativeKey(client)
+      Type.ImportedPGP -> providePgpAuthenticationKey(client, passphraseFinder)
       null -> null
     }
 
-  private fun KeystoreNativeKeyProvider(client: SSHClient): KeyProvider =
+  private fun provideKeystoreNativeKey(client: SSHClient): KeyProvider =
     runCatching {
         val publicKey = androidKeystore.sshPublicKey ?: throw NullPointerException()
         val privateKey = androidKeystore.sshPrivateKey ?: throw NullPointerException()
@@ -308,7 +308,7 @@ object SshKey {
         throw IOException("Failed to unlock authentication keypair from Android Keystore", error)
       }
 
-  private fun PGPAuthenticationKeyProvider(
+  private fun providePgpAuthenticationKey(
     client: SSHClient,
     passphraseFinder: PasswordFinder,
   ): KeyProvider =

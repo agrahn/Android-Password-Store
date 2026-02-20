@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file
 
 ### Added
 
-- PGP key option for authenticating and connecting via SSH. The PGP key does not need to provide a dedicated authentication subkey; the signing subkey and even the primary certification key are equally usable for that purpose. The authentication key is always picked first, if available, while the signing subkey and the primary key serve as fallbacks
+- PGP key option for authenticating and connecting via SSH. The PGP key does not need to provide a dedicated authentication subkey; the signing subkey and even the primary certification key are equally usable for that purpose. Of course, the authentication key is always picked first, if available, while the signing subkey and the primary key only serve as fallback keys
 - The PGP key manager now lets you set individual passphrases for the subkeys of a PGP key
 - Declare sensitive fields of extra content by adding asterisks around keys
 
@@ -19,7 +19,7 @@ All notable changes to this project will be documented in this file
       key_3: more stuff
       ...
 
-  Such fields will be displayed like password fields with masked content. Search for keys listed in the `unsafe-keys` entry is case-insensitive.
+  Such fields will be displayed like password fields with masked content. Search for keys listed in the `unsafe-keys` entry is case-insensitive
 - Allow custom port setting for Git via http
 
 ### Fixed
@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file
 - Handling of password items that were encrypted to multiple subkeys
 - Enhanced feedback on encryption/decryption success and PGP key availability
 - Extra content: strip leading whitespace when copied to clipboard but preserve indentation of multiline text; append newline character at last line
+- SSH key parsing and connection failures after a recent system update
 
 ## [1.15.4] - 2025-11-27
 
