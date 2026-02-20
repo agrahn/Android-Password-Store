@@ -54,7 +54,7 @@ class CredentialFinder(
   private var retries = 0
 
   private var rememberPassphraseVisible = View.VISIBLE
-  private var rememberPassphrase = true
+  private var rememberPassphrase = false
   private var cachedPassphrase: CharArray? = null
 
   val credentialPref: String? =
