@@ -305,7 +305,10 @@ object SshKey {
       }
       .getOrElse { error ->
         logcat { error.asLog() }
-        throw IOException("Failed to unlock authentication keypair from Android Keystore", error)
+        throw IOException(
+          context.getString(R.string.ssh_use_pgp_key_error_unlocking_from_keystore_message),
+          error,
+        )
       }
 
   private fun providePgpAuthenticationKey(
@@ -318,6 +321,9 @@ object SshKey {
       }
       .getOrElse { error ->
         logcat { error.asLog() }
-        throw IOException("Failed to unlock authentication subkey from PGP key", error)
+        throw IOException(
+          context.getString(R.string.ssh_use_pgp_key_error_unlocking_pgp_auth_subkey_message),
+          error,
+        )
       }
 }

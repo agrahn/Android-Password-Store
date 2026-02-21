@@ -116,6 +116,8 @@
   <string name="pref_copy_summary">Kopiert das Passwort in die Zwischenablage, nachdem es entschlüsselt wurde.</string>
   <string name="ssh_key_import_error_not_an_ssh_key_message">Die ausgewählte Datei scheint kein privater SSH-Schlüssel zu sein.</string>
   <string name="ssh_use_pgp_key_error_no_authkey_message">Der ausgewählte PGP-Schlüssel stellt keinen zur Authentifizierung geeigneten Unterschlüssel bereit.</string>
+  <string name="ssh_use_pgp_key_error_unlocking_from_keystore_message">Fehler beim Entsperren des Authentifizierungsschlüssels aus dem Android Keystore.</string>
+  <string name="ssh_use_pgp_key_error_unlocking_pgp_auth_subkey_message">Fehler beim Entsperren des Authentifizierungs-Unterschlüssels aus dem PGP-Schlüssel.</string>
   <string name="ssh_key_success_dialog_title">SSH-Schlüssel importiert</string>
   <string name="ssh_key_error_dialog_title">Schlüssel-Importfehler</string>
   <string name="ssh_key_error_dialog_text">Nachricht : \n</string>
