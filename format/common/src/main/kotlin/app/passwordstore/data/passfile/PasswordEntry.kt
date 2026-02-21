@@ -190,7 +190,7 @@ constructor(
   }
 
   /* gopass-way of declaring sensitive extra-content keys denoting fields that should be displayed
-   * as passwords:
+   * with masked content, like passwords:
    *
    *   unsafe-keys: key_1, key_2, ...
    *
@@ -261,14 +261,7 @@ constructor(
           else charArrayOf()
         if (k.isBlank() || k.startsWith(" ") || k.startsWith("\\t") || extraContentStarted)
           extraContentLines.add(line)
-        else {
-          val kk = String(k).trimEnd()
-          val key =
-            if (kk.startsWith("*") && kk.endsWith("*")) {
-              kk.substring(1, kk.length - 1).also { unsafeKeys.add(it) }
-            } else kk
-          items.putOrAppend(key, v.trimStart().trimEnd())
-        }
+        else items.putOrAppend(String(k).trimEnd(), v.trimStart().trimEnd())
       } else {
         if (line.isBlank()) {
           extraContentStarted = true

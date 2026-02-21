@@ -248,7 +248,9 @@ class DecryptActivity : BasePGPActivity() {
 
       entry.extraContent.forEach { (key, value) ->
         if (key != PasswordEntry.EXTRA_CONTENT) {
-          if (
+          if (key.startsWith("*") && key.endsWith("*"))
+            items.add(FieldItem.createPasswordField(key.substring(1, key.length - 1).trim(), value))
+          else if (
             key.lowercase() in entry.unsafeKeys ||
               key.lowercase() in PasswordEntry.PASSWORD_FIELDS.map { it.dropLast(1) }
           )
