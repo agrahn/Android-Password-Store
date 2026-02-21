@@ -15,7 +15,7 @@ jobs:
       - name: Setup build environment
         uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@develop
         with:
-          java-version: 17
+          java-version: 21
 
       - name: Check codestyle
         shell: bash
@@ -34,7 +34,7 @@ jobs:
       - name: Setup build environment
         uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@develop
         with:
-          java-version: 17
+          java-version: 21
 
       - name: Run unit tests
         shell: bash
@@ -60,7 +60,7 @@ jobs:
       - name: Setup build environment
         uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@develop
         with:
-          java-version: 17
+          java-version: 21
 
       - name: Build debug APKs
         shell: bash
@@ -79,7 +79,7 @@ jobs:
       - name: Setup build environment
         uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@develop
         with:
-          java-version: 17
+          java-version: 21
 
       - name: Run Lint
         shell: bash

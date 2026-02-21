@@ -9,7 +9,7 @@ plugins {
   // kotlin("jvm") version libs.versions.kotlin.get()
 }
 
-kotlin.jvmToolchain(17)
+kotlin.jvmToolchain(21)
 
 gradlePlugin {
   plugins {

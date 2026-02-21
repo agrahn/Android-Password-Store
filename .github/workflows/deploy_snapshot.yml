@@ -21,7 +21,7 @@ jobs:
     - name: Setup build environment
       uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@develop
       with:
-        java-version: 17
+        java-version: 21
         fetch-depth: 0
         dependency-graph: generate-and-submit
 
