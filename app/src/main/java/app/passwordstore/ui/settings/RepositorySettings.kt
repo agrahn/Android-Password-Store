@@ -220,7 +220,9 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
           }
         }
         pref(PreferenceKeys.SSH_KEYGEN) {
+          enabled = false
           titleRes = R.string.pref_ssh_keygen_title
+          summaryRes = R.string.pref_ssh_keygen_summary_disabled_platform
           onClick {
             sshKeyAction.launch(Intent(activity, SshKeyGenActivity::class.java))
             true

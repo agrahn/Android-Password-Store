@@ -5,6 +5,7 @@
 package app.passwordstore.util.git.operation
 
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
@@ -146,13 +147,15 @@ abstract class GitOperation(protected val callingActivity: FragmentActivity) {
   }
 
   private fun onMissingSshKeyFile() {
-    MaterialAlertDialogBuilder(callingActivity)
-      .setTitle(R.string.ssh_preferences_dialog_title)
-      .setMessage(R.string.ssh_preferences_dialog_text)
-      .setNeutralButton(R.string.button_label_import) { _, _ -> getSshKey(false) }
-      .setNegativeButton(R.string.ssh_preferences_dialog_generate) { _, _ -> getSshKey(true) }
-      .setPositiveButton(R.string.ssh_preferences_dialog_pgp_key) { _, _ -> usePgpKey() }
-      .show()
+    var dialog =
+      MaterialAlertDialogBuilder(callingActivity)
+        .setTitle(R.string.ssh_preferences_dialog_title)
+        .setMessage(R.string.ssh_preferences_dialog_text)
+        .setNeutralButton(R.string.button_label_import) { _, _ -> getSshKey(false) }
+        .setNegativeButton(R.string.ssh_preferences_dialog_generate) { _, _ -> getSshKey(true) }
+        .setPositiveButton(R.string.ssh_preferences_dialog_pgp_key) { _, _ -> usePgpKey() }
+        .show()
+    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled = false
   }
 
   suspend fun executeAfterAuthentication(authMode: AuthMode): Result<Unit, Throwable> {

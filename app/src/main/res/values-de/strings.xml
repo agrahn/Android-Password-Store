@@ -102,6 +102,7 @@
   <string name="pref_edit_git_config">Lokale Git-Konfiguration &amp; Dienstprogramme</string>
   <string name="pref_ssh_use_pgp_key_title">PGP-Schlüssel verwenden</string>
   <string name="pref_ssh_keygen_title">Erstelle SSH-Schlüsselpaar</string>
+  <string name="pref_ssh_keygen_summary_disabled_platform">Funktion wegen eines Plattformbugs nicht verfügbar</string>
   <string name="pref_import_ssh_key_title">Importiere SSH-Schlüssel</string>
   <string name="pref_ssh_see_key_title">Zeige den öffentlichen Schlüssel an</string>
   <string name="pref_git_delete_repo_title">Repository löschen</string>

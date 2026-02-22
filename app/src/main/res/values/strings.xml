@@ -103,6 +103,7 @@
   <string name="pref_edit_git_config">Local Git config &amp; utilities</string>
   <string name="pref_ssh_use_pgp_key_title">Use PGP key</string>
   <string name="pref_ssh_keygen_title">Generate SSH key pair</string>
+  <string name="pref_ssh_keygen_summary_disabled_platform">Feature unavailable due to a platform bug</string>
   <string name="pref_import_ssh_key_title">Import SSH key</string>
   <string name="pref_ssh_see_key_title">View public key</string>
   <string name="pref_git_delete_repo_title">Delete repository</string>

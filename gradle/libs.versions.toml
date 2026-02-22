@@ -86,9 +86,7 @@ thirdparty-modernAndroidPrefs = "de.maxr1998:modernandroidpreferences:2.4.0-beta
 thirdparty-pgpainless = "org.pgpainless:pgpainless-core:2.0.2"
 thirdparty-slack-lints = "com.slack.lint:slack-lint-checks:0.11.1"
 thirdparty-slf4j-api = { module = "org.slf4j:slf4j-api", version = { strictly = "[1.7, 1.8[", prefer = "1.7.36" } }
-# v0.40.0 does not work with KeyStore provided keys anymore after Google Play Services update at the beginning of 2026
-# noinspection GradleDependency
-thirdparty-sshj = "com.hierynomus:sshj:0.39.0"
+thirdparty-sshj = "com.hierynomus:sshj:0.40.0"
 thirdparty-uri = "com.eygraber:uri-kmp:0.0.21"
 
 [bundles]
