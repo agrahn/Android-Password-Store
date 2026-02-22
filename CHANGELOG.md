@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING**: Keystore-provided SSH keys option disabled after Play Services update; available SSH public-key authentication options are PGP key and imported SSH key
+
+### Fixed
+
+- Raise Java version in the toolchain to v21 for f-droid
+- Sensitive extra content fields mark-up using asterisk-notation did only work with lowercase keys
+
 ## [1.16.0] - 2026-02-20
 
 ### Added

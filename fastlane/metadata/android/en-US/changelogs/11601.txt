@@ -5,10 +5,13 @@ Added:
 - Declare sensitive fields of extra content by adding asterisks around keys or by using `gopass` syntax
 - Allow custom port setting for Git via http
 
+Changed:
+
+- Disabled Keystore-provided SSH keys option after Play Services update
+
 Fixed:
 
 - App crash when handling expired PGP keys.
 - Handling of password items that were encrypted to multiple subkeys
 - Enhanced feedback on encryption/decryption success and PGP key availability
 - Extra content formatting
-- SSH key parsing and connection failures after a recent system update
