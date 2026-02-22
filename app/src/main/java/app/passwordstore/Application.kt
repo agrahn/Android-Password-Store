@@ -26,7 +26,6 @@ import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.features.Features
-import app.passwordstore.util.git.sshj.setUpBouncyCastleForSshj
 import app.passwordstore.util.proxy.ProxyUtils
 import app.passwordstore.util.settings.GitSettings
 import app.passwordstore.util.settings.PreferenceKeys
@@ -69,7 +68,6 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
     logcat { "Debug logging enabled." }
     prefs.registerOnSharedPreferenceChangeListener(this)
     setNightMode()
-    setUpBouncyCastleForSshj()
     runMigrations(filesDirPath, prefs, gitSettings)
     proxyUtils.setDefaultProxy()
     DynamicColors.applyToActivitiesIfAvailable(this)

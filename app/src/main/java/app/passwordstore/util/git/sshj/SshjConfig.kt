@@ -19,6 +19,7 @@ import logcat.logcat
 import net.schmizz.keepalive.KeepAliveProvider
 import net.schmizz.sshj.ConfigImpl
 import net.schmizz.sshj.common.LoggerFactory
+import net.schmizz.sshj.common.SecurityUtils
 import net.schmizz.sshj.transport.compression.NoneCompression
 import net.schmizz.sshj.transport.kex.Curve25519SHA256
 import net.schmizz.sshj.transport.kex.Curve25519SHA256.FactoryLibSsh
@@ -52,10 +53,12 @@ fun setUpBouncyCastleForSshj() {
     "JCE providers: ${Security.getProviders().joinToString { "${it.name} (${it.version})" }}"
   }
 
-  /* Does not seem to be a good idea anymore, hence commented out
-  // Prevent sshj from forwarding all cryptographic operations to BC.
-  SecurityUtils.setRegisterBouncyCastle(false)
-  SecurityUtils.setSecurityProvider(null) */
+  /* Prevent sshj from forwarding all cryptographic operations to BC in case of KeyStore
+   * provided keys. */
+  if (SshKey.type == SshKey.Type.KeystoreNative) {
+    SecurityUtils.setRegisterBouncyCastle(false)
+    SecurityUtils.setSecurityProvider(null)
+  }
 }
 
 private object LogcatLoggerFactory : LoggerFactory {

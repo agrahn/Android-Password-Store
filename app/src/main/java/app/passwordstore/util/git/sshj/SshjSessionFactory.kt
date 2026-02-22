@@ -107,6 +107,10 @@ private class SshjSession(
   private val dispatcherProvider: DispatcherProvider,
 ) : RemoteSession {
 
+  init {
+    setUpBouncyCastleForSshj()
+  }
+
   private lateinit var ssh: SSHClient
   private var currentCommand: Session? = null
 
