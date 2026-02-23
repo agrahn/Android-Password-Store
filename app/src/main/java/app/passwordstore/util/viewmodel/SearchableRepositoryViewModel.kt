@@ -90,9 +90,7 @@ private fun PasswordItem.Companion.makeComparator(
       }
     )
     .then(
-      compareBy(nullsLast(CaseInsensitiveComparator)) {
-        directoryStructure.getUsernameFor(it.file)?.let(::String)
-      }
+      compareBy(nullsLast(CaseInsensitiveComparator)) { directoryStructure.getUsernameFor(it.file) }
     )
 }
 

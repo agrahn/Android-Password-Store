@@ -151,7 +151,7 @@ class OreoAutofillService : AutofillService() {
 }
 
 fun Context.getDefaultUsername() =
-  sharedPrefs.getString(PreferenceKeys.OREO_AUTOFILL_DEFAULT_USERNAME)?.toCharArray()
+  sharedPrefs.getString(PreferenceKeys.OREO_AUTOFILL_DEFAULT_USERNAME)
 
 fun Context.getCustomSuffixes(): Sequence<String> {
   return sharedPrefs
