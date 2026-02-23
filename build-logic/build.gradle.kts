@@ -13,6 +13,10 @@ kotlin.jvmToolchain(21)
 
 gradlePlugin {
   plugins {
+    register("assemble-alias") {
+      id = "com.github.android-password-store.assemble-alias"
+      implementationClass = "app.passwordstore.gradle.AssembleAliasPlugin"
+    }
     register("android-application") {
       id = "com.github.android-password-store.android-application"
       implementationClass = "app.passwordstore.gradle.ApplicationPlugin"
