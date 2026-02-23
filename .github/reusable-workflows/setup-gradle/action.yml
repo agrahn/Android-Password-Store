@@ -15,7 +15,7 @@ inputs:
   java-version:
     description: 'java-version input for actions/setup-java'
     required: false
-    default: 20
+    default: 21
   gradle-version:
     description: 'gradle-version input for actions/setup-java'
     required: false
