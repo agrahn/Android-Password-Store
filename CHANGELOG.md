@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+## [1.16.1] - 2026-02-23
+
 ### Changed
 
 - **BREAKING**: Keystore-provided SSH keys option disabled after Play Services update; available SSH public-key authentication options are PGP key and imported SSH key
@@ -625,7 +627,8 @@ All notable changes to this project will be documented in this file
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.0...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.1...HEAD
+[1.16.1]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.0...v1.16.1
 [1.16.0]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.4...v1.16.0
 [1.15.4]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.3...v1.15.4
 [1.15.3]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.2...v1.15.3
