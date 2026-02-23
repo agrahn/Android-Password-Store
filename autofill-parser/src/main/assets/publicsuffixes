@@ -1,4 +1,4 @@
-140468
+140516
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -82,6 +82,7 @@
 *.awsapprunner.com
 *.azurecontainer.io
 *.beget.app
+*.begetcdn.cloud
 *.build.run
 *.builder.code.com
 *.bwcloud-os-instance.de
@@ -2215,6 +2216,8 @@ drangedal.no
 drayddns.com
 dreamhosters.com
 drive
+drive-platform.com
+drive-platform.io
 drobak.no
 drr.ac
 drøbak.no
@@ -4622,6 +4625,7 @@ kazimierz-dolny.pl
 kazo.saitama.jp
 kazuno.akita.jp
 kddi
+kdns.fr
 ke
 keenetic.io
 keenetic.link
@@ -9630,7 +9634,6 @@ wmflabs.org
 wnext.app
 wodzislaw.pl
 wolomin.pl
-wolterskluwer
 woltlab-demo.com
 woodside
 worf.replit.dev
