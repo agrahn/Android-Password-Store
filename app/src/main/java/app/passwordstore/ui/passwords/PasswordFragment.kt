@@ -374,15 +374,9 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
                 else "\"${id.toString()}\" (${message})"
               }
             } else {
-              if (id is PGPIdentifier.KeyId) {
-                val userId =
-                  requireNotNull(repository.getEmailFromKeyId(id)) {
-                    "Could not extract user e-mail"
-                  }
-                if (userId.matches("[^@]*@[^@]*".toRegex())) "${id.toString()} <${userId}>"
-                else "${id.toString()} \"${userId}\""
-              } else {
-                "${repository.getLongKeyIdFromKeyId(id).toString()} : ${id.toString()}"
+              val keyId = repository.getLongKeyIdFromKeyId(id).toString()
+              repository.getEmailFromKeyId(id)?.let {
+                if (it.matches("[^@]*@[^@]*".toRegex())) "$keyId <$it>" else "$keyId \"$it\""
               }
             }
           }
