@@ -70,7 +70,7 @@ public class PGPainlessCryptoHandler @Inject constructor() :
           if (openPgpKey !is OpenPGPKey || !hasDecKey(openPgpKey))
             throw NoDecryptionKeyAvailableException("Key not usable for decryption")
 
-          val decKey = extractDecKey(openPgpKey, passphrase) ?: openPgpKey
+          val decKey = extractDecKeys(openPgpKey, passphrase) ?: openPgpKey
 
           val protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase(passphrase))
 
@@ -266,17 +266,13 @@ public class PGPainlessCryptoHandler @Inject constructor() :
         }
       }
 
-  private fun extractDecKey(openPgpKey: OpenPGPKey, passphrase: CharArray?): OpenPGPKey? =
-    openPgpKey
-      .getSecretKeys()
-      .values
-      .filter { it.isEncryptionKey() && it.isPassphraseCorrect(passphrase) }
-      .firstOrNull()
-      ?.let {
-        OpenPGPKey(
-          PGPSecretKeyRing(
-            listOf(openPgpKey.getPrimarySecretKey().getPGPSecretKey(), it.getPGPSecretKey())
-          )
-        )
+  private fun extractDecKeys(openPgpKey: OpenPGPKey, passphrase: CharArray?): OpenPGPKey? {
+    val primKeyWithDecKeys =
+      openPgpKey.getSecretKeys().values.filter {
+        it.isPrimaryKey() || it.isEncryptionKey() && it.isPassphraseCorrect(passphrase)
       }
+    return if (primKeyWithDecKeys.size > 1)
+      OpenPGPKey(PGPSecretKeyRing(primKeyWithDecKeys.map { it.getPGPSecretKey() }))
+    else null
+  }
 }
