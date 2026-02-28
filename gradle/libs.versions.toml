@@ -48,7 +48,7 @@ build-r8 = "com.android.tools:r8:9.0.32"
 build-semver = "com.github.zafarkhaja:java-semver:0.10.2"
 build-spotless = "com.diffplug.spotless:spotless-plugin-gradle:8.2.1"
 build-vcu = "nl.littlerobots.version-catalog-update:nl.littlerobots.version-catalog-update.gradle.plugin:1.1.0"
-compose-bom = "androidx.compose:compose-bom:2026.02.00"
+compose-bom = "androidx.compose:compose-bom:2026.02.01"
 compose-foundation-core = { module = "androidx.compose.foundation:foundation" }
 compose-foundation-layout = { module = "androidx.compose.foundation:foundation-layout" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
