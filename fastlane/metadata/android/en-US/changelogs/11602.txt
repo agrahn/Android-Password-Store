@@ -1,0 +1,3 @@
+Fixed:
+
+- decryption failure if PGP key contained revoked encryption subkey
