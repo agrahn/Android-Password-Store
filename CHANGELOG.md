@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+## [1.16.2] - 2026-03-01
+
 ### Fixed
 
 - key parsing prematurely stopped on revoked key
@@ -631,7 +633,8 @@ All notable changes to this project will be documented in this file
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.1...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.2...HEAD
+[1.16.2]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.1...v1.16.2
 [1.16.1]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.0...v1.16.1
 [1.16.0]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.4...v1.16.0
 [1.15.4]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.3...v1.15.4
