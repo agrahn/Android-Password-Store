@@ -1,4 +1,4 @@
-140516
+140597
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -154,7 +154,6 @@
 *.inbrowser.link
 *.jm
 *.kawasaki.jp
-*.kh
 *.kin.one
 *.kin.pub
 *.kitakyushu.jp
@@ -1811,6 +1810,7 @@ com.io
 com.iq
 com.jo
 com.kg
+com.kh
 com.ki
 com.km
 com.kp
@@ -2390,6 +2390,7 @@ edu.iq
 edu.it
 edu.jo
 edu.kg
+edu.kh
 edu.ki
 edu.km
 edu.kn
@@ -3363,6 +3364,7 @@ gov.ir
 gov.it
 gov.jo
 gov.kg
+gov.kh
 gov.ki
 gov.km
 gov.kn
@@ -4117,6 +4119,7 @@ international
 internet-dns.de
 internet.in
 intl.tn
+intouch.email
 intuit
 inuyama.aichi.jp
 investments
@@ -4644,6 +4647,7 @@ keyword-on.net
 kfh
 kg
 kg.kr
+kh
 kh.ua
 khakassia.su
 khanhhoa.vn
@@ -5791,6 +5795,9 @@ myaddr.io
 myaddr.tools
 myamaze.net
 myasustor.com
+mybox.company
+mybox.me
+mybox.page
 mycloudnas.com
 mydatto.com
 mydatto.net
@@ -6082,6 +6089,7 @@ net.ir
 net.je
 net.jo
 net.kg
+net.kh
 net.ki
 net.kn
 net.kw
@@ -6702,6 +6710,7 @@ org.ir
 org.je
 org.jo
 org.kg
+org.kh
 org.ki
 org.km
 org.kn
