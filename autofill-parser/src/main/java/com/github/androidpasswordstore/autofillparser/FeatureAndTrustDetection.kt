@@ -100,6 +100,11 @@ private val TRUSTED_BROWSER_CERTIFICATE_HASH =
         "8JHKOZi0nhWdI+6VWGmZx10LcCP8+cVBkqgTAKwWbhc=", // GitHub release
         "KTmZei2PBzA86zetaBCv7wvacQviEWR241Jac3nsLho=", // Play Store
       ),
+    "eu.weblibre.gecko" to
+      arrayOf(
+        "j1JuHlPWvU379PS5PCqR7LXLjaXhStlMJXDh48cTUn8=", // GitHub release + Play Store
+        "uyqX9WFTNcnlfIZvHDDtT9fXvdy8vAZo/pOleRc9PS0=", // F-Droid
+      ),
   )
 
 private fun isTrustedBrowser(context: Context, appPackage: String): Boolean {
