@@ -34,6 +34,7 @@ class ShowSshKeyFragment : DialogFragment() {
         startActivity(Intent.createChooser(sendIntent, null))
         (activity as? SshKeyGenActivity)?.finish()
         (activity as? PgpAuthKeySelectionActivity)?.finish()
+        (activity as? HwAuthKeySelectionActivity)?.finish()
       }
       create()
     }

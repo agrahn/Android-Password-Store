@@ -84,6 +84,8 @@ object PreferenceKeys {
   const val SSH_KEYGEN = "ssh_keygen"
   const val SSH_USE_PGP_KEY = "ssh_use_pgp_key"
   const val SSH_PGP_KEY_ID = "ssh_pgp_key_id"
+  const val SSH_USE_HW_KEY = "ssh_use_hw_key"
+  const val SSH_HW_KEY_ID = "ssh_hw_key_id"
 
   const val SSH_KEY_LOCAL_PASSPHRASE = "ssh_key_local_passphrase"
 

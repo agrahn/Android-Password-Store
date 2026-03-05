@@ -192,8 +192,10 @@
   <string name="ssh_keygen_existing_title">Replace SSH key</string>
   <string name="ssh_keygen_existing_message">Replace existing SSH key? You might lose access to your server.</string>
   <string name="ssh_keygen_replace_with_pgp_key_message">An SSH key already exists. Do you want to remove it and use a PGP key for authentication instead? You might lose access to your server.</string>
+  <string name="ssh_keygen_replace_with_hw_key_message">An SSH key already exists. Do you want to remove it and register a hardware key for authentication? You might lose access to your server.</string>
   <string name="ssh_keygen_existing_replace">Replace</string>
   <string name="ssh_keygen_replace_with_pgp_key">Replace with PGP key</string>
+  <string name="ssh_keygen_replace_with_hw_key">Replace with hardware key</string>
   <string name="ssh_keygen_existing_keep">Keep</string>
 
 

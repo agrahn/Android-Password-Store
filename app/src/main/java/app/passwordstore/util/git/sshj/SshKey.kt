@@ -18,6 +18,7 @@ import app.passwordstore.Application
 import app.passwordstore.R
 import app.passwordstore.crypto.KeyUtils
 import app.passwordstore.crypto.PGPIdentifier
+import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPKey
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.gitSecrets
@@ -137,7 +138,8 @@ object SshKey {
   public enum class Type(val value: String) {
     Imported("imported"),
     KeystoreNative("keystore_native"),
-    ImportedPGP("imported_pgp");
+    ImportedPGP("imported_pgp"),
+    HardwareKey("hardware_key");
 
     companion object {
 
@@ -287,6 +289,15 @@ object SshKey {
     context.sharedPrefs.edit { putLong(PreferenceKeys.SSH_PGP_KEY_ID, authKeyId.id) }
 
     type = Type.ImportedPGP
+  }
+
+  fun useHwKey(pubKey: PublicKey, keyId: KeyId) {
+    delete()
+
+    publicKeyFile.writeText(toSshPublicKey(pubKey) + " 0x${keyId}")
+    context.sharedPrefs.edit { putLong(PreferenceKeys.SSH_HW_KEY_ID, keyId.id) }
+
+    type = Type.HardwareKey
   }
 
   fun provide(client: SSHClient, passphraseFinder: PasswordFinder): KeyProvider? =
