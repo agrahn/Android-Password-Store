@@ -15,7 +15,6 @@ import com.hierynomus.sshj.transport.kex.ExtInfoClientFactory
 import com.hierynomus.sshj.transport.mac.Macs
 import com.hierynomus.sshj.userauth.keyprovider.OpenSSHKeyV1KeyFile
 import java.security.Security
-import logcat.LogPriority.VERBOSE
 import logcat.logcat
 import net.schmizz.keepalive.KeepAliveProvider
 import net.schmizz.sshj.ConfigImpl
@@ -34,31 +33,22 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 
 fun setUpBouncyCastleForSshj() {
-  // Replace the Android BC provider with the Java BouncyCastle provider since the former does
-  // not include all the required algorithms.
+  // Enforce Java (instead of Android provided) BouncyCastle as security provider and move
+  // it to the top position
   // Note: This may affect crypto operations in other parts of the application.
   val bcIndex =
     Security.getProviders().indexOfFirst { it.name == BouncyCastleProvider.PROVIDER_NAME }
-  if (bcIndex == -1) {
-    // No Android BC found, install Java BC at lowest priority.
-    Security.addProvider(BouncyCastleProvider())
-  } else {
-    // Replace Android BC with Java BC, inserted at the same position.
+  if (bcIndex != -1) {
+    // Remove Android or Java BC
     Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME)
-    // May be needed on Android Pie+ as per https://stackoverflow.com/a/57897224/297261
-    runCatching { Class.forName("sun.security.jca.Providers") }
-    Security.insertProviderAt(BouncyCastleProvider(), bcIndex + 1)
   }
-  logcat("setUpBouncyCastleForSshj", priority = VERBOSE) {
-    "JCE providers: ${Security.getProviders().joinToString { "${it.name} (${it.version})" }}"
-  }
+  // May be needed on Android Pie+ as per https://stackoverflow.com/a/57897224/297261
+  runCatching { Class.forName("sun.security.jca.Providers") }
+  // Insert Java BC at the top position (index is 1-based)
+  Security.insertProviderAt(BouncyCastleProvider(), 1)
 
-  if (SshKey.type == SshKey.Type.KeystoreNative) {
-    SshKey.delete() // disabling KeyStore-generated keys (platform bug, 2026)
-    /* Prevent sshj from forwarding all cryptographic operations to BC in case of KeyStore
-     * provided keys. */
-    // SecurityUtils.setRegisterBouncyCastle(false)
-    // SecurityUtils.setSecurityProvider(null)
+  logcat("setUpBouncyCastleForSshj") {
+    "JCE providers: ${Security.getProviders().joinToString { "${it.name} (${it.version})" }}"
   }
 }
 
