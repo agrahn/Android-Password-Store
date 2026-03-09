@@ -4,11 +4,13 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+### Fixed                                                                                   - Keystore-provided SSH keys are available again
+
 ## [1.16.2] - 2026-03-01
 
 ### Fixed
 
-- key parsing prematurely stopped on revoked key
+- Key parsing prematurely stopped on revoked key
 
 ## [1.16.1] - 2026-02-23
 
