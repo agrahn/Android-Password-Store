@@ -373,11 +373,10 @@ class PasswordStore : BaseGitActivity() {
     if (searchItem.isActionViewExpanded) searchItem.collapseActionView()
   }
 
-  private fun runGitOperation(operation: GitOp) =
-    lifecycleScope.launch {
-      launchGitOperation(operation)
-        .fold(success = { refreshPasswordList() }, failure = { promptOnErrorHandler(it) })
-    }
+  private fun runGitOperation(operation: GitOp) = lifecycleScope.launch {
+    launchGitOperation(operation)
+      .fold(success = { refreshPasswordList() }, failure = { promptOnErrorHandler(it) })
+  }
 
   private fun checkLocalRepository() {
     PasswordRepository.initialize()

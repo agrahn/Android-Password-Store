@@ -80,12 +80,11 @@ public fun computeCertificatesHash(context: Context, appPackage: String): String
  * its `webDomain` and `webScheme`, if available.
  */
 internal val AssistStructure.ViewNode.webOrigin: String?
-  get() =
-    webDomain?.let { domain ->
-      val scheme =
-        (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) webScheme else null) ?: "https"
-      "$scheme://$domain"
-    }
+  get() = webDomain?.let { domain ->
+    val scheme =
+      (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) webScheme else null) ?: "https"
+    "$scheme://$domain"
+  }
 
 public class FixedSaveCallback(private val context: Context, private val callback: SaveCallback) {
 

@@ -98,8 +98,9 @@ abstract class GitOperation(protected val callingActivity: FragmentActivity) {
       return true
     }
 
-    override fun supports(vararg items: CredentialItem) =
-      items.all { it is CredentialItem.Username || it is CredentialItem.Password }
+    override fun supports(vararg items: CredentialItem) = items.all {
+      it is CredentialItem.Username || it is CredentialItem.Password
+    }
 
     override fun reset(uri: URIish?) {
       cachedPassword?.fill(0.toChar())

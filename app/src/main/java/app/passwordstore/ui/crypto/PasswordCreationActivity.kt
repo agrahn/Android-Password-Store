@@ -220,14 +220,13 @@ class PasswordCreationActivity : BasePGPActivity() {
         }
       }
 
-      val suggestedEntry: PasswordEntry? =
-        suggestedEntryChars?.let { encrypted ->
-          AESEncryption.decrypt(encrypted)?.let { decrypted ->
-            val entry = passwordEntryFactory.create(decrypted)
-            decrypted.wipe()
-            entry
-          }
+      val suggestedEntry: PasswordEntry? = suggestedEntryChars?.let { encrypted ->
+        AESEncryption.decrypt(encrypted)?.let { decrypted ->
+          val entry = passwordEntryFactory.create(decrypted)
+          decrypted.wipe()
+          entry
         }
+      }
 
       directoryInputLayout.apply {
         if (suggestedName != null || suggestedEntry?.password != null || shouldGeneratePassword) {
@@ -397,12 +396,11 @@ class PasswordCreationActivity : BasePGPActivity() {
       }
 
       if (!editUsername.isEmpty()) {
-        editUsername =
-          editUsername.let {
-            val withPrefix = "\nusername: ".toCharArray() + it
-            it.wipe()
-            withPrefix
-          }
+        editUsername = editUsername.let {
+          val withPrefix = "\nusername: ".toCharArray() + it
+          it.wipe()
+          withPrefix
+        }
       }
 
       if (editPass.isEmpty() && editExtra.isEmpty()) {
@@ -412,15 +410,14 @@ class PasswordCreationActivity : BasePGPActivity() {
 
       // fix extra content formatting
       if (!editExtra.isEmpty()) {
-        editExtra =
-          editExtra.let {
-            val extraLines = it.splitToCharArrayListAt('\n').map { it.trimEnd() }
-            it?.wipe()
-            val editExtra = extraLines.joinToCharArray('\n')?.trimEnd()
-            val editExtraPlusLineFeed = editExtra?.let { it + '\n' }
-            editExtra?.wipe()
-            editExtraPlusLineFeed ?: charArrayOf()
-          }
+        editExtra = editExtra.let {
+          val extraLines = it.splitToCharArrayListAt('\n').map { it.trimEnd() }
+          it?.wipe()
+          val editExtra = extraLines.joinToCharArray('\n')?.trimEnd()
+          val editExtraPlusLineFeed = editExtra?.let { it + '\n' }
+          editExtra?.wipe()
+          editExtraPlusLineFeed ?: charArrayOf()
+        }
       }
 
       if (copy && editPass.isNotEmpty()) {

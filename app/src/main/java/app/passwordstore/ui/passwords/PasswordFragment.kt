@@ -237,8 +237,9 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
       // but may be called multiple times if the mode is invalidated.
       override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
         val selectedItems = recyclerAdapter.getSelectedItems()
-        menu.findItem(R.id.menu_edit_password).isVisible =
-          selectedItems.all { it.type == PasswordItem.TYPE_CATEGORY }
+        menu.findItem(R.id.menu_edit_password).isVisible = selectedItems.all {
+          it.type == PasswordItem.TYPE_CATEGORY
+        }
         menu.findItem(R.id.menu_pin_password).isVisible =
           selectedItems.size == 1 && selectedItems[0].type == PasswordItem.TYPE_PASSWORD
         return true

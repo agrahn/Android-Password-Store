@@ -53,12 +53,11 @@ internal class PublicSuffixList(
    *   unexpected values are passed (e.g., a full URL, a domain with a trailing '/', etc) this may
    *   return an incorrect result.
    */
-  fun getPublicSuffixPlusOneAsync(domain: String): Deferred<String?> =
-    scope.async {
-      when (val offset = data.getPublicSuffixOffset(domain)) {
-        is PublicSuffixOffset.Offset ->
-          domain.split('.').drop(offset.value).joinToString(separator = ".")
-        else -> null
-      }
+  fun getPublicSuffixPlusOneAsync(domain: String): Deferred<String?> = scope.async {
+    when (val offset = data.getPublicSuffixOffset(domain)) {
+      is PublicSuffixOffset.Offset ->
+        domain.split('.').drop(offset.value).joinToString(separator = ".")
+      else -> null
     }
+  }
 }

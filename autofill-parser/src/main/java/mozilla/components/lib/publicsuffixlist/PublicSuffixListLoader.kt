@@ -16,16 +16,15 @@ private const val PUBLIC_SUFFIX_LIST_FILE = "publicsuffixes"
 
 internal object PublicSuffixListLoader {
 
-  fun load(inputStream: BufferedInputStream): PublicSuffixListData =
-    inputStream.use { stream ->
-      val publicSuffixSize = stream.readSize()
-      val exceptionSize = stream.readSize()
+  fun load(inputStream: BufferedInputStream): PublicSuffixListData = inputStream.use { stream ->
+    val publicSuffixSize = stream.readSize()
+    val exceptionSize = stream.readSize()
 
-      val publicSuffixBytes = stream.readFully(publicSuffixSize)
-      val exceptionBytes = stream.readFully(exceptionSize)
+    val publicSuffixBytes = stream.readFully(publicSuffixSize)
+    val exceptionBytes = stream.readFully(exceptionSize)
 
-      PublicSuffixListData(publicSuffixBytes, exceptionBytes)
-    }
+    PublicSuffixListData(publicSuffixBytes, exceptionBytes)
+  }
 
   fun load(context: Context): PublicSuffixListData =
     load(context.assets.open(PUBLIC_SUFFIX_LIST_FILE).buffered())

@@ -757,16 +757,18 @@ open class BasePGPActivity : AppCompatActivity() {
   }
 
   protected fun decrypt(identifiers: List<PGPIdentifier>, isError: Boolean = false) {
-    val passphrases =
-      cachedPassphrases.filterKeys { identifiers.map { it.toString() }.contains(it) }
+    val passphrases = cachedPassphrases.filterKeys {
+      identifiers.map { it.toString() }.contains(it)
+    }
     lifecycleScope.launch(dispatcherProvider.main()) {
       if (!repository.isPasswordProtected(identifiers) && !isError) {
         // try passphraseless decryption first
         decryptWithPassphrase(mapOf("" to null), identifiers)
       } else if (!isError && !passphrases.isEmpty()) {
         // try cached passphrases
-        val decryptedCachedPassphrases =
-          passphrases.mapValues { AESEncryption.decrypt(it.value) ?: charArrayOf() }
+        val decryptedCachedPassphrases = passphrases.mapValues {
+          AESEncryption.decrypt(it.value) ?: charArrayOf()
+        }
         decryptWithPassphrase(decryptedCachedPassphrases, identifiers)
         decryptedCachedPassphrases.values.forEach { it.wipe() }
       } else {

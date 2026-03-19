@@ -48,15 +48,14 @@ class FieldItemAdapter(
 
   fun updateOTPCode(totp: Totp, labelFormat: String) {
     var otpItemPosition = -1
-    fieldItemList =
-      fieldItemList.mapIndexed { position, item ->
-        if (item.type == FieldItem.ItemType.OTP) {
-          otpItemPosition = position
-          return@mapIndexed FieldItem.createOtpField(labelFormat, totp)
-        }
-
-        return@mapIndexed item
+    fieldItemList = fieldItemList.mapIndexed { position, item ->
+      if (item.type == FieldItem.ItemType.OTP) {
+        otpItemPosition = position
+        return@mapIndexed FieldItem.createOtpField(labelFormat, totp)
       }
+
+      return@mapIndexed item
+    }
 
     notifyItemChanged(otpItemPosition)
   }
