@@ -4,7 +4,6 @@
  */
 package app.passwordstore.util.git.sshj
 
-// import net.schmizz.sshj.common.SecurityUtils
 import app.passwordstore.util.log.LogcatLogger
 import com.github.michaelbull.result.runCatching
 import com.hierynomus.sshj.key.KeyAlgorithms
@@ -19,6 +18,7 @@ import logcat.logcat
 import net.schmizz.keepalive.KeepAliveProvider
 import net.schmizz.sshj.ConfigImpl
 import net.schmizz.sshj.common.LoggerFactory
+import net.schmizz.sshj.common.SecurityUtils
 import net.schmizz.sshj.transport.compression.NoneCompression
 import net.schmizz.sshj.transport.kex.Curve25519SHA256
 import net.schmizz.sshj.transport.kex.Curve25519SHA256.FactoryLibSsh
@@ -46,6 +46,11 @@ fun setUpBouncyCastleForSshj() {
   runCatching { Class.forName("sun.security.jca.Providers") }
   // Insert Java BC at the top position (index is 1-based)
   Security.insertProviderAt(BouncyCastleProvider(), 1)
+
+  if (SshKey.type == SshKey.Type.KeystoreNative) {
+    SecurityUtils.setRegisterBouncyCastle(false)
+    SecurityUtils.setSecurityProvider(null)
+  }
 
   logcat("setUpBouncyCastleForSshj") {
     "JCE providers: ${Security.getProviders().joinToString { "${it.name} (${it.version})" }}"
