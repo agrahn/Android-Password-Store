@@ -7,7 +7,7 @@ flowbinding = "1.2.0"
 hilt = "2.59.2"
 kotlin = "2.3.20"
 ksp = "2.3.6"
-kotlinResult = "2.1.0"
+kotlinResult = "2.3.1"
 lifecycle = "2.10.0"
 moshi = "1.15.2"
 
