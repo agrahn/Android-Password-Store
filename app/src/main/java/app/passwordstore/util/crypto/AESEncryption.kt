@@ -14,7 +14,7 @@ import android.util.Base64
 import app.passwordstore.Application
 import app.passwordstore.util.extensions.unsafeLazy
 import com.github.michaelbull.result.getOrElse
-import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import java.nio.ByteBuffer
 import java.nio.CharBuffer
@@ -159,7 +159,7 @@ object AESEncryption {
     encryptedBase64Data: CharArray? = null,
   ): Cipher? {
     runCatching { initKeyStore(keyType) }
-      .onFailure {
+      .onErr {
         return null
       }
     val cipher = Cipher.getInstance(TRANSFORMATION)
@@ -228,7 +228,7 @@ object AESEncryption {
   // Check if the AES key is hardware-backed
   fun isHardwareBacked(keyType: KeyType = KeyType.TEMPORARY): Boolean {
     runCatching { initKeyStore(keyType) }
-      .onFailure {
+      .onErr {
         return false
       }
     val key = getSecretKey(keyType)

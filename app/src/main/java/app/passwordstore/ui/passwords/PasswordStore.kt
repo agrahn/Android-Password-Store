@@ -54,7 +54,7 @@ import app.passwordstore.util.settings.PreferenceKeys
 import app.passwordstore.util.shortcuts.ShortcutHandler
 import app.passwordstore.util.viewmodel.SearchableRepositoryViewModel
 import com.github.michaelbull.result.fold
-import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
@@ -333,7 +333,7 @@ class PasswordStore : BaseGitActivity() {
     when (id) {
       R.id.user_pref -> {
         runCatching { launchActivity(SettingsActivity::class.java) }
-          .onFailure { e -> e.printStackTrace() }
+          .onErr { e -> e.printStackTrace() }
       }
       R.id.git_push -> {
         if (!PasswordRepository.isInitialized) {

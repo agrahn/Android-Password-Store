@@ -42,7 +42,7 @@ import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.Constants
 import app.passwordstore.util.settings.PreferenceKeys
-import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -589,7 +589,7 @@ open class BasePGPActivity : AppCompatActivity() {
                   passphrase.wipe()
                 }
               }
-              .onFailure { e ->
+              .onErr { e ->
                 logcat { e.asLog() }
                 passphrase.wipe()
               }

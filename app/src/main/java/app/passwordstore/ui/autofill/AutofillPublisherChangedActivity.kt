@@ -28,7 +28,7 @@ import app.passwordstore.util.extensions.getPackageInfoCompat
 import app.passwordstore.util.extensions.viewBinding
 import com.github.androidpasswordstore.autofillparser.FormOrigin
 import com.github.androidpasswordstore.autofillparser.computeCertificatesHash
-import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import logcat.LogPriority.ERROR
 import logcat.logcat
@@ -137,7 +137,7 @@ class AutofillPublisherChangedActivity : AppCompatActivity() {
             )
         }
       }
-      .onFailure { e ->
+      .onErr { e ->
         logcat(ERROR) { e.asLog("Failed to retrieve package info for $appPackage") }
         finish()
       }

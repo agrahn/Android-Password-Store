@@ -27,7 +27,7 @@ import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.getOrThrow
-import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -77,7 +77,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     runCatching { pgpKeyImportAction.launch("*/*") }
-      .onFailure { e ->
+      .onErr { e ->
         logcat(ERROR) { e.asLog() }
         e.message?.let { message -> snackbar(message = message) }
       }

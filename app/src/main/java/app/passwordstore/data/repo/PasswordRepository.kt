@@ -12,7 +12,7 @@ import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.settings.PasswordSortOrder
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.getOrElse
-import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import java.io.File
 import org.eclipse.jgit.api.Git
@@ -76,7 +76,7 @@ object PasswordRepository {
 
           storedConfig.save()
         }
-        .onFailure { e -> e.printStackTrace() }
+        .onErr { e -> e.printStackTrace() }
     } else if (replace) {
       runCatching {
           val uri = URIish(url)
@@ -97,7 +97,7 @@ object PasswordRepository {
 
           storedConfig.save()
         }
-        .onFailure { e -> e.printStackTrace() }
+        .onErr { e -> e.printStackTrace() }
     }
   }
 

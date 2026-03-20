@@ -17,7 +17,7 @@ import app.passwordstore.crypto.PGPIdentifier.UserId
 import app.passwordstore.crypto.PGPKey
 import app.passwordstore.crypto.PGPKeyManager
 import com.github.michaelbull.result.map
-import com.github.michaelbull.result.onSuccess
+import com.github.michaelbull.result.onOk
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
@@ -40,7 +40,7 @@ class PGPKeyListViewModel @Inject constructor(private val keyManager: PGPKeyMana
         .map { keys ->
           keys.mapNotNull { key -> KeyUtils.tryGetKeyId(key) to KeyUtils.tryGetUserId(key) }
         }
-        .onSuccess {
+        .onOk {
           keys = persistentListOf<Pair<KeyId, UserId>>()
           keys = it.filter { it.first != null && it.second != null }.toPersistentList()
         }

@@ -52,8 +52,8 @@ import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.DirectoryStructure
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.getOrThrow
-import com.github.michaelbull.result.onFailure
-import com.github.michaelbull.result.onSuccess
+import com.github.michaelbull.result.onErr
+import com.github.michaelbull.result.onOk
 import com.github.michaelbull.result.runCatching
 import com.github.michaelbull.result.unwrapError
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -150,7 +150,7 @@ class PasswordCreationActivity : BasePGPActivity() {
           snackbar(message = getString(R.string.otp_import_success))
           binding.otpImportButton.isVisible = false
         }
-        .onFailure { snackbar(message = getString(R.string.otp_import_failure_generic)) }
+        .onErr { snackbar(message = getString(R.string.otp_import_failure_generic)) }
     }
 
   override fun onDestroy() {
@@ -206,7 +206,7 @@ class PasswordCreationActivity : BasePGPActivity() {
                   )
                 1 -> {
                   runCatching { imageImportAction.launch("image/*") }
-                    .onFailure { e ->
+                    .onErr { e ->
                       logcat(ERROR) { e.asLog() }
                       e.message?.let { message -> snackbar(message = message) }
                     }
@@ -574,7 +574,7 @@ class PasswordCreationActivity : BasePGPActivity() {
               commitChange(
                   resources.getString(commitMessageRes, getLongName(fullPath, repoPath, editName))
                 )
-                .onSuccess {
+                .onOk {
                   setResult(RESULT_OK, returnIntent)
                   var dialog =
                     MaterialAlertDialogBuilder(this@PasswordCreationActivity)
@@ -606,7 +606,7 @@ class PasswordCreationActivity : BasePGPActivity() {
                 }
             }
           }
-          .onFailure { e ->
+          .onErr { e ->
             logcat(ERROR) { e.asLog() }
             setResult(RESULT_CANCELED)
             val errMessage =

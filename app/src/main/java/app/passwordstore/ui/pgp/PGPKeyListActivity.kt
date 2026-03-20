@@ -44,8 +44,8 @@ import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.git.sshj.SshKey
 import app.passwordstore.util.viewmodel.PGPKeyListViewModel
 import com.github.michaelbull.result.getOrThrow
-import com.github.michaelbull.result.onFailure
-import com.github.michaelbull.result.onSuccess
+import com.github.michaelbull.result.onErr
+import com.github.michaelbull.result.onOk
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -352,8 +352,8 @@ class PGPKeyListActivity : AppCompatActivity() {
         val outputStream = contentResolver.openOutputStream(uri) ?: throw IOException()
         source?.inputStream().use { src -> outputStream.use { dest -> src?.copyTo(dest) } }
       }
-      .onSuccess { snackbar(message = resources.getString(R.string.pgp_key_export_succeeded)) }
-      .onFailure { e ->
+      .onOk { snackbar(message = resources.getString(R.string.pgp_key_export_succeeded)) }
+      .onErr { e ->
         logcat(ERROR) { e.asLog() }
         snackbar(message = resources.getString(R.string.pgp_key_export_failed))
       }

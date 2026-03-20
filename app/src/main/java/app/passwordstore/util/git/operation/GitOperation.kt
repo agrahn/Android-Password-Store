@@ -29,7 +29,7 @@ import app.passwordstore.util.settings.AuthMode
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
-import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.EntryPoint
@@ -114,12 +114,12 @@ abstract class GitOperation(protected val callingActivity: FragmentActivity) {
           if (generateKey) SshKeyGenActivity::class.java else SshKeyImportActivity::class.java
         )
       }
-      .onFailure { e -> logcat(ERROR) { e.asLog() } }
+      .onErr { e -> logcat(ERROR) { e.asLog() } }
   }
 
   private fun usePgpKey() {
     runCatching { callingActivity.launchActivity(PgpAuthKeySelectionActivity::class.java) }
-      .onFailure { e -> logcat(ERROR) { e.asLog() } }
+      .onErr { e -> logcat(ERROR) { e.asLog() } }
   }
 
   private fun registerAuthProviders(

@@ -24,7 +24,7 @@ import app.passwordstore.util.extensions.launchActivity
 import app.passwordstore.util.extensions.viewBinding
 import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.getOrElse
-import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -100,7 +100,7 @@ class GitConfigActivity : BaseGitActivity() {
     }
     binding.gitLog.setOnClickListener {
       runCatching { launchActivity(GitLogActivity::class.java) }
-        .onFailure { ex -> logcat(ERROR) { ex.asLog("Failed to start GitLogActivity") } }
+        .onErr { ex -> logcat(ERROR) { ex.asLog("Failed to start GitLogActivity") } }
     }
     binding.gitAbortRebase.setOnClickListener { abortRebase() }
     binding.gitResetToRemote.setOnClickListener { resetToRemote() }

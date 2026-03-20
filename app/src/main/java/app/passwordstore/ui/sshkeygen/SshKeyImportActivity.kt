@@ -13,7 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import app.passwordstore.R
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.git.sshj.SshKey
-import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import logcat.LogPriority.ERROR
@@ -39,7 +39,7 @@ class SshKeyImportActivity : AppCompatActivity() {
           setResult(RESULT_OK)
           finish()
         }
-        .onFailure { e ->
+        .onErr { e ->
           MaterialAlertDialogBuilder(this)
             .setCancelable(false)
             .setTitle(R.string.ssh_key_error_dialog_title)
@@ -70,7 +70,7 @@ class SshKeyImportActivity : AppCompatActivity() {
 
   private fun importSshKey() {
     runCatching { sshKeyImportAction.launch("*/*") }
-      .onFailure { e ->
+      .onErr { e ->
         logcat(ERROR) { e.asLog() }
         e.message?.let { message -> snackbar(message = message) }
       }

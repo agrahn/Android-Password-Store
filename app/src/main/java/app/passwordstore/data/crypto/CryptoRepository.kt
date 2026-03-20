@@ -17,7 +17,7 @@ import app.passwordstore.crypto.PGPainlessCryptoHandler
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.settings.PreferenceKeys
-import com.github.michaelbull.result.filterValues
+import com.github.michaelbull.result.filterOk
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.getOrThrow
@@ -70,7 +70,7 @@ constructor(
   }
 
   fun isPasswordProtected(identifiers: List<PGPIdentifier>, anySubkey: Boolean = false): Boolean {
-    val keys = identifiers.map { pgpKeyManager.getKeyById(it) }.filterValues()
+    val keys = identifiers.map { pgpKeyManager.getKeyById(it) }.filterOk()
     return pgpCryptoHandler.isPassphraseProtected(keys, anySubkey)
   }
 
@@ -178,7 +178,7 @@ constructor(
         .mapNotNull { getLongKeyIdFromKeyId(it) }
         .distinct()
         .mapNotNull { PGPIdentifier.fromString(it) }
-    val keys = primaryKeyIds.map { id -> pgpKeyManager.getKeyById(id) }.filterValues()
+    val keys = primaryKeyIds.map { id -> pgpKeyManager.getKeyById(id) }.filterOk()
     val encryptionOptions =
       PGPEncryptOptions.Builder()
         .withAsciiArmor(settings.getBoolean(PreferenceKeys.ASCII_ARMOR, false))

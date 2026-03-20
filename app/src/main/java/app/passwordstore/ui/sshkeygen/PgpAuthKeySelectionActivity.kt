@@ -16,7 +16,7 @@ import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.git.sshj.SshKey
 import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.get
-import com.github.michaelbull.result.onFailure
+import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -91,7 +91,7 @@ class PgpAuthKeySelectionActivity : AppCompatActivity() {
           PGPKeyListActivity.newIntent(this, keySelection = true, singleSelection = true)
         )
       }
-      .onFailure { e ->
+      .onErr { e ->
         logcat(ERROR) { e.asLog() }
         e.message?.let { message -> snackbar(message = message) }
       }
