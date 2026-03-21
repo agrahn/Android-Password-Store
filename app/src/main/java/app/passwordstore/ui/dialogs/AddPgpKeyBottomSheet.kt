@@ -11,7 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.FrameLayout
-import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
@@ -69,11 +68,17 @@ class AddPgpKeyBottomSheet : BottomSheetDialogFragment() {
             addBottomSheetCallback(bottomSheetCallback)
           }
           dialog.findViewById<View>(R.id.import_key)?.setOnClickListener {
-            setFragmentResult(PGP_KEY_ADD_REQUEST_KEY, bundleOf(ACTION_KEY to ACTION_IMPORT_FILE))
+            setFragmentResult(
+              PGP_KEY_ADD_REQUEST_KEY,
+              Bundle().also { it.putString(ACTION_KEY, ACTION_IMPORT_FILE) },
+            )
             dismiss()
           }
           dialog.findViewById<View>(R.id.create_key)?.setOnClickListener {
-            setFragmentResult(PGP_KEY_ADD_REQUEST_KEY, bundleOf(ACTION_KEY to ACTION_NEW_PGP_KEY))
+            setFragmentResult(
+              PGP_KEY_ADD_REQUEST_KEY,
+              Bundle().also { it.putString(ACTION_KEY, ACTION_NEW_PGP_KEY) },
+            )
             dismiss()
           }
         }

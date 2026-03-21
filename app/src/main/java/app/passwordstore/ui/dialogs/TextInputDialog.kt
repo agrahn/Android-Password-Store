@@ -9,7 +9,6 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.WindowManager
-import androidx.core.os.bundleOf
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.setFragmentResult
@@ -45,7 +44,10 @@ class TextInputDialog : DialogFragment() {
       binding.textInputLayout.hint = hint
     }
     builder.setPositiveButton(android.R.string.ok) { _, _ ->
-      setFragmentResult(REQUEST_KEY, bundleOf(BUNDLE_KEY_TEXT to binding.editText.text?.toString()))
+      setFragmentResult(
+        REQUEST_KEY,
+        Bundle().also { it.putString(BUNDLE_KEY_TEXT, binding.editText.text?.toString()) },
+      )
       dismissAllowingStateLoss()
     }
     val dialog = builder.create()
@@ -79,7 +81,13 @@ class TextInputDialog : DialogFragment() {
     private const val BUNDLE_KEY_HINT = "hint"
 
     fun newInstance(title: String, hint: String? = null): TextInputDialog {
-      val args = bundleOf(BUNDLE_KEY_TITLE to title, BUNDLE_KEY_HINT to hint)
+      val args =
+        Bundle().also {
+          it.apply {
+            putString(BUNDLE_KEY_TITLE, title)
+            putString(BUNDLE_KEY_HINT, hint)
+          }
+        }
       val dialog = TextInputDialog()
       dialog.arguments = args
       return dialog

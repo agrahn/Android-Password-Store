@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
-import androidx.core.os.bundleOf
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.setFragmentResult
@@ -87,7 +86,7 @@ class PinDialog : DialogFragment() {
 
   private fun setPinAndDismiss() {
     val pin = binding.pinEditText.text?.let { CharArray(it.length) { i -> it[i] } }
-    setFragmentResult(PIN_RESULT_KEY, bundleOf(PIN_KEY to pin))
+    setFragmentResult(PIN_RESULT_KEY, Bundle().also { it.putCharArray(PIN_KEY, pin) })
     dismissAllowingStateLoss()
   }
 
@@ -106,11 +105,13 @@ class PinDialog : DialogFragment() {
       clearOnDismiss: CharArray? = null,
     ): PinDialog {
       val extras =
-        bundleOf(
-          TITLE_TEXT_EXTRA to title,
-          DESCRIPTION_TEXT_EXTRA to description,
-          CLEAR_ON_DISMISS_TEXT_EXTRA to clearOnDismiss,
-        )
+        Bundle().also {
+          it.apply {
+            putString(TITLE_TEXT_EXTRA, title)
+            putString(DESCRIPTION_TEXT_EXTRA, description)
+            putCharArray(CLEAR_ON_DISMISS_TEXT_EXTRA, clearOnDismiss)
+          }
+        }
       val fragment = PinDialog()
       fragment.arguments = extras
       return fragment

@@ -9,7 +9,6 @@ import android.app.Dialog
 import android.net.Uri
 import android.os.Bundle
 import android.view.WindowManager
-import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.setFragmentResult
 import app.passwordstore.databinding.FragmentManualOtpEntryBinding
@@ -25,7 +24,7 @@ class OtpImportDialogFragment : DialogFragment() {
     builder.setPositiveButton(android.R.string.ok) { _, _ ->
       setFragmentResult(
         PasswordCreationActivity.OTP_RESULT_REQUEST_KEY,
-        bundleOf(PasswordCreationActivity.RESULT to getTOTPUri(binding)),
+        Bundle().also { it.putString(PasswordCreationActivity.RESULT, getTOTPUri(binding)) },
       )
     }
     val dialog = builder.create()

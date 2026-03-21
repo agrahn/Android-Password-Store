@@ -10,7 +10,6 @@ import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
@@ -109,7 +108,13 @@ class FolderCreationDialogFragment : DialogFragment() {
       startingDirectory: String,
       setGpgKey: Boolean = false,
     ): FolderCreationDialogFragment {
-      val extras = bundleOf(CURRENT_DIR_EXTRA to startingDirectory, SET_GPG_KEY_EXTRA to setGpgKey)
+      val extras =
+        Bundle().also {
+          it.apply {
+            putString(CURRENT_DIR_EXTRA, startingDirectory)
+            putBoolean(SET_GPG_KEY_EXTRA, setGpgKey)
+          }
+        }
       val fragment = FolderCreationDialogFragment()
       fragment.arguments = extras
       return fragment
