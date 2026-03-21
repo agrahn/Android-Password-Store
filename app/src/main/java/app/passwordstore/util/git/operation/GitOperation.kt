@@ -127,7 +127,12 @@ abstract class GitOperation(protected val callingActivity: FragmentActivity) {
     credentialsProvider: CredentialsProvider? = null,
   ) {
     sshSessionFactory =
-      SshjSessionFactory(authMethod, hostKeyFile, hiltEntryPoint.dispatcherProvider())
+      SshjSessionFactory(
+        authMethod,
+        hostKeyFile,
+        hiltEntryPoint.dispatcherProvider(),
+        callingActivity,
+      )
     commands.filterIsInstance<TransportCommand<*, *>>().forEach { command ->
       command.setTransportConfigCallback { transport: Transport ->
         (transport as? SshTransport)?.sshSessionFactory = sshSessionFactory

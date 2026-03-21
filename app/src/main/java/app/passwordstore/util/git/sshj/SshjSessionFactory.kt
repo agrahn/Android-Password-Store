@@ -6,11 +6,15 @@ package app.passwordstore.util.git.sshj
 
 import android.util.Base64
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.FragmentActivity
+import app.passwordstore.R
 import app.passwordstore.util.coroutines.DispatcherProvider
+import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.git.operation.CredentialFinder
 import app.passwordstore.util.settings.AuthMode
 import com.github.michaelbull.result.getOrElse
 import com.github.michaelbull.result.runCatching
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -18,10 +22,14 @@ import java.io.OutputStream
 import java.security.PublicKey
 import java.util.Collections
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.runBlocking
 import logcat.LogPriority.WARN
 import logcat.logcat
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.common.Buffer.PlainBuffer
+import net.schmizz.sshj.common.KeyType
 import net.schmizz.sshj.common.SSHRuntimeException
 import net.schmizz.sshj.common.SecurityUtils
 import net.schmizz.sshj.connection.channel.direct.Session
@@ -45,6 +53,7 @@ class SshjSessionFactory(
   private val authMethod: SshAuthMethod,
   private val hostKeyFile: File,
   private val dispatcherProvider: DispatcherProvider,
+  private val callingActivity: FragmentActivity,
 ) : SshSessionFactory() {
 
   private var currentSession: SshjSession? = null
@@ -56,10 +65,12 @@ class SshjSessionFactory(
     tms: Int,
   ): RemoteSession {
     return currentSession
-      ?: SshjSession(uri, uri.user, authMethod, hostKeyFile, dispatcherProvider).connect().also {
-        logcat { "New SSH connection created" }
-        currentSession = it
-      }
+      ?: SshjSession(uri, uri.user, authMethod, hostKeyFile, dispatcherProvider, callingActivity)
+        .connect()
+        .also {
+          logcat { "New SSH connection created" }
+          currentSession = it
+        }
   }
 
   override fun getType(): String {
@@ -71,7 +82,11 @@ class SshjSessionFactory(
   }
 }
 
-private fun makeTofuHostKeyVerifier(hostKeyFile: File): HostKeyVerifier {
+private fun makeTofuHostKeyVerifier(
+  hostKeyFile: File,
+  dispatcherProvider: DispatcherProvider,
+  callingActivity: FragmentActivity,
+): HostKeyVerifier {
   if (!hostKeyFile.exists()) {
     return object : HostKeyVerifier {
       override fun verify(hostname: String?, port: Int, key: PublicKey?): Boolean {
@@ -80,12 +95,40 @@ private fun makeTofuHostKeyVerifier(hostKeyFile: File): HostKeyVerifier {
             .getOrElse { e -> throw SSHRuntimeException(e) }
         digest.update(PlainBuffer().putPublicKey(key).compactData)
         val digestData = digest.digest()
+        val keyType = KeyType.fromKey(key)
         val hostKeyEntry = "SHA256:${Base64.encodeToString(digestData, Base64.NO_WRAP)}"
-        logcat(SshjSessionFactory::class.java.simpleName) {
-          "Trusting host key on first use: $hostKeyEntry"
-        }
-        hostKeyFile.writeText(hostKeyEntry)
-        return true
+        val hostKeyTrusted =
+          runBlocking(dispatcherProvider.main()) {
+            suspendCoroutine { cont ->
+              val title =
+                callingActivity.resources.getString(
+                  R.string.git_server_hostkey_dialog_title,
+                  keyType,
+                )
+              val message =
+                callingActivity.resources.getString(
+                  R.string.git_server_hostkey_dialog_message,
+                  hostKeyEntry,
+                )
+              val showHostKeyDialog =
+                MaterialAlertDialogBuilder(callingActivity)
+                  .setCancelable(false)
+                  .setTitle(title)
+                  .setMessage(message)
+                  .setPositiveButton(R.string.git_server_hostkey_dialog_connect) { _, _ ->
+                    hostKeyFile.writeText(hostKeyEntry)
+                    logcat(SshjSessionFactory::class.java.simpleName) {
+                      "Trusting host key after approval by user: $hostKeyEntry"
+                    }
+                    cont.resume(true)
+                  }
+                  .setNegativeButton(R.string.git_server_hostkey_dialog_abort) { _, _ ->
+                    cont.resume(false)
+                  }
+                  .show()
+            }
+          }
+        return hostKeyTrusted
       }
 
       override fun findExistingAlgorithms(hostname: String?, port: Int): MutableList<String> {
@@ -105,6 +148,7 @@ private class SshjSession(
   private val authMethod: SshAuthMethod,
   private val hostKeyFile: File,
   private val dispatcherProvider: DispatcherProvider,
+  private val callingActivity: FragmentActivity,
 ) : RemoteSession {
 
   init {
@@ -132,7 +176,9 @@ private class SshjSession(
 
   fun connect(): SshjSession {
     ssh = SSHClient(SshjConfig())
-    ssh.addHostKeyVerifier(makeTofuHostKeyVerifier(hostKeyFile))
+    ssh.addHostKeyVerifier(
+      makeTofuHostKeyVerifier(hostKeyFile, dispatcherProvider, callingActivity)
+    )
     ssh.connect(uri.host, uri.port.takeUnless { it == -1 } ?: 22)
     if (!ssh.isConnected) throw IOException()
     when (authMethod) {

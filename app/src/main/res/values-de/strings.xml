@@ -286,6 +286,10 @@
   <string name="pref_app_theme_value_follow_system">Systemstandard</string>
   <string name="connection_mode_ssh_key">Public-Key</string>
   <string name="connection_mode_basic_authentication">Passwort</string>
+  <string name="git_server_hostkey_dialog_title">Fingerabdruck des %s-Hostschlüssels</string>
+  <string name="git_server_hostkey_dialog_message">%s\n\nÜberprüfen Sie die Korrektheit des Fingerabdrucks vor dem Verbinden.</string>
+  <string name="git_server_hostkey_dialog_connect">Verbinden</string>
+  <string name="git_server_hostkey_dialog_abort">Abbruch</string>
   <string name="git_server_config_save_success">Konfiguration erfolgreich gespeichert</string>
   <string name="git_server_config_save_error">Die angegebene Repository-URL ist ungültig.</string>
   <string name="git_server_config_save_missing_username_https">Bitte geben Sie den HTTPS-Benutzernamen in der Form https://username@example.com/… an.</string>

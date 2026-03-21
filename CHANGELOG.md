@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+### Added
+
+- The host key fingerprint is displayed when connecting to the Git server for the first time, so that the user can decide whether to establish the connection
+
 ### Fixed
 
 - Keystore-provided SSH keys are usable again
