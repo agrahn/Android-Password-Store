@@ -83,7 +83,12 @@ class CredentialFinder(
   fun unlockAuthKeyPair(): KeyPair? {
     if (SshKey.pgpLongKeyId == 0L) return null
 
-    var kp: KeyPair? = null
+    // try without passphrase first
+    var kp = repository.unlockAuthKeyPair(null, KeyId(SshKey.pgpLongKeyId)).get()
+    if (kp != null) {
+      gitSecrets.edit { remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE) }
+      return kp
+    }
 
     cachedPassphrase =
       runBlocking(dispatcherProvider.main()) {
