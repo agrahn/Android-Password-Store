@@ -97,6 +97,8 @@ private fun makeTofuHostKeyVerifier(
         val digestData = digest.digest()
         val keyType = KeyType.fromKey(key)
         val hostKeyEntry = "SHA256:${Base64.encodeToString(digestData, Base64.NO_WRAP)}"
+        val hostKeyEntryNoPadding =
+          "SHA256:${Base64.encodeToString(digestData, Base64.NO_WRAP or Base64.NO_PADDING)}"
         val hostKeyTrusted =
           runBlocking(dispatcherProvider.main()) {
             suspendCoroutine { cont ->
@@ -108,7 +110,7 @@ private fun makeTofuHostKeyVerifier(
               val message =
                 callingActivity.resources.getString(
                   R.string.git_server_hostkey_dialog_message,
-                  hostKeyEntry,
+                  hostKeyEntryNoPadding,
                 )
               val showHostKeyDialog =
                 MaterialAlertDialogBuilder(callingActivity)
@@ -118,7 +120,7 @@ private fun makeTofuHostKeyVerifier(
                   .setPositiveButton(R.string.git_server_hostkey_dialog_connect) { _, _ ->
                     hostKeyFile.writeText(hostKeyEntry)
                     logcat(SshjSessionFactory::class.java.simpleName) {
-                      "Trusting host key after approval by user: $hostKeyEntry"
+                      "Trusting host key after approval by user: $hostKeyEntryNoPadding"
                     }
                     cont.resume(true)
                   }
