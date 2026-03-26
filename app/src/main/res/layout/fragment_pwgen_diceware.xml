@@ -70,4 +70,21 @@
       android:maxLength="1" />
   </com.google.android.material.textfield.TextInputLayout>
 
+  <com.google.android.material.checkbox.MaterialCheckBox
+    android:id="@+id/capitalise"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:text="@string/pwgen_capitalise"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@id/password_separator" />
+
+  <com.google.android.material.checkbox.MaterialCheckBox
+    android:id="@+id/include_numeral"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="@string/pwgen_include_numeral"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@id/capitalise" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

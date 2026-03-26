@@ -170,6 +170,8 @@
   <string name="pwgen_length_too_short_error">Länge zu kurz für die gewählten Kriterien.</string>
   <string name="pwgen_max_iterations_exceeded">Fehler beim Erstellen eines Passworts, das den Anforderungen genügt. Versuchen Sie es mit einem längeren Passwort.</string>
   <string name="pwgen_separator">Trennzeichen</string>
+  <string name="pwgen_capitalise">Großschreibung</string>
+  <string name="pwgen_include_numeral">Ziffer einbetten</string>
 
   <!-- Password generator prefs -->
   <string name="pref_password_generator_type_title">Passwortgenerator</string>

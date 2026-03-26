@@ -21,6 +21,9 @@ class DicewarePassphraseGeneratorTest {
 
     val generator = DicewarePassphraseGenerator(die, WordListParserTest.getDefaultWordList())
 
-    assertEquals("salvation_cozily_croon_trustee_fidgety", generator.generatePassphrase(5, '_'))
+    assertEquals(
+      "Salvation_Cozily_Croon_Trustee_Fidgety",
+      generator.generatePassphrase(5, '_', false, true),
+    )
   }
 }

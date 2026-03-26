@@ -171,6 +171,8 @@
   <string name="pwgen_length_too_short_error">Length too short for selected criteria</string>
   <string name="pwgen_max_iterations_exceeded">Failed to generate a password satisfying the constraints. Try to increase the length.</string>
   <string name="pwgen_separator">Separator</string>
+  <string name="pwgen_capitalise">Capitalise</string>
+  <string name="pwgen_include_numeral">Include numeral</string>
 
   <!-- Password generator prefs -->
   <string name="pref_password_generator_type_title">Password generator type</string>

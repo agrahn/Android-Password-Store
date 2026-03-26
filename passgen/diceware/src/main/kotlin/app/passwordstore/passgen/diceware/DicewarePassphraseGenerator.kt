@@ -6,6 +6,8 @@
 package app.passwordstore.passgen.diceware
 
 import java.io.InputStream
+import java.security.SecureRandom
+import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -17,12 +19,28 @@ public class DicewarePassphraseGenerator
 constructor(private val die: Die, wordList: InputStream) {
 
   private val wordMap = WordListParser.parse(wordList)
+  private val random = SecureRandom()
 
   /** Generates a passphrase with [wordCount] words. */
-  public fun generatePassphrase(wordCount: Int, separator: Char): String {
+  public fun generatePassphrase(
+    wordCount: Int,
+    separator: Char,
+    includeNumeral: Boolean,
+    capitalise: Boolean,
+  ): String {
     return buildString {
+      val numeralPos = random.nextInt(wordCount)
       repeat(wordCount) { idx ->
-        append(wordMap[die.rollMultiple(DIGITS)])
+        append(
+          wordMap[die.rollMultiple(DIGITS)]?.let {
+            if (capitalise)
+              it.replaceFirstChar {
+                if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+              }
+            else it
+          } ?: throw NullPointerException()
+        )
+        if (idx == numeralPos && includeNumeral) append("${random.nextInt(10)}")
         if (idx < wordCount - 1) append(separator)
       }
     }

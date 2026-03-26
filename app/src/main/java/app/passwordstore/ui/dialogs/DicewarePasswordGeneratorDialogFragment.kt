@@ -11,6 +11,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Typeface
 import android.os.Bundle
+import android.widget.CheckBox
+import androidx.annotation.IdRes
 import androidx.core.content.edit
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.setFragmentResult
@@ -18,6 +20,7 @@ import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.databinding.FragmentPwgenDicewareBinding
 import app.passwordstore.passgen.diceware.DicewarePassphraseGenerator
+import app.passwordstore.passgen.diceware.PasswordOption
 import app.passwordstore.ui.crypto.PasswordCreationActivity
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
@@ -30,6 +33,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import reactivecircus.flowbinding.android.widget.afterTextChanges
+import reactivecircus.flowbinding.android.widget.checkedChanges
 
 @AndroidEntryPoint
 class DicewarePasswordGeneratorDialogFragment : DialogFragment() {
@@ -60,8 +64,13 @@ class DicewarePasswordGeneratorDialogFragment : DialogFragment() {
     )
     binding.passwordText.typeface = Typeface.MONOSPACE
 
+    binding.includeNumeral.isChecked = prefs.getBoolean(PasswordOption.Numeral.key, false)
+    binding.capitalise.isChecked = prefs.getBoolean(PasswordOption.Capitalise.key, false)
+
     lifecycleScope.launch {
       merge(
+          binding.includeNumeral.checkedChanges().skipInitialValue(),
+          binding.capitalise.checkedChanges().skipInitialValue(),
           binding.passwordLengthText.afterTextChanges(),
           binding.passwordSeparatorText.afterTextChanges(),
         )
@@ -93,11 +102,24 @@ class DicewarePasswordGeneratorDialogFragment : DialogFragment() {
   private fun generatePassword(binding: FragmentPwgenDicewareBinding) {
     val length = binding.passwordLengthText.text?.toString()?.toIntOrNull() ?: 5
     val separator = binding.passwordSeparatorText.text?.toString()?.getOrNull(0) ?: '-'
-    setPreferences(length, separator)
-    binding.passwordText.text = dicewareGenerator.generatePassphrase(length, separator)
+    val includeNumeral = binding.includeNumeral.isChecked
+    val capitalise = binding.capitalise.isChecked
+
+    setPreferences(length, separator, includeNumeral, capitalise)
+    binding.passwordText.text =
+      dicewareGenerator.generatePassphrase(length, separator, includeNumeral, capitalise)
   }
 
-  private fun setPreferences(length: Int, separator: Char) {
+  private fun isChecked(@IdRes id: Int): Boolean {
+    return requireDialog().findViewById<CheckBox>(id).isChecked
+  }
+
+  private fun setPreferences(
+    length: Int,
+    separator: Char,
+    includeNumeral: Boolean,
+    capitalise: Boolean,
+  ) {
     prefs.edit {
       putString(
         DICEWARE_LENGTH,
@@ -111,6 +133,8 @@ class DicewarePasswordGeneratorDialogFragment : DialogFragment() {
           String(it)
         },
       )
+      putBoolean(PasswordOption.Numeral.key, includeNumeral)
+      putBoolean(PasswordOption.Capitalise.key, capitalise)
     }
   }
 }

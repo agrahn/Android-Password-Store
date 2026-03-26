@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file
 ### Added
 
 - The host key fingerprint is displayed when connecting to the Git server for the first time, so that the user can decide whether to establish the connection
+- Diceware passphrase generator options for capitalising words and embedding a numeral
 
 ### Fixed
 
