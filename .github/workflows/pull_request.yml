@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup build environment
-        uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@develop
+        uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@9fb2d22a4553ffe4c9b287d7e15752a058f87192 # develop
         with:
           java-version: 21
 
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup build environment
-        uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@develop
+        uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@9fb2d22a4553ffe4c9b287d7e15752a058f87192 # develop
         with:
           java-version: 21
 
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup build environment
-        uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@develop
+        uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@9fb2d22a4553ffe4c9b287d7e15752a058f87192 # develop
         with:
           java-version: 21
 
@@ -77,7 +77,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup build environment
-        uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@develop
+        uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@9fb2d22a4553ffe4c9b287d7e15752a058f87192 # develop
         with:
           java-version: 21
 
