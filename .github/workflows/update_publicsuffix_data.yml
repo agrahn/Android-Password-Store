@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup build environment
-        uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@0470d05549952b9b58a3f6c2271e00ebcd465f14 # develop
+        uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@94f64e65efce4d293d31d8429880084519df762e # develop
 
       - name: Download new publicsuffix data
         shell: bash
