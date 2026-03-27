@@ -19,7 +19,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[ci skip]')"
     steps:
     - name: Setup build environment
-      uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@c1e2044949aca678363a91368a7b0d16a6233073 # develop
+      uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@68f7c5b4be36b0b41a3a9c0597837cb9b433e0a2 # develop
       with:
         java-version: 21
         fetch-depth: 0
