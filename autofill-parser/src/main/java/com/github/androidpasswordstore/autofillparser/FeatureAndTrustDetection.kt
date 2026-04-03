@@ -132,6 +132,10 @@ internal enum class BrowserMultiOriginMethod {
  */
 private val BROWSER_MULTI_ORIGIN_METHOD =
   mapOf(
+    "com.android.chrome" to BrowserMultiOriginMethod.Field,
+    "com.chrome.beta" to BrowserMultiOriginMethod.Field,
+    "com.chrome.canary" to BrowserMultiOriginMethod.Field,
+    "com.chrome.dev" to BrowserMultiOriginMethod.Field,
     "com.duckduckgo.mobile.android" to BrowserMultiOriginMethod.WebView,
     "com.opera.mini.native" to BrowserMultiOriginMethod.WebView,
     "com.opera.mini.native.beta" to BrowserMultiOriginMethod.WebView,
@@ -148,6 +152,11 @@ private val BROWSER_MULTI_ORIGIN_METHOD =
     "org.mozilla.klar" to BrowserMultiOriginMethod.Field,
     "org.torproject.torbrowser" to BrowserMultiOriginMethod.WebView,
     "us.spotco.fennec_dos" to BrowserMultiOriginMethod.Field,
+    "org.bromite.bromite" to BrowserMultiOriginMethod.Field,
+    "org.cromite.cromite" to BrowserMultiOriginMethod.Field,
+    "org.ungoogled.chromium.stable" to BrowserMultiOriginMethod.Field,
+    "org.ungoogled.chromium.extensions.stable" to BrowserMultiOriginMethod.Field,
+    "app.vanadium.browser" to BrowserMultiOriginMethod.Field,
     "org.ironfoxoss.ironfox" to BrowserMultiOriginMethod.Field,
     "org.ironfoxoss.ironfox.nightly" to BrowserMultiOriginMethod.Field,
     "net.waterfox.android.release" to BrowserMultiOriginMethod.Field,
