@@ -65,6 +65,9 @@ class DecryptActivity : BasePGPActivity() {
         copyTextToClipboard(name.toCharArray(), isSensitive = false)
         true
       }
+      binding.fab.setOnClickListener {
+        copyPassword()
+      }
     }
     requireKeysExist {
       requireDecryptionKeysExist(relativeParentPath) { ids -> getPersistentAndDecrypt(ids) }
@@ -150,22 +153,24 @@ class DecryptActivity : BasePGPActivity() {
       android.R.id.home -> onBackPressedDispatcher.onBackPressed()
       R.id.edit_password -> editPassword()
       R.id.share_password_as_plaintext -> shareAsPlaintext()
-      R.id.copy_password -> {
-        encryptedEntryChars?.let { encrypted ->
-          AESEncryption.decrypt(encrypted)?.let { decrypted ->
-            val entry = passwordEntryFactory.create(decrypted)
-            decrypted.wipe()
-            if (entry.password?.let { !it.isBlank() } ?: false) {
-              clearTimer?.shutdownNow()
-              clearTimer = copyPasswordToClipboard(entry?.password)
-            }
-            entry.clear()
-          }
-        }
-      }
+      R.id.copy_password -> copyPassword()
       else -> return super.onOptionsItemSelected(item)
     }
     return true
+  }
+
+  private fun copyPassword() {
+    encryptedEntryChars?.let { encrypted ->
+      AESEncryption.decrypt(encrypted)?.let { decrypted ->
+        val entry = passwordEntryFactory.create(decrypted)
+        decrypted.wipe()
+        if (entry.password?.let { !it.isBlank() } ?: false) {
+          clearTimer?.shutdownNow()
+          clearTimer = copyPasswordToClipboard(entry.password)
+        }
+        entry.clear()
+      }
+    }
   }
 
   /**
