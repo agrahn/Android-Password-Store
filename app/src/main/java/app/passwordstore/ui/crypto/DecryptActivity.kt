@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
@@ -65,9 +66,7 @@ class DecryptActivity : BasePGPActivity() {
         copyTextToClipboard(name.toCharArray(), isSensitive = false)
         true
       }
-      binding.fab.setOnClickListener {
-        copyPassword()
-      }
+      fab.setOnClickListener { copyPassword() }
     }
     requireKeysExist {
       requireDecryptionKeysExist(relativeParentPath) { ids -> getPersistentAndDecrypt(ids) }
@@ -141,6 +140,7 @@ class DecryptActivity : BasePGPActivity() {
         if (entry.password?.let { !it.isBlank() } ?: false) {
           menu.findItem(R.id.share_password_as_plaintext).isVisible = true
           menu.findItem(R.id.copy_password).isVisible = true
+          binding.fab.setVisibility(View.VISIBLE)
         }
         entry.clear()
       }
