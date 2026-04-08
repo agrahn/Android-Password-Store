@@ -222,9 +222,7 @@ class PasswordCreationActivity : BasePGPActivity() {
 
       val suggestedEntry: PasswordEntry? = suggestedEntryChars?.let { encrypted ->
         AESEncryption.decrypt(encrypted)?.let { decrypted ->
-          val entry = passwordEntryFactory.create(decrypted)
-          decrypted.wipe()
-          entry
+          passwordEntryFactory.create(decrypted).also { decrypted.wipe() }
         }
       }
 
@@ -642,9 +640,9 @@ class PasswordCreationActivity : BasePGPActivity() {
     const val RETURN_EXTRA_LONG_NAME = "LONG_NAME"
     const val RETURN_EXTRA_USERNAME = "USERNAME"
     const val RETURN_EXTRA_PASSWORD = "PASSWORD"
-    const val EXTRA_FILE_NAME = "FILENAME"
-    const val EXTRA_ENTRY = "ENTRY"
-    const val EXTRA_GENERATE_PASSWORD = "GENERATE_PASSWORD"
-    const val EXTRA_EDITING = "EDITING"
+    const val EXTRA_FILE_NAME = "EXTRA_FILENAME"
+    const val EXTRA_ENTRY = "EXTRA_ENTRY"
+    const val EXTRA_GENERATE_PASSWORD = "EXTRA_GENERATE_PASSWORD"
+    const val EXTRA_EDITING = "EXTRA_EDITING"
   }
 }

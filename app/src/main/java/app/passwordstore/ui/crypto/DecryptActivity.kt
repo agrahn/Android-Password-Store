@@ -181,8 +181,8 @@ class DecryptActivity : BasePGPActivity() {
     encryptedEntryChars?.let { encrypted ->
       val intent = Intent(this, PasswordCreationActivity::class.java)
       intent.action = Intent.ACTION_VIEW
-      intent.putExtra("FILE_PATH", relativeParentPath)
-      intent.putExtra("REPO_PATH", repoPath)
+      intent.putExtra(EXTRA_FILE_PATH, relativeParentPath)
+      intent.putExtra(EXTRA_REPO_PATH, repoPath)
       intent.putExtra(PasswordCreationActivity.EXTRA_FILE_NAME, name)
       intent.putExtra(PasswordCreationActivity.EXTRA_ENTRY, encrypted)
       intent.putExtra(PasswordCreationActivity.EXTRA_EDITING, true)

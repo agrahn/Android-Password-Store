@@ -12,12 +12,17 @@ import android.os.Bundle
 import android.view.autofill.AutofillManager
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.app.AppCompatActivity
+import app.passwordstore.data.passfile.joinToCharArray
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.ui.crypto.BasePGPActivity
 import app.passwordstore.ui.crypto.PasswordCreationActivity
 import app.passwordstore.util.autofill.AutofillMatcher
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.autofill.AutofillResponseBuilder
+import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.unsafeLazy
+import app.passwordstore.util.extensions.wipe
+import app.passwordstore.util.settings.DirectoryStructure
 import com.github.androidpasswordstore.autofillparser.AutofillAction
 import com.github.androidpasswordstore.autofillparser.Credentials
 import com.github.androidpasswordstore.autofillparser.FormOrigin
@@ -32,7 +37,7 @@ class AutofillSaveActivity : AppCompatActivity() {
   companion object {
 
     private const val EXTRA_FOLDER_NAME = "app.passwordstore.autofill.oreo.ui.EXTRA_FOLDER_NAME"
-    private const val EXTRA_PASSWORD = "app.passwordstore.autofill.oreo.ui.EXTRA_PASSWORD"
+    private const val EXTRA_ENTRY = "app.passwordstore.autofill.oreo.ui.EXTRA_ENTRY"
     private const val EXTRA_NAME = "app.passwordstore.autofill.oreo.ui.EXTRA_NAME"
     private const val EXTRA_SHOULD_MATCH_APP =
       "app.passwordstore.autofill.oreo.ui.EXTRA_SHOULD_MATCH_APP"
@@ -64,6 +69,19 @@ class AutofillSaveActivity : AppCompatActivity() {
           username = credentials?.username,
           identifier = identifier,
         )
+      val clearCredentials = credentials?.let {
+        if (directoryStructure == DirectoryStructure.EncryptedUsername)
+          listOf(
+              it.password ?: charArrayOf(),
+              "\nusername: ".toCharArray(),
+              it.username ?: charArrayOf(),
+            )
+            .joinToCharArray()
+        else it.password
+      }
+      val encryptedCredentials = AESEncryption.encrypt(clearCredentials)
+      credentials?.password?.wipe()
+      clearCredentials?.wipe()
       val intent =
         Intent(context, AutofillSaveActivity::class.java).apply {
           putExtras(
@@ -71,7 +89,7 @@ class AutofillSaveActivity : AppCompatActivity() {
               it.apply {
                 putString(EXTRA_FOLDER_NAME, folderName)
                 putString(EXTRA_NAME, fileName)
-                putCharArray(EXTRA_PASSWORD, credentials?.password)
+                putCharArray(EXTRA_ENTRY, encryptedCredentials)
                 putString(
                   EXTRA_SHOULD_MATCH_APP,
                   formOrigin.identifier.takeIf { formOrigin is FormOrigin.App },
@@ -115,15 +133,18 @@ class AutofillSaveActivity : AppCompatActivity() {
         putExtras(
           Bundle().also {
             it.apply {
-              putString("REPO_PATH", repo.absolutePath)
+              putString(BasePGPActivity.EXTRA_REPO_PATH, repo.absolutePath)
               putString(
-                "FILE_PATH",
+                BasePGPActivity.EXTRA_FILE_PATH,
                 repo
                   .resolve(intent.getStringExtra(EXTRA_FOLDER_NAME) ?: throw NullPointerException())
                   .absolutePath,
               )
               putString(PasswordCreationActivity.EXTRA_FILE_NAME, intent.getStringExtra(EXTRA_NAME))
-              putCharArray("EXTRA_PASSWORD", intent.getCharArrayExtra(EXTRA_PASSWORD))
+              putCharArray(
+                PasswordCreationActivity.EXTRA_ENTRY,
+                intent.getCharArrayExtra(EXTRA_ENTRY),
+              )
               putBoolean(
                 PasswordCreationActivity.EXTRA_GENERATE_PASSWORD,
                 intent.getBooleanExtra(EXTRA_GENERATE_PASSWORD, false),

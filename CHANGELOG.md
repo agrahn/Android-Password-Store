@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file
 
 - Keystore-provided SSH keys are usable again
 - Allow empty passphrase on Git authentication via PGP key
+- Autofill support for Chrome/Chromium browser
+- Password entry creation after first successful login (autofill-save) 
 
 ## [1.16.2] - 2026-03-01
 

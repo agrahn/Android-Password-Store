@@ -43,8 +43,11 @@ data class PasswordItem(
   fun createAuthEnabledIntent(context: Context): Intent {
     val intent = Intent(context, LaunchActivity::class.java)
     intent.putExtra("NAME", toString()) // this.toString
-    intent.putExtra("FILE_PATH", file.absolutePath)
-    intent.putExtra("REPO_PATH", PasswordRepository.getRepositoryDirectory().absolutePath)
+    intent.putExtra(BasePGPActivity.EXTRA_FILE_PATH, file.absolutePath)
+    intent.putExtra(
+      BasePGPActivity.EXTRA_REPO_PATH,
+      PasswordRepository.getRepositoryDirectory().absolutePath,
+    )
     intent.action = LaunchActivity.ACTION_DECRYPT_PASS
     return intent
   }

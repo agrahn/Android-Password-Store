@@ -65,12 +65,12 @@ open class BasePGPActivity : AppCompatActivity() {
 
   /** Full path to the password file being worked on */
   val fullPath by unsafeLazy {
-    requireNotNull(intent.getStringExtra("FILE_PATH")) { "FILE_PATH is missing" }
+    requireNotNull(intent.getStringExtra(EXTRA_FILE_PATH)) { "${EXTRA_FILE_PATH} is missing" }
   }
 
   /** Full path to the repository */
   val repoPath by unsafeLazy {
-    requireNotNull(intent.getStringExtra("REPO_PATH")) { "REPO_PATH is missing" }
+    requireNotNull(intent.getStringExtra(EXTRA_REPO_PATH)) { "${EXTRA_REPO_PATH} is missing" }
   }
 
   private val relativeParentPath by unsafeLazy { getParentPath(fullPath, repoPath) }

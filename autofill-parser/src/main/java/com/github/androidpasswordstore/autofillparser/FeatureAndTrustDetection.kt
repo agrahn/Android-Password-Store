@@ -40,7 +40,7 @@ import androidx.core.net.toUri
  *    whether a save request to Password Store is triggered when you submit a registration form.
  * 7. Optionally, try adding the browser's package name to BROWSERS_WITH_MULTI_ORIGIN_SUPPORT and
  *    check whether it correctly distinguishes web origins even if iframes are present on the page.
- *    You can use https://fabianhenneke.github.io/Android-Password-Store/ as a test form.
+ *    You can use https://fmeum.github.io/Android-Password-Store/ as a test form.
  *
  * **Security assumption**: Browsers on this list correctly report the web origin of the top-level
  * window as part of their AssistStructure.
@@ -50,6 +50,7 @@ import androidx.core.net.toUri
  */
 private val TRUSTED_BROWSER_CERTIFICATE_HASH =
   mapOf(
+    "app.vanadium.browser" to arrayOf("xq24uDxtTBfSkq/eVv1IilHTFv+PLBHFQQIjv/in27M="),
     "com.android.chrome" to arrayOf("8P1sW0EPJcslw7UzRsiXL64w+O50Ed+RBICtay1g24M="),
     "com.brave.browser" to arrayOf("nC23BRNRX9v7vFhbPt89cSPU3GfJT/0wY2HB15u/GKw="),
     "com.chrome.beta" to arrayOf("2mM9NLaeY64hA7SdU84FL8X388U6q5T9wqIIvf0UJJw="),
@@ -60,50 +61,48 @@ private val TRUSTED_BROWSER_CERTIFICATE_HASH =
         "u3uzHFc8RqHaf8XFKKas9DIQhFb+7FCBDH8zaU6z0tQ=",
         "8HB9AhwL8+b43MEbo/VwBCXVl9yjAaMeIQVWk067Gwo=",
       ),
-    "com.jamal2367.styx" to arrayOf("Lph3oaG1C8WLhLiK5PVxOp5+6wTU9ipJSBYlD2bA3VI="),
+    "com.kiwibrowser.browser" to arrayOf("wGnqlmMy6R4KDDzFd+b1Cf49ndr3AVrQxcXvj9o/hig="),
     "com.microsoft.emmx" to arrayOf("AeGZlxCoLCdJtNUMRF3IXWcLYTYInQp2anOCfIKh6sk="),
-    "com.opera.mini.native" to arrayOf("V6y8Ul8bLr0ZGWzW8BQ5fMkQ/RiEHgroUP68Ph5ZP/I="),
     "com.opera.mini.native.beta" to arrayOf("V6y8Ul8bLr0ZGWzW8BQ5fMkQ/RiEHgroUP68Ph5ZP/I="),
+    "com.opera.mini.native" to arrayOf("V6y8Ul8bLr0ZGWzW8BQ5fMkQ/RiEHgroUP68Ph5ZP/I="),
     "com.opera.touch" to arrayOf("qtjiBNJNF3k0yc0MY8xqo4779CxKaVcJfiIQ9X+qZ6o="),
+    "com.vivaldi.browser" to arrayOf("6KeFRGVbqMCYF/cydo9WibFmLsSyvFoLwOwTjTPKPR4="),
+    "eu.weblibre.gecko" to
+      arrayOf(
+        "j1JuHlPWvU379PS5PCqR7LXLjaXhStlMJXDh48cTUn8=", // GitHub release + Play Store
+        "uyqX9WFTNcnlfIZvHDDtT9fXvdy8vAZo/pOleRc9PS0=", // F-Droid
+      ),
     "io.github.forkmaintainers.iceraven" to // IceRaven (Firefox fork)
       arrayOf(
         "nA0iN59Ie3Ck+fi+wBc8+RoWRPCPkzhbW3gs43ZguoE=", // Original (GitHub release)
         "eRN80/UC/Z35sLtql9UY+ig0XwP/8M76QJ9omrs54hQ=", // GoodyOG's OLED fork (GitHub release)
       ),
-    "org.bromite.bromite" to arrayOf("4e5c0HbXsNyEyytF+3i4bfLrOaO2xWuj3CkqXgw7lQQ="),
-    "org.cromite.cromite" to arrayOf("Yz+kHYIR1tCRaoGbiWaMbekuZCMtpn+dFv2Bw7fpI/8="),
-    "org.gnu.icecat" to arrayOf("wi2iuVvK/WYZUzd2g0Qzn9ef3kAisQURZ8U1WSMTkcM="),
-    "org.mozilla.fenix" to arrayOf("UAR3kIjn+YjVvFzF+HmP6/T4zQhKGypG79TI7krq8hE="),
-    "org.mozilla.fenix.nightly" to arrayOf("d+rEzu02r++6dheZMd1MwZWrDNVLrzVdIV57vdKOQCo="),
-    "org.mozilla.fennec_aurora" to arrayOf("vASIg40G9Mpr8yOG2qsN2OvPPncweHRZ9i+zzRShuqo="),
-    "org.mozilla.fennec_fdroid" to arrayOf("BmZTWO/YugW+I2pHoSywlY19dd2TnXfCsx9TmFN+vcU="),
-    "org.mozilla.firefox" to arrayOf("p4tipRZbRJSy/q2edqKA0i2Tf+5iUa7OWZRGsuoxmwQ="),
-    "org.mozilla.firefox_beta" to arrayOf("p4tipRZbRJSy/q2edqKA0i2Tf+5iUa7OWZRGsuoxmwQ="),
-    "org.mozilla.focus" to arrayOf("YgOkc7421k7jf4f6UA7bx56rkwYQq5ufpMp9XB8bT/w="),
-    "org.mozilla.klar" to arrayOf("YgOkc7421k7jf4f6UA7bx56rkwYQq5ufpMp9XB8bT/w="),
-    "org.torproject.torbrowser" to arrayOf("IAYfBF5zfGc3XBd5TP7bQ2oDzsa6y3y5+WZCIFyizsg="),
-    "org.ungoogled.chromium.stable" to arrayOf("29UOO5cXoxO/e/hH3hOu6bbtg1My4tK6Eik2Ym5Krtk="),
-    "org.ungoogled.chromium.extensions.stable" to
-      arrayOf("29UOO5cXoxO/e/hH3hOu6bbtg1My4tK6Eik2Ym5Krtk="),
-    "com.kiwibrowser.browser" to arrayOf("wGnqlmMy6R4KDDzFd+b1Cf49ndr3AVrQxcXvj9o/hig="),
-    "us.spotco.fennec_dos" to
-      arrayOf(
-        "Jg4KSWeMeLcMAtZTet07bcChcXG73oznX9QCaoo+GNI=",
-        "/4H1vlY5ZZTu5w/vKDIlbhUhQSLiupzt0mAF/9S8qqg=",
-      ),
-    "com.vivaldi.browser" to arrayOf("6KeFRGVbqMCYF/cydo9WibFmLsSyvFoLwOwTjTPKPR4="),
-    "app.vanadium.browser" to arrayOf("xq24uDxtTBfSkq/eVv1IilHTFv+PLBHFQQIjv/in27M="),
-    "org.ironfoxoss.ironfox" to arrayOf("xeKRtaVx+cjNmpeZwslOAuyXA5SIk/LKdW1nuUIE+QQ="),
-    "org.ironfoxoss.ironfox.nightly" to arrayOf("xeKRtaVx+cjNmpeZwslOAuyXA5SIk/LKdW1nuUIE+QQ="),
     "net.waterfox.android.release" to
       arrayOf(
         "8JHKOZi0nhWdI+6VWGmZx10LcCP8+cVBkqgTAKwWbhc=", // GitHub release
         "KTmZei2PBzA86zetaBCv7wvacQviEWR241Jac3nsLho=", // Play Store
       ),
-    "eu.weblibre.gecko" to
+    "org.bromite.bromite" to arrayOf("4e5c0HbXsNyEyytF+3i4bfLrOaO2xWuj3CkqXgw7lQQ="),
+    "org.cromite.cromite" to arrayOf("Yz+kHYIR1tCRaoGbiWaMbekuZCMtpn+dFv2Bw7fpI/8="),
+    "org.gnu.icecat" to arrayOf("wi2iuVvK/WYZUzd2g0Qzn9ef3kAisQURZ8U1WSMTkcM="),
+    "org.ironfoxoss.ironfox.nightly" to arrayOf("xeKRtaVx+cjNmpeZwslOAuyXA5SIk/LKdW1nuUIE+QQ="),
+    "org.ironfoxoss.ironfox" to arrayOf("xeKRtaVx+cjNmpeZwslOAuyXA5SIk/LKdW1nuUIE+QQ="),
+    "org.mozilla.fenix.nightly" to arrayOf("d+rEzu02r++6dheZMd1MwZWrDNVLrzVdIV57vdKOQCo="),
+    "org.mozilla.fenix" to arrayOf("UAR3kIjn+YjVvFzF+HmP6/T4zQhKGypG79TI7krq8hE="),
+    "org.mozilla.fennec_aurora" to arrayOf("vASIg40G9Mpr8yOG2qsN2OvPPncweHRZ9i+zzRShuqo="),
+    "org.mozilla.fennec_fdroid" to arrayOf("BmZTWO/YugW+I2pHoSywlY19dd2TnXfCsx9TmFN+vcU="),
+    "org.mozilla.firefox_beta" to arrayOf("p4tipRZbRJSy/q2edqKA0i2Tf+5iUa7OWZRGsuoxmwQ="),
+    "org.mozilla.firefox" to arrayOf("p4tipRZbRJSy/q2edqKA0i2Tf+5iUa7OWZRGsuoxmwQ="),
+    "org.mozilla.focus" to arrayOf("YgOkc7421k7jf4f6UA7bx56rkwYQq5ufpMp9XB8bT/w="),
+    "org.mozilla.klar" to arrayOf("YgOkc7421k7jf4f6UA7bx56rkwYQq5ufpMp9XB8bT/w="),
+    "org.torproject.torbrowser" to arrayOf("IAYfBF5zfGc3XBd5TP7bQ2oDzsa6y3y5+WZCIFyizsg="),
+    "org.ungoogled.chromium.extensions.stable" to
+      arrayOf("29UOO5cXoxO/e/hH3hOu6bbtg1My4tK6Eik2Ym5Krtk="),
+    "org.ungoogled.chromium.stable" to arrayOf("29UOO5cXoxO/e/hH3hOu6bbtg1My4tK6Eik2Ym5Krtk="),
+    "us.spotco.fennec_dos" to
       arrayOf(
-        "j1JuHlPWvU379PS5PCqR7LXLjaXhStlMJXDh48cTUn8=", // GitHub release + Play Store
-        "uyqX9WFTNcnlfIZvHDDtT9fXvdy8vAZo/pOleRc9PS0=", // F-Droid
+        "Jg4KSWeMeLcMAtZTet07bcChcXG73oznX9QCaoo+GNI=",
+        "/4H1vlY5ZZTu5w/vKDIlbhUhQSLiupzt0mAF/9S8qqg=",
       ),
   )
 
@@ -132,34 +131,37 @@ internal enum class BrowserMultiOriginMethod {
  */
 private val BROWSER_MULTI_ORIGIN_METHOD =
   mapOf(
+    "app.vanadium.browser" to BrowserMultiOriginMethod.Field,
     "com.android.chrome" to BrowserMultiOriginMethod.Field,
     "com.chrome.beta" to BrowserMultiOriginMethod.Field,
     "com.chrome.canary" to BrowserMultiOriginMethod.Field,
     "com.chrome.dev" to BrowserMultiOriginMethod.Field,
     "com.duckduckgo.mobile.android" to BrowserMultiOriginMethod.WebView,
-    "com.opera.mini.native" to BrowserMultiOriginMethod.WebView,
+    "com.microsoft.emmx" to BrowserMultiOriginMethod.Field,
     "com.opera.mini.native.beta" to BrowserMultiOriginMethod.WebView,
+    "com.opera.mini.native" to BrowserMultiOriginMethod.WebView,
     "com.opera.touch" to BrowserMultiOriginMethod.WebView,
+    "com.vivaldi.browser" to BrowserMultiOriginMethod.Field,
+    "eu.weblibre.gecko" to BrowserMultiOriginMethod.Field,
     "io.github.forkmaintainers.iceraven" to BrowserMultiOriginMethod.WebView,
+    "net.waterfox.android.release" to BrowserMultiOriginMethod.Field,
+    "org.bromite.bromite" to BrowserMultiOriginMethod.Field,
+    "org.cromite.cromite" to BrowserMultiOriginMethod.Field,
     "org.gnu.icecat" to BrowserMultiOriginMethod.WebView,
-    "org.mozilla.fenix" to BrowserMultiOriginMethod.Field,
+    "org.ironfoxoss.ironfox.nightly" to BrowserMultiOriginMethod.Field,
+    "org.ironfoxoss.ironfox" to BrowserMultiOriginMethod.Field,
     "org.mozilla.fenix.nightly" to BrowserMultiOriginMethod.Field,
+    "org.mozilla.fenix" to BrowserMultiOriginMethod.Field,
     "org.mozilla.fennec_aurora" to BrowserMultiOriginMethod.Field,
     "org.mozilla.fennec_fdroid" to BrowserMultiOriginMethod.Field,
-    "org.mozilla.firefox" to BrowserMultiOriginMethod.WebView,
     "org.mozilla.firefox_beta" to BrowserMultiOriginMethod.WebView,
+    "org.mozilla.firefox" to BrowserMultiOriginMethod.WebView,
     "org.mozilla.focus" to BrowserMultiOriginMethod.Field,
     "org.mozilla.klar" to BrowserMultiOriginMethod.Field,
     "org.torproject.torbrowser" to BrowserMultiOriginMethod.WebView,
-    "us.spotco.fennec_dos" to BrowserMultiOriginMethod.Field,
-    "org.bromite.bromite" to BrowserMultiOriginMethod.Field,
-    "org.cromite.cromite" to BrowserMultiOriginMethod.Field,
-    "org.ungoogled.chromium.stable" to BrowserMultiOriginMethod.Field,
     "org.ungoogled.chromium.extensions.stable" to BrowserMultiOriginMethod.Field,
-    "app.vanadium.browser" to BrowserMultiOriginMethod.Field,
-    "org.ironfoxoss.ironfox" to BrowserMultiOriginMethod.Field,
-    "org.ironfoxoss.ironfox.nightly" to BrowserMultiOriginMethod.Field,
-    "net.waterfox.android.release" to BrowserMultiOriginMethod.Field,
+    "org.ungoogled.chromium.stable" to BrowserMultiOriginMethod.Field,
+    "us.spotco.fennec_dos" to BrowserMultiOriginMethod.Field,
   )
 
 private fun getBrowserMultiOriginMethod(appPackage: String): BrowserMultiOriginMethod =
@@ -175,25 +177,38 @@ private fun getBrowserMultiOriginMethod(appPackage: String): BrowserMultiOriginM
 private val BROWSER_SAVE_FLAG =
   mapOf(
     "com.duckduckgo.mobile.android" to 0,
-    "io.github.forkmaintainers.iceraven" to 0,
-    "org.mozilla.klar" to 0,
-    "org.mozilla.focus" to 0,
-    "org.mozilla.fenix" to 0,
-    "org.mozilla.fenix.nightly" to 0,
-    "org.mozilla.fennec_aurora" to 0,
-    "com.opera.mini.native" to 0,
     "com.opera.mini.native.beta" to 0,
+    "com.opera.mini.native" to 0,
     "com.opera.touch" to 0,
+    "eu.weblibre.gecko" to 0,
+    "io.github.forkmaintainers.iceraven" to 0,
+    "net.waterfox.android.release" to 0,
+    "org.ironfoxoss.ironfox.nightly" to 0,
+    "org.ironfoxoss.ironfox" to 0,
+    "org.mozilla.fenix.nightly" to 0,
+    "org.mozilla.fenix" to 0,
+    "org.mozilla.fennec_aurora" to 0,
+    "org.mozilla.fennec_fdroid" to 0,
+    "org.mozilla.firefox_beta" to 0,
+    "org.mozilla.firefox" to 0,
+    "org.mozilla.focus" to 0,
+    "org.mozilla.klar" to 0,
+    "org.torproject.torbrowser" to 0,
+    "us.spotco.fennec_dos" to 0,
   )
 
 private val BROWSER_SAVE_FLAG_IF_NO_ACCESSIBILITY =
   mapOf(
+    "app.vanadium.browser" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "com.android.chrome" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "com.chrome.beta" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "com.chrome.canary" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "com.chrome.dev" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
+    "com.microsoft.emmx" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
+    "com.vivaldi.browser" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "org.bromite.bromite" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "org.cromite.cromite" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
+    "org.ungoogled.chromium.extensions.stable" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "org.ungoogled.chromium.stable" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
   )
 

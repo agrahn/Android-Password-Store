@@ -404,9 +404,7 @@ public fun CharArray.splitToCharArrayListAt(c: Char): List<CharArray> {
   return result
 }
 
-/**
- * Joins a list of CharArray at [c] into a list of CharArray, avoiding String as an intermediate.
- */
+/** Joins a list of CharArray into new CharArray, avoiding String as an intermediate. */
 public fun List<CharArray>.joinToCharArray(separator: Char? = null): CharArray? {
   if (isEmpty() || size == 1 && last().isEmpty()) return null
 
