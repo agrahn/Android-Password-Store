@@ -35,7 +35,7 @@ jobs:
           echo "PR_HEAD=release-prep" >> $GITHUB_ENV
 
       - name: Setup build environment
-        uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@d81c90dd3fc6ac796ca9014fd18b09792d6b1c3d # develop
+        uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@63548343a83d4a3147f52173e464ec9b62b76d00 # develop
         with:
           ref: ${{ env.CHECKOUT_REF }}
 
