@@ -16,6 +16,7 @@ import android.view.animation.AnimationUtils
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.view.ActionMode
 import androidx.core.content.edit
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.flowWithLifecycle
@@ -88,6 +89,16 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
     super.onViewCreated(view, savedInstanceState)
     settings = requireContext().sharedPrefs
     initializePasswordList()
+    binding.fabSync.setOnClickListener {
+      if (!PasswordRepository.isInitialized) {
+        MaterialAlertDialogBuilder(requireContext())
+          .setMessage(R.string.creation_dialog_text)
+          .setPositiveButton(R.string.dialog_ok, null)
+          .show()
+      } else {
+        requireStore().runGitOperation(BaseGitActivity.GitOp.SYNC)
+      }
+    }
     binding.fab.setOnClickListener {
       ItemCreationBottomSheet().show(childFragmentManager, "BOTTOM_SHEET")
     }
@@ -220,7 +231,10 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
         }
       }
     }
+    updateFabSync()
   }
+
+  private var fabVisible = true
 
   private val actionModeCallback =
     object : ActionMode.Callback {
@@ -285,6 +299,7 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
 
       private fun animateFab(show: Boolean) =
         with(binding.fab) {
+          fabVisible = show
           val animation =
             AnimationUtils.loadAnimation(context, if (show) R.anim.scale_up else R.anim.scale_down)
           animation.setAnimationListener(
@@ -300,14 +315,42 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
               }
             }
           )
-          animate()
-            .rotationBy(if (show) -90f else 90f)
-            .setStartDelay(if (show) 100 else 0)
-            .setDuration(100)
-            .start()
+          animate().setStartDelay(if (show) 100 else 0).setDuration(100).start()
           startAnimation(animation)
+          updateFabSync()
         }
     }
+
+  public fun updateFabSync() {
+    val syncNeeded = requireStore().aheadCount > 0
+
+    val showAnim = if (syncNeeded && fabVisible && !binding.fabSync.isVisible) true else false
+
+    val hideAnim = if (binding.fabSync.isVisible && (!fabVisible || !syncNeeded)) true else false
+
+    with(binding.fabSync) {
+      val animation =
+        AnimationUtils.loadAnimation(context, if (showAnim) R.anim.scale_up else R.anim.scale_down)
+
+      animation.setAnimationListener(
+        object : Animation.AnimationListener {
+          override fun onAnimationRepeat(animation: Animation?) {}
+
+          override fun onAnimationEnd(animation: Animation?) {
+            if (hideAnim) visibility = View.GONE
+          }
+
+          override fun onAnimationStart(animation: Animation?) {
+            if (showAnim) visibility = View.VISIBLE
+          }
+        }
+      )
+
+      animate().setStartDelay(if (showAnim) 100 else 0).setDuration(100).start()
+
+      if (showAnim || hideAnim) startAnimation(animation)
+    }
+  }
 
   override fun onResume() {
     super.onResume()
@@ -386,7 +429,7 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
     MaterialAlertDialogBuilder(requireContext())
       .setTitle(title.substringBefore(':'))
       .setMessage(gpgIds.joinToString("\n"))
-      .setPositiveButton(resources.getString(R.string.dialog_ok)) { dialog, _ -> dialog.dismiss() }
+      .setPositiveButton(R.string.dialog_ok) { dialog, _ -> dialog.dismiss() }
       .show()
   }
 

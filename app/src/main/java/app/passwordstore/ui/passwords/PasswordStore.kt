@@ -82,6 +82,9 @@ class PasswordStore : BaseGitActivity() {
   private val binding by viewBinding(ActivityPwdstoreBinding::inflate)
   private val model: SearchableRepositoryViewModel by viewModels()
 
+  var aheadCount = 0
+    private set
+
   private val gpgKeySelectAction =
     registerForActivityResult(StartActivityForResult()) { result ->
       if (result.resultCode == AppCompatActivity.RESULT_OK) {
@@ -184,6 +187,7 @@ class PasswordStore : BaseGitActivity() {
                   destinationLongName,
                 )
               )
+              updateFabSync()
             }
           }
           else -> {
@@ -193,6 +197,7 @@ class PasswordStore : BaseGitActivity() {
               commitChange(
                 resources.getString(R.string.git_commit_move_multiple_text, relativePath)
               )
+              updateFabSync()
             }
           }
         }
@@ -373,7 +378,7 @@ class PasswordStore : BaseGitActivity() {
     if (searchItem.isActionViewExpanded) searchItem.collapseActionView()
   }
 
-  private fun runGitOperation(operation: GitOp) = lifecycleScope.launch {
+  fun runGitOperation(operation: GitOp) = lifecycleScope.launch {
     launchGitOperation(operation)
       .fold(success = { refreshPasswordList() }, failure = { promptOnErrorHandler(it) })
   }
@@ -484,6 +489,7 @@ class PasswordStore : BaseGitActivity() {
           }
         lifecycleScope.launch {
           commitChange(resources.getString(R.string.git_commit_remove_text, fmt))
+          updateFabSync()
         }
       }
       .setNegativeButton(resources.getString(R.string.dialog_no), null)
@@ -565,6 +571,7 @@ class PasswordStore : BaseGitActivity() {
                       newCategory.name,
                     )
                   )
+                  updateFabSync()
                 }
 
                 refreshPasswordList()
@@ -582,6 +589,11 @@ class PasswordStore : BaseGitActivity() {
     for (oldCategory in categories) {
       renameCategory(oldCategory)
     }
+  }
+
+  private fun updateFabSync() {
+    aheadCount = PasswordRepository.getAheadCount()
+    getPasswordFragment()?.updateFabSync()
   }
 
   /**
@@ -607,6 +619,7 @@ class PasswordStore : BaseGitActivity() {
       model.reset()
       supportActionBar?.setDisplayHomeAsUpEnabled(false)
     }
+    updateFabSync()
   }
 
   private val currentDir: File

@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file
 
 - The host key fingerprint is displayed when connecting to the Git server for the first time, so that the user can decide whether to establish the connection
 - Diceware passphrase generator options for capitalising words and embedding a numeral
+- Floating sync button on the password list that is shown if there are local commits to be pushed to remote
 
 ### Fixed
 

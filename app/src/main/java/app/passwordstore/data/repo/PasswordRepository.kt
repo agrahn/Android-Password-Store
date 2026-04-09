@@ -16,6 +16,7 @@ import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import java.io.File
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.lib.BranchTrackingStatus
 import org.eclipse.jgit.lib.Constants
 import org.eclipse.jgit.lib.Repository
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
@@ -152,6 +153,20 @@ object PasswordRepository {
       null
     }
   }
+
+  /** If repo is tracking a remote branch, return commit count to be pushed, zero otherwise */
+  fun getAheadCount(): Int =
+    runCatching {
+        repository?.let { repo ->
+          getCurrentBranch()?.let { branch ->
+            BranchTrackingStatus.of(repo, branch)?.getAheadCount()
+          }
+        } ?: 0
+      }
+      .getOrElse { e ->
+        e.printStackTrace()
+        0
+      }
 
   /**
    * Gets the .gpg files in a directory
