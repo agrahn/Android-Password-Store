@@ -23,7 +23,7 @@ jobs:
 
       - name: Upload Kotlin build report
         if: "${{ always() }}"
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: Build report (check-codestyle)
           path: build/reports/kotlin-build/
@@ -42,14 +42,14 @@ jobs:
 
       - name: (Fail-only) Upload test report
         if: "${{ failure() }}"
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: Test report (unit-tests)
           path: app/build/reports
 
       - name: Upload Kotlin build report
         if: "${{ always() }}"
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: Build report (unit-tests)
           path: build/reports/kotlin-build/
@@ -68,7 +68,7 @@ jobs:
 
       - name: Upload Kotlin build report
         if: "${{ always() }}"
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: Build report (build-apks)
           path: build/reports/kotlin-build/
@@ -87,7 +87,7 @@ jobs:
 
       - name: Upload Kotlin build report
         if: "${{ always() }}"
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: Build report (lint)
           path: build/reports/kotlin-build/
