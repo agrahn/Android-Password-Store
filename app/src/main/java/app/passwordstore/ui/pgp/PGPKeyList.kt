@@ -218,7 +218,7 @@ private fun KeyItem(
     ) {
       Box() {
         Icon(
-          painter = painterResource(id = R.drawable.ic_check_24dp),
+          painter = painterResource(id = R.drawable.ic_done_24dp),
           contentDescription = "PGP key actions",
         )
       }

@@ -42,6 +42,8 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
 
   private val model: SearchableRepositoryViewModel by activityViewModels()
 
+  // private var recyclerViewStateToRestore: Parcelable? = null
+
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
 
@@ -89,6 +91,18 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
           }
       }
       .onErr { throw ClassCastException("$context must implement OnFragmentInteractionListener") }
+  }
+
+  /** Returns true if the back press was handled by the [Fragment]. */
+  fun onBackPressedInActivity(): Boolean {
+    if (!model.canNavigateBack) return false
+    // The RecyclerView state is restored when the asynchronous update operation on the
+    // adapter is completed.
+    // recyclerViewStateToRestore = model.navigateBack()
+    model.navigateBack()
+    if (!model.canNavigateBack)
+      (requireActivity() as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(false)
+    return true
   }
 
   val currentDir: File
