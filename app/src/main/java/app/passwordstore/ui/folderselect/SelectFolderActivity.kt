@@ -16,10 +16,14 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.ui.dialogs.FolderCreationDialogFragment
 import app.passwordstore.ui.passwords.PASSWORD_FRAGMENT_TAG
 import app.passwordstore.ui.passwords.PasswordStore
+import app.passwordstore.util.extensions.contains
+import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.viewmodel.SearchableRepositoryViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -92,9 +96,30 @@ class SelectFolderActivity : AppCompatActivity(R.layout.select_folder_layout) {
     return true
   }
 
+  fun refreshPasswordList(target: File? = null) {
+    target?.let {
+      require(it.isInsideRepository()) { "Trying to access target outside the repository" }
+    }
+    val plist = passwordList
+    if (target?.isDirectory == true && model.currentDir.value.contains(target)) {
+      plist?.navigateTo(target)
+    } else if (model.currentDir.value.isDirectory) {
+      model.forceRefresh()
+    } else {
+      model.reset()
+      supportActionBar?.setDisplayHomeAsUpEnabled(false)
+    }
+  }
+
   private fun selectFolder() {
     intent.putExtra("SELECTED_FOLDER_PATH", passwordList.currentDir.absolutePath)
     setResult(RESULT_OK, intent)
     finish()
+  }
+
+  fun createFolder() {
+    if (!PasswordRepository.isInitialized) return
+    FolderCreationDialogFragment.newInstance(passwordList.currentDir.path, setGpgKey = true)
+      .show(supportFragmentManager, null)
   }
 }

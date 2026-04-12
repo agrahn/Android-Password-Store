@@ -21,7 +21,7 @@ android {
 
   defaultConfig {
     minSdk = 26
-    applicationId = "app.passwordstore.agrahn"
+    applicationId = "app.passwordstore2.agrahn"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
