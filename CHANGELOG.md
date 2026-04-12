@@ -9,13 +9,14 @@ All notable changes to this project will be documented in this file
 - The host key fingerprint is displayed when connecting to the Git server for the first time, so that the user can decide whether to establish the connection
 - Diceware passphrase generator options for capitalising words and embedding a numeral
 - Floating sync button on the password list that is shown if there are local commits to be pushed to remote
+- Enhanced folder selection when moving password items, allow navigating upwards, floating button for creating new subfolder
 
 ### Fixed
 
 - Keystore-provided SSH keys are usable again
 - Allow empty passphrase on Git authentication via PGP key
 - Autofill support for Chrome/Chromium browser
-- Password entry creation after first successful login (autofill-save) 
+- Password entry creation after first successful login (autofill-save)
 
 ## [1.16.2] - 2026-03-01
 
@@ -142,7 +143,7 @@ All notable changes to this project will be documented in this file
 ### Fixed
 
 - Re-enable pre-launch biometric auth option on Android-14 devices (<https://github.com/android-password-store/Android-Password-Store/issues/2802>)
-- More reliable detection of AES key invalidation due to fingerprint enrollment 
+- More reliable detection of AES key invalidation due to fingerprint enrollment
 
 ## [1.14.1] - 2025-04-16
 

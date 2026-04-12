@@ -42,14 +42,15 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
 
   private val model: SearchableRepositoryViewModel by activityViewModels()
 
-  // private var recyclerViewStateToRestore: Parcelable? = null
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
 
     ViewCompat.setOnApplyWindowInsetsListener(view, windowInsetsLambda)
 
-    binding.fab.hide()
+    binding.fab.setMaxImageSize(64)
+    binding.fab.setImageResource(R.drawable.ic_new_folder_48dp)
+    binding.fab.setOnClickListener { (requireActivity() as SelectFolderActivity).createFolder() }
+
     recyclerAdapter =
       PasswordItemRecyclerAdapter(lifecycleScope, dispatcherProvider).onItemClicked { _, item ->
         listener.onFragmentInteraction(item)
@@ -75,6 +76,15 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
     }
   }
 
+  fun navigateTo(file: File) {
+    model.navigateTo(
+      file,
+      listMode = ListMode.DirectoriesOnly,
+      recyclerViewState =
+        binding.passRecycler.layoutManager?.onSaveInstanceState() ?: throw NullPointerException(),
+    )
+  }
+
   override fun onAttach(context: Context) {
     super.onAttach(context)
     runCatching {
@@ -96,9 +106,6 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
   /** Returns true if the back press was handled by the [Fragment]. */
   fun onBackPressedInActivity(): Boolean {
     if (!model.canNavigateBack) return false
-    // The RecyclerView state is restored when the asynchronous update operation on the
-    // adapter is completed.
-    // recyclerViewStateToRestore = model.navigateBack()
     model.navigateBack()
     if (!model.canNavigateBack)
       (requireActivity() as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(false)

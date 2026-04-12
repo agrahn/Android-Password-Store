@@ -15,6 +15,7 @@ import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import app.passwordstore.R
 import app.passwordstore.databinding.FolderDialogFragmentBinding
+import app.passwordstore.ui.folderselect.SelectFolderActivity
 import app.passwordstore.ui.passwords.PasswordStore
 import app.passwordstore.ui.pgp.PGPKeyListActivity
 import app.passwordstore.util.extensions.commitChange
@@ -32,24 +33,6 @@ class FolderCreationDialogFragment : DialogFragment() {
 
   private val binding by unsafeLazy { FolderDialogFragmentBinding.inflate(layoutInflater) }
   private lateinit var newFolder: File
-
-  private val gpgKeySelectAction =
-    registerForActivityResult(StartActivityForResult()) { result ->
-      if (result.resultCode == AppCompatActivity.RESULT_OK) {
-        val data = result.data ?: return@registerForActivityResult
-        val selectedKeyId =
-          data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
-            ?: return@registerForActivityResult
-        val gpgIdentifierFile = File(newFolder, ".gpg-id")
-        gpgIdentifierFile.writeText(selectedKeyId + "\n")
-        runBlocking {
-          requireActivity()
-            .commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))
-        }
-        (requireActivity() as PasswordStore).refreshPasswordList(newFolder)
-      }
-      dismiss()
-    }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val builder = MaterialAlertDialogBuilder(requireContext())
@@ -76,6 +59,27 @@ class FolderCreationDialogFragment : DialogFragment() {
     return dialog
   }
 
+  private val gpgKeySelectAction =
+    registerForActivityResult(StartActivityForResult()) { result ->
+      if (result.resultCode == AppCompatActivity.RESULT_OK) {
+        val data = result.data ?: return@registerForActivityResult
+        val selectedKeyId =
+          data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
+            ?: return@registerForActivityResult
+        val gpgIdentifierFile = File(newFolder, ".gpg-id")
+        gpgIdentifierFile.writeText(selectedKeyId + "\n")
+        runBlocking {
+          requireActivity()
+            .commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))
+        }
+        requireActivity().let {
+          if (it is PasswordStore) (it as PasswordStore).refreshPasswordList(newFolder)
+          else (it as SelectFolderActivity).refreshPasswordList(newFolder)
+        }
+      }
+      dismiss()
+    }
+
   private fun createDirectory(currentDir: String) {
     val dialog = requireDialog()
     val folderNameView = dialog.findViewById<TextInputEditText>(R.id.folder_name_text)
@@ -95,7 +99,10 @@ class FolderCreationDialogFragment : DialogFragment() {
       gpgKeySelectAction.launch(PGPKeyListActivity.newIntent(requireContext(), keySelection = true))
       return
     }
-    (requireActivity() as PasswordStore).refreshPasswordList(newFolder)
+    requireActivity().let {
+      if (it is PasswordStore) (it as PasswordStore).refreshPasswordList(newFolder)
+      else (it as SelectFolderActivity).refreshPasswordList(newFolder)
+    }
     dismiss()
   }
 
