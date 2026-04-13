@@ -36,13 +36,11 @@ class SelectFolderActivity : AppCompatActivity(R.layout.select_folder_layout) {
     super.onCreate(savedInstanceState)
 
     passwordList = SelectFolderFragment()
-    val args = Bundle()
-    args.putString(
-      PasswordStore.REQUEST_ARG_PATH,
-      PasswordRepository.getRepositoryDirectory().absolutePath,
-    )
-
-    passwordList.arguments = args
+    intent.getStringExtra(PasswordStore.REQUEST_ARG_PATH)?.let { relPath ->
+      val args = Bundle()
+      args.putString(PasswordStore.REQUEST_ARG_PATH, relPath)
+      passwordList.arguments = args
+    }
 
     onBackPressedDispatcher.addCallback(
       this,
@@ -55,16 +53,13 @@ class SelectFolderActivity : AppCompatActivity(R.layout.select_folder_layout) {
       },
     )
 
-    supportActionBar?.apply {
-      show()
-      setDisplayHomeAsUpEnabled(false) // Back arrow in the upper left corner
-    }
-
     supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
 
     supportFragmentManager.commit {
       replace(R.id.pgp_handler_linearlayout, passwordList, PASSWORD_FRAGMENT_TAG)
     }
+
+    supportActionBar?.show()
 
     lifecycleScope.launch { // Update action bar title with current dir name
       model.currentDir.flowWithLifecycle(lifecycle).collect { dir ->
@@ -112,7 +107,7 @@ class SelectFolderActivity : AppCompatActivity(R.layout.select_folder_layout) {
   }
 
   private fun selectFolder() {
-    intent.putExtra("SELECTED_FOLDER_PATH", passwordList.currentDir.absolutePath)
+    intent.putExtra(SELECTED_FOLDER_PATH, passwordList.currentDir.absolutePath)
     setResult(RESULT_OK, intent)
     finish()
   }
@@ -121,5 +116,10 @@ class SelectFolderActivity : AppCompatActivity(R.layout.select_folder_layout) {
     if (!PasswordRepository.isInitialized) return
     FolderCreationDialogFragment.newInstance(passwordList.currentDir.path, setGpgKey = true)
       .show(supportFragmentManager, null)
+  }
+
+  companion object {
+
+    const val SELECTED_FOLDER_PATH = "SELECTED_FOLDER_PATH"
   }
 }

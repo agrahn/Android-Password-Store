@@ -29,7 +29,6 @@ import app.passwordstore.data.password.PasswordItem
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.ActivityPwdstoreBinding
 import app.passwordstore.ui.crypto.BasePGPActivity
-import app.passwordstore.ui.crypto.BasePGPActivity.Companion.getLongName
 import app.passwordstore.ui.crypto.DecryptActivity
 import app.passwordstore.ui.crypto.PasswordCreationActivity
 import app.passwordstore.ui.dialogs.FolderCreationDialogFragment
@@ -117,7 +116,7 @@ class PasswordStore : BaseGitActivity() {
         }
       val target =
         File(
-          requireNotNull(intentData.getStringExtra("SELECTED_FOLDER_PATH")) {
+          requireNotNull(intentData.getStringExtra(SelectFolderActivity.SELECTED_FOLDER_PATH)) {
             "'SELECTED_FOLDER_PATH' intent extra must be set"
           }
         )
@@ -140,12 +139,13 @@ class PasswordStore : BaseGitActivity() {
           val destinationFile = File(target.absolutePath + "/" + source.name)
           val basename = source.nameWithoutExtension
           val sourceLongName =
-            getLongName(
+            PasswordRepository.getLongName(
               requireNotNull(source.parent) { "$file has no parent" },
               repositoryPath,
               basename,
             )
-          val destinationLongName = getLongName(target.absolutePath, repositoryPath, basename)
+          val destinationLongName =
+            PasswordRepository.getLongName(target.absolutePath, repositoryPath, basename)
           if (destinationFile.exists()) {
             logcat(ERROR) { "Trying to move a file that already exists." }
             withContext(dispatcherProvider.main()) {
@@ -173,12 +173,13 @@ class PasswordStore : BaseGitActivity() {
             val source = File(filesToMove[0])
             val basename = source.nameWithoutExtension
             val sourceLongName =
-              getLongName(
+              PasswordRepository.getLongName(
                 requireNotNull(source.parent) { "$basename has no parent" },
                 repositoryPath,
                 basename,
               )
-            val destinationLongName = getLongName(target.absolutePath, repositoryPath, basename)
+            val destinationLongName =
+              PasswordRepository.getLongName(target.absolutePath, repositoryPath, basename)
             withContext(dispatcherProvider.main()) {
               commitChange(
                 resources.getString(
@@ -192,7 +193,8 @@ class PasswordStore : BaseGitActivity() {
           }
           else -> {
             val repoDir = PasswordRepository.getRepositoryDirectory().absolutePath
-            val relativePath = getRelativePath("${target.absolutePath}/", repoDir)
+            val relativePath =
+              PasswordRepository.getRelativePath("${target.absolutePath}/", repoDir)
             withContext(dispatcherProvider.main()) {
               commitChange(
                 resources.getString(R.string.git_commit_move_multiple_text, relativePath)
@@ -417,10 +419,6 @@ class PasswordStore : BaseGitActivity() {
     }
   }
 
-  private fun getRelativePath(fullPath: String, repositoryPath: String): String {
-    return fullPath.replace(repositoryPath, "").replace("/+".toRegex(), "/")
-  }
-
   fun decryptPassword(item: PasswordItem) {
     val authDecryptIntent = item.createAuthEnabledIntent(this)
     val decryptIntent =
@@ -500,6 +498,9 @@ class PasswordStore : BaseGitActivity() {
     val intent = Intent(this, SelectFolderActivity::class.java)
     val fileLocations = values.map { it.file.absolutePath }.toTypedArray()
     intent.putExtra("Files", fileLocations)
+    val repoDir = PasswordRepository.getRepositoryDirectory().absolutePath
+    val relPath = PasswordRepository.getRelativePath(currentDir.absolutePath, repoDir)
+    if (!relPath.isEmpty()) intent.putExtra(PasswordStore.REQUEST_ARG_PATH, relPath)
     passwordMoveAction.launch(intent)
   }
 

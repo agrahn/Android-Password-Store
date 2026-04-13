@@ -21,7 +21,7 @@ data class PasswordItem(
 
   val fullPathToParent = file.absolutePath.replace(rootDir.absolutePath, "").replace(file.name, "")
 
-  val longName = BasePGPActivity.getLongName(fullPathToParent, rootDir.absolutePath, toString())
+  val longName = PasswordRepository.getLongName(fullPathToParent, rootDir.absolutePath, toString())
 
   override fun equals(other: Any?): Boolean {
     return (other is PasswordItem) && (other.file == file)

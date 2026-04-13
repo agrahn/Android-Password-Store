@@ -36,6 +36,8 @@ import app.passwordstore.databinding.PasswordCreationActivityBinding
 import app.passwordstore.ui.dialogs.DicewarePasswordGeneratorDialogFragment
 import app.passwordstore.ui.dialogs.OtpImportDialogFragment
 import app.passwordstore.ui.dialogs.PasswordGeneratorDialogFragment
+import app.passwordstore.ui.folderselect.SelectFolderActivity
+import app.passwordstore.ui.passwords.PasswordStore
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.asLog
@@ -162,6 +164,16 @@ class PasswordCreationActivity : BasePGPActivity() {
     super.onDestroy()
   }
 
+  private val selectFolderAction =
+    registerForActivityResult(StartActivityForResult()) { result ->
+      if (result.resultCode == RESULT_OK) {
+        result.data?.getStringExtra(SelectFolderActivity.SELECTED_FOLDER_PATH)?.let { fullPath ->
+          val relPath = PasswordRepository.getRelativePath(fullPath, repoPath)
+          binding.directory.setText(if (!relPath.isEmpty()) relPath else "/")
+        }
+      }
+    }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -170,6 +182,7 @@ class PasswordCreationActivity : BasePGPActivity() {
     with(binding) {
       enableEdgeToEdgeView(root)
       setContentView(root)
+
       generatePassword.setOnClickListener { generatePassword() }
       otpImportButton.setOnClickListener {
         supportFragmentManager.setFragmentResultListener(
@@ -226,20 +239,17 @@ class PasswordCreationActivity : BasePGPActivity() {
         }
       }
 
-      directoryInputLayout.apply {
-        if (suggestedName != null || suggestedEntry?.password != null || shouldGeneratePassword) {
-          isEnabled = true
-        } else {
-          setBackgroundColor(getColor(android.R.color.transparent))
-        }
-        val path = getRelativePath(fullPath, repoPath)
-        // Keep empty path field visible if it is editable.
-        if (path.isEmpty() && !isEnabled) visibility = View.GONE
-        else {
-          directory.setText(path)
-          oldCategory = path
-        }
+      directory.inputType = InputType.TYPE_NULL
+      val relPath = PasswordRepository.getRelativePath(fullPath, repoPath)
+      directory.setText(if (relPath.isEmpty()) "/" else relPath)
+      oldCategory = relPath
+
+      directory.setOnClickListener {
+        val intent = Intent(this@PasswordCreationActivity, SelectFolderActivity::class.java)
+        if (!relPath.isEmpty()) intent.putExtra(PasswordStore.REQUEST_ARG_PATH, relPath)
+        selectFolderAction.launch(intent)
       }
+
       if (suggestedName != null) {
         filename.setText(suggestedName)
       } else {
@@ -521,7 +531,10 @@ class PasswordCreationActivity : BasePGPActivity() {
             val returnIntent = Intent()
             returnIntent.putExtra(RETURN_EXTRA_CREATED_FILE, path)
             returnIntent.putExtra(RETURN_EXTRA_NAME, editName)
-            returnIntent.putExtra(RETURN_EXTRA_LONG_NAME, getLongName(fullPath, repoPath, editName))
+            returnIntent.putExtra(
+              RETURN_EXTRA_LONG_NAME,
+              PasswordRepository.getLongName(fullPath, repoPath, editName),
+            )
 
             if (shouldGeneratePassword) {
               val directoryStructure = AutofillPreferences.directoryStructure(applicationContext)
@@ -570,7 +583,10 @@ class PasswordCreationActivity : BasePGPActivity() {
               if (editing) R.string.git_commit_edit_text else R.string.git_commit_add_text
             lifecycleScope.launch {
               commitChange(
-                  resources.getString(commitMessageRes, getLongName(fullPath, repoPath, editName))
+                  resources.getString(
+                    commitMessageRes,
+                    PasswordRepository.getLongName(fullPath, repoPath, editName),
+                  )
                 )
                 .onOk {
                   setResult(RESULT_OK, returnIntent)

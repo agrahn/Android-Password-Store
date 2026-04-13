@@ -111,6 +111,38 @@ object PasswordRepository {
     return File(filesDir.toString(), "/store")
   }
 
+  /*
+   * /path/to/store/social/other/ -> social/other
+   * /path/to/store/social/facebook.gpg -> social/facebook.gpg
+   */
+  fun getRelativePath(fullPath: String, repositoryPath: String): String {
+    return fullPath.replace(repositoryPath, "").replace("/+".toRegex(), "/")
+  }
+
+  /** /path/to/store/social/facebook.gpg -> social/facebook */
+  fun getLongName(fullPath: String, repositoryPath: String, basename: String): String {
+    var relativePath = getRelativePath(fullPath, repositoryPath)
+    return if (relativePath.isNotEmpty() && relativePath != "/") {
+      // remove preceding '/'
+      relativePath = relativePath.substring(1)
+      if (relativePath.endsWith('/')) {
+        relativePath + basename
+      } else {
+        "$relativePath/$basename"
+      }
+    } else {
+      basename
+    }
+  }
+
+  /** /path/to/store/social/other/myspace.gpg -> social/other */
+  fun getParentPath(fullPath: String, repositoryPath: String): String {
+    val relativePath = getRelativePath(fullPath, repositoryPath)
+    val index = relativePath.lastIndexOf("/")
+    return "/${relativePath.substring(startIndex = 0, endIndex = index + 1)}/"
+      .replace("/+".toRegex(), "/")
+  }
+
   fun initialize(): Repository? {
     val dir = getRepositoryDirectory()
     // Un-initialize the repo if the dir does not exist or is absolutely empty

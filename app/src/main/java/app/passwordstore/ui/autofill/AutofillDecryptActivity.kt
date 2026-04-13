@@ -72,7 +72,8 @@ class AutofillDecryptActivity : BasePGPActivity() {
     action = if (isSearchAction) AutofillAction.Search else AutofillAction.Match
     logcat { action.toString() }
     requireKeysExist {
-      requireDecryptionKeysExist(getParentPath(filePath, repositoryPath)) { ids ->
+      requireDecryptionKeysExist(PasswordRepository.getParentPath(filePath, repositoryPath)) { ids
+        ->
         getPersistentAndDecrypt(ids)
       }
     }
