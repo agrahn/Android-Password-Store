@@ -25,6 +25,7 @@ import javax.inject.Inject
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
+import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.util.Passphrase
 
@@ -88,7 +89,7 @@ public class PGPKeyManager @Inject constructor(filesDir: String) :
       // PGPainless.generateKey()
       val pgpPassphraseCopy = Passphrase(passphrase?.copyOf())
 
-      val secretKeys = pgpApi.generateKey().modernKeyRing(userId, pgpPassphrase)
+      val secretKeys = pgpApi.generateKey(OpenPGPKeyVersion.v4).modernKeyRing(userId, pgpPassphrase)
       val protector = SecretKeyRingProtector.unlockAnyKeyWith(pgpPassphraseCopy)
       var key =
         pgpApi
