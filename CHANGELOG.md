@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+## [1.16.3] - 2026-04-15
+
 ### Added
 
 - The host key fingerprint is displayed when connecting to the Git server for the first time, so that the user can decide whether to establish the connection
@@ -647,7 +649,8 @@ All notable changes to this project will be documented in this file
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.2...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.3...HEAD
+[1.16.3]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.2...v1.16.3
 [1.16.2]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.1...v1.16.2
 [1.16.1]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.0...v1.16.1
 [1.16.0]: https://github.com/agrahn/Android-Password-Store/compare/v1.15.4...v1.16.0
