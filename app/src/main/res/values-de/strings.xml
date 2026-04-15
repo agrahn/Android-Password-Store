@@ -145,8 +145,8 @@
   <string name="prefs_repo_invalid_source_dialog_summary">Das Quellverzeichnis ist kein gültiges Git-Repository: fehlender .git-Ordner</string>
   <string name="pref_rebase_on_pull_title">Rebase beim Pullen</string>
   <string name="pref_rebase_on_pull_summary">Ein Merge-Commit mit Upstream-Änderungen beim Pullen oder Synchronisieren erstellen.</string>
-  <string name="pref_rebase_on_pull_summary_on">Beim Pullen oder Synchronisieren Commits rebasen, die nicht im Remote-Repository vorhanden sind.</string>
-  <string name="pref_disable_sync_on_pull_title">Kein Synchronisieren durch Abwärtswischen</string>
+  <string name="pref_rebase_on_pull_summary_on">Beim Pullen oder Synchronisieren lokale Commits auf die Spitze der Historie des Remote-Repositorys rebasen. (Empfohlen)</string>
+  <string name="pref_disable_sync_on_pull_title">Wischgeste deaktivieren</string>
   <string name="pref_disable_sync_on_pull_summary">Beim Wischen über die Passwortliste keine Git-Synchronisation mit dem Repository anstoßen.</string>
   <string name="pref_import_pgp_key_title">Importiere PGP-Schlüssel</string>
   <string name="pref_pgp_key_manager_title">Schlüsselmanager</string>

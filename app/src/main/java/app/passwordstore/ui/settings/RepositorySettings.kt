@@ -195,12 +195,6 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
 
   override fun provideSettings(builder: PreferenceScreen.Builder) {
     builder.apply {
-      switch(PreferenceKeys.REBASE_ON_PULL) {
-        titleRes = R.string.pref_rebase_on_pull_title
-        summaryRes = R.string.pref_rebase_on_pull_summary
-        summaryOnRes = R.string.pref_rebase_on_pull_summary_on
-        defaultValue = true
-      }
       pref(PreferenceKeys.GIT_SERVER_INFO) {
         titleRes = R.string.pref_edit_git_server_settings
         onClick {
@@ -269,6 +263,12 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
           activity.launchActivity(GitConfigActivity::class.java)
           true
         }
+      }
+      switch(PreferenceKeys.REBASE_ON_PULL) {
+        titleRes = R.string.pref_rebase_on_pull_title
+        summaryRes = R.string.pref_rebase_on_pull_summary
+        summaryOnRes = R.string.pref_rebase_on_pull_summary_on
+        defaultValue = true
       }
       pref(PreferenceKeys.EXPORT_PASSWORDS) {
         titleRes = R.string.prefs_export_passwords_title
