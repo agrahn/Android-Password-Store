@@ -81,9 +81,6 @@ class PasswordStore : BaseGitActivity() {
   private val binding by viewBinding(ActivityPwdstoreBinding::inflate)
   private val model: SearchableRepositoryViewModel by viewModels()
 
-  var aheadCount = 0
-    private set
-
   private val gpgKeySelectAction =
     registerForActivityResult(StartActivityForResult()) { result ->
       if (result.resultCode == AppCompatActivity.RESULT_OK) {
@@ -593,8 +590,7 @@ class PasswordStore : BaseGitActivity() {
   }
 
   private fun updateFabSync() {
-    aheadCount = PasswordRepository.getAheadCount()
-    getPasswordFragment()?.updateFabSync()
+    runOnUiThread { getPasswordFragment()?.updateFabSync() }
   }
 
   /**

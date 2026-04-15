@@ -323,7 +323,7 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
     }
 
   public fun updateFabSync() {
-    val syncNeeded = requireStore().aheadCount > 0
+    val syncNeeded = PasswordRepository.getAheadCount() > 0
 
     val showAnim = if (syncNeeded && fabVisible && !binding.fabSync.isVisible) true else false
 
