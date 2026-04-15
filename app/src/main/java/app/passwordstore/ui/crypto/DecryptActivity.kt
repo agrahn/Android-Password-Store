@@ -135,6 +135,10 @@ class DecryptActivity : BasePGPActivity() {
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
     menuInflater.inflate(R.menu.pgp_handler, menu)
+    return true
+  }
+
+  override fun onPrepareOptionsMenu(menu: Menu): Boolean {
     encryptedEntryChars?.let { encrypted ->
       menu.findItem(R.id.edit_password).isVisible = true
       AESEncryption.decrypt(encrypted)?.let { decrypted ->
@@ -148,6 +152,7 @@ class DecryptActivity : BasePGPActivity() {
         entry.clear()
       }
     }
+
     return true
   }
 
@@ -221,7 +226,7 @@ class DecryptActivity : BasePGPActivity() {
     withContext(dispatcherProvider.main()) {
       val labelFormat = resources.getString(R.string.otp_label_format)
       val showPassword = settings.getBoolean(PreferenceKeys.SHOW_PASSWORD, false)
-      invalidateOptionsMenu()
+      invalidateOptionsMenu() // redraws/enables menu items in the action bar
 
       entry.extraContentChars?.wipe() // not used here
 
