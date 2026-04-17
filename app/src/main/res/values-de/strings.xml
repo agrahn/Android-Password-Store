@@ -137,8 +137,11 @@
   <string name="pref_git_delete_repo_summary">Lösche das lokale (versteckte) Repository.</string>
   <string name="prefs_export_passwords_title">Passwörter exportieren</string>
   <string name="prefs_export_passwords_summary">Exportiert das Password-Repository in ein externes Verzeichnis.</string>
+  <string name="prefs_export_passwords_dialog_title">Passwörter werden exportiert</string>
+  <string name="prefs_export_passwords_dialog_message">Bitte warten Sie…</string>
   <string name="prefs_import_passwords_title">Passwörter importieren</string>
   <string name="prefs_import_passwords_summary">Importiert ein Password-Repository aus einem externen Verzeichnis.</string>
+  <string name="prefs_import_passwords_dialog_title">Passwörter werden importiert</string>
   <string name="prefs_repo_not_empty_dialog_title">Lokales Repository ist nicht leer</string>
   <string name="prefs_repo_not_empty_dialog_summary">Vor dem Importieren muss das lokale Repository zunächst gelöscht werden.</string>
   <string name="prefs_repo_invalid_source_dialog_title">Unbrauchbares Quellverzeichnis</string>
