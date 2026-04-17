@@ -138,8 +138,11 @@
   <string name="pref_git_delete_repo_summary">Deletes local (hidden) repository.</string>
   <string name="prefs_export_passwords_title">Export repository</string>
   <string name="prefs_export_passwords_summary">Exports the password repository to an external directory.</string>
+  <string name="prefs_export_passwords_dialog_title">Exporting passwords</string>
+  <string name="prefs_export_passwords_dialog_message">Please wait…</string>
   <string name="prefs_import_passwords_title">Import repository</string>
   <string name="prefs_import_passwords_summary">Imports a password repository from an external directory.</string>
+  <string name="prefs_import_passwords_dialog_title">Importing passwords</string>
   <string name="prefs_repo_not_empty_dialog_title">Local repository not empty</string>
   <string name="prefs_repo_not_empty_dialog_summary">The local password repository must be deleted first.</string>
   <string name="prefs_repo_invalid_source_dialog_title">Source directory unusable</string>

@@ -13,8 +13,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.FragmentActivity
+import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.ui.git.config.GitConfigActivity
@@ -24,6 +32,7 @@ import app.passwordstore.ui.sshkeygen.PgpAuthKeySelectionActivity
 import app.passwordstore.ui.sshkeygen.ShowSshKeyFragment
 import app.passwordstore.ui.sshkeygen.SshKeyGenActivity
 import app.passwordstore.ui.sshkeygen.SshKeyImportActivity
+import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.gitSecrets
 import app.passwordstore.util.extensions.launchActivity
@@ -33,6 +42,7 @@ import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.git.sshj.SshKey
 import app.passwordstore.util.settings.GitSettings
 import app.passwordstore.util.settings.PreferenceKeys
+import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -55,6 +65,7 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
@@ -76,6 +87,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
             flags =
               Intent.FLAG_GRANT_READ_URI_PERMISSION or
                 Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
                 Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
           }
         }
@@ -83,20 +95,45 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
     ) { uri: Uri? ->
       if (uri == null) return@registerForActivityResult
 
-      val targetDirectory = DocumentFile.fromTreeUri(activity.applicationContext, uri)
-      val dateString = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
-      val passDir = targetDirectory?.createDirectory("password_store_$dateString")
-      if (passDir == null) return@registerForActivityResult
+      val exportWork =
+        OneTimeWorkRequestBuilder<ExportPasswordsWorker>()
+          .setInputData(workDataOf("uri" to uri.toString()))
+          .build()
 
-      val repositoryDirectory = PasswordRepository.getRepositoryDirectory()
-      val internalRepository = DocumentFile.fromFile(repositoryDirectory)
+      val workId = exportWork.id
 
-      runCatching {
-          logcat { "Copying ${repositoryDirectory.path} to $targetDirectory" }
-          copyDirToDir(internalRepository, passDir)
-          logcat { "Done with importing ${repositoryDirectory.path} to $targetDirectory" }
+      val workManager = WorkManager.getInstance(activity.applicationContext)
+
+      val progressDialog =
+        MaterialAlertDialogBuilder(activity)
+          .setTitle(R.string.prefs_export_passwords_dialog_title)
+          .setMessage(R.string.prefs_export_passwords_dialog_message)
+          .setCancelable(false)
+          .create()
+
+      workManager.getWorkInfoByIdLiveData(workId).observe(activity) { workInfo ->
+        when (workInfo?.state) {
+          WorkInfo.State.RUNNING -> progressDialog.show()
+          WorkInfo.State.SUCCEEDED -> {
+            logcat { "Successful repository export" }
+            progressDialog.dismiss()
+          }
+          WorkInfo.State.FAILED -> {
+            logcat { "Repository export failed" }
+            progressDialog.dismiss()
+          }
+          WorkInfo.State.CANCELLED -> {
+            logcat { "Repository export cancelled" }
+            progressDialog.dismiss()
+          }
+          else -> {
+            logcat { "Repository export: ${workInfo?.state}" }
+          }
         }
-        .onErr { e -> logcat(ERROR) { e.asLog() } }
+      }
+
+      logcat { "enqueuing password export" }
+      workManager.enqueueUniqueWork("export_passwords", ExistingWorkPolicy.KEEP, exportWork)
     }
 
   private val storeImportAction =
@@ -113,37 +150,55 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
       }
     ) { uri: Uri? ->
       if (uri == null) return@registerForActivityResult
-      val sourceDirectory = DocumentFile.fromTreeUri(activity.applicationContext, uri)
-      if (sourceDirectory == null) return@registerForActivityResult
 
       // Minimal check to see if the source directory is a git repo
-      if (sourceDirectory.findFile(".git")?.isDirectory() ?: false) {
-        val repositoryDirectory =
-          requireNotNull(PasswordRepository.getRepositoryDirectory()) {
-            "Password target directory must be set for import"
-          }
-        if (!repositoryDirectory.exists()) repositoryDirectory.mkdirs()
-        val internalRepository = DocumentFile.fromFile(repositoryDirectory)
-
-        runCatching {
-            logcat { "Copying $sourceDirectory to ${repositoryDirectory.path}" }
-            copyDirToDir(sourceDirectory, internalRepository)
-            /**
-             * When importing an external repo, the .bin extension is appended to the files copied;
-             * we walk through the internal repo directory once more and remove the .bin ending from
-             * all files we find.
-             */
-            renameFilesInDirectoryTree(repositoryDirectory.getAbsolutePath(), ".bin", "")
-            logcat { "Done with importing $sourceDirectory to ${repositoryDirectory.path}" }
-          }
-          .onErr { e -> logcat(ERROR) { e.asLog() } }
-      } else {
+      val sourceDirectory =
+        DocumentFile.fromTreeUri(activity.applicationContext, uri)
+          ?: return@registerForActivityResult
+      if (!(sourceDirectory.findFile(".git")?.isDirectory() ?: false)) {
         MaterialAlertDialogBuilder(activity)
           .setTitle(R.string.prefs_repo_invalid_source_dialog_title)
           .setIcon(R.drawable.ic_crossmark_red_24dp)
           .setMessage(R.string.prefs_repo_invalid_source_dialog_summary)
           .setPositiveButton(R.string.dialog_ok) { dialog, _ -> dialog.dismiss() }
           .show()
+      } else {
+        val importWork =
+          OneTimeWorkRequestBuilder<ImportPasswordsWorker>()
+            .setInputData(workDataOf("uri" to uri.toString()))
+            .build()
+
+        val workId = importWork.id
+
+        val workManager = WorkManager.getInstance(activity.applicationContext)
+
+        val progressDialog =
+          MaterialAlertDialogBuilder(activity)
+            .setTitle(R.string.prefs_import_passwords_dialog_title)
+            .setMessage(R.string.prefs_export_passwords_dialog_message)
+            .setCancelable(false)
+            .create()
+
+        workManager.getWorkInfoByIdLiveData(workId).observe(activity) { workInfo ->
+          when (workInfo?.state) {
+            WorkInfo.State.RUNNING -> progressDialog.show()
+            WorkInfo.State.SUCCEEDED -> {
+              logcat { "Successful repository import" }
+              progressDialog.dismiss()
+            }
+            WorkInfo.State.FAILED -> {
+              logcat { "Repository import failed" }
+              progressDialog.dismiss()
+            }
+            WorkInfo.State.CANCELLED -> {
+              logcat { "Repository import cancelled" }
+              progressDialog.dismiss()
+            }
+            else -> {} // ENQUEUED, BLOCKED states - keep current state
+          }
+        }
+
+        workManager.enqueueUniqueWork("import_passwords", ExistingWorkPolicy.KEEP, importWork)
       }
     }
 
@@ -331,79 +386,193 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
     }
   }
 
-  /**
-   * Copies a password file to a given directory.
-   *
-   * Note: this does not preserve last modified time.
-   *
-   * @param passwordFile password file to copy.
-   * @param targetDirectory target directory to copy password.
-   */
-  private fun copyFileToDir(passwordFile: DocumentFile, targetDirectory: DocumentFile) {
-    val sourceInputStream =
-      activity.applicationContext.contentResolver.openInputStream(passwordFile.uri)
-    val name = passwordFile.name
-    val targetPasswordFile =
-      targetDirectory.createFile("application/octet-stream", name ?: throw NullPointerException())
-    if (targetPasswordFile?.exists() == true) {
-      val destOutputStream =
-        activity.applicationContext.contentResolver.openOutputStream(targetPasswordFile.uri)
-
-      if (destOutputStream != null && sourceInputStream != null) {
-        sourceInputStream.use { source -> destOutputStream.use { dest -> source.copyTo(dest) } }
-      }
-    }
-  }
-
-  /**
-   * Recursively copies a directory to a destination.
-   *
-   * @param sourceDirectory directory to copy from.
-   * @param targetDirectory directory to copy to.
-   */
-  private fun copyDirToDir(sourceDirectory: DocumentFile, targetDirectory: DocumentFile) {
-    sourceDirectory.listFiles().forEach { file ->
-      if (file.isDirectory()) {
-        // Create new directory and recurse
-        val newDir = targetDirectory.createDirectory(file.name ?: throw NullPointerException())
-        copyDirToDir(file, newDir ?: throw NullPointerException())
-      } else {
-        copyFileToDir(file, targetDirectory)
-      }
-    }
-  }
-
-  private fun renameFilesInDirectoryTree(
-    rootDir: String,
-    oldExtension: String,
-    newExtension: String,
-  ) {
-    val startPath = Paths.get(rootDir)
-    Files.walkFileTree(
-      startPath,
-      object : SimpleFileVisitor<Path>() {
-        override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
-          val fileName = file.fileName.toString()
-          if (fileName.endsWith(oldExtension)) {
-            val newFileName = fileName.replace(oldExtension, newExtension)
-            val newFile = file.resolveSibling(newFileName)
-            Files.move(file, newFile)
-          }
-          return FileVisitResult.CONTINUE
-        }
-
-        override fun visitFileFailed(file: Path, exc: IOException): FileVisitResult {
-          logcat { "Failed to access file: $file" }
-          exc.printStackTrace()
-          return FileVisitResult.CONTINUE
-        }
-      },
-    )
-  }
-
   @EntryPoint
   @InstallIn(SingletonComponent::class)
   interface RepositorySettingsEntryPoint {
     fun gitSettings(): GitSettings
   }
+}
+
+class ExportPasswordsWorker(context: Context, params: WorkerParameters) :
+  CoroutineWorker(context, params) {
+
+  private val hiltEntryPoint by unsafeLazy {
+    EntryPointAccessors.fromApplication(
+      applicationContext,
+      ExportPasswordsWorkerEntryPoint::class.java,
+    )
+  }
+
+  override suspend fun doWork(): Result =
+    runCatching {
+        val uriString =
+          inputData.getString("uri")
+            ?: throw IllegalArgumentException("No URI passed to ImportPasswordsWorker")
+        val uri = uriString.toUri()
+
+        val targetDirectory = DocumentFile.fromTreeUri(applicationContext, uri)
+        val dateString = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
+        val passDir =
+          targetDirectory?.createDirectory("password_store_$dateString")
+            ?: throw IllegalArgumentException(
+              "Failed to create target directory ${targetDirectory?.uri?.path}/password_store_$dateString"
+            )
+
+        val repositoryDirectory = PasswordRepository.getRepositoryDirectory()
+        val internalRepository = DocumentFile.fromFile(repositoryDirectory)
+
+        withContext(hiltEntryPoint.dispatcherProvider().io()) {
+          logcat { "Exporting ${repositoryDirectory.path} to ${passDir.uri.path}" }
+          copyDirToDir(getApplicationContext(), internalRepository, passDir)
+          logcat { "Done with exporting ${repositoryDirectory.path} to ${passDir.uri.path}" }
+        }
+        Result.success()
+      }
+      .fold(
+        success = { Result.success() },
+        failure = {
+          logcat(ERROR) { it.asLog() }
+          Result.retry()
+        },
+      )
+
+  @EntryPoint
+  @InstallIn(SingletonComponent::class)
+  interface ExportPasswordsWorkerEntryPoint {
+    fun dispatcherProvider(): DispatcherProvider
+  }
+}
+
+class ImportPasswordsWorker(context: Context, params: WorkerParameters) :
+  CoroutineWorker(context, params) {
+
+  private val hiltEntryPoint by unsafeLazy {
+    EntryPointAccessors.fromApplication(
+      applicationContext,
+      ImportPasswordsWorkerEntryPoint::class.java,
+    )
+  }
+
+  override suspend fun doWork(): Result =
+    runCatching {
+        val uriString =
+          inputData.getString("uri")
+            ?: throw IllegalArgumentException("No URI passed to ImportPasswordsWorker")
+        val uri = uriString.toUri()
+
+        val sourceDirectory =
+          DocumentFile.fromTreeUri(applicationContext, uri)
+            ?: throw IllegalArgumentException("Invalid URI passed to ImportPasswordsWorker")
+
+        val repositoryDirectory =
+          requireNotNull(PasswordRepository.getRepositoryDirectory()) {
+            "Password target directory must be set for import"
+          }
+        if (!repositoryDirectory.exists()) repositoryDirectory.mkdirs()
+        val internalRepository = DocumentFile.fromFile(repositoryDirectory)
+
+        withContext(hiltEntryPoint.dispatcherProvider().io()) {
+          logcat { "Importing ${sourceDirectory?.uri?.path} to ${repositoryDirectory.path}" }
+          copyDirToDir(getApplicationContext(), sourceDirectory, internalRepository)
+          /**
+           * When importing an external repo, the .bin extension is appended to the files copied; we
+           * walk through the internal repo directory once more and remove the .bin ending from all
+           * files we find.
+           */
+          renameFilesInDirectoryTree(repositoryDirectory.getAbsolutePath(), ".bin", "")
+          logcat {
+            "Done with importing ${sourceDirectory?.uri?.path} to ${repositoryDirectory.path}"
+          }
+        }
+        Result.success()
+      }
+      .fold(
+        success = { Result.success() },
+        failure = {
+          logcat(ERROR) { it.asLog() }
+          Result.retry()
+        },
+      )
+
+  @EntryPoint
+  @InstallIn(SingletonComponent::class)
+  interface ImportPasswordsWorkerEntryPoint {
+    fun dispatcherProvider(): DispatcherProvider
+  }
+}
+
+/**
+ * Recursively copies a directory to a destination.
+ *
+ * @param sourceDirectory directory to copy from.
+ * @param targetDirectory directory to copy to.
+ */
+private fun copyDirToDir(
+  context: Context,
+  sourceDirectory: DocumentFile,
+  targetDirectory: DocumentFile,
+) {
+  sourceDirectory.listFiles().forEach { file ->
+    if (file.isDirectory()) {
+      // Create new directory and recurse
+      val newDir = targetDirectory.createDirectory(file.name ?: throw NullPointerException())
+      copyDirToDir(context, file, newDir ?: throw NullPointerException())
+    } else {
+      copyFileToDir(context, file, targetDirectory)
+    }
+  }
+}
+
+/**
+ * Copies a password file to a given directory.
+ *
+ * Note: this does not preserve last modified time.
+ *
+ * @param passwordFile password file to copy.
+ * @param targetDirectory target directory to copy password.
+ */
+private fun copyFileToDir(
+  context: Context,
+  passwordFile: DocumentFile,
+  targetDirectory: DocumentFile,
+) {
+  val sourceInputStream = context.contentResolver.openInputStream(passwordFile.uri)
+  val name = passwordFile.name
+  val targetPasswordFile =
+    targetDirectory.createFile("application/octet-stream", name ?: throw NullPointerException())
+  if (targetPasswordFile?.exists() == true) {
+    val destOutputStream = context.contentResolver.openOutputStream(targetPasswordFile.uri)
+
+    if (destOutputStream != null && sourceInputStream != null) {
+      sourceInputStream.use { source -> destOutputStream.use { dest -> source.copyTo(dest) } }
+    }
+  }
+}
+
+private fun renameFilesInDirectoryTree(
+  rootDir: String,
+  oldExtension: String,
+  newExtension: String,
+) {
+  val startPath = Paths.get(rootDir)
+  Files.walkFileTree(
+    startPath,
+    object : SimpleFileVisitor<Path>() {
+      override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+        val fileName = file.fileName.toString()
+        if (fileName.endsWith(oldExtension)) {
+          val newFileName = fileName.replace(oldExtension, newExtension)
+          val newFile = file.resolveSibling(newFileName)
+          Files.move(file, newFile)
+        }
+        return FileVisitResult.CONTINUE
+      }
+
+      override fun visitFileFailed(file: Path, exc: IOException): FileVisitResult {
+        logcat { "Failed to access file: $file" }
+        exc.printStackTrace()
+        return FileVisitResult.CONTINUE
+      }
+    },
+  )
 }
