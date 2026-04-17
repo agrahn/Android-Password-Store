@@ -13,8 +13,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.FragmentActivity
+import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.ui.git.config.GitConfigActivity
@@ -83,20 +90,14 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
     ) { uri: Uri? ->
       if (uri == null) return@registerForActivityResult
 
-      val targetDirectory = DocumentFile.fromTreeUri(activity.applicationContext, uri)
-      val dateString = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
-      val passDir = targetDirectory?.createDirectory("password_store_$dateString")
-      if (passDir == null) return@registerForActivityResult
+      // Enqueue background work
+      val exportWork =
+        OneTimeWorkRequestBuilder<ExportPasswordsWorker>()
+          .setInputData(workDataOf("uri" to uri.toString()))
+          .build()
 
-      val repositoryDirectory = PasswordRepository.getRepositoryDirectory()
-      val internalRepository = DocumentFile.fromFile(repositoryDirectory)
-
-      runCatching {
-          logcat { "Copying ${repositoryDirectory.path} to $targetDirectory" }
-          copyDirToDir(internalRepository, passDir)
-          logcat { "Done with importing ${repositoryDirectory.path} to $targetDirectory" }
-        }
-        .onErr { e -> logcat(ERROR) { e.asLog() } }
+      WorkManager.getInstance(activity.applicationContext)
+        .enqueueUniqueWork("export_passwords", ExistingWorkPolicy.KEEP, exportWork)
     }
 
   private val storeImportAction =
@@ -127,7 +128,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
 
         runCatching {
             logcat { "Copying $sourceDirectory to ${repositoryDirectory.path}" }
-            copyDirToDir(sourceDirectory, internalRepository)
+            copyDirToDir(activity.applicationContext, sourceDirectory, internalRepository)
             /**
              * When importing an external repo, the .bin extension is appended to the files copied;
              * we walk through the internal repo directory once more and remove the .bin ending from
@@ -331,48 +332,6 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
     }
   }
 
-  /**
-   * Copies a password file to a given directory.
-   *
-   * Note: this does not preserve last modified time.
-   *
-   * @param passwordFile password file to copy.
-   * @param targetDirectory target directory to copy password.
-   */
-  private fun copyFileToDir(passwordFile: DocumentFile, targetDirectory: DocumentFile) {
-    val sourceInputStream =
-      activity.applicationContext.contentResolver.openInputStream(passwordFile.uri)
-    val name = passwordFile.name
-    val targetPasswordFile =
-      targetDirectory.createFile("application/octet-stream", name ?: throw NullPointerException())
-    if (targetPasswordFile?.exists() == true) {
-      val destOutputStream =
-        activity.applicationContext.contentResolver.openOutputStream(targetPasswordFile.uri)
-
-      if (destOutputStream != null && sourceInputStream != null) {
-        sourceInputStream.use { source -> destOutputStream.use { dest -> source.copyTo(dest) } }
-      }
-    }
-  }
-
-  /**
-   * Recursively copies a directory to a destination.
-   *
-   * @param sourceDirectory directory to copy from.
-   * @param targetDirectory directory to copy to.
-   */
-  private fun copyDirToDir(sourceDirectory: DocumentFile, targetDirectory: DocumentFile) {
-    sourceDirectory.listFiles().forEach { file ->
-      if (file.isDirectory()) {
-        // Create new directory and recurse
-        val newDir = targetDirectory.createDirectory(file.name ?: throw NullPointerException())
-        copyDirToDir(file, newDir ?: throw NullPointerException())
-      } else {
-        copyFileToDir(file, targetDirectory)
-      }
-    }
-  }
-
   private fun renameFilesInDirectoryTree(
     rootDir: String,
     oldExtension: String,
@@ -405,5 +364,78 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
   @InstallIn(SingletonComponent::class)
   interface RepositorySettingsEntryPoint {
     fun gitSettings(): GitSettings
+  }
+}
+
+class ExportPasswordsWorker(context: Context, params: WorkerParameters) :
+  CoroutineWorker(context, params) {
+
+  override suspend fun doWork(): Result {
+    return try {
+      val uriString = inputData.getString("uri") ?: return Result.retry()
+      val uri = uriString.toUri()
+
+      val targetDirectory = DocumentFile.fromTreeUri(applicationContext, uri)
+      val dateString = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
+      val passDir = targetDirectory?.createDirectory("password_store_$dateString")
+      if (passDir == null) return Result.retry()
+
+      val repositoryDirectory = PasswordRepository.getRepositoryDirectory()
+      val internalRepository = DocumentFile.fromFile(repositoryDirectory)
+
+      copyDirToDir(getApplicationContext(), internalRepository, passDir)
+      Result.success()
+    } catch (e: Exception) {
+      logcat(ERROR) { e.asLog() }
+      Result.retry()
+    }
+  }
+}
+
+/**
+ * Recursively copies a directory to a destination.
+ *
+ * @param sourceDirectory directory to copy from.
+ * @param targetDirectory directory to copy to.
+ */
+private fun copyDirToDir(
+  context: Context,
+  sourceDirectory: DocumentFile,
+  targetDirectory: DocumentFile,
+) {
+  sourceDirectory.listFiles().forEach { file ->
+    if (file.isDirectory()) {
+      // Create new directory and recurse
+      val newDir = targetDirectory.createDirectory(file.name ?: throw NullPointerException())
+      copyDirToDir(context, file, newDir ?: throw NullPointerException())
+    } else {
+      copyFileToDir(context, file, targetDirectory)
+    }
+  }
+}
+
+/**
+ * Copies a password file to a given directory.
+ *
+ * Note: this does not preserve last modified time.
+ *
+ * @param passwordFile password file to copy.
+ * @param targetDirectory target directory to copy password.
+ */
+private fun copyFileToDir(
+  context: Context,
+  passwordFile: DocumentFile,
+  targetDirectory: DocumentFile,
+) {
+  val sourceInputStream = context.contentResolver.openInputStream(passwordFile.uri)
+  val name = passwordFile.name
+  val targetPasswordFile =
+    targetDirectory.createFile("application/octet-stream", name ?: throw NullPointerException())
+  if (targetPasswordFile?.exists() == true) {
+    val destOutputStream = context.contentResolver.openOutputStream(targetPasswordFile.uri)
+
+    if (destOutputStream != null && sourceInputStream != null) {
+      sourceInputStream.use { source -> destOutputStream.use { dest -> source.copyTo(dest) } }
+    }
   }
 }
