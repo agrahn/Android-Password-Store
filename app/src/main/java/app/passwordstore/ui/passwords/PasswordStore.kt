@@ -189,9 +189,9 @@ class PasswordStore : BaseGitActivity() {
             }
           }
           else -> {
-            val repoDir = PasswordRepository.getRepositoryDirectory().absolutePath
+            val repoPath = PasswordRepository.getRepositoryDirectory().absolutePath
             val relativePath =
-              PasswordRepository.getRelativePath("${target.absolutePath}/", repoDir)
+              PasswordRepository.getRelativePath("${target.absolutePath}/", repoPath)
             withContext(dispatcherProvider.main()) {
               commitChange(
                 resources.getString(R.string.git_commit_move_multiple_text, relativePath)
@@ -201,8 +201,9 @@ class PasswordStore : BaseGitActivity() {
           }
         }
       }
-      refreshPasswordList()
       getPasswordFragment()?.dismissActionMode()
+      getPasswordFragment()?.scrollToOnNextRefresh(File(target, File(filesToMove[0]).name))
+      refreshPasswordList(target)
     }
 
   override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
@@ -462,7 +463,7 @@ class PasswordStore : BaseGitActivity() {
     selectedItems.forEach {
       if (it.file.isFile) size++ else size += it.file.listFilesRecursively().size
     }
-    if (size == 0) {
+    if (size == 0) { // delete empty directory trees without confirmation
       selectedItems.map { item -> item.file.deleteRecursively() }
       refreshPasswordList()
       return
@@ -495,8 +496,8 @@ class PasswordStore : BaseGitActivity() {
     val intent = Intent(this, SelectFolderActivity::class.java)
     val fileLocations = values.map { it.file.absolutePath }.toTypedArray()
     intent.putExtra("Files", fileLocations)
-    val repoDir = PasswordRepository.getRepositoryDirectory().absolutePath
-    val relPath = PasswordRepository.getRelativePath(currentDir.absolutePath, repoDir)
+    val repoPath = PasswordRepository.getRepositoryDirectory().absolutePath
+    val relPath = PasswordRepository.getRelativePath(currentDir.absolutePath, repoPath)
     if (!relPath.isEmpty()) intent.putExtra(PasswordStore.REQUEST_ARG_PATH, relPath)
     passwordMoveAction.launch(intent)
   }
@@ -597,25 +598,30 @@ class PasswordStore : BaseGitActivity() {
    * Refreshes the password list by re-executing the last navigation or search action, preserving
    * the navigation stack and scroll position. If the current directory no longer exists, navigation
    * is reset to the repository root. If the optional [target] argument is provided, it will be
-   * entered if it is a directory or scrolled into view if it is a file (both inside the current
-   * directory).
+   * entered if it is a directory or scrolled into view if it is a file.
    */
   fun refreshPasswordList(target: File? = null) {
-    target?.let {
+    val relativeTargetPath = target?.let {
       require(it.isInsideRepository()) { "Trying to access target outside the repository" }
+      val repoPath = PasswordRepository.getRepositoryDirectory().absolutePath
+      PasswordRepository.getRelativePath(target.absolutePath, repoPath)
     }
-    val plist = getPasswordFragment()
-    if (target?.isDirectory == true && model.currentDir.value.contains(target)) {
-      plist?.navigateTo(target)
-    } else if (target?.isFile == true && model.currentDir.value.contains(target)) {
-      // Creating new passwords is handled by an activity, so we will refresh in onStart.
-      plist?.scrollToOnNextRefresh(target)
+    if (relativeTargetPath != null) {
+      model.reset()
+      model.navigateTo(PasswordRepository.getRepositoryDirectory(), pushPreviousLocation = false)
+      relativeTargetPath.trim('/').split('/').forEach { item ->
+        val file = File(model.currentDir.value, item)
+        if (file.isDirectory) {
+          if (file.equals(model.currentDir.value)) model.forceRefresh()
+          else model.navigateTo(file, pushPreviousLocation = true)
+        } else getPasswordFragment()?.scrollToOnNextRefresh(file)
+      }
     } else if (model.currentDir.value.isDirectory) {
       model.forceRefresh()
     } else {
       model.reset()
-      supportActionBar?.setDisplayHomeAsUpEnabled(false)
     }
+    supportActionBar?.setDisplayHomeAsUpEnabled(model.canNavigateBack)
     updateFabSync()
   }
 
@@ -651,10 +657,9 @@ class PasswordStore : BaseGitActivity() {
   }
 
   fun matchPasswordWithApp(item: PasswordItem) {
+    val repoPath = PasswordRepository.getRepositoryDirectory().absolutePath
     val path =
-      item.file.absolutePath
-        .replace(PasswordRepository.getRepositoryDirectory().toString() + "/", "")
-        .replace(".gpg", "")
+      PasswordRepository.getRelativePath(item.file.absolutePath, repoPath + "/").replace(".gpg", "")
     val data = Intent()
     data.putExtra("path", path)
     setResult(RESULT_OK, data)

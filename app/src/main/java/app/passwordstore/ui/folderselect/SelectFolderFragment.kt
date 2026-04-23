@@ -66,7 +66,7 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
     registerForContextMenu(binding.passRecycler)
 
     model.navigateTo(
-      File(PasswordRepository.getRepositoryDirectory().absolutePath),
+      PasswordRepository.getRepositoryDirectory(),
       listMode = ListMode.DirectoriesOnly,
       pushPreviousLocation = false,
     )
@@ -120,7 +120,7 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
   /** Returns true if the back press was handled by the [Fragment]. */
   fun onBackPressedInActivity(): Boolean {
     if (!model.canNavigateBack) return false
-    model.navigateBack()
+    model.navigateBack(listMode = ListMode.DirectoriesOnly)
     if (!model.canNavigateBack)
       (requireActivity() as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(false)
     return true

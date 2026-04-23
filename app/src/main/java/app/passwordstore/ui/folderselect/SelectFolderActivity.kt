@@ -92,18 +92,27 @@ class SelectFolderActivity : AppCompatActivity(R.layout.select_folder_layout) {
   }
 
   fun refreshPasswordList(target: File? = null) {
-    target?.let {
+    val relativeTargetPath = target?.let {
       require(it.isInsideRepository()) { "Trying to access target outside the repository" }
+      val repoPath = PasswordRepository.getRepositoryDirectory().absolutePath
+      PasswordRepository.getRelativePath(target.absolutePath, repoPath)
     }
-    val plist = passwordList
-    if (target?.isDirectory == true && model.currentDir.value.contains(target)) {
-      plist?.navigateTo(target)
+    if (relativeTargetPath != null) {
+      model.reset()
+      model.navigateTo(PasswordRepository.getRepositoryDirectory(), pushPreviousLocation = false)
+      relativeTargetPath.trim('/').split('/').forEach { item ->
+        val file = File(model.currentDir.value, item)
+        if (file.isDirectory) {
+          if (file.equals(model.currentDir.value)) model.forceRefresh()
+          else model.navigateTo(file, pushPreviousLocation = true)
+        }
+      }
     } else if (model.currentDir.value.isDirectory) {
       model.forceRefresh()
     } else {
       model.reset()
-      supportActionBar?.setDisplayHomeAsUpEnabled(false)
     }
+    supportActionBar?.setDisplayHomeAsUpEnabled(model.canNavigateBack)
   }
 
   private fun selectFolder() {

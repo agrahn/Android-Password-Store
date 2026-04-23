@@ -111,17 +111,21 @@ object PasswordRepository {
     return File(filesDir.toString(), "/store")
   }
 
-  /*
-   * /path/to/store/social/other/ -> social/other
-   * /path/to/store/social/facebook.gpg -> social/facebook.gpg
+  /* referencePath: /a/b/c
+   * /a/b/c/d/e/dir -> /d/e/dir
+   * /a/b/c/d/e/file.ext -> /d/e/file.ext
    */
-  fun getRelativePath(fullPath: String, repositoryPath: String): String {
-    return fullPath.replace(repositoryPath, "").replace("/+".toRegex(), "/")
+  fun getRelativePath(fullPath: String, referencePath: String): String {
+    return fullPath.replace(referencePath, "").replace("/+".toRegex(), "/")
   }
 
-  /** /path/to/store/social/facebook.gpg -> social/facebook */
-  fun getLongName(fullPath: String, repositoryPath: String, basename: String): String {
-    var relativePath = getRelativePath(fullPath, repositoryPath)
+  /* referencePath=/a/b/c
+   * fullPath=/a/b/c/d/e
+   * basename=file
+   * -> d/e/file
+   */
+  fun getLongName(fullPath: String, referencePath: String, basename: String): String {
+    var relativePath = getRelativePath(fullPath, referencePath)
     return if (relativePath.isNotEmpty() && relativePath != "/") {
       // remove preceding '/'
       relativePath = relativePath.substring(1)
@@ -135,9 +139,11 @@ object PasswordRepository {
     }
   }
 
-  /** /path/to/store/social/other/myspace.gpg -> social/other */
-  fun getParentPath(fullPath: String, repositoryPath: String): String {
-    val relativePath = getRelativePath(fullPath, repositoryPath)
+  /* referencePath: /a/b/c
+   * /a/b/c/d/e/file.ext -> /d/e/
+   */
+  fun getParentPath(fullPath: String, referencePath: String): String {
+    val relativePath = getRelativePath(fullPath, referencePath)
     val index = relativePath.lastIndexOf("/")
     return "/${relativePath.substring(startIndex = 0, endIndex = index + 1)}/"
       .replace("/+".toRegex(), "/")

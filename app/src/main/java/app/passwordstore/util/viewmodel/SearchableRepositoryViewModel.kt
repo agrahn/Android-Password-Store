@@ -345,10 +345,10 @@ constructor(
    *
    * Returns the old RecyclerView's LinearLayoutManager state as a [Parcelable] if it was cached.
    */
-  fun navigateBack(): Parcelable? {
+  fun navigateBack(listMode: ListMode = ListMode.AllEntries): Parcelable? {
     if (!canNavigateBack) return null
     val (oldDir, oldRecyclerViewState) = navigationStack.removeFirst()
-    navigateTo(oldDir, pushPreviousLocation = false)
+    navigateTo(oldDir, listMode, pushPreviousLocation = false)
     return oldRecyclerViewState
   }
 
