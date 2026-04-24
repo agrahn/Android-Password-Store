@@ -19,7 +19,7 @@ data class PasswordItem(
   val rootDir: File,
 ) : Comparable<PasswordItem> {
 
-  val fullPathToParent = file.absolutePath.replace(rootDir.absolutePath, "").replace(file.name, "")
+  val fullPathToParent = PasswordRepository.getParentPath(file.absolutePath, rootDir.absolutePath)
 
   val longName = PasswordRepository.getLongName(fullPathToParent, rootDir.absolutePath, toString())
 

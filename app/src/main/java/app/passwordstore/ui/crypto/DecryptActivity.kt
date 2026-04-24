@@ -18,7 +18,6 @@ import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.password.FieldItem
-import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.DecryptLayoutBinding
 import app.passwordstore.ui.adapters.FieldItemAdapter
 import app.passwordstore.util.crypto.AESEncryption
@@ -26,7 +25,6 @@ import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.toCharArray
-import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.PreferenceKeys
@@ -47,9 +45,6 @@ class DecryptActivity : BasePGPActivity() {
 
   private var itemsAdapter: FieldItemAdapter? = null
   private val binding by viewBinding(DecryptLayoutBinding::inflate)
-  private val relativeParentPath by unsafeLazy {
-    PasswordRepository.getParentPath(fullPath, repoPath)
-  }
 
   // temporarily AES-encrypted password entry
   private var encryptedEntryChars: CharArray? = null // AES encrypted password entry

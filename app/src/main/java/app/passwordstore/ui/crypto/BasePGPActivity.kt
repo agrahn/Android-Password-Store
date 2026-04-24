@@ -73,7 +73,7 @@ open class BasePGPActivity : AppCompatActivity() {
     requireNotNull(intent.getStringExtra(EXTRA_REPO_PATH)) { "${EXTRA_REPO_PATH} is missing" }
   }
 
-  private val relativeParentPath by unsafeLazy {
+  protected val relativeParentPath by unsafeLazy {
     PasswordRepository.getParentPath(fullPath, repoPath)
   }
 
