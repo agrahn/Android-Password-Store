@@ -1,4 +1,4 @@
-141298
+141409
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -77,6 +77,9 @@
 *.appwrite.run
 *.at.playit.plus
 *.at.ply.gg
+*.atlassian-3p-us-gov-mod.com
+*.atlassian-3p.com
+*.atlassian-isolated-3p.com
 *.auiusercontent.com
 *.awdev.ca
 *.awsapprunner.com
@@ -170,6 +173,7 @@
 *.me-central-1.rds.amazonaws.com
 *.me-south-1.airflow.amazonaws.com
 *.me-south-1.rds.amazonaws.com
+*.metaaiusercontent.com
 *.migration.run
 *.mm
 *.moonscale.io
@@ -1584,6 +1588,7 @@ cl
 cl.it
 claims
 clan.rip
+claude.app
 cleaning
 clerk.app
 clerkstage.app
@@ -1607,7 +1612,6 @@ cloud66.ws
 cloudaccess.host
 cloudaccess.net
 cloudapp.net
-cloudapps.digital
 cloudbeesusercontent.io
 cloudflare-ipfs.com
 cloudflare.app
@@ -2109,6 +2113,7 @@ dental
 dentist
 dep.no
 deployagent.com
+deployagent.space
 deporte.bo
 des.br
 desa.id
@@ -3042,6 +3047,7 @@ frosta.no
 froya.no
 fræna.no
 frøya.no
+fspages.org
 fst.br
 ftpaccess.cc
 ftr
@@ -5189,7 +5195,6 @@ lomza.pl
 lon-1.paas.massivegrid.net
 lon-2.paas.massivegrid.net
 london
-london.cloudapps.digital
 londrina.br
 longan.vn
 loppa.no
@@ -7024,6 +7029,7 @@ pics
 pictet
 pictures
 pid
+piebox.site
 piedmont.it
 piemonte.it
 pigboat.jp
