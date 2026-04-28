@@ -39,7 +39,6 @@
     <string name="git_commit_gpg_id">Inicialitza IDs de PGP a %1$s.</string>
     <string name="clipboard_copied_text">Copiat al porta‑retalls</string>
     <string name="file_toast_text">Indiqueu un nom de fitxer</string>
-    <string name="path_toast_text">Indiqueu una ruta de fitxer</string>
     <string name="empty_toast_text">No podeu usar una contrasenya o contingut extra buit</string>
     <string name="jgit_error_dialog_title">S\'ha produït un error a l\'operació Git</string>
     <string name="ssh_preferences_dialog_text">Importeu o genereu el fitxer de clau SSH a les preferències</string>
@@ -253,7 +252,6 @@
     <string name="preference_custom_public_suffixes_summary">L\'emplenament automàtic distingirà subdominis d\'aquests dominis</string>
     <string name="preference_custom_public_suffixes_hint">company.com\npersonal.com</string>
     <string name="password_creation_file_write_fail_message">No s\'ha pogut escriute el fitxer de contrasenya al magatzem, prova un altre cop.</string>
-    <string name="password_creation_file_delete_fail_message">No s\'ha pogut eliminar el fitxer de contrasenya %1$s del magatzem, prova a suprimir-lo manualment.</string>
     <string name="password_creation_duplicate_error">El fitxer ja existeix, usa un nom diferent</string>
     <string name="add_otp">Afegeix OTP</string>
     <string name="otp_import_success">S\'ha importat al configuració OTP correctament</string>

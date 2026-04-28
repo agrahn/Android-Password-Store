@@ -48,7 +48,6 @@
   <!-- PGPHandler -->
   <string name="clipboard_copied_text">In die Zwischenablage kopiert.</string>
   <string name="file_toast_text">Bitte setzen Sie einen Dateinamen.</string>
-  <string name="path_toast_text">Bitte setzen Sie einen Pfad.</string>
   <string name="empty_toast_text">Sie müssen mindestens ein Passwort oder Zusatzangaben eintragen.</string>
 
   <!-- Git Async Task -->
@@ -327,7 +326,6 @@
   <string name="password_creation_file_encryption_failed_ids_message">\n\nVerschlüsselung fehlgeschlagen für%1$s</string>
   <string name="password_creation_file_encryption_failed_expired_key">Schlüssel abgelaufen</string>
   <string name="password_creation_file_write_fail_message">Fehler beim Speichern der Passwortdatei im Password Store, bitte versuchen Sie es erneut.</string>
-  <string name="password_creation_file_delete_fail_message">Fehler beim Löschen der Passwortdatei %1$s aus dem Password Store, bitte löschen Sie die Datei von Hand.</string>
   <string name="password_creation_unusable_encryption_key_error_message">Verschlüsseln fehlgeschlagen. Überprüfen Sie Ablaufdatum und Widerrufstatus der PGP-Schlüssel mithilfe eines externen Programms.</string>
   <string name="password_creation_no_keys_provided_message">Keine passenden PGP-Schlüssel gefunden.</string>
   <string name="password_creation_duplicate_error">Datei existiert bereits, bitte verwenden Sie einen anderen Dateinamen.</string>

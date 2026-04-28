@@ -38,7 +38,6 @@
   <!-- PGPHandler -->
   <string name="clipboard_copied_text">Skopiowano do schowka</string>
   <string name="file_toast_text">Podaj nazwę pliku</string>
-  <string name="path_toast_text">Podaj ścieżkę do pliku</string>
   <string name="empty_toast_text">Nie możesz użyć pustego hasła lub pustej dodatkowej zawartości</string>
   <!-- Git Async Task -->
   <string name="jgit_error_dialog_title">Wystąpił błąd podczas operacji Git</string>
@@ -249,7 +248,6 @@
   <string name="preference_custom_public_suffixes_summary">Autouzupełnianie rozróżni subdomeny tych domen</string>
   <!-- Password creation failure -->
   <string name="password_creation_file_write_fail_message">Nie udało się zapisać pliku z hasłem do repozytorium, spróbuj ponownie.</string>
-  <string name="password_creation_file_delete_fail_message">Nie udało się usunąć pliku hasła %1$s z repozytorium, usuń go ręcznie.</string>
   <string name="password_creation_duplicate_error">Plik o tej nazwie już istnieje, użyj innej nazwy</string>
   <string name="add_otp">Dodaj OTP</string>
   <string name="otp_import_success">Pomyślnie zaimportowano konfigurację TOTP</string>

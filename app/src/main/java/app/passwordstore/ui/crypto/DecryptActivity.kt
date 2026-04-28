@@ -33,7 +33,9 @@ import com.github.michaelbull.result.getOrThrow
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.file.Paths
 import javax.inject.Inject
+import kotlin.io.path.pathString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -184,7 +186,7 @@ class DecryptActivity : BasePGPActivity() {
     encryptedEntryChars?.let { encrypted ->
       val intent = Intent(this, PasswordCreationActivity::class.java)
       intent.action = Intent.ACTION_VIEW
-      intent.putExtra(EXTRA_FILE_PATH, relativeParentPath)
+      intent.putExtra(EXTRA_FILE_PATH, Paths.get(fullPath).parent.pathString)
       intent.putExtra(EXTRA_REPO_PATH, repoPath)
       intent.putExtra(PasswordCreationActivity.EXTRA_FILE_NAME, name)
       intent.putExtra(PasswordCreationActivity.EXTRA_ENTRY, encrypted)

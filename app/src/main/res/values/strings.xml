@@ -49,7 +49,6 @@
   <!-- PGPHandler -->
   <string name="clipboard_copied_text">Copied to clipboard.</string>
   <string name="file_toast_text">Please provide a file name.</string>
-  <string name="path_toast_text">Please provide a file path.</string>
   <string name="empty_toast_text">You need to fill in at least a password or some extra content.</string>
 
   <!-- Git Async Task -->
@@ -328,7 +327,6 @@
   <string name="password_creation_file_encryption_failed_ids_message">\n\nEncryption failed for%1$s</string>
   <string name="password_creation_file_encryption_failed_expired_key">expired key</string>
   <string name="password_creation_file_write_fail_message">Failed to write password file to the store, please try again.</string>
-  <string name="password_creation_file_delete_fail_message">Failed to delete password file %1$s from the store, please delete it manually.</string>
   <string name="password_creation_unusable_encryption_key_error_message">Encryption failure. Check expiration date and revocation status of the PGP key(s) using an external utility.</string>
   <string name="password_creation_no_keys_provided_message">No matching PGP keys found.</string>
   <string name="password_creation_duplicate_error">File already exists, please use a different name.</string>

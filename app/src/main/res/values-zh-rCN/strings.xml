@@ -39,7 +39,6 @@
   <!-- PGPHandler -->
   <string name="clipboard_copied_text">复制到剪切板</string>
   <string name="file_toast_text">请提供文件名</string>
-  <string name="path_toast_text">请提供文件路径</string>
   <string name="empty_toast_text">您不能使用空密码或空额外内容</string>
   <!-- Git Async Task -->
   <string name="jgit_error_dialog_title">Git操作过程中发生错误</string>
@@ -257,7 +256,6 @@
 personal.com</string>
   <!-- Password creation failure -->
   <string name="password_creation_file_write_fail_message">将密码文件写入存储失败,请重试</string>
-  <string name="password_creation_file_delete_fail_message">从仓库删除密码文件%1$s失败,请手动删除</string>
   <string name="password_creation_duplicate_error">文件已存在,请使用其他名称</string>
   <string name="add_otp">添加 OTP</string>
   <string name="otp_import_success">导入TOTP配置成功</string>
