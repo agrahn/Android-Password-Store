@@ -239,7 +239,7 @@ class PasswordCreationActivity : BasePGPActivity() {
 
       directory.setOnClickListener {
         val intent = Intent(this@PasswordCreationActivity, SelectFolderActivity::class.java)
-        if (!relPath.isEmpty()) intent.putExtra(PasswordStore.REQUEST_ARG_PATH, relPath)
+        intent.putExtra(PasswordStore.REQUEST_ARG_PATH, directory.text.toString().trimEnd('/'))
         selectFolderAction.launch(intent)
       }
 
