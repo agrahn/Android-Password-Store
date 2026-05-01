@@ -35,6 +35,7 @@ import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
 import java.security.PublicKey
+import java.security.spec.X509EncodedKeySpec
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
 import logcat.asLog
@@ -42,6 +43,7 @@ import logcat.logcat
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.common.Buffer
 import net.schmizz.sshj.common.KeyType
+import net.schmizz.sshj.common.SSHRuntimeException
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider
 import net.schmizz.sshj.userauth.password.PasswordFinder
 
@@ -64,9 +66,41 @@ fun parseSshPublicKey(sshPublicKey: String): PublicKey? {
   return Buffer.PlainBuffer(Base64.decode(sshKeyParts[1], Base64.NO_WRAP)).readPublicKey()
 }
 
+internal fun normalizeForSshj(key: PublicKey): PublicKey {
+  if (KeyType.fromKey(key) != KeyType.UNKNOWN) return key
+
+  val encoded =
+    key.encoded
+      ?: throw SSHRuntimeException(
+        "Cannot normalize key: encoded form is null (${key.javaClass.name})"
+      )
+
+  val bcAlgorithm =
+    when (key.algorithm) {
+      "EdDSA",
+      "Ed25519",
+      "1.3.101.112" -> "Ed25519"
+      "Ed448",
+      "1.3.101.113" -> "Ed448"
+      else -> key.algorithm
+    }
+
+  return runCatching {
+      KeyFactory.getInstance(bcAlgorithm, "BC").generatePublic(X509EncodedKeySpec(encoded))
+    }
+    .getOrElse { error ->
+      logcat("normalizeForSshj") { error.asLog() }
+      throw SSHRuntimeException(
+        "Cannot normalize ${key.javaClass.name} (algorithm=${key.algorithm}) for SSHJ",
+        error,
+      )
+    }
+}
+
 fun toSshPublicKey(publicKey: PublicKey): String {
-  val rawPublicKey = Buffer.PlainBuffer().putPublicKey(publicKey).compactData
-  val keyType = KeyType.fromKey(publicKey)
+  val normalizedKey = normalizeForSshj(publicKey)
+  val rawPublicKey = Buffer.PlainBuffer().putPublicKey(normalizedKey).compactData
+  val keyType = KeyType.fromKey(normalizedKey)
   return "$keyType ${Base64.encodeToString(rawPublicKey, Base64.NO_WRAP)}"
 }
 
