@@ -163,7 +163,7 @@ object PasswordRepository {
         putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true)
       }
     }
-    // Create the repository static variable in PasswordRepository
+    // Create the `repository` static variable in PasswordRepository
     initializeRepository(dir.resolve(".git"))
 
     return repository

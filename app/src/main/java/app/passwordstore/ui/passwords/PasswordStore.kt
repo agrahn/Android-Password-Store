@@ -148,9 +148,9 @@ class PasswordStore : BaseGitActivity() {
             logcat(ERROR) { "Trying to move a file that already exists." }
             withContext(dispatcherProvider.main()) {
               MaterialAlertDialogBuilder(this@PasswordStore)
-                .setTitle(resources.getString(R.string.password_exists_title))
+                .setTitle(R.string.password_exists_title)
                 .setMessage(
-                  resources.getString(
+                  getString(
                     R.string.password_exists_message,
                     destinationLongName,
                     sourceLongName,
@@ -180,7 +180,7 @@ class PasswordStore : BaseGitActivity() {
               PasswordRepository.getLongName(target.absolutePath, repositoryPath, basename)
             withContext(dispatcherProvider.main()) {
               commitChange(
-                resources.getString(
+                getString(
                   R.string.git_commit_move_text,
                   sourceLongName,
                   destinationLongName,
@@ -194,9 +194,7 @@ class PasswordStore : BaseGitActivity() {
             val relativePath =
               PasswordRepository.getRelativePath("${target.absolutePath}/", repoPath)
             withContext(dispatcherProvider.main()) {
-              commitChange(
-                resources.getString(R.string.git_commit_move_multiple_text, relativePath)
-              )
+              commitChange(getString(R.string.git_commit_move_multiple_text, relativePath))
               updateFabSync()
             }
           }
@@ -338,8 +336,11 @@ class PasswordStore : BaseGitActivity() {
     val id = item.itemId
     val initBefore =
       MaterialAlertDialogBuilder(this)
-        .setMessage(resources.getString(R.string.creation_dialog_text))
-        .setPositiveButton(resources.getString(R.string.dialog_ok), null)
+        .setCancelable(false)
+        .setTitle(R.string.error)
+        .setIcon(R.drawable.ic_warning_red_24dp)
+        .setMessage(R.string.creation_dialog_text)
+        .setPositiveButton(R.string.dialog_ok, null)
     when (id) {
       R.id.user_pref -> {
         runCatching { launchActivity(SettingsActivity::class.java) }
@@ -436,8 +437,8 @@ class PasswordStore : BaseGitActivity() {
   private fun validateState(): Boolean {
     if (!PasswordRepository.isInitialized) {
       MaterialAlertDialogBuilder(this)
-        .setMessage(resources.getString(R.string.creation_dialog_text))
-        .setPositiveButton(resources.getString(R.string.dialog_ok), null)
+        .setMessage(R.string.creation_dialog_text)
+        .setPositiveButton(R.string.dialog_ok, null)
         .show()
       return false
     }
@@ -475,7 +476,7 @@ class PasswordStore : BaseGitActivity() {
     }
     MaterialAlertDialogBuilder(this)
       .setMessage(resources.getQuantityString(R.plurals.delete_dialog_text, size, size))
-      .setPositiveButton(resources.getString(R.string.dialog_yes)) { _, _ ->
+      .setPositiveButton(R.string.dialog_yes) { _, _ ->
         val filesToDelete = arrayListOf<File>()
         selectedItems.forEach { item ->
           if (item.file.isDirectory) filesToDelete.addAll(item.file.listFilesRecursively())
@@ -496,11 +497,11 @@ class PasswordStore : BaseGitActivity() {
             item.file.toRelativeString(PasswordRepository.getRepositoryDirectory())
           }
         lifecycleScope.launch {
-          commitChange(resources.getString(R.string.git_commit_remove_text, fmt))
+          commitChange(getString(R.string.git_commit_remove_text, fmt))
           updateFabSync()
         }
       }
-      .setNegativeButton(resources.getString(R.string.dialog_no), null)
+      .setNegativeButton(R.string.dialog_no, null)
       .show()
   }
 
@@ -576,7 +577,7 @@ class PasswordStore : BaseGitActivity() {
 
                 withContext(dispatcherProvider.main()) {
                   commitChange(
-                    resources.getString(
+                    getString(
                       R.string.git_commit_move_text,
                       oldCategory.name,
                       newCategory.name,

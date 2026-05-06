@@ -15,6 +15,7 @@ private constructor(
   val action: ActionType,
 ) {
   enum class ActionType {
+    NOCOPY,
     COPY,
     HIDE,
   }
@@ -46,6 +47,10 @@ private constructor(
 
     fun createFreeformField(label: String, content: CharArray): FieldItem {
       return FieldItem(ItemType.FREEFORM, label, content, ActionType.COPY)
+    }
+
+    fun createNoCopyFreeformField(label: String, content: CharArray): FieldItem {
+      return FieldItem(ItemType.FREEFORM, label, content, ActionType.NOCOPY)
     }
   }
 }

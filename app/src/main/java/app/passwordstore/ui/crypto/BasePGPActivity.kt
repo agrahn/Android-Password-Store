@@ -14,6 +14,7 @@ import android.os.PersistableBundle
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.annotation.CallSuper
+import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
@@ -22,6 +23,7 @@ import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.data.crypto.CryptoRepository
+import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.prefs.PGPPassphrases
 import app.passwordstore.injection.prefs.SettingsPreferences
@@ -32,6 +34,7 @@ import app.passwordstore.util.auth.BiometricAuthenticator.Result as BiometricRes
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
+import app.passwordstore.util.extensions.b64Decode
 import app.passwordstore.util.extensions.clipboard
 import app.passwordstore.util.extensions.commitChange
 import app.passwordstore.util.extensions.getString
@@ -40,8 +43,10 @@ import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.substringBefore
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.wipe
+import app.passwordstore.util.passkey.StoredCredential
 import app.passwordstore.util.settings.Constants
 import app.passwordstore.util.settings.PreferenceKeys
+import com.github.michaelbull.result.get
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -64,13 +69,15 @@ import logcat.logcat
 open class BasePGPActivity : AppCompatActivity() {
 
   /** Full path to the password file being worked on */
-  val fullPath by unsafeLazy {
-    requireNotNull(intent.getStringExtra(EXTRA_FILE_PATH)) { "${EXTRA_FILE_PATH} is missing" }
+  val fullPath: String by unsafeLazy {
+    intent.getStringExtra(EXTRA_FILE_PATH)
+      ?: PasswordRepository.getRepositoryDirectory().absolutePath
   }
 
   /** Full path to the repository */
-  val repoPath by unsafeLazy {
-    requireNotNull(intent.getStringExtra(EXTRA_REPO_PATH)) { "${EXTRA_REPO_PATH} is missing" }
+  val repoPath: String by unsafeLazy {
+    intent.getStringExtra(EXTRA_REPO_PATH)
+      ?: PasswordRepository.getRepositoryDirectory().absolutePath
   }
 
   protected val relativeParentPath by unsafeLazy {
@@ -118,15 +125,21 @@ open class BasePGPActivity : AppCompatActivity() {
         val subPath = data.getStringExtra("SUB_PATH") ?: return@registerForActivityResult
 
         val gpgIdDir =
-          File(repoRoot, subPath).let { if (it.isFile()) it.getParent() else it.getPath() }
+          File(repoRoot, subPath)
+            .let {
+              if (it.isFile() || !it.exists()) it.getParentFile() else it.getAbsoluteFile()
+            }
+            .also {
+              if (!it.exists()) it.mkdirs() // should not be necessary
+            }
 
         File(gpgIdDir, ".gpg-id")?.let {
           it.writeText(selectedKeyId + "\n")
           runBlocking {
             commitChange(
-              resources.getString(
+              getString(
                 R.string.git_commit_gpg_id,
-                resources.getString(R.string.app_name),
+                getString(R.string.app_name),
               )
             )
           }
@@ -198,8 +211,8 @@ open class BasePGPActivity : AppCompatActivity() {
       if (!hasKeys) {
         withContext(dispatcherProvider.main()) {
           openKeyManagerDialog(
-            resources.getString(R.string.no_keys_imported_dialog_title),
-            resources.getString(R.string.no_keys_imported_dialog_message),
+            getString(R.string.no_keys_imported_dialog_title),
+            getString(R.string.no_keys_imported_dialog_message),
           ) {
             keyImportAction.launch(PGPKeyListActivity.newIntent(this@BasePGPActivity))
           }
@@ -221,12 +234,12 @@ open class BasePGPActivity : AppCompatActivity() {
       val (title, message) =
         if (ids == null) {
           // .gpg-id is missing
-          resources.getString(R.string.missing_gpg_id_dialog_title) to
-            resources.getString(R.string.missing_gpg_id_dialog_message)
+          getString(R.string.missing_gpg_id_dialog_title) to
+            getString(R.string.missing_gpg_id_dialog_message)
         } else {
           // .gpg-id contains no or malformed PGP IDs
-          resources.getString(R.string.invalid_gpg_id_dialog_title) to
-            resources.getString(R.string.invalid_gpg_id_dialog_message)
+          getString(R.string.invalid_gpg_id_dialog_title) to
+            getString(R.string.invalid_gpg_id_dialog_message)
         }
       openKeyManagerDialog(title, message) {
         val intent = PGPKeyListActivity.newIntent(this@BasePGPActivity, keySelection = true)
@@ -241,9 +254,9 @@ open class BasePGPActivity : AppCompatActivity() {
          * The app does not provide keys with the requested key IDs; open Key Manager in key
          * creation/import mode and let the user _import_ the needed PGP keys
          */
-        val title = resources.getString(R.string.no_pgp_keys_dialog_title)
+        val title = getString(R.string.no_pgp_keys_dialog_title)
         val missingKeysForIds = ids.joinToString(", ")
-        val message = resources.getString(R.string.no_pgp_keys_dialog_message) + missingKeysForIds
+        val message = getString(R.string.no_pgp_keys_dialog_message) + missingKeysForIds
         openKeyManagerDialog(title, message) {
           keyImportAction.launch(PGPKeyListActivity.newIntent(this@BasePGPActivity))
         }
@@ -264,12 +277,12 @@ open class BasePGPActivity : AppCompatActivity() {
       val (title, message) =
         if (ids == null) {
           // .gpg-id is missing
-          resources.getString(R.string.missing_gpg_id_dialog_title) to
-            resources.getString(R.string.missing_gpg_id_dialog_message)
+          getString(R.string.missing_gpg_id_dialog_title) to
+            getString(R.string.missing_gpg_id_dialog_message)
         } else {
           // .gpg-id contains no or malformed PGP IDs
-          resources.getString(R.string.invalid_gpg_id_dialog_title) to
-            resources.getString(R.string.invalid_gpg_id_dialog_message)
+          getString(R.string.invalid_gpg_id_dialog_title) to
+            getString(R.string.invalid_gpg_id_dialog_message)
         }
       openKeyManagerDialog(title, message) {
         val intent = PGPKeyListActivity.newIntent(this@BasePGPActivity, keySelection = true)
@@ -285,7 +298,7 @@ open class BasePGPActivity : AppCompatActivity() {
          * The app does not provide secret decryption keys with the requested key IDs; open Key
          * Manager in key creation/import mode and let the user _import_ the needed PGP keys
          */
-        val title = resources.getString(R.string.no_decryption_keys_dialog_title)
+        val title = getString(R.string.no_decryption_keys_dialog_title)
         val missingDecKeysForIds =
           if (idsWithKey.isNotEmpty()) {
             // Some keys keys are available, but they are all public
@@ -299,8 +312,7 @@ open class BasePGPActivity : AppCompatActivity() {
             // No keys at all
             ids.joinToString(", ")
           }
-        val message =
-          resources.getString(R.string.no_decryption_keys_dialog_message) + missingDecKeysForIds
+        val message = getString(R.string.no_decryption_keys_dialog_message) + missingDecKeysForIds
         openKeyManagerDialog(title, message) {
           keyImportAction.launch(PGPKeyListActivity.newIntent(this@BasePGPActivity))
         }
@@ -371,7 +383,7 @@ open class BasePGPActivity : AppCompatActivity() {
     charBuf?.array()?.wipe()
     text?.wipe()
     if (showSnackbar && Build.VERSION.SDK_INT < Build.VERSION_CODES.S_V2) {
-      snackbar(message = resources.getString(snackbarTextRes))
+      snackbar(message = getString(snackbarTextRes))
     }
   }
 
@@ -390,7 +402,7 @@ open class BasePGPActivity : AppCompatActivity() {
     val gpgIdentifierFile =
       File(repoRoot, subDir).findTillRoot(".gpg-id", repoRoot)
         ?: run {
-          snackbar(message = resources.getString(R.string.missing_gpg_id))
+          snackbar(message = getString(R.string.missing_gpg_id))
           return null
         }
 
@@ -417,11 +429,11 @@ open class BasePGPActivity : AppCompatActivity() {
 
     if (gpgIdentifiers.isEmpty()) {
       if (shortIdCount == 0 && invalidIdCount == 0) {
-        snackbar(message = resources.getString(R.string.empty_gpg_id))
+        snackbar(message = getString(R.string.empty_gpg_id))
       } else if (shortIdCount > 0 && invalidIdCount == 0) {
-        snackbar(message = resources.getString(R.string.short_gpg_id))
+        snackbar(message = getString(R.string.short_gpg_id))
       } else {
-        snackbar(message = resources.getString(R.string.invalid_gpg_id))
+        snackbar(message = getString(R.string.invalid_gpg_id))
       }
     }
 
@@ -432,7 +444,7 @@ open class BasePGPActivity : AppCompatActivity() {
     val emails = identifiers.map { repository.getEmailFromKeyId(it) }.filterNotNull().distinct()
     if (emails.isEmpty()) return null
     val label = if (emails.size > 1) R.string.pgp_id_label_plural else R.string.pgp_id_label
-    return "${resources.getString(label)} ${emails.joinToString(", ")}"
+    return "${getString(label)} ${emails.joinToString(", ")}"
   }
 
   @Suppress("ReturnCount")
@@ -542,8 +554,8 @@ open class BasePGPActivity : AppCompatActivity() {
                   if (persistentPassphrases.getString("unlock_pin", null) == null) {
                     val pinDialog =
                       PinDialog.newInstance(
-                        title = resources.getString(R.string.pin_new_entry_title),
-                        description = resources.getString(R.string.pin_new_entry_description),
+                        title = getString(R.string.pin_new_entry_title),
+                        description = getString(R.string.pin_new_entry_description),
                         clearOnDismiss = passphrase,
                       )
                     pinDialog.show(supportFragmentManager, "PIN_DIALOG")
@@ -689,8 +701,8 @@ open class BasePGPActivity : AppCompatActivity() {
   ) {
     val pinDialog =
       PinDialog.newInstance(
-        title = resources.getString(R.string.pin_entry_title),
-        description = resources.getString(R.string.pin_entry_description),
+        title = getString(R.string.pin_entry_title),
+        description = getString(R.string.pin_entry_description),
       )
     if (isError) pinDialog.setError()
     pinDialog.show(supportFragmentManager, "PIN_DIALOG")
@@ -786,6 +798,20 @@ open class BasePGPActivity : AppCompatActivity() {
     identifiers: List<PGPIdentifier>,
     onSuccess: suspend (String) -> Unit = {},
   ) {}
+
+  @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+  protected fun retrievePasskey(
+    entry: PasswordEntry,
+    stripped: Boolean = false,
+  ): StoredCredential? =
+    entry.password
+      ?.let {
+        val cbor = it.b64Decode()
+        cbor?.let { cb ->
+          StoredCredential.fromCbor(cb).get().also { cb.wipe() }
+        }
+      }
+      ?.also { if (stripped) it.privateKey?.wipe() }
 
   companion object {
 

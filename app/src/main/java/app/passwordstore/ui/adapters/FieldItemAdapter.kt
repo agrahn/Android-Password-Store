@@ -75,6 +75,12 @@ class FieldItemAdapter(
         fieldItem.value.wipe()
 
         when (fieldItem.action) {
+          FieldItem.ActionType.NOCOPY -> {
+            itemTextContainer.apply {
+              setEndIconMode(TextInputLayout.END_ICON_NONE)
+            }
+            itemText.transformationMethod = null
+          }
           FieldItem.ActionType.COPY -> {
             itemTextContainer.apply {
               setEndIconMode(TextInputLayout.END_ICON_CUSTOM)

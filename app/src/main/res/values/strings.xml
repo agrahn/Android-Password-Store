@@ -23,7 +23,7 @@
   <string name="title_activity_git_log">Commit log</string>
 
   <!-- Password Store -->
-  <string name="creation_dialog_text">Please clone or create a new repository below before trying to add a password or running any synchronisation operation.</string>
+  <string name="creation_dialog_text">Password Store is not fully initialised. Please clone or create a new repository below before you add a password or run a synchronisation operation.</string>
   <plurals name="delete_dialog_text">
     <item quantity="one">Are you sure you want to delete the selected item?</item>
     <item quantity="other">Are you sure you want to delete the %d selected items?</item>
@@ -92,8 +92,10 @@
   <string name="username">Username</string>
   <string name="otp_label_format">OTP (expires in %ds)</string>
   <string name="edit_password">Edit password</string>
+  <string name="edit_passkey">Edit passkey</string>
   <string name="copy_password">Copy password</string>
   <string name="share_as_plaintext">Share as plaintext</string>
+  <string name="created_date">created on %s</string>
 
   <!-- Preferences -->
   <string name="pref_category_repository_title">Repository</string>
@@ -260,6 +262,7 @@
 
   <string name="ssh_key_does_not_exist">Unable to open the ssh private key, please check that the file exists</string>
   <string name="new_password_title">New password</string>
+  <string name="new_passkey_title">New passkey</string>
   <string name="git_tools">Utilities</string>
   <string name="abort_rebase">Abort rebase and push new branch</string>
   <string name="reset_to_remote">Hard reset to remote branch</string>
@@ -495,4 +498,12 @@
   <string name="pin_entry_title">PIN verification</string>
   <string name="pin_entry_description">Enter your PIN code to show this entry</string>
   <string name="pin_entry_wrong_input">Wrong input</string>
+
+  <!-- Passkeys -->
+  <string name="passkey">Passkey</string>
+  <string name="key_create_passkey">New passkey</string>
+  <string name="cred_id_hint">WebAuthn credential ID</string>
+  <string name="rp_name_hint">Relying party ID</string>
+  <string name="fullname_hint">Real username</string>
+
 </resources>
