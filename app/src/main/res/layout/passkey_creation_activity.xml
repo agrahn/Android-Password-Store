@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright © 2014-2026 The Android Password Store Authors. All Rights Reserved.
+  ~ SPDX-License-Identifier: GPL-3.0-only
+  -->
+
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  tools:targetApi="34"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:fillViewport="false"
+  tools:context="app.passwordstore.ui.crypto.PasskeyCreationActivity">
+
+  <androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="@dimen/activity_horizontal_margin">
+
+    <com.google.android.material.textfield.TextInputLayout
+      android:id="@+id/directory_input_layout"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center_vertical"
+      android:layout_margin="8dp"
+      android:hint="@string/directory_hint"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent">
+
+      <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/directory"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:imeOptions="actionNext"
+        android:nextFocusForward="@id/password"
+        android:focusable="false"
+        android:clickable="true"
+        tools:text="CATEGORY HERE" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+      android:id="@+id/cred_id_layout"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_margin="8dp"
+      android:hint="@string/cred_id_hint"
+      app:boxStrokeColor="?attr/colorControlNormal"
+      android:textColorHint="?attr/colorControlNormal"
+      android:alpha="0.6"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@id/directory_input_layout">
+
+      <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/cred_id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:alpha="0.6"
+        android:focusable="false"
+        android:inputType="none"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+      android:id="@+id/username_layout"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_margin="8dp"
+      android:hint="@string/crypto_username_hint"
+      app:boxStrokeColor="?attr/colorControlNormal"
+      android:textColorHint="?attr/colorControlNormal"
+      android:alpha="0.6"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@id/cred_id_layout">
+
+      <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/username"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:alpha="0.6"
+        android:focusable="false"
+        android:inputType="none"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+      android:id="@+id/fullname_layout"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_margin="8dp"
+      android:hint="@string/fullname_hint"
+      app:boxStrokeColor="?attr/colorControlNormal"
+      android:textColorHint="?attr/colorControlNormal"
+      android:alpha="0.6"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@id/username_layout">
+
+      <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/fullname"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:alpha="0.6"
+        android:focusable="false"
+        android:inputType="none"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+      android:id="@+id/extra_input_layout"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_margin="8dp"
+      android:hint="@string/crypto_extra_label"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@id/fullname_layout">
+
+      <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/extra_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textMultiLine|textVisiblePassword" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+      android:id="@+id/otp_import_button"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_margin="8dp"
+      android:text="@string/add_otp"
+      app:icon="@drawable/ic_qr_code_scanner"
+      app:iconTint="?attr/colorOnSecondary"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintTop_toBottomOf="@id/extra_input_layout" />
+
+  </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

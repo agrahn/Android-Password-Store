@@ -22,7 +22,7 @@
   <string name="title_activity_git_log">Commit-Log</string>
 
   <!-- Password Store -->
-  <string name="creation_dialog_text">Bitte klonen oder erstellen Sie ein neues Repository, bevor Sie ein Passwort hinzufügen oder eine Synchronisations-Operation durchführen wollen.</string>
+  <string name="creation_dialog_text">Password Store ist nicht vollständig eingerichtet. Bitte klonen oder erstellen Sie ein neues Repository, bevor Sie ein Passwort hinzufügen oder eine Synchronisations-Operation durchführen.</string>
   <plurals name="delete_dialog_text">
     <item quantity="one">Möchten Sie das ausgewählte Element wirklich löschen?</item>
     <item quantity="other">Möchten Sie die %d ausgewählten Elemente wirklich löschen?</item>
@@ -91,8 +91,10 @@
   <string name="username">Benutzername</string>
   <string name="otp_label_format">OTP (läuft in %ds ab)</string>
   <string name="edit_password">Passwort bearbeiten</string>
+  <string name="edit_passkey">Passkey bearbeiten</string>
   <string name="copy_password">Passwort kopieren</string>
   <string name="share_as_plaintext">Als Klartext teilen</string>
+  <string name="created_date">erstellt am %s</string>
 
   <!-- Preferences -->
   <string name="pref_category_repository_title">Repository</string>
@@ -258,6 +260,7 @@
 
   <string name="ssh_key_does_not_exist">Der private SSH-Schlüssel konnte nicht geöffnet werden. Bitte überprüfen Sie, ob die Datei existiert.</string>
   <string name="new_password_title">Neues Passwort</string>
+  <string name="new_passkey_title">Neuer Passkey</string>
   <string name="git_tools">Hilfsmittel</string>
   <string name="abort_rebase">Rebase abbrechen und neuen Branch pushen</string>
   <string name="reset_to_remote">Hard Reset auf Remote-Branch</string>
@@ -493,4 +496,12 @@
   <string name="pin_entry_title">PIN-Verifizierung</string>
   <string name="pin_entry_description">Geben Sie Ihren PIN-Code ein, um den Eintrag anzuzeigen.</string>
   <string name="pin_entry_wrong_input">Falsche Eingabe</string>
+
+  <!-- Passkeys -->
+
+  <string name="key_create_passkey">Neuer Passkey</string>
+  <string name="cred_id_hint">WebAuthn-Anmeldedaten-ID</string>
+  <string name="rp_name_hint">Gegenstellen-ID</string>
+  <string name="fullname_hint">Vollständiger Benutzername</string>
+
 </resources>

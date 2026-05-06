@@ -122,7 +122,7 @@ class SelectFolderActivity : AppCompatActivity(R.layout.select_folder_layout) {
   }
 
   fun createFolder() {
-    if (!PasswordRepository.isInitialized) return
+    if (PasswordRepository.isEmpty()) return
     FolderCreationDialogFragment.newInstance(passwordList.currentDir.path, setGpgKey = true)
       .show(supportFragmentManager, null)
   }

@@ -6,6 +6,8 @@ package app.passwordstore.util.extensions
 
 import android.util.Base64
 import app.passwordstore.data.repo.PasswordRepository
+import com.github.michaelbull.result.get
+import com.github.michaelbull.result.runCatching
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.ByteBuffer
@@ -103,4 +105,19 @@ fun ByteArrayOutputStream.wipe() {
     write(ByteArray(it))
   }
   reset()
+}
+
+fun ByteArray.b64Encode(): CharArray {
+  val base64Bytes = Base64.encode(this, Base64.NO_PADDING or Base64.NO_WRAP or Base64.URL_SAFE)
+  return (CharArray(base64Bytes.size) { i -> base64Bytes[i].toInt().toChar() }).also {
+    base64Bytes.wipe()
+  }
+}
+
+fun CharArray.b64Decode(): ByteArray? {
+  return runCatching {
+      val base64Bytes = ByteArray(this.size) { i -> this[i].code.toByte() }
+      (Base64.decode(base64Bytes, Base64.URL_SAFE)).also { base64Bytes.wipe() }
+    }
+    .get()
 }

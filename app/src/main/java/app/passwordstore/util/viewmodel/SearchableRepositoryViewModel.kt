@@ -364,7 +364,7 @@ constructor(
   fun search(
     filter: String,
     baseDirectory: File? = null,
-    filterMode: FilterMode = FilterMode.Fuzzy,
+    filterMode: FilterMode = FilterMode.Exact,
     searchMode: SearchMode? = null,
     listMode: ListMode = ListMode.AllEntries,
   ) {

@@ -18,6 +18,7 @@ import android.os.StrictMode
 import android.view.View
 import android.view.WindowInsetsController
 import androidx.appcompat.app.AppCompatDelegate
+import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.context.FilesDirPath
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.ui.crypto.BasePGPActivity.Companion.cachedPassphrases
@@ -66,6 +67,10 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
       setVmPolicy()
     }
     logcat { "Debug logging enabled." }
+
+    val repoDir = PasswordRepository.getRepositoryDirectory()
+    if (!repoDir.exists()) repoDir.mkdirs()
+
     prefs.registerOnSharedPreferenceChangeListener(this)
     setNightMode()
     runMigrations(filesDirPath, prefs, gitSettings)

@@ -30,8 +30,8 @@
     android:label="@string/app_name"
     android:supportsRtl="true"
     android:theme="@style/AppThemeM3"
-    tools:ignore="GoogleAppIndexingWarning"
-    tools:targetApi="s">
+    tools:ignore="GoogleAppIndexingWarning,CredentialDependency"
+    tools:targetApi="34" >
 
     <activity
       android:name=".ui.passwords.PasswordStore"
@@ -101,6 +101,32 @@
       android:label="@string/new_password_title"
       android:windowSoftInputMode="adjustResize" />
 
+    <activity
+      android:name=".ui.crypto.PasskeyCreationActivity"
+      android:exported="false"
+      android:label="@string/new_password_title">
+      <intent-filter>
+          <action android:name="${applicationId}.action.CREATE_PASSKEY" />
+          <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+    </activity>
+
+    <service
+      android:name=".util.services.UDCakeCredentialProviderService"
+      android:label="@string/app_name"
+      android:icon="@mipmap/ic_launcher"
+      android:enabled="true"
+      android:exported="true"
+      android:permission="android.permission.BIND_CREDENTIAL_PROVIDER_SERVICE"
+      tools:targetApi="34">
+      <intent-filter>
+        <action android:name="android.service.credentials.CredentialProviderService" />
+      </intent-filter>
+      <meta-data
+        android:name="android.credentials.provider"
+        android:resource="@xml/udcake_credential_provider" />
+    </service>
+
     <service
       android:name=".util.services.OreoAutofillService"
       android:exported="true"
@@ -117,7 +143,7 @@
       android:name=".util.services.QuickSearchTileService"
       android:exported="true"
       android:icon="@drawable/ic_launcher_monochrome"
-      android:label="Password Store"
+      android:label="@string/app_name"
       android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
       <intent-filter>
           <action android:name="android.service.quicksettings.action.QS_TILE"/>

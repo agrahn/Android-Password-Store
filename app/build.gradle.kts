@@ -54,6 +54,7 @@ dependencies {
   implementation(libs.androidx.biometricKtx)
   implementation(libs.androidx.constraintlayout)
   implementation(libs.androidx.core.ktx)
+  implementation(libs.androidx.credentials)
   implementation(libs.androidx.documentfile)
   implementation(libs.androidx.fragment.ktx)
   implementation(libs.androidx.work.runtime.ktx)
@@ -71,6 +72,7 @@ dependencies {
   implementation(libs.kotlinx.collections.immutable)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
+  implementation(libs.kotlinx.serialization.json)
 
   implementation(libs.aps.sublimeFuzzy)
   implementation(libs.aps.zxingAndroidEmbedded)
@@ -91,6 +93,11 @@ dependencies {
   implementation(libs.thirdparty.slf4j.api) {
     because("SSHJ now uses SLF4J 2.0 which we don't want")
   }
+
+  implementation(libs.thirdparty.jackson.cbor)
+  implementation(libs.thirdparty.jackson.databind)
+  implementation(libs.thirdparty.jackson.core)
+  implementation(libs.thirdparty.jackson.kotlin)
 
   testImplementation(libs.testing.robolectric)
   testImplementation(libs.testing.sharedPrefsMock)

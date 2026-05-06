@@ -6,6 +6,7 @@
 package app.passwordstore.ui.crypto
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -28,6 +29,7 @@ import app.passwordstore.util.extensions.toCharArray
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.PreferenceKeys
+import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.getOrThrow
 import dagger.hilt.android.AndroidEntryPoint
@@ -52,6 +54,8 @@ class DecryptActivity : BasePGPActivity() {
   private var encryptedEntryChars: CharArray? = null // AES encrypted password entry
 
   private fun CharArray.isBlank() = this.isEmpty() || this.all { it.isWhitespace() }
+
+  private var isPasskey: Boolean = false
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -141,7 +145,7 @@ class DecryptActivity : BasePGPActivity() {
       AESEncryption.decrypt(encrypted)?.let { decrypted ->
         val entry = passwordEntryFactory.create(decrypted)
         decrypted.wipe()
-        if (entry.password?.let { !it.isBlank() } ?: false) {
+        if (!isPasskey && entry.password?.let { !it.isBlank() } ?: false) {
           menu.findItem(R.id.share_password_as_plaintext).setVisible(true)
           menu.findItem(R.id.copy_password).setVisible(true)
           binding.fab.setVisibility(View.VISIBLE)
@@ -156,7 +160,9 @@ class DecryptActivity : BasePGPActivity() {
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       android.R.id.home -> onBackPressedDispatcher.onBackPressed()
-      R.id.edit_password -> editPassword()
+      R.id.edit_password -> {
+        if (isPasskey) editPasskey() else editPassword()
+      }
       R.id.share_password_as_plaintext -> shareAsPlaintext()
       R.id.copy_password -> copyPassword()
       else -> return super.onOptionsItemSelected(item)
@@ -178,13 +184,23 @@ class DecryptActivity : BasePGPActivity() {
     }
   }
 
-  /**
-   * Edit the current password and hide all the fields populated by encrypted data so that when the
-   * result triggers they can be repopulated with new data.
-   */
   private fun editPassword() {
     encryptedEntryChars?.let { encrypted ->
       val intent = Intent(this, PasswordCreationActivity::class.java)
+      intent.action = Intent.ACTION_VIEW
+      intent.putExtra(EXTRA_FILE_PATH, Paths.get(fullPath).parent.pathString)
+      intent.putExtra(EXTRA_REPO_PATH, repoPath)
+      intent.putExtra(PasswordCreationActivity.EXTRA_FILE_NAME, name)
+      intent.putExtra(PasswordCreationActivity.EXTRA_ENTRY, encrypted)
+      intent.putExtra(PasswordCreationActivity.EXTRA_EDITING, true)
+      startActivity(intent)
+      finish()
+    }
+  }
+
+  private fun editPasskey() {
+    encryptedEntryChars?.let { encrypted ->
+      val intent = Intent(this, PasskeyCreationActivity::class.java)
       intent.action = Intent.ACTION_VIEW
       intent.putExtra(EXTRA_FILE_PATH, Paths.get(fullPath).parent.pathString)
       intent.putExtra(EXTRA_REPO_PATH, repoPath)
@@ -221,14 +237,51 @@ class DecryptActivity : BasePGPActivity() {
 
   private suspend fun createPasswordUI(entry: PasswordEntry) =
     withContext(dispatcherProvider.main()) {
-      val labelFormat = resources.getString(R.string.otp_label_format)
-      val showPassword = settings.getBoolean(PreferenceKeys.SHOW_PASSWORD, false)
-      invalidateOptionsMenu() // redraws/enables menu items in the action bar
-
       entry.extraContentChars?.wipe() // not used here
 
+      val passkey =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+          retrievePasskey(entry, stripped = true)
+        else null
+
+      isPasskey = passkey != null
+
+      invalidateOptionsMenu() // redraws/enables menu items in the action bar
+
       val items = arrayListOf<FieldItem>()
-      if (entry.password?.let { !it.isBlank() } ?: false) {
+
+      if (passkey != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        items.add(
+          FieldItem.createNoCopyFreeformField(
+            getString(R.string.passkey),
+            getString(R.string.created_date, passkey.creationDateTimeString()).toCharArray(),
+          )
+        )
+
+        items.add(
+          FieldItem.createFreeformField(
+            getString(R.string.rp_name_hint),
+            passkey.rp.id.toCharArray(),
+          )
+        )
+
+        items.add(
+          FieldItem.createUsernameField(
+            getString(R.string.username),
+            passkey.user.name.toCharArray(),
+          )
+        )
+
+        if (passkey.user.displayName != null && passkey.user.displayName != passkey.user.name) {
+          items.add(
+            FieldItem.createUsernameField(
+              getString(R.string.fullname_hint),
+              passkey.user.displayName.toCharArray(),
+            )
+          )
+        }
+      } else if (entry.password?.let { !it.isBlank() } ?: false) {
+        // password
         items.add(
           FieldItem.createPasswordField(
             getString(R.string.password),
@@ -243,6 +296,7 @@ class DecryptActivity : BasePGPActivity() {
         }
       }
 
+      val labelFormat = resources.getString(R.string.otp_label_format)
       if (entry.hasTotp()) {
         items.add(FieldItem.createOtpField(labelFormat, entry.totp.first()))
       }
@@ -274,6 +328,7 @@ class DecryptActivity : BasePGPActivity() {
           items.add(FieldItem.createFreeformField(getString(R.string.crypto_extra_label), value))
       }
 
+      val showPassword = settings.getBoolean(PreferenceKeys.SHOW_PASSWORD, false)
       val adapter =
         FieldItemAdapter(items, showPassword) { text, isSensitive ->
           copyPasswordToClipboard(text, isSensitive)
