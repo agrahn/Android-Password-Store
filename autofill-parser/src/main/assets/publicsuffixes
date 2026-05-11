@@ -1,4 +1,4 @@
-141436
+141452
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -282,6 +282,7 @@
 *.xmit.co
 *.yokohama.jp
 *.zerops.app
+*.zerops.zone
 0.bg
 0am.jp
 0g0.jp
@@ -6605,7 +6606,6 @@ on-vapor.com
 on-web.fr
 on.biz.ng
 on.ca
-on.crisp.email
 on.expo.app
 on.staging.expo.app
 onagawa.miyagi.jp
@@ -7153,6 +7153,7 @@ presse.ml
 preview.csb.app
 preview.emergentagent.com
 preview.site
+prg1-zerops.zone
 pri.ee
 prime
 primetel.cloud
