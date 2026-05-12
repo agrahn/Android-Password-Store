@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+### Added
+
+- Search result filter options "exact match" and "fuzzy" in Settings --> General
+
 ### Changed
 
 - When moving files or directories, conclude action with listing the content of the destination directory
@@ -11,7 +15,7 @@ All notable changes to this project will be documented in this file
 
 ### Fixed
 
-- Accidental overwriting of existing password items after editing
+- Accidental overwriting of existing password items of same file name after editing
 
 ## [1.16.3] - 2026-04-15
 

@@ -68,6 +68,15 @@ class GeneralSettings(private val activity: FragmentActivity) : SettingsProvider
         defaultValue = false
       }
 
+      val filterModeValues = arrayOf("exact", "fuzzy")
+      val filterModeLabels = activity.resources.getStringArray(R.array.search_filter_mode_labels)
+      val filterModeItems =
+        filterModeValues.zip(filterModeLabels).map { SelectionItem(it.first, it.second, null) }
+      singleChoice(PreferenceKeys.SEARCH_FILTER_MODE, filterModeItems) {
+        initialSelection = "exact"
+        titleRes = R.string.pref_search_filter_mode_title
+      }
+
       switch(PreferenceKeys.SHOW_HIDDEN_CONTENTS) {
         titleRes = R.string.pref_show_hidden_title
         summaryRes = R.string.pref_show_hidden_summary

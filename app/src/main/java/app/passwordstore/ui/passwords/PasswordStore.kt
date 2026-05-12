@@ -51,6 +51,7 @@ import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.settings.AuthMode
 import app.passwordstore.util.settings.PreferenceKeys
 import app.passwordstore.util.shortcuts.ShortcutHandler
+import app.passwordstore.util.viewmodel.FilterMode
 import app.passwordstore.util.viewmodel.SearchableRepositoryViewModel
 import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.onErr
@@ -296,11 +297,15 @@ class PasswordStore : BaseGitActivity() {
 
         override fun onQueryTextChange(s: String): Boolean {
           val filter = s.trim()
+          val filterMode =
+            if (settings.getString(PreferenceKeys.SEARCH_FILTER_MODE, "exact") == "fuzzy")
+              FilterMode.Fuzzy
+            else FilterMode.Exact
           // List the contents of the current directory if the user enters a blank
           // search term.
           if (filter.isEmpty())
             model.navigateTo(newDirectory = model.currentDir.value, pushPreviousLocation = false)
-          else model.search(filter)
+          else model.search(filter, filterMode = filterMode)
           return true
         }
       }

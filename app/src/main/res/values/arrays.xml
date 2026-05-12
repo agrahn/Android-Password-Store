@@ -29,6 +29,10 @@
     <item>with Biometrics (fingerprint)</item>
     <item>with PIN</item>
   </string-array>
+  <string-array name="search_filter_mode_labels">
+    <item>exact match</item>
+    <item>fuzzy</item>
+  </string-array>
   <string-array name="directory_structure_entries">
     <item>work/example.org(.gpg)</item>
     <item>work/example.org/john@doe.org(.gpg)</item>

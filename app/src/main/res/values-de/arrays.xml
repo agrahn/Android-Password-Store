@@ -9,4 +9,8 @@
     <item>mit Biometrie (Fingerabdruck)</item>
     <item>mit PIN</item>
   </string-array>
+  <string-array name="search_filter_mode_labels">
+    <item>exakte Übereinstimmung</item>
+    <item>fuzzy</item>
+  </string-array>
 </resources>
