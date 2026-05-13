@@ -137,13 +137,13 @@ class DecryptActivity : BasePGPActivity() {
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
     encryptedEntryChars?.let { encrypted ->
-      menu.findItem(R.id.edit_password).isVisible = true
+      menu.findItem(R.id.edit_password).setVisible(true)
       AESEncryption.decrypt(encrypted)?.let { decrypted ->
         val entry = passwordEntryFactory.create(decrypted)
         decrypted.wipe()
         if (entry.password?.let { !it.isBlank() } ?: false) {
-          menu.findItem(R.id.share_password_as_plaintext).isVisible = true
-          menu.findItem(R.id.copy_password).isVisible = true
+          menu.findItem(R.id.share_password_as_plaintext).setVisible(true)
+          menu.findItem(R.id.copy_password).setVisible(true)
           binding.fab.setVisibility(View.VISIBLE)
         }
         entry.clear()
