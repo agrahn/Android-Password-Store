@@ -1,4 +1,4 @@
-141452
+141478
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -1438,7 +1438,6 @@ cc.mo.us
 cc.ms.us
 cc.mt.us
 cc.nc.us
-cc.nd.us
 cc.ne.us
 cc.nh.us
 cc.nj.us
@@ -3874,6 +3873,7 @@ hra.health
 hrsn.dev
 hs.kr
 hsbc
+hstgr.cloud
 ht
 httpbin.org
 hu
@@ -5092,7 +5092,6 @@ lib.mn.us
 lib.mo.us
 lib.mt.us
 lib.nc.us
-lib.nd.us
 lib.ne.us
 lib.nh.us
 lib.nj.us
@@ -8621,6 +8620,8 @@ sørum.no
 südtirol.it
 t.bg
 t.se
+t3.storage.dev
+t3.storageapi.dev
 ta.it
 taa.it
 tab
