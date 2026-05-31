@@ -71,7 +71,9 @@ class PasswordEntryTest {
     )
     assertEquals(
       "password: foo\nusername: baz",
-      makeEntry("blubb\npassword: foo\nid:bar\nusername: baz").extraContentChars?.let { String(it) },
+      makeEntry("blubb\npassword: foo\nid:bar\nusername: baz").extraContentChars?.let {
+        String(it)
+      },
     )
     assertEquals(
       "password: foo\npass: 1234 \nusername: baz",
@@ -122,7 +124,9 @@ class PasswordEntryTest {
       assertEquals("username", makeEntry("\n$field username").username?.let { String(it) })
       assertEquals(
         "username",
-        makeEntry("\n${field.uppercase(Locale.getDefault())} username").username?.let { String(it) },
+        makeEntry("\n${field.uppercase(Locale.getDefault())} username").username?.let {
+          String(it)
+        },
       )
     }
     assertEquals(
