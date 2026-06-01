@@ -14,14 +14,12 @@ The original documentation can be found [here](https://docs.passwordstore.app) a
 
 ## How-To: Transfer a PGP key to Password Store securely
 
-You can only import one PGP key at a time. If you need to transfer more than one key, repeat the steps for each key.
-
 ### From GPG keyring
 ````bash
 gpg --armor --gen-random 1 24 # generate a strong random password; use it in the next step
 gpg --armor --export-secret-keys <ID of key used for pass> | gpg --armor --symmetric --output myKeyForPass.sec.asc
 ````
-File `myKeyForPass.sec.asc` can be directly imported into Password Store; enter the password from the first step when asked for the backup code.
+File `myKeyForPass.sec.asc` can be directly imported into Password Store via Settings → PGP Settings → Key Manager → <kbd>+</kbd>; enter the password from the first step when asked for the backup code.
 
 ### From OpenKeychain
 1. In the main app window, select the key that you use for `pass`/Password Store from the "My Keys" list.

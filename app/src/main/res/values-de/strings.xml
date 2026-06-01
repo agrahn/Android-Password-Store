@@ -3,7 +3,7 @@
   ~ SPDX-License-Identifier: GPL-3.0-only
   -->
 
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
   <plurals name="delete_title">
     <item quantity="one">%d Element ausgewählt</item>
@@ -399,11 +399,27 @@
   <string name="pgp_new_pgp_key_title">PGP-Schlüssel erstellen</string>
   <string name="pgp_key_backupcode_title">Backup-Code</string>
   <string name="pgp_key_backupcode_confirmation">Ich habe den Backup-Code notiert und verwahre ihn an einem sicheren Ort.</string>
-  <string name="pgp_key_import_failed">Fehler beim Import des PGP-Schlüssels</string>
-  <string name="pgp_key_import_failed_replace_message">Ein bestehender Schlüssel mit dieser ID wurde gefunden. Möchten Sie ihn ersetzen?</string>
+  <string name="pgp_key_import_failed">Import des PGP-Schlüssels fehlgeschlagen</string>
+  <string name="pgp_key_import_failed_replace_message">Ein bestehender Schlüssel mit der folgenden ID wurde gefunden:\n\n\t%1$s\n\nMöchten Sie ihn ersetzen?</string>
   <string name="pgp_key_import_failed_unusable_message">Der angegebene Schlüssel ist nicht für die Verschlüsselung verwendbar. Stellen Sie sicher, dass ein Unterschlüssel für die Verschlüsselung existiert und dass dieser weder abgelaufen ist noch widerrufen wurde.</string>
-  <string name="pgp_key_import_succeeded">PGP-Schlüssel erfolgreich importiert</string>
-  <string name="pgp_key_import_succeeded_message">Die ID des importierten Schlüssels ist unten angegeben. Bitte überprüfen Sie deren Korrektheit:\n%1$s</string>
+  <string name="pgp_key_import_skipped_existing">Schlüssel existiert, Austausch übersprungen</string>
+  <plurals name="pgp_key_import_success_title">
+    <item quantity="one">PGP-Schlüssel erfolgreich importiert</item>
+    <item quantity="other">Alle PGP-Schlüssel erfolgreich importiert</item>
+  </plurals>
+  <plurals name="pgp_key_import_failure_title">
+    <item quantity="one">Kein PGP-Schlüssel importiert</item>
+    <item quantity="other">Keine PGP-Schlüssel importiert</item>
+  </plurals>
+  <string name="pgp_key_import_partial_success_title">Nicht alle PGP-Schlüssel wurden importiert</string>
+  <plurals name="pgp_key_import_success_message">
+    <item quantity="one">Die ID des importierten Schlüssels ist nachfolgend angegeben. Bitte überprüfen Sie deren Korrektheit:</item>
+    <item quantity="other">Die IDs der importierten Schlüssel sind nachfolgend angegeben. Bitte überprüfen Sie deren Korrektheit:</item>
+  </plurals>
+  <plurals name="pgp_key_import_failure_message">
+    <item quantity="one">Der Schlüssel mit der folgenden ID wurde nicht importiert:</item>
+    <item quantity="other">Schlüssel mit den folgenden IDs wurden nicht importiert:</item>
+  </plurals>
   <string name="pgp_key_export_failed">Fehler beim Export des PGP-Schlüssels</string>
   <string name="pgp_key_export_succeeded">PGP-Schlüssel erfolgreich exportiert</string>
   <string name="pgp_full_name_hint">Benutzername</string>

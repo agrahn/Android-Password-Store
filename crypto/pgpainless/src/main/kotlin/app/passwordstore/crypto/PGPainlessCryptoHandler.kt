@@ -226,8 +226,10 @@ public class PGPainlessCryptoHandler @Inject constructor() :
         /* A and S subkeys as well as the primary C key are equally suitable for authentication;
          * we pick the first one matching one of the capabilities in the given ranking order */
         val authFlags = listOf(KeyFlags.AUTHENTICATION, KeyFlags.SIGN_DATA, KeyFlags.CERTIFY_OTHER)
-        val subkeys = openPgpKey.getSecretKeys().values.toMutableList()
-        subkeys.sortByDescending { it.getCreationTime() } // newest first
+        val subkeys =
+          openPgpKey.getSecretKeys().values.sortedByDescending {
+            it.getCreationTime()
+          } // newest first
         val authKeys =
           authFlags
             .map { flag ->

@@ -307,9 +307,7 @@ username@example.com:…</string>
   <string name="place_shortcut_on_home_screen">홈 화면에 추가</string>
   <string name="password_list_fab_content_description">새 비밀번호 또는 폴더 만들기</string>
   <string name="pgp_key_import_failed">PGP 키를 가져오지 못했습니다</string>
-  <string name="pgp_key_import_failed_replace_message">이 ID를 가진 기존 키가 발견되었습니다. 교체하시겠습니까?</string>
-  <string name="pgp_key_import_succeeded">PGP 키를 성공적으로 가져왔습니다</string>
-  <string name="pgp_key_import_succeeded_message">가져온 키의 키 ID는 다음과 같습니다. 정확한지 확인하시기 바랍니다:\n%1$s</string>
+  <string name="pgp_key_import_failed_replace_message">이 ID를 가진 기존 키가 발견되었습니다:\n\n\t%1$s\n\n교체하시겠습니까?</string>
   <string name="pref_category_pgp_title">PGP 설정</string>
   <string name="pwgen_some_error_occurred">오류가 발생했습니다</string>
   <string name="git_run_gc_job">메모리 정리 작업 수행</string>

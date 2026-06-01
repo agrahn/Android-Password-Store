@@ -365,9 +365,7 @@
   <string name="pgp_key_backupcode_title">Código de respaldo</string>
   <string name="pgp_key_backupcode_confirmation">He anotado el código de respaldo y lo he guardado en un lugar seguro.</string>
   <string name="pgp_key_import_failed">No se pudo importar la clave PGP</string>
-  <string name="pgp_key_import_failed_replace_message">Se encontró una clave existente con este ID, ¿desea reemplazarla?</string>
-  <string name="pgp_key_import_succeeded">Clave PGP importada correctamente</string>
-  <string name="pgp_key_import_succeeded_message">El ID de la clave importada se proporciona a continuación, revíselo para verificar que sea correcto:\n%1$s</string>
+  <string name="pgp_key_import_failed_replace_message">Se encontró una clave existente con este ID:\n\n\t%1$s\n\n¿Desea reemplazarla?</string>
   <string name="pgp_key_export_failed">No se pudo exportar la clave PGP</string>
   <string name="pgp_key_export_succeeded">Clave PGP exportada correctamente</string>
   <string name="pgp_full_name_hint">Nombre completo</string>

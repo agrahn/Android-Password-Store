@@ -309,9 +309,7 @@
     <string name="pgp_key_backupcode_title">Codi de còpia de seguretat</string>
     <string name="pgp_key_backupcode_confirmation">He anotat i guardat en un lloc segur el codi de còpia de seguretat.</string>
     <string name="pgp_key_import_failed">No s\'ha pogut importar la clau PGP</string>
-    <string name="pgp_key_import_failed_replace_message">S\'ha trobat un clau amb el mateix ID, voleu reemplaçar-la?</string>
-    <string name="pgp_key_import_succeeded">Clau PGP importada correctament</string>
-    <string name="pgp_key_import_succeeded_message">Comproveu la correcció del ID de la clau importada: %1$s</string>
+    <string name="pgp_key_import_failed_replace_message">S\'ha trobat un clau amb el mateix ID:\n\n\t%1$s\n\nVoleu reemplaçar-la?</string>
     <string name="pgp_key_export_failed">No s\'ha pogut exportar la clau PGP</string>
     <string name="pgp_key_export_succeeded">Clau PGP exportada correctament</string>
     <string name="pgp_full_name_hint">Nom complert</string>

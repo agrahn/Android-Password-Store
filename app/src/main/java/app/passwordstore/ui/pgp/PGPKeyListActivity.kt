@@ -74,9 +74,12 @@ class PGPKeyListActivity : AppCompatActivity() {
       if (it.resultCode == RESULT_OK) {
         if (isAddingKeys) keysAdded = true
         it.data?.let { data ->
-          /* If we replace a key by itself, we unregister it as an authentication key,
-           * since the replacement may come without that capability */
-          if (data.getLongExtra("PGP_KEY_ID", 0L) == SshKey.pgpLongKeyId) SshKey.delete()
+          /* If we replace a key that is currently registered for SSH auth, drop the SSH
+           * registration; the cached key is a snapshot of the previous PGP auth subkey
+           * and may no longer match the replacement (different subkey, or no auth
+           * capability at all). Forcing a re-setup avoids silent SSH auth breakage. */
+          val importedIds = data.getLongArrayExtra("PGP_KEY_IDS") ?: longArrayOf()
+          if (SshKey.pgpLongKeyId in importedIds) SshKey.delete()
         }
         viewModel.updateKeySet()
       }
