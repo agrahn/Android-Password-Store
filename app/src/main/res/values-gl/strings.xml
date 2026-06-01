@@ -309,9 +309,7 @@ a app desde unha fonte de confianza, como a Play Store, Amazon Appstore, F-Droid
   <string name="place_shortcut_on_home_screen">Crear atallo na pantalla de inicio</string>
   <string name="password_list_fab_content_description">Crear novo contrasinal ou cartafol</string>
   <string name="pgp_key_import_failed">Fallou a importación da chave PGP</string>
-  <string name="pgp_key_import_failed_replace_message">Atopouse unha chave existente con este ID, queres substituíla?</string>
-  <string name="pgp_key_import_succeeded">Chave PGP importada correctamente</string>
-  <string name="pgp_key_import_succeeded_message">Aquí abaixo está o ID da chave importada, comproba que é correcto:\n%1$s</string>
+  <string name="pgp_key_import_failed_replace_message">Atopouse unha chave existente con este ID:\n\n\t%1$s\n\nQueres substituíla?</string>
   <string name="pref_category_pgp_title">Axustes PGP</string>
   <string name="pwgen_some_error_occurred">Houbo un fallo</string>
   <string name="git_run_gc_job">Recolle o lixo</string>

@@ -359,9 +359,7 @@
   <string name="pgp_key_backupcode_title">Yedekleme kodu</string>
   <string name="pgp_key_backupcode_confirmation">Yedekleme kodunu not aldım ve güvenli bir yerde sakladım.</string>
   <string name="pgp_key_import_failed">PGP anahtarı içe aktarılamadı</string>
-  <string name="pgp_key_import_failed_replace_message">Bu kimliğe sahip mevcut bir anahtar bulundu, değiştirmek istiyor musunuz?</string>
-  <string name="pgp_key_import_succeeded">PGP anahtarı başarıyla içe aktarıldı</string>
-  <string name="pgp_key_import_succeeded_message">İçe aktarılan anahtarın kimliği aşağıda verilmiştir, lütfen doğruluğunu kontrol edin:\n%1$s</string>
+  <string name="pgp_key_import_failed_replace_message">Bu kimliğe sahip mevcut bir anahtar bulundu:\n\n\t%1$s\n\nDeğiştirmek istiyor musunuz?</string>
   <string name="pgp_key_export_failed">PGP anahtarı dışa aktarılamadı</string>
   <string name="pgp_key_export_succeeded">PGP anahtarı başarıyla dışa aktarıldı</string>
   <string name="pref_category_pgp_title">PGP ayarları</string>

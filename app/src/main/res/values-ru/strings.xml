@@ -303,5 +303,4 @@
   <string name="place_shortcut_on_home_screen">Разместить ярлык на рабочем столе</string>
   <string name="password_list_fab_content_description">Создать новый пароль или папку</string>
   <string name="pgp_key_import_failed">Не удалось импортировать PGP-ключ</string>
-  <string name="pgp_key_import_succeeded">PGP ключ успешно импортирован</string>
 </resources>

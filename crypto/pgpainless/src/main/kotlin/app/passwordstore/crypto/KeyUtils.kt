@@ -8,6 +8,7 @@ package app.passwordstore.crypto
 import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPIdentifier.UserId
 import com.github.michaelbull.result.get
+import com.github.michaelbull.result.getOr
 import com.github.michaelbull.result.runCatching
 import java.security.PublicKey
 import java.util.Date
@@ -34,6 +35,31 @@ public object KeyUtils {
         incoming.filter { it.isSecretKey() }?.firstOrNull() ?: incoming.firstOrNull()
       }
       .get()
+
+  /**
+   * Parses every PGP certificate or key block contained in [key]'s payload. A typical multi-key
+   * file (e.g. produced by `gpg --export A B C`) holds several concatenated blocks; this helper
+   * yields one [OpenPGPCertificate] per block, with any secret keys ordered before public
+   * certificates to match the preference used by [tryParseCertificateOrKey]. The elements in the
+   * sorted list need to be visited once more to strip those public certificates whose secret
+   * counterpart with the same key ID has already been included.
+   *
+   * Returns an empty list if parsing fails or no key is found.
+   */
+  public fun parseAllCertificatesOrKeys(key: PGPKey): List<OpenPGPCertificate> =
+    runCatching {
+        var primaryKeyIds = mutableListOf<Long>()
+        OpenPGPKeyReader()
+          .parseKeysOrCertificates(key.contents.inputStream())
+          .sortedByDescending { cert ->
+            cert.isSecretKey()
+          }
+          .filterNot { cert ->
+            val primaryKeyId = cert.getKeyIdentifier().getKeyId()
+            primaryKeyIds.contains(primaryKeyId).also { primaryKeyIds.add(primaryKeyId) }
+          }
+      }
+      .getOr(emptyList())
 
   /**
    * Parses an [OpenPGPPrimaryKey] from the given [PGPKey] and calculates its long primary key ID
@@ -161,8 +187,8 @@ public object KeyUtils {
     /* A and S subkeys as well as the primary C key are equally suitable for authentication;
      * we pick the first subkey matching one of the capabilities in the given ranking order: */
     val authFlags = listOf(KeyFlags.AUTHENTICATION, KeyFlags.SIGN_DATA, KeyFlags.CERTIFY_OTHER)
-    val subkeys = cert.getSecretKeys().values.toMutableList()
-    subkeys.sortByDescending { it.getCreationTime() } // newest first
+    val subkeys =
+      cert.getSecretKeys().values.sortedByDescending { it.getCreationTime() } // newest first
     val authKeys =
       authFlags
         .map { flag ->

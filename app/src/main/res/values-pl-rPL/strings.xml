@@ -299,9 +299,7 @@
   <string name="place_shortcut_on_home_screen">Utwórz skrót na pulpicie</string>
   <string name="password_list_fab_content_description">Utwórz nowe hasło lub folder</string>
   <string name="pgp_key_import_failed">Nie udało się zaimportować klucza PGP</string>
-  <string name="pgp_key_import_failed_replace_message">Znaleziono istniejący klucz z tym identyfikatorem, czy chcesz go zastąpić?</string>
-  <string name="pgp_key_import_succeeded">Pomyślnie zaimportowano klucz PGP</string>
-  <string name="pgp_key_import_succeeded_message">ID zaimportowanego klucza jest podany poniżej, sprawdź go pod kątem poprawności:\n%1$s</string>
+  <string name="pgp_key_import_failed_replace_message">Znaleziono istniejący klucz z tym identyfikatorem:\n\n\t%1$s\n\nCzy chcesz go zastąpić?</string>
   <string name="pref_category_pgp_title">Ustawienia PGP</string>
   <string name="pwgen_some_error_occurred">Wystąpił błąd</string>
   <string name="git_run_gc_job">Uruchom operację sprzątania śmieci</string>

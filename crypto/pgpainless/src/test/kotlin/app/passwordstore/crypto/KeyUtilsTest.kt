@@ -7,6 +7,7 @@ package app.passwordstore.crypto
 
 import app.passwordstore.crypto.KeyUtils.isKeyUsable
 import app.passwordstore.crypto.KeyUtils.isSecretKey
+import app.passwordstore.crypto.KeyUtils.parseAllCertificatesOrKeys
 import app.passwordstore.crypto.KeyUtils.tryGetKeyId
 import app.passwordstore.crypto.KeyUtils.tryParseCertificateOrKey
 import app.passwordstore.crypto.TestUtils.AllKeys
@@ -32,6 +33,26 @@ class KeyUtilsTest {
     assertNotNull(keyId)
     assertIs<PGPIdentifier.KeyId>(keyId)
     assertEquals("b950ae2813841585", keyId.toString())
+  }
+
+  @Test
+  fun parseAllCertificatesOrKeysReturnsEveryBlockInMultiKeyArmor() {
+    val aliceBytes =
+      this::class.java.classLoader.getResource("alice_owner@example_com")!!.readBytes()
+    val bobbyBytes =
+      this::class.java.classLoader.getResource("bobby_owner@example_com")!!.readBytes()
+    val combined = aliceBytes + "\n".toByteArray() + bobbyBytes
+
+    val parsed = parseAllCertificatesOrKeys(PGPKey(combined))
+    assertEquals(2, parsed.size)
+    val ids = parsed.map { tryGetKeyId(it).toString() }.toSet()
+    assertEquals(2, ids.size, "expected two distinct key IDs but got $ids")
+  }
+
+  @Test
+  fun parseAllCertificatesOrKeysReturnsEmptyOnGarbage() {
+    val garbage = PGPKey("not a pgp key".toByteArray())
+    assertEquals(emptyList(), parseAllCertificatesOrKeys(garbage))
   }
 
   @Test

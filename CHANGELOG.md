@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file
 ### Added
 
 - Search result filter options "exact match" and "fuzzy" in Settings --> General
+- PGP Manager now imports all keys from multi-key backups, such as those produced with OpenKeychain (previously, only the first key was imported)
 
 ### Changed
 

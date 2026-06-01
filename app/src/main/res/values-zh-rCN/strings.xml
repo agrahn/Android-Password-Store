@@ -310,9 +310,7 @@ personal.com</string>
   <string name="place_shortcut_on_home_screen">在主屏幕上放置快捷方式</string>
   <string name="password_list_fab_content_description">创建新密码或文件夹</string>
   <string name="pgp_key_import_failed">导入 PGP 密钥失败</string>
-  <string name="pgp_key_import_failed_replace_message">发现了 ID 相同的现有密钥，您要替换它吗？</string>
-  <string name="pgp_key_import_succeeded">成功导入 PGP 密钥</string>
-  <string name="pgp_key_import_succeeded_message">下面给出了导入密钥的 key ID，请检查它是否正确：\n%1$s</string>
+  <string name="pgp_key_import_failed_replace_message">发现了 ID 相同的现有密钥，:\n\n\t%1$s\n\n您要替换它吗？</string>
   <string name="pref_category_pgp_title">PGP 设置</string>
   <string name="pwgen_some_error_occurred">发生某些错误</string>
   <string name="git_run_gc_job">运行垃圾收集作业</string>
