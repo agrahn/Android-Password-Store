@@ -226,10 +226,28 @@ constructor(
                 .toList()
                 .sortedWith(itemComparator)
             }
+            FilterMode.Fuzzy -> {
+              prefilteredResultFlow
+                .map {
+                  val item = it.toPasswordItem()
+                  Pair(item.fuzzyMatch(searchAction.filter), item)
+                }
+                .filter { it.first > 0 }
+                .flowOn(dispatcherProvider.io())
+                .toList()
+                .sortedWith(
+                  compareByDescending<Pair<Int, PasswordItem>> { it.first }
+                    .thenBy(itemComparator) { it.second }
+                )
+                .map { it.second }
+            }
             FilterMode.Exact -> {
               prefilteredResultFlow
                 .filter { absoluteFile ->
-                  absoluteFile.relativeTo(root).path.contains(searchAction.filter)
+                  absoluteFile
+                    .relativeTo(root)
+                    .path
+                    .contains(searchAction.filter, ignoreCase = true)
                 }
                 .map { it.toPasswordItem() }
                 .flowOn(dispatcherProvider.io())
@@ -253,21 +271,6 @@ constructor(
               } else {
                 emptyList()
               }
-            }
-            FilterMode.Fuzzy -> {
-              prefilteredResultFlow
-                .map {
-                  val item = it.toPasswordItem()
-                  Pair(item.fuzzyMatch(searchAction.filter), item)
-                }
-                .filter { it.first > 0 }
-                .flowOn(dispatcherProvider.io())
-                .toList()
-                .sortedWith(
-                  compareByDescending<Pair<Int, PasswordItem>> { it.first }
-                    .thenBy(itemComparator) { it.second }
-                )
-                .map { it.second }
             }
           }
         SearchResult(passwordList, isFiltered = searchAction.filterMode != FilterMode.NoFilter)
