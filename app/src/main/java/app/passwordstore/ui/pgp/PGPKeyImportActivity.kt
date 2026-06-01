@@ -246,7 +246,10 @@ class PGPKeyImportActivity : AppCompatActivity() {
     builder
       .setPositiveButton(android.R.string.ok) { _, _ ->
         if (importedKeyIds.isNotEmpty()) {
-          setResult(RESULT_OK, Intent().putExtra("PGP_KEY_ID", importedKeyIds.first().id))
+          setResult(
+            RESULT_OK,
+            Intent().putExtra("PGP_KEY_IDS", importedKeyIds.map { it.id }.toLongArray()),
+          )
         } else {
           setResult(RESULT_CANCELED)
         }
