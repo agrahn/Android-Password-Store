@@ -1,4 +1,4 @@
-141478
+141481
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -506,6 +506,7 @@ ah.cn
 ah.no
 ai
 ai.bd
+ai.id
 ai.in
 ai.jo
 ai.kr
@@ -1207,8 +1208,8 @@ bones.replit.dev
 boo
 boo.jp
 book
+book.online
 booking
-bookonline.app
 boomla.net
 bosch
 bostik
@@ -1364,6 +1365,7 @@ cantho.vn
 canva-apps.cn
 canva-apps.com
 canva-hosted-embed.com
+canva.link
 canva.run
 canvacode.com
 caobang.vn
@@ -4677,6 +4679,7 @@ kherson.ua
 khmelnitskiy.ua
 khmelnytskyi.ua
 khplay.nl
+khsj.cn
 ki
 kia
 kibichuo.okayama.jp
@@ -7379,7 +7382,6 @@ reservd.com
 reservd.dev.thingdust.io
 reservd.disrec.thingdust.io
 reservd.testing.thingdust.io
-reserve-online.com
 reserve-online.net
 resindevice.io
 rest
