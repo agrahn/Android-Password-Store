@@ -222,7 +222,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
             val id = tryGetKeyId(k)?.toString() ?: "?"
             val reason =
               when (e) {
-                is KeyAlreadyExistsException -> getString(R.string.pgp_key_import_failed)
+                is KeyAlreadyExistsException -> getString(R.string.pgp_key_import_skipped_existing)
                 is UnusableKeyException ->
                   getString(R.string.pgp_key_import_failed_unusable_message)
                 else -> e.message ?: e::class.simpleName ?: "error"
