@@ -231,7 +231,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
           }
         val titleRes =
           if (importedKeyIds.isEmpty()) R.string.pgp_key_import_failed
-          else R.string.pgp_key_import_succeeded
+          else R.string.pgp_key_import_partial
         builder
           .setTitle(getString(titleRes))
           .setMessage(

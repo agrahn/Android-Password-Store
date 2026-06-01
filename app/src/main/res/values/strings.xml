@@ -412,6 +412,7 @@
   <string name="pgp_key_import_succeeded_multi_message">The imported key IDs are listed below, please review them for correctness:\n%1$s</string>
   <string name="pgp_key_import_partial_failure_message">Imported %1$d key(s) successfully. The following keys failed to import:\n%2$s</string>
   <string name="pgp_key_import_skipped_existing">Already exists (replacement skipped)</string>
+  <string name="pgp_key_import_partial">Some PGP keys could not be imported</string>
   <string name="pgp_key_export_failed">Failed to export PGP key</string>
   <string name="pgp_key_export_succeeded">Successfully exported PGP key</string>
   <string name="pgp_full_name_hint">Full name</string>
