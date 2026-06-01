@@ -8,6 +8,7 @@ package app.passwordstore.crypto
 // import app.passwordstore.crypto.errors.UnusableKeyException
 import app.passwordstore.crypto.CryptoConstants.KEY_PASSPHRASE
 import app.passwordstore.crypto.CryptoConstants.PLAIN_TEXT
+import app.passwordstore.crypto.KeyUtils.parseAllCertificatesOrKeys
 import app.passwordstore.crypto.KeyUtils.tryGetKeyId
 import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPIdentifier.UserId
@@ -223,6 +224,30 @@ class PGPKeyManagerTest {
   fun replaceSecretKeyWithSecretKey() {
     assertTrue(keyManager.addKey(secretKey).isOk)
     assertTrue(keyManager.addKey(secretKey).isErr)
+  }
+
+  @Test
+  fun importIteratesMultiKeyArmor() {
+    val aliceBytes =
+      this::class.java.classLoader.getResource("alice_owner@example_com")!!.readBytes()
+    val bobbyBytes =
+      this::class.java.classLoader.getResource("bobby_owner@example_com")!!.readBytes()
+    val combined = aliceBytes + "\n".toByteArray() + bobbyBytes
+
+    val parsedCerts = parseAllCertificatesOrKeys(PGPKey(combined))
+    assertEquals(2, parsedCerts.size)
+
+    parsedCerts.forEach { cert ->
+      val perKey = PGPKey(cert.toAsciiArmoredString().toByteArray())
+      assertTrue(keyManager.addKey(perKey).isOk)
+    }
+
+    keyManager.getAllKeys().apply {
+      assertTrue(this.isOk)
+      assertEquals(2, this.unwrap().size)
+    }
+    assertTrue(keyManager.getKeyById(KeyId(-7087927403306410599)).isOk) // Alice
+    assertTrue(keyManager.getKeyById(KeyId(-961222705095032109)).isOk) // Bobby
   }
 
   @Test

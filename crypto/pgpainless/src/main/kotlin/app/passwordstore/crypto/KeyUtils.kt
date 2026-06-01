@@ -8,6 +8,7 @@ package app.passwordstore.crypto
 import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.crypto.PGPIdentifier.UserId
 import com.github.michaelbull.result.get
+import com.github.michaelbull.result.getOr
 import com.github.michaelbull.result.runCatching
 import java.security.PublicKey
 import java.util.Date
@@ -34,6 +35,21 @@ public object KeyUtils {
         incoming.filter { it.isSecretKey() }?.firstOrNull() ?: incoming.firstOrNull()
       }
       .get()
+
+  /**
+   * Parses every PGP certificate or key block contained in [key]'s payload. A typical multi-key
+   * .asc file (e.g. produced by `gpg --export A B C`) holds several concatenated armored blocks;
+   * this helper yields one [OpenPGPCertificate] per block, with any secret keys ordered before
+   * public certificates to match the preference used by [tryParseCertificateOrKey]. Returns an
+   * empty list if parsing fails or no key is found.
+   */
+  public fun parseAllCertificatesOrKeys(key: PGPKey): List<OpenPGPCertificate> =
+    runCatching {
+        OpenPGPKeyReader().parseKeysOrCertificates(key.contents.inputStream()).sortedByDescending {
+          it.isSecretKey()
+        }
+      }
+      .getOr(emptyList())
 
   /**
    * Parses an [OpenPGPPrimaryKey] from the given [PGPKey] and calculates its long primary key ID

@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file
 ### Fixed
 
 - Accidental overwriting of existing password items of same file name after editing
+- PGP Manager imports all keys from an `.asc` file containing multiple key blocks (previously only the first key was imported)
 
 ## [1.16.3] - 2026-04-15
 

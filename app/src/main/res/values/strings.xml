@@ -405,6 +405,12 @@
   <string name="pgp_key_import_failed_unusable_message">The given key is not usable for encryption. Please ensure that a subkey for encryption exists and that it has not expired or been revoked.</string>
   <string name="pgp_key_import_succeeded">Successfully imported PGP key</string>
   <string name="pgp_key_import_succeeded_message">The key ID of the imported key is given below, please review it for correctness:\n%1$s</string>
+  <plurals name="pgp_key_import_succeeded_multi_title">
+    <item quantity="one">Successfully imported %1$d PGP key</item>
+    <item quantity="other">Successfully imported %1$d PGP keys</item>
+  </plurals>
+  <string name="pgp_key_import_succeeded_multi_message">The imported key IDs are listed below, please review them for correctness:\n%1$s</string>
+  <string name="pgp_key_import_partial_failure_message">Imported %1$d key(s) successfully. The following keys failed to import:\n%2$s</string>
   <string name="pgp_key_export_failed">Failed to export PGP key</string>
   <string name="pgp_key_export_succeeded">Successfully exported PGP key</string>
   <string name="pgp_full_name_hint">Full name</string>
