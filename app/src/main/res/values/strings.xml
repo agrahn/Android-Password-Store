@@ -117,6 +117,7 @@
   <string name="ssh_key_import_error_not_an_ssh_key_message">The selected file does not appear to be an SSH private key.</string>
   <string name="ssh_use_pgp_key_error_no_authkey_message">The selected PGP key does not provide an authentication-capable subkey.</string>
   <string name="ssh_use_pgp_key_error_unlocking_from_keystore_message">Error unlocking authentication key from the Android Keystore.</string>
+  <string name="ssh_use_pgp_key_error_unlocking_wrapped_ed25519_message">Error unlocking authentication key.</string>
   <string name="ssh_use_pgp_key_error_unlocking_pgp_auth_subkey_message">Error unlocking authentication subkey from PGP key.</string>
   <string name="ssh_key_success_dialog_title">SSH-key imported</string>
   <string name="ssh_key_error_dialog_title">Key import error</string>
@@ -190,8 +191,10 @@
   <string name="ssh_keygen_require_authentication">Protect with screen lock credential</string>
   <string name="ssh_keygen_label_rsa">RSA</string>
   <string name="ssh_keygen_label_ecdsa">ECDSA</string>
+  <string name="ssh_keygen_label_ed25519">Ed25519</string>
   <string name="ssh_keygen_explanation_rsa"><b>RSA (3072 bit)</b>\nSupported by all servers, but authentication is comparatively slow.</string>
   <string name="ssh_keygen_explanation_ecdsa"><b>ECDSA (NIST P-256)</b>\nFast authentication and supported by most servers that are still receiving updates.</string>
+  <string name="ssh_keygen_explanation_ed25519"><b>Ed25519</b>\nFast authentication, but only supported by rather modern servers.</string>
   <string name="ssh_keygen_existing_title">Replace SSH key</string>
   <string name="ssh_keygen_existing_message">Replace existing SSH key? You might lose access to your server.</string>
   <string name="ssh_keygen_replace_with_pgp_key_message">An SSH key already exists. Do you want to remove it and use a PGP key for authentication instead? You might lose access to your server.</string>

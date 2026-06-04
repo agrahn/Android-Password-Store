@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file
 
 - Search result filter options "exact match" and "fuzzy" in Settings --> General
 - PGP Manager now imports all keys from multi-key backups, such as those produced with OpenKeychain (previously, only the first key was imported)
+- Option to generate Ed25519 SSH keys restored
 
 ### Changed
 

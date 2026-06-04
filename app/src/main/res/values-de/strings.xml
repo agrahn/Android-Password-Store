@@ -116,6 +116,7 @@
   <string name="ssh_key_import_error_not_an_ssh_key_message">Die ausgewählte Datei scheint kein privater SSH-Schlüssel zu sein.</string>
   <string name="ssh_use_pgp_key_error_no_authkey_message">Der ausgewählte PGP-Schlüssel stellt keinen zur Authentifizierung geeigneten Unterschlüssel bereit.</string>
   <string name="ssh_use_pgp_key_error_unlocking_from_keystore_message">Fehler beim Entsperren des Authentifizierungsschlüssels aus dem Android Keystore.</string>
+  <string name="ssh_use_pgp_key_error_unlocking_wrapped_ed25519_message">Fehler beim Entsperren des Authentifizierungsschlüssels.</string>
   <string name="ssh_use_pgp_key_error_unlocking_pgp_auth_subkey_message">Fehler beim Entsperren des Authentifizierungs-Unterschlüssels aus dem PGP-Schlüssel.</string>
   <string name="ssh_key_success_dialog_title">SSH-Schlüssel importiert</string>
   <string name="ssh_key_error_dialog_title">Schlüssel-Importfehler</string>
@@ -191,6 +192,7 @@
 
   <string name="ssh_keygen_explanation_rsa"><b>RSA (3072 Bit)</b>\nWird von allen Servern unterstützt, allerdings ist die Authentifizierung recht langsam.</string>
   <string name="ssh_keygen_explanation_ecdsa"><b>ECDSA (NIST P-256)</b>\nSchnelle Authentifizierung, unterstützt von den meisten Servern, die noch Updates erhalten.</string>
+  <string name="ssh_keygen_explanation_ed25519"><b>Ed25519</b>\nSchnelle Authentifizierung, aber nur von moderneren Servern unterstützt</string>
   <string name="ssh_keygen_existing_title">SSH-Schlüssel ersetzen</string>
   <string name="ssh_keygen_existing_message">Existierenden SSH-Schlüssel ersetzen? Möglicherweise verlieren Sie den Zugriff auf Ihren Server.</string>
   <string name="ssh_keygen_replace_with_pgp_key_message">Es existiert bereits ein SSH-Schlüssel. Möchten Sie diesen entfernen und stattdessen einen PGP-Schlüssel zur Authentifizierung verwenden? Möglicherweise verlieren Sie den Zugriff auf Ihren Server.</string>
