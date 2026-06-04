@@ -19,10 +19,10 @@ object AndroidCommon {
   fun configure(project: Project) {
     // Configure Application projects
     project.extensions.findByType<ApplicationExtension>()?.apply {
-      compileSdk = 36
+      compileSdk = 37
       defaultConfig {
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
       }
 
       packaging {
@@ -42,7 +42,7 @@ object AndroidCommon {
 
     // Configure Library projects
     project.extensions.findByType<LibraryExtension>()?.apply {
-      compileSdk = 36
+      compileSdk = 37
       defaultConfig { minSdk = 26 }
 
       packaging {
