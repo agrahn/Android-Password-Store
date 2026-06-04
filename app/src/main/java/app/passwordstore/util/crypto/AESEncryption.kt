@@ -185,11 +185,24 @@ object AESEncryption {
     data: CharArray?,
     keyType: KeyType = KeyType.TEMPORARY,
     cipher: Cipher? = null,
+  ): CharArray? =
+    encrypt(
+      data?.toByteArray(),
+      keyType,
+      cipher,
+    )
+
+  /* Encrypt a ByteArray using the AES key from the KeyStore and Base64-encode the result;
+   * prepend the cipher's init vector to the result */
+  fun encrypt(
+    data: ByteArray?,
+    keyType: KeyType = KeyType.TEMPORARY,
+    cipher: Cipher? = null,
   ): CharArray? {
     if (data == null || !isHardwareBacked(keyType)) return null
     val c = cipher ?: getCipher(keyType)
     if (c == null) return null
-    return runCatching { (c.iv + c.doFinal(data.toByteArray())).encodeToBase64CharArray() }
+    return runCatching { (c.iv + c.doFinal(data)).encodeToBase64CharArray() }
       .getOrElse { e ->
         logcat { e.asLog() }
         null
@@ -201,13 +214,26 @@ object AESEncryption {
     encryptedBase64Data: CharArray?,
     keyType: KeyType = KeyType.TEMPORARY,
     cipher: Cipher? = null,
-  ): CharArray? {
+  ): CharArray? =
+    decryptToByteArray(
+        encryptedBase64Data,
+        keyType,
+        cipher,
+      )
+      ?.toCharArray()
+
+  // Decrypt Base64 encoded AES-encrypted data to ByteArray
+  fun decryptToByteArray(
+    encryptedBase64Data: CharArray?,
+    keyType: KeyType = KeyType.TEMPORARY,
+    cipher: Cipher? = null,
+  ): ByteArray? {
     if (encryptedBase64Data == null || !isHardwareBacked(keyType)) return null
     val ivAndEncryptedData = encryptedBase64Data.decodeFromBase64ToByteArray()
     val encryptedBytes = ivAndEncryptedData.copyOfRange(IV_SIZE, ivAndEncryptedData.size)
     val c = cipher ?: getCipher(keyType, encryptedBase64Data)
     if (c == null) return null
-    return runCatching { c.doFinal(encryptedBytes).toCharArray() }
+    return runCatching { c.doFinal(encryptedBytes) }
       .getOrElse { e ->
         logcat { e.asLog() }
         null

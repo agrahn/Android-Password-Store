@@ -18,7 +18,6 @@ import logcat.logcat
 import net.schmizz.keepalive.KeepAliveProvider
 import net.schmizz.sshj.ConfigImpl
 import net.schmizz.sshj.common.LoggerFactory
-import net.schmizz.sshj.common.SecurityUtils
 import net.schmizz.sshj.transport.compression.NoneCompression
 import net.schmizz.sshj.transport.kex.Curve25519SHA256
 import net.schmizz.sshj.transport.kex.Curve25519SHA256.FactoryLibSsh
@@ -34,9 +33,8 @@ import org.slf4j.Logger
 
 fun setUpBouncyCastleForSshj() {
   /**
-   * Replace the Android BC provider with the Java BouncyCastle provider since the former does not
-   * include all the required algorithms. Note: This may affect crypto operations in other parts of
-   * the application.
+   * Replace the Android BC provider with the original Java BouncyCastle provider since the former
+   * does not include all the required algorithms.
    */
   val bcIndex =
     Security.getProviders().indexOfFirst { it.name == BouncyCastleProvider.PROVIDER_NAME }
@@ -55,10 +53,6 @@ fun setUpBouncyCastleForSshj() {
   logcat("setUpBouncyCastleForSshj") {
     "JCE providers: ${Security.getProviders().joinToString { "${it.name} (${it.version})" }}"
   }
-
-  // Prevent sshj from forwarding all cryptographic operations to BC
-  SecurityUtils.setRegisterBouncyCastle(false)
-  SecurityUtils.setSecurityProvider(null)
 }
 
 private object LogcatLoggerFactory : LoggerFactory {
