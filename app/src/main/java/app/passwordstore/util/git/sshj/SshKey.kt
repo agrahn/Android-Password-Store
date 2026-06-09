@@ -37,7 +37,7 @@ import java.security.KeyStore
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.SecureRandom
-import java.security.spec.NamedParameterSpec
+import java.security.spec.ECGenParameterSpec
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.SecretKey
@@ -213,7 +213,7 @@ object SshKey {
       KeyProperties.KEY_ALGORITHM_EC,
       {
         setKeySize(256)
-        setAlgorithmParameterSpec(java.security.spec.ECGenParameterSpec("secp256r1"))
+        setAlgorithmParameterSpec(ECGenParameterSpec("secp256r1"))
         setDigests(KeyProperties.DIGEST_SHA256)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
           setIsStrongBoxBacked(isStrongBoxSupported)
@@ -321,7 +321,7 @@ object SshKey {
     // Generate the Ed25519 key pair, encrypt the private key and store it away
     val keyPair =
       KeyPairGenerator.getInstance("EdDSA", BouncyCastleProvider()).run {
-        initialize(NamedParameterSpec("Ed25519"), SecureRandom())
+        initialize(ECGenParameterSpec("ed25519"), SecureRandom())
         generateKeyPair()
       }
 
