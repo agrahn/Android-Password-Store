@@ -32,7 +32,7 @@ jobs:
     name: Run Gradle-${{ matrix.gradle-version }}, AGP-${{ matrix.agp-version }}, Java-${{ matrix.java-version }}
     steps:
     - name: Setup build environment
-      uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@63548343a83d4a3147f52173e464ec9b62b76d00 # develop
+      uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@b1a8b397cdb8bbc6bdede251cfa657ddc7a03f40 # develop
       with:
         cache-read-only: true
         gradle-version: ${{ matrix.gradle-version }}
