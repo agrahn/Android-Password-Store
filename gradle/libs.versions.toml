@@ -8,7 +8,7 @@ hilt = "2.59.2"
 kotlin = "2.3.21"
 ksp = "2.3.9"
 kotlinResult = "2.3.1"
-lifecycle = "2.10.0"
+lifecycle = "2.11.0"
 moshi = "1.15.2"
 
 [libraries]
@@ -49,7 +49,7 @@ build-r8 = "com.android.tools:r8:9.1.31"
 build-semver = "com.github.zafarkhaja:java-semver:0.10.2"
 build-spotless = "com.diffplug.spotless:spotless-plugin-gradle:8.7.0"
 build-vcu = "nl.littlerobots.version-catalog-update:nl.littlerobots.version-catalog-update.gradle.plugin:1.1.0"
-compose-bom = "androidx.compose:compose-bom:2026.05.01"
+compose-bom = "androidx.compose:compose-bom:2026.06.00"
 compose-foundation-core = { module = "androidx.compose.foundation:foundation" }
 compose-foundation-layout = { module = "androidx.compose.foundation:foundation-layout" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
