@@ -92,9 +92,9 @@ internal fun normalizeForSshj(key: PublicKey): PublicKey {
     }
 
   return runCatching {
-      KeyFactory.getInstance(bcAlgorithm, BouncyCastleProvider.PROVIDER_NAME)
-        .generatePublic(X509EncodedKeySpec(encoded))
-    }
+    KeyFactory.getInstance(bcAlgorithm, BouncyCastleProvider.PROVIDER_NAME)
+      .generatePublic(X509EncodedKeySpec(encoded))
+  }
     .getOrElse { error ->
       logcat("normalizeForSshj") { error.asLog() }
       throw SSHRuntimeException(
@@ -127,32 +127,32 @@ object SshKey {
   val mustAuthenticate: Boolean
     get() {
       return runCatching {
-          when (type) {
-            Type.KeystoreNative ->
-              when (val key = androidKeystore.getKey(KEYSTORE_ALIAS, null)) {
-                is PrivateKey -> {
-                  val factory = KeyFactory.getInstance(key.algorithm, PROVIDER_ANDROID_KEY_STORE)
-                  return@runCatching factory
-                    .getKeySpec(key, KeyInfo::class.java)
-                    .isUserAuthenticationRequired
-                }
-                is SecretKey -> {
-                  val factory =
-                    SecretKeyFactory.getInstance(key.algorithm, PROVIDER_ANDROID_KEY_STORE)
-                  return@runCatching (factory.getKeySpec(key, KeyInfo::class.java) as KeyInfo)
-                    .isUserAuthenticationRequired
-                }
-                else -> throw IllegalStateException("SSH key does not exist in Keystore")
+        when (type) {
+          Type.KeystoreNative ->
+            when (val key = androidKeystore.getKey(KEYSTORE_ALIAS, null)) {
+              is PrivateKey -> {
+                val factory = KeyFactory.getInstance(key.algorithm, PROVIDER_ANDROID_KEY_STORE)
+                return@runCatching factory
+                  .getKeySpec(key, KeyInfo::class.java)
+                  .isUserAuthenticationRequired
               }
-            Type.KeystoreWrappedEd25519 -> {
-              context.gitSecrets
-                .getString(KEYSTORE_ALIAS, "false:")
-                ?.split(":", limit = 2)
-                ?.getOrNull(0) == "true"
+              is SecretKey -> {
+                val factory =
+                  SecretKeyFactory.getInstance(key.algorithm, PROVIDER_ANDROID_KEY_STORE)
+                return@runCatching (factory.getKeySpec(key, KeyInfo::class.java) as KeyInfo)
+                  .isUserAuthenticationRequired
+              }
+              else -> throw IllegalStateException("SSH key does not exist in Keystore")
             }
-            else -> return@runCatching false
+          Type.KeystoreWrappedEd25519 -> {
+            context.gitSecrets
+              .getString(KEYSTORE_ALIAS, "false:")
+              ?.split(":", limit = 2)
+              ?.getOrNull(0) == "true"
           }
+          else -> return@runCatching false
         }
+      }
         .getOrElse { error ->
           // It is fine to swallow the exception here since it will reappear when the key
           // is used for SSH authentication and can then be shown in the UI.
@@ -377,71 +377,68 @@ object SshKey {
       null -> null
     }
 
-  private fun provideKeystoreNativeKey(client: SSHClient): KeyProvider =
-    runCatching {
-        val publicKey = androidKeystore.sshPublicKey ?: throw NullPointerException()
-        val privateKey = androidKeystore.sshPrivateKey ?: throw NullPointerException()
+  private fun provideKeystoreNativeKey(client: SSHClient): KeyProvider = runCatching {
+    val publicKey = androidKeystore.sshPublicKey ?: throw NullPointerException()
+    val privateKey = androidKeystore.sshPrivateKey ?: throw NullPointerException()
 
-        // let Keystore do cryptographic operations
-        SecurityUtils.setRegisterBouncyCastle(false)
-        SecurityUtils.setSecurityProvider(null)
+    // let Keystore do cryptographic operations
+    SecurityUtils.setRegisterBouncyCastle(false)
+    SecurityUtils.setSecurityProvider(null)
 
-        client.loadKeys(KeyPair(publicKey, privateKey))
-      }
-      .getOrElse { error ->
-        logcat { error.asLog() }
-        throw IOException(
-          context.getString(R.string.ssh_use_pgp_key_error_unlocking_from_keystore_message),
-          error,
-        )
-      }
+    client.loadKeys(KeyPair(publicKey, privateKey))
+  }
+    .getOrElse { error ->
+      logcat { error.asLog() }
+      throw IOException(
+        context.getString(R.string.ssh_use_pgp_key_error_unlocking_from_keystore_message),
+        error,
+      )
+    }
 
-  private fun provideKeystoreWrappedEd25519Key(client: SSHClient): KeyProvider =
-    runCatching {
-        val publicKey = sshPublicKey?.let { parseSshPublicKey(it) } ?: throw NullPointerException()
+  private fun provideKeystoreWrappedEd25519Key(client: SSHClient): KeyProvider = runCatching {
+    val publicKey = sshPublicKey?.let { parseSshPublicKey(it) } ?: throw NullPointerException()
 
-        val mustAuthenticateAndPrivateKeyEncrypted =
-          context.gitSecrets.getString(KEYSTORE_ALIAS, "false:")?.split(":", limit = 2)
+    val mustAuthenticateAndPrivateKeyEncrypted =
+      context.gitSecrets.getString(KEYSTORE_ALIAS, "false:")?.split(":", limit = 2)
 
-        val privateKeyEncoded =
-          AESEncryption.decryptToByteArray(
-            mustAuthenticateAndPrivateKeyEncrypted?.getOrNull(1)?.toCharArray(),
-            if (mustAuthenticateAndPrivateKeyEncrypted?.getOrNull(0) == "true")
-              AESEncryption.KeyType.PERSISTENT_WITH_PIN
-            else AESEncryption.KeyType.PERSISTENT,
-          )
+    val privateKeyEncoded =
+      AESEncryption.decryptToByteArray(
+        mustAuthenticateAndPrivateKeyEncrypted?.getOrNull(1)?.toCharArray(),
+        if (mustAuthenticateAndPrivateKeyEncrypted?.getOrNull(0) == "true")
+          AESEncryption.KeyType.PERSISTENT_WITH_PIN
+        else AESEncryption.KeyType.PERSISTENT,
+      )
 
-        val keyFactory = KeyFactory.getInstance("Ed25519", BouncyCastleProvider())
-        val keySpec = PKCS8EncodedKeySpec(privateKeyEncoded)
-        val privateKey = keyFactory.generatePrivate(keySpec)
+    val keyFactory = KeyFactory.getInstance("Ed25519", BouncyCastleProvider())
+    val keySpec = PKCS8EncodedKeySpec(privateKeyEncoded)
+    val privateKey = keyFactory.generatePrivate(keySpec)
 
-        // ensure that BC carries out cryptographic operations
-        SecurityUtils.setRegisterBouncyCastle(true)
-        SecurityUtils.setSecurityProvider(BouncyCastleProvider.PROVIDER_NAME)
+    // ensure that BC carries out cryptographic operations
+    SecurityUtils.setRegisterBouncyCastle(true)
+    SecurityUtils.setSecurityProvider(BouncyCastleProvider.PROVIDER_NAME)
 
-        client.loadKeys(KeyPair(publicKey, privateKey))
-      }
-      .getOrElse { error ->
-        logcat { error.asLog() }
-        throw IOException(
-          context.getString(R.string.ssh_use_pgp_key_error_unlocking_wrapped_ed25519_message),
-          error,
-        )
-      }
+    client.loadKeys(KeyPair(publicKey, privateKey))
+  }
+    .getOrElse { error ->
+      logcat { error.asLog() }
+      throw IOException(
+        context.getString(R.string.ssh_use_pgp_key_error_unlocking_wrapped_ed25519_message),
+        error,
+      )
+    }
 
   private fun providePgpAuthenticationKey(
     client: SSHClient,
     passphraseFinder: PasswordFinder,
-  ): KeyProvider =
-    runCatching {
-        (passphraseFinder as CredentialFinder).unlockAuthKeyPair()?.let { client.loadKeys(it) }
-          ?: throw NullPointerException()
-      }
-      .getOrElse { error ->
-        logcat { error.asLog() }
-        throw IOException(
-          context.getString(R.string.ssh_use_pgp_key_error_unlocking_pgp_auth_subkey_message),
-          error,
-        )
-      }
+  ): KeyProvider = runCatching {
+    (passphraseFinder as CredentialFinder).unlockAuthKeyPair()?.let { client.loadKeys(it) }
+      ?: throw NullPointerException()
+  }
+    .getOrElse { error ->
+      logcat { error.asLog() }
+      throw IOException(
+        context.getString(R.string.ssh_use_pgp_key_error_unlocking_pgp_auth_subkey_message),
+        error,
+      )
+    }
 }

@@ -364,35 +364,34 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
   override fun onAttach(context: Context) {
     super.onAttach(context)
     runCatching {
-        listener =
-          object : OnFragmentInteractionListener {
-            override fun onFragmentInteraction(item: PasswordItem) {
-              if (
-                settings.getString(PreferenceKeys.SORT_ORDER) ==
-                  PasswordSortOrder.RECENTLY_USED.name
-              ) {
-                // save the time when password was used
-                val preferences =
-                  context.getSharedPreferences("recent_password_history", Context.MODE_PRIVATE)
-                preferences.edit {
-                  putString(item.file.absolutePath.base64(), System.currentTimeMillis().toString())
-                }
+      listener =
+        object : OnFragmentInteractionListener {
+          override fun onFragmentInteraction(item: PasswordItem) {
+            if (
+              settings.getString(PreferenceKeys.SORT_ORDER) == PasswordSortOrder.RECENTLY_USED.name
+            ) {
+              // save the time when password was used
+              val preferences =
+                context.getSharedPreferences("recent_password_history", Context.MODE_PRIVATE)
+              preferences.edit {
+                putString(item.file.absolutePath.base64(), System.currentTimeMillis().toString())
               }
+            }
 
-              if (item.type == PasswordItem.TYPE_CATEGORY) {
-                navigateTo(item.file)
-              } else {
-                if (requireArguments().getBoolean("matchWith", false)) {
-                  requireStore().matchPasswordWithApp(item)
-                } else if (item.type == PasswordItem.TYPE_PASSWORD) {
-                  requireStore().decryptPassword(item)
-                } else if (item.type == PasswordItem.TYPE_GPG_ID) {
-                  showGpgIds(item.file)
-                }
+            if (item.type == PasswordItem.TYPE_CATEGORY) {
+              navigateTo(item.file)
+            } else {
+              if (requireArguments().getBoolean("matchWith", false)) {
+                requireStore().matchPasswordWithApp(item)
+              } else if (item.type == PasswordItem.TYPE_PASSWORD) {
+                requireStore().decryptPassword(item)
+              } else if (item.type == PasswordItem.TYPE_GPG_ID) {
+                showGpgIds(item.file)
               }
             }
           }
-      }
+        }
+    }
       .onErr { throw ClassCastException("$context must implement OnFragmentInteractionListener") }
   }
 

@@ -45,10 +45,10 @@ class CloneFragment : Fragment(R.layout.fragment_clone) {
         } else {
           // non-pass repository --> go to key selection
           runCatching {
-              parentFragmentManager.performTransactionWithBackStack(
-                KeySelectionFragment.newInstance()
-              )
-            }
+            parentFragmentManager.performTransactionWithBackStack(
+              KeySelectionFragment.newInstance()
+            )
+          }
             .onErr { e -> logcat(ERROR) { e.asLog() } }
         }
       }
@@ -70,13 +70,13 @@ class CloneFragment : Fragment(R.layout.fragment_clone) {
   private fun createRepository() {
     val localDir = PasswordRepository.getRepositoryDirectory()
     runCatching {
-        check(localDir.exists() || localDir.mkdir()) { "Failed to create directory!" }
-        PasswordRepository.createRepository(localDir)
-        if (!PasswordRepository.isInitialized) {
-          PasswordRepository.initialize()
-        }
-        parentFragmentManager.performTransactionWithBackStack(KeySelectionFragment.newInstance())
+      check(localDir.exists() || localDir.mkdir()) { "Failed to create directory!" }
+      PasswordRepository.createRepository(localDir)
+      if (!PasswordRepository.isInitialized) {
+        PasswordRepository.initialize()
       }
+      parentFragmentManager.performTransactionWithBackStack(KeySelectionFragment.newInstance())
+    }
       .onErr { e ->
         logcat(ERROR) { e.asLog() }
         if (!localDir.delete()) {

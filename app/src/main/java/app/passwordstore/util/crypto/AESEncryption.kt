@@ -164,15 +164,15 @@ object AESEncryption {
       }
     val cipher = Cipher.getInstance(TRANSFORMATION)
     return runCatching {
-        if (encryptedBase64Data == null) {
-          cipher.init(Cipher.ENCRYPT_MODE, getSecretKey(keyType))
-        } else {
-          val iv = encryptedBase64Data.decodeFromBase64ToByteArray().copyOfRange(0, IV_SIZE)
-          val spec = GCMParameterSpec(128, iv)
-          cipher.init(Cipher.DECRYPT_MODE, getSecretKey(keyType), spec)
-        }
-        cipher
+      if (encryptedBase64Data == null) {
+        cipher.init(Cipher.ENCRYPT_MODE, getSecretKey(keyType))
+      } else {
+        val iv = encryptedBase64Data.decodeFromBase64ToByteArray().copyOfRange(0, IV_SIZE)
+        val spec = GCMParameterSpec(128, iv)
+        cipher.init(Cipher.DECRYPT_MODE, getSecretKey(keyType), spec)
       }
+      cipher
+    }
       .getOrElse { e ->
         logcat { e.asLog() }
         null

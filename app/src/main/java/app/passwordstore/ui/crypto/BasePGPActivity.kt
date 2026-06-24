@@ -473,124 +473,124 @@ open class BasePGPActivity : AppCompatActivity() {
         lifecycleScope.launch(dispatcherProvider.main()) {
           decryptWithPassphrase(mapOf("" to passphrase), identifiers) { id -> // onSuccess
             runCatching {
-                // update temporary passphrase cache
-                val isHardwareBacked = AESEncryption.isHardwareBacked()
-                val encryptedPassphrase = AESEncryption.encrypt(passphrase)
-                if (isHardwareBacked && cacheEnabled && encryptedPassphrase != null)
-                  cachedPassphrases.put(id, encryptedPassphrase)
-                settings.edit {
-                  putBoolean(
-                    PreferenceKeys.CACHE_PASSPHRASE,
-                    isHardwareBacked && cacheEnabled && encryptedPassphrase != null,
-                  )
-                }
+              // update temporary passphrase cache
+              val isHardwareBacked = AESEncryption.isHardwareBacked()
+              val encryptedPassphrase = AESEncryption.encrypt(passphrase)
+              if (isHardwareBacked && cacheEnabled && encryptedPassphrase != null)
+                cachedPassphrases.put(id, encryptedPassphrase)
+              settings.edit {
+                putBoolean(
+                  PreferenceKeys.CACHE_PASSPHRASE,
+                  isHardwareBacked && cacheEnabled && encryptedPassphrase != null,
+                )
+              }
 
-                // update persistent passphrase cache
-                var cipher = // cipher for encrypting the passphrase with biometrics
-                  if (
-                    AESEncryption.isHardwareBacked(KeyType.PERSISTENT_WITH_AUTHENTICATION) &&
-                      BiometricAuthenticator.canAuthenticate(this@BasePGPActivity)
-                  ) {
-                    AESEncryption.getCipher(KeyType.PERSISTENT_WITH_AUTHENTICATION)
-                      ?: run {
-                        if (
-                          settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") ==
-                            "fingerprint"
-                        )
-                          persistentPassphrases.edit { clear() }
-                        // recover from invalidated AES key
-                        AESEncryption.deleteKey(KeyType.PERSISTENT_WITH_AUTHENTICATION)
-                        AESEncryption.getCipher(KeyType.PERSISTENT_WITH_AUTHENTICATION)
-                      }
-                  } else null
-
+              // update persistent passphrase cache
+              var cipher = // cipher for encrypting the passphrase with biometrics
                 if (
-                  settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") ==
-                    "fingerprint" && cipher != null
+                  AESEncryption.isHardwareBacked(KeyType.PERSISTENT_WITH_AUTHENTICATION) &&
+                    BiometricAuthenticator.canAuthenticate(this@BasePGPActivity)
                 ) {
-                  BiometricAuthenticator.authenticate(
-                    this@BasePGPActivity,
-                    dialogDescriptionRes =
-                      R.string.biometric_prompt_description_persistently_cache_password,
-                    cipher = cipher,
-                  ) { result ->
-                    if (result is BiometricResult.Success) {
-                      persistentPassphrases.edit {
-                        putString(
-                          id,
-                          AESEncryption.encrypt(
-                              passphrase,
-                              keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION,
-                              cipher = result.cryptoObject?.cipher,
-                            )
-                            ?.concatToString(),
-                        )
-                        putLong(
-                          PreferenceKeys.BIOMETRICS_AND_PIN_LAST_USE,
-                          Instant.now().toEpochMilli(),
-                        )
-                      }
-                    }
-                    passphrase.wipe()
-                  }
-                } else if (
-                  settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") == "PIN" &&
-                    AESEncryption.isHardwareBacked(KeyType.PERSISTENT)
-                ) {
-                  /* Ask user for setting a PIN if not yet existing, encrypt and store it on the
-                   * device, then update passphrase in cache */
-                  if (persistentPassphrases.getString("unlock_pin", null) == null) {
-                    val pinDialog =
-                      PinDialog.newInstance(
-                        title = resources.getString(R.string.pin_new_entry_title),
-                        description = resources.getString(R.string.pin_new_entry_description),
-                        clearOnDismiss = passphrase,
+                  AESEncryption.getCipher(KeyType.PERSISTENT_WITH_AUTHENTICATION)
+                    ?: run {
+                      if (
+                        settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") ==
+                          "fingerprint"
                       )
-                    pinDialog.show(supportFragmentManager, "PIN_DIALOG")
-                    pinDialog.setFragmentResultListener(PinDialog.PIN_RESULT_KEY) { key, bundle ->
-                      if (key == PinDialog.PIN_RESULT_KEY) {
-                        val pin =
-                          requireNotNull(bundle.getCharArray(PinDialog.PIN_KEY)) {
-                            "returned PIN is null"
-                          }
-                        if (pin.size >= 4) {
-                          persistentPassphrases.edit {
-                            putString(
-                              "unlock_pin", // reset and prepend PIN attempt counter
-                              AESEncryption.encrypt(
-                                  charArrayOf('0', ':') + pin,
-                                  keyType = KeyType.PERSISTENT,
-                                )
-                                ?.concatToString(),
-                            )
-                            putString(
-                              id,
-                              AESEncryption.encrypt(passphrase, keyType = KeyType.PERSISTENT)
-                                ?.concatToString(),
-                            )
-                            putLong(
-                              PreferenceKeys.BIOMETRICS_AND_PIN_LAST_USE,
-                              Instant.now().toEpochMilli(),
-                            )
-                          }
-                        }
-                        pin.wipe()
-                      }
+                        persistentPassphrases.edit { clear() }
+                      // recover from invalidated AES key
+                      AESEncryption.deleteKey(KeyType.PERSISTENT_WITH_AUTHENTICATION)
+                      AESEncryption.getCipher(KeyType.PERSISTENT_WITH_AUTHENTICATION)
                     }
-                  } else {
+                } else null
+
+              if (
+                settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") ==
+                  "fingerprint" && cipher != null
+              ) {
+                BiometricAuthenticator.authenticate(
+                  this@BasePGPActivity,
+                  dialogDescriptionRes =
+                    R.string.biometric_prompt_description_persistently_cache_password,
+                  cipher = cipher,
+                ) { result ->
+                  if (result is BiometricResult.Success) {
                     persistentPassphrases.edit {
                       putString(
                         id,
-                        AESEncryption.encrypt(passphrase, keyType = KeyType.PERSISTENT)
+                        AESEncryption.encrypt(
+                            passphrase,
+                            keyType = KeyType.PERSISTENT_WITH_AUTHENTICATION,
+                            cipher = result.cryptoObject?.cipher,
+                          )
                           ?.concatToString(),
                       )
+                      putLong(
+                        PreferenceKeys.BIOMETRICS_AND_PIN_LAST_USE,
+                        Instant.now().toEpochMilli(),
+                      )
                     }
-                    passphrase.wipe()
                   }
-                } else {
                   passphrase.wipe()
                 }
+              } else if (
+                settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") == "PIN" &&
+                  AESEncryption.isHardwareBacked(KeyType.PERSISTENT)
+              ) {
+                /* Ask user for setting a PIN if not yet existing, encrypt and store it on the
+                 * device, then update passphrase in cache */
+                if (persistentPassphrases.getString("unlock_pin", null) == null) {
+                  val pinDialog =
+                    PinDialog.newInstance(
+                      title = resources.getString(R.string.pin_new_entry_title),
+                      description = resources.getString(R.string.pin_new_entry_description),
+                      clearOnDismiss = passphrase,
+                    )
+                  pinDialog.show(supportFragmentManager, "PIN_DIALOG")
+                  pinDialog.setFragmentResultListener(PinDialog.PIN_RESULT_KEY) { key, bundle ->
+                    if (key == PinDialog.PIN_RESULT_KEY) {
+                      val pin =
+                        requireNotNull(bundle.getCharArray(PinDialog.PIN_KEY)) {
+                          "returned PIN is null"
+                        }
+                      if (pin.size >= 4) {
+                        persistentPassphrases.edit {
+                          putString(
+                            "unlock_pin", // reset and prepend PIN attempt counter
+                            AESEncryption.encrypt(
+                                charArrayOf('0', ':') + pin,
+                                keyType = KeyType.PERSISTENT,
+                              )
+                              ?.concatToString(),
+                          )
+                          putString(
+                            id,
+                            AESEncryption.encrypt(passphrase, keyType = KeyType.PERSISTENT)
+                              ?.concatToString(),
+                          )
+                          putLong(
+                            PreferenceKeys.BIOMETRICS_AND_PIN_LAST_USE,
+                            Instant.now().toEpochMilli(),
+                          )
+                        }
+                      }
+                      pin.wipe()
+                    }
+                  }
+                } else {
+                  persistentPassphrases.edit {
+                    putString(
+                      id,
+                      AESEncryption.encrypt(passphrase, keyType = KeyType.PERSISTENT)
+                        ?.concatToString(),
+                    )
+                  }
+                  passphrase.wipe()
+                }
+              } else {
+                passphrase.wipe()
               }
+            }
               .onErr { e ->
                 logcat { e.asLog() }
                 passphrase.wipe()

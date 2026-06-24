@@ -64,40 +64,40 @@ object PasswordRepository {
 
     if (!remotes.contains(name)) {
       runCatching {
-          val uri = URIish(url)
-          val refSpec = RefSpec("+refs/head/*:refs/remotes/$name/*")
+        val uri = URIish(url)
+        val refSpec = RefSpec("+refs/head/*:refs/remotes/$name/*")
 
-          val remoteConfig = RemoteConfig(storedConfig, name)
-          remoteConfig.addFetchRefSpec(refSpec)
-          remoteConfig.addPushRefSpec(refSpec)
-          remoteConfig.addURI(uri)
-          remoteConfig.addPushURI(uri)
+        val remoteConfig = RemoteConfig(storedConfig, name)
+        remoteConfig.addFetchRefSpec(refSpec)
+        remoteConfig.addPushRefSpec(refSpec)
+        remoteConfig.addURI(uri)
+        remoteConfig.addPushURI(uri)
 
-          remoteConfig.update(storedConfig)
+        remoteConfig.update(storedConfig)
 
-          storedConfig.save()
-        }
+        storedConfig.save()
+      }
         .onErr { e -> e.printStackTrace() }
     } else if (replace) {
       runCatching {
-          val uri = URIish(url)
+        val uri = URIish(url)
 
-          val remoteConfig = RemoteConfig(storedConfig, name)
-          // remove the first and eventually the only uri
-          if (remoteConfig.urIs.size > 0) {
-            remoteConfig.removeURI(remoteConfig.urIs[0])
-          }
-          if (remoteConfig.pushURIs.size > 0) {
-            remoteConfig.removePushURI(remoteConfig.pushURIs[0])
-          }
-
-          remoteConfig.addURI(uri)
-          remoteConfig.addPushURI(uri)
-
-          remoteConfig.update(storedConfig)
-
-          storedConfig.save()
+        val remoteConfig = RemoteConfig(storedConfig, name)
+        // remove the first and eventually the only uri
+        if (remoteConfig.urIs.size > 0) {
+          remoteConfig.removeURI(remoteConfig.urIs[0])
         }
+        if (remoteConfig.pushURIs.size > 0) {
+          remoteConfig.removePushURI(remoteConfig.pushURIs[0])
+        }
+
+        remoteConfig.addURI(uri)
+        remoteConfig.addPushURI(uri)
+
+        remoteConfig.update(storedConfig)
+
+        storedConfig.save()
+      }
         .onErr { e -> e.printStackTrace() }
     }
   }
@@ -193,18 +193,17 @@ object PasswordRepository {
   }
 
   /** If repo is tracking a remote branch, return commit count to be pushed, zero otherwise */
-  fun getAheadCount(): Int =
-    runCatching {
-        repository?.let { repo ->
-          getCurrentBranch()?.let { branch ->
-            BranchTrackingStatus.of(repo, branch)?.getAheadCount()
-          }
-        } ?: 0
+  fun getAheadCount(): Int = runCatching {
+    repository?.let { repo ->
+      getCurrentBranch()?.let { branch ->
+        BranchTrackingStatus.of(repo, branch)?.getAheadCount()
       }
-      .getOrElse { e ->
-        e.printStackTrace()
-        0
-      }
+    } ?: 0
+  }
+    .getOrElse { e ->
+      e.printStackTrace()
+      0
+    }
 
   /**
    * Gets the .gpg files in a directory

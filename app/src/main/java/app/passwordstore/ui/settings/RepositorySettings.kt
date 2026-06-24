@@ -340,12 +340,12 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
             .setCancelable(false)
             .setPositiveButton(R.string.dialog_delete) { dialogInterface, _ ->
               runCatching {
-                  PasswordRepository.closeRepository()
-                  PasswordRepository.getRepositoryDirectory().let { dir ->
-                    dir.deleteRecursively()
-                    dir.mkdirs()
-                  }
+                PasswordRepository.closeRepository()
+                PasswordRepository.getRepositoryDirectory().let { dir ->
+                  dir.deleteRecursively()
+                  dir.mkdirs()
                 }
+              }
                 .onErr { it.message?.let { message -> activity.snackbar(message = message) } }
 
               activity.getSystemService<ShortcutManager>()?.apply {
@@ -382,39 +382,37 @@ class ExportPasswordsWorker(context: Context, params: WorkerParameters) :
     )
   }
 
-  override suspend fun doWork(): Result =
-    runCatching {
-        val uriString =
-          inputData.getString("uri")
-            ?: throw IllegalArgumentException("No URI passed to ImportPasswordsWorker")
-        val uri = uriString.toUri()
+  override suspend fun doWork(): Result = runCatching {
+    val uriString =
+      inputData.getString("uri")
+        ?: throw IllegalArgumentException("No URI passed to ImportPasswordsWorker")
+    val uri = uriString.toUri()
 
-        val targetDirectory = DocumentFile.fromTreeUri(applicationContext, uri)
-        val dateString =
-          LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME).replace(':', '_')
-        val passDir =
-          targetDirectory?.createDirectory("password_store_$dateString")
-            ?: throw IllegalArgumentException(
-              "Failed to create target directory ${targetDirectory?.uri?.path}/password_store_$dateString"
-            )
+    val targetDirectory = DocumentFile.fromTreeUri(applicationContext, uri)
+    val dateString = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME).replace(':', '_')
+    val passDir =
+      targetDirectory?.createDirectory("password_store_$dateString")
+        ?: throw IllegalArgumentException(
+          "Failed to create target directory ${targetDirectory?.uri?.path}/password_store_$dateString"
+        )
 
-        val repositoryDirectory = PasswordRepository.getRepositoryDirectory()
-        val internalRepository = DocumentFile.fromFile(repositoryDirectory)
+    val repositoryDirectory = PasswordRepository.getRepositoryDirectory()
+    val internalRepository = DocumentFile.fromFile(repositoryDirectory)
 
-        withContext(hiltEntryPoint.dispatcherProvider().io()) {
-          logcat { "Exporting ${repositoryDirectory.path} to ${passDir.uri.path}" }
-          copyDirToDir(applicationContext, internalRepository, passDir)
-          logcat { "Done with exporting ${repositoryDirectory.path} to ${passDir.uri.path}" }
-        }
-        Result.success()
-      }
-      .fold(
-        success = { Result.success() },
-        failure = {
-          logcat { it.asLog() }
-          Result.failure()
-        },
-      )
+    withContext(hiltEntryPoint.dispatcherProvider().io()) {
+      logcat { "Exporting ${repositoryDirectory.path} to ${passDir.uri.path}" }
+      copyDirToDir(applicationContext, internalRepository, passDir)
+      logcat { "Done with exporting ${repositoryDirectory.path} to ${passDir.uri.path}" }
+    }
+    Result.success()
+  }
+    .fold(
+      success = { Result.success() },
+      failure = {
+        logcat { it.asLog() }
+        Result.failure()
+      },
+    )
 
   @EntryPoint
   @InstallIn(SingletonComponent::class)
@@ -433,46 +431,45 @@ class ImportPasswordsWorker(context: Context, params: WorkerParameters) :
     )
   }
 
-  override suspend fun doWork(): Result =
-    runCatching {
-        val uriString =
-          inputData.getString("uri")
-            ?: throw IllegalArgumentException("No URI passed to ImportPasswordsWorker")
-        val uri = uriString.toUri()
+  override suspend fun doWork(): Result = runCatching {
+    val uriString =
+      inputData.getString("uri")
+        ?: throw IllegalArgumentException("No URI passed to ImportPasswordsWorker")
+    val uri = uriString.toUri()
 
-        val sourceDirectory =
-          DocumentFile.fromTreeUri(applicationContext, uri)
-            ?: throw IllegalArgumentException("Invalid URI passed to ImportPasswordsWorker")
+    val sourceDirectory =
+      DocumentFile.fromTreeUri(applicationContext, uri)
+        ?: throw IllegalArgumentException("Invalid URI passed to ImportPasswordsWorker")
 
-        val repositoryDirectory =
-          requireNotNull(PasswordRepository.getRepositoryDirectory()) {
-            "Password target directory must be set for import"
-          }
-        if (!repositoryDirectory.exists()) repositoryDirectory.mkdirs()
-        val internalRepository = DocumentFile.fromFile(repositoryDirectory)
-
-        withContext(hiltEntryPoint.dispatcherProvider().io()) {
-          logcat { "Importing ${sourceDirectory?.uri?.path} to ${repositoryDirectory.path}" }
-          copyDirToDir(applicationContext, sourceDirectory, internalRepository)
-          /**
-           * When importing an external repo, the .bin extension is appended to the files copied; we
-           * walk through the internal repo directory once more and remove the .bin ending from all
-           * files we find.
-           */
-          renameFilesInDirectoryTree(repositoryDirectory.getAbsolutePath(), ".bin", "")
-          logcat {
-            "Done with importing ${sourceDirectory?.uri?.path} to ${repositoryDirectory.path}"
-          }
-        }
-        Result.success()
+    val repositoryDirectory =
+      requireNotNull(PasswordRepository.getRepositoryDirectory()) {
+        "Password target directory must be set for import"
       }
-      .fold(
-        success = { Result.success() },
-        failure = {
-          logcat { it.asLog() }
-          Result.failure()
-        },
-      )
+    if (!repositoryDirectory.exists()) repositoryDirectory.mkdirs()
+    val internalRepository = DocumentFile.fromFile(repositoryDirectory)
+
+    withContext(hiltEntryPoint.dispatcherProvider().io()) {
+      logcat { "Importing ${sourceDirectory?.uri?.path} to ${repositoryDirectory.path}" }
+      copyDirToDir(applicationContext, sourceDirectory, internalRepository)
+      /**
+       * When importing an external repo, the .bin extension is appended to the files copied; we
+       * walk through the internal repo directory once more and remove the .bin ending from all
+       * files we find.
+       */
+      renameFilesInDirectoryTree(repositoryDirectory.getAbsolutePath(), ".bin", "")
+      logcat {
+        "Done with importing ${sourceDirectory?.uri?.path} to ${repositoryDirectory.path}"
+      }
+    }
+    Result.success()
+  }
+    .fold(
+      success = { Result.success() },
+      failure = {
+        logcat { it.asLog() }
+        Result.failure()
+      },
+    )
 
   @EntryPoint
   @InstallIn(SingletonComponent::class)

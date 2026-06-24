@@ -147,11 +147,12 @@ constructor(
     newAuthMode: AuthMode,
     newUrl: String,
   ): UpdateConnectionSettingsResult {
-    val parsedUrl =
-      runCatching { URIish(newUrl) }
-        .getOrElse {
-          return UpdateConnectionSettingsResult.FailedToParseUrl
-        }
+    val parsedUrl = runCatching {
+      URIish(newUrl)
+    }
+      .getOrElse {
+        return UpdateConnectionSettingsResult.FailedToParseUrl
+      }
     val newProtocol =
       when (parsedUrl.scheme) {
         in listOf("http", "https") -> Protocol.Https

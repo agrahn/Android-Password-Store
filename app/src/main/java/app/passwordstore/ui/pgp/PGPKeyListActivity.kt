@@ -352,9 +352,9 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   private fun writeBytesToUri(uri: Uri, source: ByteArray?) {
     runCatching {
-        val outputStream = contentResolver.openOutputStream(uri) ?: throw IOException()
-        source?.inputStream().use { src -> outputStream.use { dest -> src?.copyTo(dest) } }
-      }
+      val outputStream = contentResolver.openOutputStream(uri) ?: throw IOException()
+      source?.inputStream().use { src -> outputStream.use { dest -> src?.copyTo(dest) } }
+    }
       .onOk { snackbar(message = resources.getString(R.string.pgp_key_export_succeeded)) }
       .onErr { e ->
         logcat(ERROR) { e.asLog() }

@@ -166,16 +166,16 @@ class GitConfigActivity : BaseGitActivity() {
    */
   private fun headStatusMsg(repo: Repository): String {
     return runCatching {
-        val headRef = repo.findRef(Constants.HEAD)
-        if (headRef.isSymbolic) {
-          val branchName = headRef.target.name
-          val shortBranchName = Repository.shortenRefName(branchName)
-          getString(R.string.git_head_on_branch, shortBranchName)
-        } else {
-          val commitHash = headRef.objectId.abbreviate(8).name()
-          getString(R.string.git_head_detached, commitHash)
-        }
+      val headRef = repo.findRef(Constants.HEAD)
+      if (headRef.isSymbolic) {
+        val branchName = headRef.target.name
+        val shortBranchName = Repository.shortenRefName(branchName)
+        getString(R.string.git_head_on_branch, shortBranchName)
+      } else {
+        val commitHash = headRef.objectId.abbreviate(8).name()
+        getString(R.string.git_head_detached, commitHash)
       }
+    }
       .getOrElse { ex ->
         logcat(ERROR) { "Error getting HEAD reference\n${ex}" }
         getString(R.string.git_head_missing)

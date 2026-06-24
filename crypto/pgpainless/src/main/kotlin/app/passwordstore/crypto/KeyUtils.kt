@@ -28,13 +28,12 @@ public object KeyUtils {
    * Attempts to parse an [OpenPGPCertificate] from a given [PGPKey]. The key is first tried as a
    * secret keyring and then as a public one before the method gives up and returns null.
    */
-  public fun tryParseCertificateOrKey(key: PGPKey): OpenPGPCertificate? =
-    runCatching {
-        val incoming = OpenPGPKeyReader().parseKeysOrCertificates(key.contents.inputStream())
-        // get first secret key and if there is none, get first certificate (public keyring)
-        incoming.filter { it.isSecretKey() }?.firstOrNull() ?: incoming.firstOrNull()
-      }
-      .get()
+  public fun tryParseCertificateOrKey(key: PGPKey): OpenPGPCertificate? = runCatching {
+    val incoming = OpenPGPKeyReader().parseKeysOrCertificates(key.contents.inputStream())
+    // get first secret key and if there is none, get first certificate (public keyring)
+    incoming.filter { it.isSecretKey() }?.firstOrNull() ?: incoming.firstOrNull()
+  }
+    .get()
 
   /**
    * Parses every PGP certificate or key block contained in [key]'s payload. A typical multi-key
@@ -46,20 +45,19 @@ public object KeyUtils {
    *
    * Returns an empty list if parsing fails or no key is found.
    */
-  public fun parseAllCertificatesOrKeys(key: PGPKey): List<OpenPGPCertificate> =
-    runCatching {
-        var primaryKeyIds = mutableListOf<Long>()
-        OpenPGPKeyReader()
-          .parseKeysOrCertificates(key.contents.inputStream())
-          .sortedByDescending { cert ->
-            cert.isSecretKey()
-          }
-          .filterNot { cert ->
-            val primaryKeyId = cert.getKeyIdentifier().getKeyId()
-            primaryKeyIds.contains(primaryKeyId).also { primaryKeyIds.add(primaryKeyId) }
-          }
+  public fun parseAllCertificatesOrKeys(key: PGPKey): List<OpenPGPCertificate> = runCatching {
+    var primaryKeyIds = mutableListOf<Long>()
+    OpenPGPKeyReader()
+      .parseKeysOrCertificates(key.contents.inputStream())
+      .sortedByDescending { cert ->
+        cert.isSecretKey()
       }
-      .getOr(emptyList())
+      .filterNot { cert ->
+        val primaryKeyId = cert.getKeyIdentifier().getKeyId()
+        primaryKeyIds.contains(primaryKeyId).also { primaryKeyIds.add(primaryKeyId) }
+      }
+  }
+    .getOr(emptyList())
 
   /**
    * Parses an [OpenPGPPrimaryKey] from the given [PGPKey] and calculates its long primary key ID
