@@ -5,8 +5,8 @@
 package app.passwordstore.ui.passwords
 
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.Menu
@@ -28,6 +28,8 @@ import app.passwordstore.R
 import app.passwordstore.data.password.PasswordItem
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.ActivityPwdstoreBinding
+import app.passwordstore.injection.prefs.CredentialUsernames
+import app.passwordstore.injection.prefs.PasswordHistory
 import app.passwordstore.ui.crypto.BasePGPActivity
 import app.passwordstore.ui.crypto.DecryptActivity
 import app.passwordstore.ui.crypto.PasswordCreationActivity
@@ -62,7 +64,9 @@ import com.google.android.material.textfield.TextInputLayout
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.lang.Character.UnicodeBlock
+import java.nio.file.Paths
 import javax.inject.Inject
+import kotlin.io.path.nameWithoutExtension
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -75,6 +79,8 @@ const val PASSWORD_FRAGMENT_TAG = "PasswordsList"
 @AndroidEntryPoint
 class PasswordStore : BaseGitActivity() {
 
+  @Inject @PasswordHistory lateinit var passwordHistory: SharedPreferences
+  @Inject @CredentialUsernames lateinit var credentialUsernames: SharedPreferences
   @Inject lateinit var shortcutHandler: ShortcutHandler
   private lateinit var searchItem: MenuItem
   private val settings by lazy { sharedPrefs }
@@ -483,10 +489,17 @@ class PasswordStore : BaseGitActivity() {
           else filesToDelete.add(item.file)
         }
         // remove to-be-deleted files from history
-        val preference = getSharedPreferences("recent_password_history", Context.MODE_PRIVATE)
-        preference.edit {
+        passwordHistory.edit {
           filesToDelete.forEach { file ->
             remove(file.absolutePath.base64())
+          }
+        }
+        // remove cached passkey hex ID (filename without extension) <--> webauthn username
+        // associations
+        credentialUsernames.edit {
+          filesToDelete.forEach { file ->
+            val fileBasename = Paths.get(file.absolutePath).nameWithoutExtension
+            if (fileBasename.matches("[a-fA-F0-9]{64}".toRegex())) remove(fileBasename)
           }
         }
         selectedItems.map { item -> item.file.deleteRecursively() }
@@ -565,11 +578,9 @@ class PasswordStore : BaseGitActivity() {
 
                 // associate the new category with the last category's timestamp in
                 // history
-                val preference =
-                  getSharedPreferences("recent_password_history", Context.MODE_PRIVATE)
-                val timestamp = preference.getString(oldCategory.file.absolutePath.base64())
+                val timestamp = passwordHistory.getString(oldCategory.file.absolutePath.base64())
                 if (timestamp != null) {
-                  preference.edit {
+                  passwordHistory.edit {
                     remove(oldCategory.file.absolutePath.base64())
                     putString(newCategory.absolutePath.base64(), timestamp)
                   }
@@ -666,11 +677,10 @@ class PasswordStore : BaseGitActivity() {
       }
     } else {
       // update timestamp cache with the new file locations
-      val preference = getSharedPreferences("recent_password_history", Context.MODE_PRIVATE)
-      preference.edit {
+      passwordHistory.edit {
         sourceDestinationMap.forEach { (src, dest) ->
           val srcPathHash = src.absolutePath.base64()
-          val timestamp = preference.getString(srcPathHash)
+          val timestamp = passwordHistory.getString(srcPathHash)
           remove(srcPathHash)
           putString(dest.absolutePath.base64(), timestamp)
         }

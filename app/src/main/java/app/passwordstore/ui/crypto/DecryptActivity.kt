@@ -6,6 +6,7 @@
 package app.passwordstore.ui.crypto
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.view.Menu
@@ -20,8 +21,10 @@ import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.password.FieldItem
 import app.passwordstore.databinding.DecryptLayoutBinding
+import app.passwordstore.injection.prefs.CredentialUsernames
 import app.passwordstore.ui.adapters.FieldItemAdapter
 import app.passwordstore.util.crypto.AESEncryption
+import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.snackbar
@@ -46,6 +49,7 @@ import kotlinx.coroutines.withContext
 class DecryptActivity : BasePGPActivity() {
 
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
+  @CredentialUsernames @Inject lateinit var credentialUsernames: SharedPreferences
 
   private var itemsAdapter: FieldItemAdapter? = null
   private val binding by viewBinding(DecryptLayoutBinding::inflate)
@@ -254,7 +258,9 @@ class DecryptActivity : BasePGPActivity() {
         items.add(
           FieldItem.createNoCopyFreeformField(
             getString(R.string.passkey),
-            getString(R.string.created_date, passkey.creationDateTimeString()).toCharArray(),
+            "${getString(R.string.cred_algorithm_hint)}: ${passkey.getAlgorithmString()}, "
+              .toCharArray() +
+              getString(R.string.created_date, passkey.creationDateTimeString()).toCharArray(),
           )
         )
 
@@ -280,6 +286,23 @@ class DecryptActivity : BasePGPActivity() {
             )
           )
         }
+
+        // maintain cred hex ID <-> user name map for display on passkey selector
+        credentialUsernames.edit {
+          if (passkey.user.revealName) {
+            val displayUser =
+              if (passkey.user.displayName != null && passkey.user.displayName != passkey.user.name)
+                "${passkey.user.name} (${passkey.user.displayName})"
+              else passkey.user.name
+            putString(
+              passkey.idHex(),
+              AESEncryption.encrypt(displayUser.toCharArray(), keyType = KeyType.PERSISTENT)
+                ?.concatToString(),
+            )
+          } else {
+            remove(passkey.idHex())
+          }
+        }
       } else if (entry.password?.let { !it.isBlank() } ?: false) {
         // password
         items.add(
@@ -295,7 +318,6 @@ class DecryptActivity : BasePGPActivity() {
           }
         }
       }
-
       val labelFormat = resources.getString(R.string.otp_label_format)
       if (entry.hasTotp()) {
         items.add(FieldItem.createOtpField(labelFormat, entry.totp.first()))

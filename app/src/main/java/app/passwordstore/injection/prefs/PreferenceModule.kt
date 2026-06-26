@@ -46,4 +46,20 @@ class PreferenceModule {
   fun provideGitSecrets(@ApplicationContext context: Context): SharedPreferences {
     return context.getSharedPreferences("${BuildConfig.APPLICATION_ID}_git_secrets", MODE_PRIVATE)
   }
+
+  @[Provides CredentialUsernames Reusable]
+  fun provideCredentialUsernames(@ApplicationContext context: Context): SharedPreferences {
+    return context.getSharedPreferences(
+      "credential_usernames",
+      MODE_PRIVATE,
+    )
+  }
+
+  @[Provides PasswordHistory Reusable]
+  fun providePasswordHistory(@ApplicationContext context: Context): SharedPreferences {
+    return context.getSharedPreferences(
+      "recent_password_history",
+      MODE_PRIVATE,
+    )
+  }
 }

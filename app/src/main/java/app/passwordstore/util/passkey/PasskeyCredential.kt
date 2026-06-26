@@ -13,7 +13,7 @@ import java.time.ZoneId
 data class PasskeyCredential(
   val credentialId: ByteArray,
   val keyPair: KeyPair,
-  val algorithm: Int,
+  val algorithm: Algorithm,
   val rpId: String,
   val user: FidoUser,
   val signCount: UInt = 0u,
@@ -37,7 +37,7 @@ data class PasskeyCredential(
   override fun hashCode(): Int {
     var result = credentialId.contentHashCode()
     result = 31 * result + keyPair.hashCode()
-    result = 31 * result + algorithm
+    result = 31 * result + algorithm.hashCode()
     result = 31 * result + rpId.hashCode()
     result = 31 * result + user.hashCode()
     result = 31 * result + signCount.hashCode()
@@ -46,28 +46,53 @@ data class PasskeyCredential(
     return result
   }
 
-  public fun incrementSignCount(): PasskeyCredential = copy(signCount = signCount + 1u)
+  fun incrementSignCount(): PasskeyCredential = copy(signCount = signCount + 1u)
 
-  public fun credentialIdBase64(): String = credentialId.b64Encode().concatToString()
+  fun credentialIdBase64(): String = credentialId.b64Encode().concatToString()
 
-  public fun displayNameOrName(): String = user.displayName.takeIf { it.isNotBlank() } ?: user.name
-}
+  fun credentialIdHex(): String = credentialId.toHexString()
 
-data class FidoUser(
-  val id: ByteArray,
-  val name: String,
-  val displayName: String,
-) {
-  override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-    if (other !is FidoUser) return false
-    return id.contentEquals(other.id) && name == other.name && displayName == other.displayName
+  fun displayNameOrName(): String = user.displayName.takeIf { it.isNotBlank() } ?: user.name
+
+  data class FidoUser(
+    val id: ByteArray,
+    val name: String,
+    val displayName: String,
+  ) {
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (other !is FidoUser) return false
+      return id.contentEquals(other.id) && name == other.name && displayName == other.displayName
+    }
+
+    override fun hashCode(): Int {
+      var result = id.contentHashCode()
+      result = 31 * result + name.hashCode()
+      result = 31 * result + displayName.hashCode()
+      return result
+    }
+
+    fun idBase64(): String = id.b64Encode().concatToString()
+
+    fun idHex(): String = id.toHexString()
   }
 
-  override fun hashCode(): Int {
-    var result = id.contentHashCode()
-    result = 31 * result + name.hashCode()
-    result = 31 * result + displayName.hashCode()
-    return result
+  enum class Algorithm(val id: Int, val algorithmName: String) {
+    EDDSA(-8, "Ed25519"),
+    ES256(-7, "ES256"),
+    RS256(-257, "RS256");
+
+    fun toLong(): Long = id.toLong()
+
+    override fun toString(): String = "${algorithmName} (${id})"
+
+    companion object {
+      private val mapById = entries.associateBy { it.id }
+      private val mapByName = entries.associateBy { it.algorithmName.lowercase() }
+
+      fun fromId(id: Int): Algorithm? = mapById[id]
+
+      fun fromName(name: String?): Algorithm? = name?.lowercase()?.let { mapByName[it] }
+    }
   }
 }

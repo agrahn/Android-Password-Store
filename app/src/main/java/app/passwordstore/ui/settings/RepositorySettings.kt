@@ -33,6 +33,7 @@ import app.passwordstore.ui.sshkeygen.ShowSshKeyFragment
 import app.passwordstore.ui.sshkeygen.SshKeyGenActivity
 import app.passwordstore.ui.sshkeygen.SshKeyImportActivity
 import app.passwordstore.util.coroutines.DispatcherProvider
+import app.passwordstore.util.extensions.credentialUsernames
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.gitSecrets
 import app.passwordstore.util.extensions.launchActivity
@@ -354,6 +355,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
               }
               activity.sharedPrefs.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, false) }
               activity.passwordHistory.edit { clear() }
+              activity.credentialUsernames.edit { clear() }
               dialogInterface.cancel()
               activity.finish()
             }

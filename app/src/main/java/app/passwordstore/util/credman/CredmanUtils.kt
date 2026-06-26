@@ -15,25 +15,38 @@ import androidx.credentials.CreatePublicKeyCredentialResponse
 import androidx.credentials.provider.BeginCreateCredentialRequest
 import androidx.credentials.provider.BeginCreateCredentialResponse
 import androidx.credentials.provider.BeginCreatePublicKeyCredentialRequest
+import androidx.credentials.provider.BeginGetCredentialRequest
+import androidx.credentials.provider.BeginGetCredentialResponse
+import androidx.credentials.provider.BeginGetPublicKeyCredentialOption
 import androidx.credentials.provider.CallingAppInfo
 import androidx.credentials.provider.CreateEntry
+import androidx.credentials.provider.CredentialEntry
+import androidx.credentials.provider.PublicKeyCredentialEntry
 import androidx.credentials.webauthn.AuthenticatorAttestationResponse
 import androidx.credentials.webauthn.FidoPublicKeyCredential
 import androidx.credentials.webauthn.PublicKeyCredentialCreationOptions
 import app.passwordstore.Application
 import app.passwordstore.R
+import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.util.crypto.AESEncryption
+import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.b64Encode
+import app.passwordstore.util.extensions.credentialUsernames
 import app.passwordstore.util.extensions.getString
+import app.passwordstore.util.extensions.passwordHistory
 import app.passwordstore.util.extensions.toByteArray
-import app.passwordstore.util.passkey.FidoUser
 import app.passwordstore.util.passkey.PasskeyCredential
+import app.passwordstore.util.passkey.PasskeyCredential.Algorithm
+import app.passwordstore.util.passkey.PasskeyCredential.FidoUser
 import app.passwordstore.util.services.UDCakeCredentialProviderService
 import com.fasterxml.jackson.core.JsonFactory
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getOrElse
 import com.github.michaelbull.result.runCatching
+import java.nio.file.Paths
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.MessageDigest
@@ -45,6 +58,10 @@ import java.security.spec.ECGenParameterSpec
 import java.security.spec.RSAKeyGenParameterSpec
 import java.time.Instant
 import java.time.ZoneId
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.name
+import kotlin.io.path.nameWithoutExtension
+import logcat.logcat
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.json.JSONArray
@@ -54,21 +71,18 @@ import org.json.JSONObject
 @SuppressLint("RestrictedApi")
 object CredmanUtils {
 
-  // COSE identifiers for key types/algorithms
-  // https://datatracker.ietf.org/doc/html/rfc9053#name-signature-algorithms
-  const val ALG_EDDSA = -8
-  const val ALG_ES256 = -7
-  const val ALG_RS256 = -257 // https://www.w3.org/TR/webauthn-3/#sctn-encoded-credPubKey-examples
-
   private val context: Context
     get() = Application.instance.applicationContext
 
-  private val jsonMapper = ObjectMapper(JsonFactory()).registerModule(kotlinModule())
+  private val jsonMapper =
+    ObjectMapper(JsonFactory()).apply {
+      registerModule(kotlinModule())
+      configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    }
 
-  /**
-   * Creates a new pending intent of type [action]
+  /* Creates a new pending intent of type [action]
    *
-   * @param extra: Additional input parameters put as extra with name
+   * @param [extra]: Additional input parameters put as extra with name
    *   [UDCakeCredentialProviderService.CREDENTIAL_DATA_EXTRA]
    */
   private fun createPendingIntent(action: String, extra: Bundle? = null): PendingIntent {
@@ -94,30 +108,121 @@ object CredmanUtils {
   ): BeginCreateCredentialResponse? {
     return when (request) {
       is BeginCreatePublicKeyCredentialRequest -> {
-        handleCreatePasskeyQuery(request)
+        BeginCreateCredentialResponse.Builder()
+          .addCreateEntry(
+            CreateEntry(
+              accountName = UDCakeCredentialProviderService.ACCOUNT_ID,
+              pendingIntent =
+                createPendingIntent(UDCakeCredentialProviderService.CREATE_PASSKEY_INTENT_ACTION),
+            )
+          )
+          .build()
       }
-
       else -> {
         null
       }
     }
   }
 
-  private fun handleCreatePasskeyQuery(
-    request: BeginCreatePublicKeyCredentialRequest
-  ): BeginCreateCredentialResponse {
+  fun processGetCredentialRequest(request: BeginGetCredentialRequest): BeginGetCredentialResponse {
+    val callingPackageInfo = request.callingAppInfo
+    val callingPackageName = callingPackageInfo?.packageName.orEmpty()
+    val credentialEntries: MutableList<CredentialEntry> = mutableListOf()
 
-    return BeginCreateCredentialResponse.Builder()
-      .addCreateEntry(
-        CreateEntry.Builder(
-            context.getString(R.string.key_create_passkey),
-            createPendingIntent(UDCakeCredentialProviderService.CREATE_PASSKEY_INTENT_ACTION),
+    for (option in request.beginGetCredentialOptions) {
+      when (option) {
+        is BeginGetPublicKeyCredentialOption -> {
+          credentialEntries.addAll(populatePasskeyData(callingPackageInfo, option))
+        }
+        else -> {
+          logcat { "Request options of type ${option::class.qualifiedName} are not implemented" }
+        }
+      }
+    }
+
+    return BeginGetCredentialResponse(credentialEntries)
+  }
+
+  private fun populatePasskeyData(
+    callingAppInfo: CallingAppInfo?,
+    option: BeginGetPublicKeyCredentialOption,
+  ): List<CredentialEntry> {
+
+    val passkeyEntries = mutableListOf<CredentialEntry>()
+    val requestOptions =
+      jsonMapper.readValue(option.requestJson, PublicKeyCredentialRequestOptions::class.java)
+
+    val allowCredentialsHex = requestOptions.allowCredentials.map { it.idHex() }
+
+    val passkeyCandidates = mutableListOf<String>()
+    val repoPath = PasswordRepository.getRepositoryDirectory().absolutePath
+
+    /* First, try to find valid passkey file canditates in Password Store by credential hex ID;
+     * expired passkeys (deleted on the RP's side but still existing in APS) will not be listed */
+    allowCredentialsHex.forEach { id ->
+      passkeyCandidates.addAll(
+        PasswordRepository.findFilesByName(
+          rootPath = repoPath,
+          fileName = "${id}.gpg",
+          ignoreCase = true,
+        )
+      )
+    }
+
+    /* If User did not specify a username, RP sends an empty allowCredentials array. In this case
+     * we try to find passkey file canditates by RP ID */
+    if (allowCredentialsHex.isEmpty()) {
+      passkeyCandidates.addAll(
+        PasswordRepository.findFilesByParentName(
+            rootPath = repoPath,
+            parentName = requestOptions.rpId,
+            ignoreCase = true,
           )
-          .setDescription(context.getString(R.string.app_name))
-          .setAutoSelectAllowed(true)
+          .filter { file ->
+            Paths.get(file).nameWithoutExtension.matches("[a-fA-F0-9]{64}".toRegex())
+          }
+      )
+    }
+
+    passkeyCandidates.forEach { passkeyPath ->
+      val credentialHexId = Paths.get(passkeyPath).nameWithoutExtension
+      val shortenedHexId = credentialHexId.take(7)
+      val displayPath =
+        Paths.get(PasswordRepository.getRelativePath(passkeyPath, repoPath))
+          .parent
+          .absolutePathString() + "/" + shortenedHexId + "…"
+
+      val displayUser =
+        context.credentialUsernames.getString(credentialHexId, null)?.let {
+          AESEncryption.decrypt(it.toCharArray(), keyType = KeyType.PERSISTENT)?.concatToString()
+        } ?: shortenedHexId
+
+      val lastUsedTime =
+        context.passwordHistory
+          .getString(passkeyPath, null)
+          ?.let { it.toLongOrNull() }
+          ?.let { Instant.ofEpochMilli(it) }
+
+      val data = Bundle()
+      data.putString(UDCakeCredentialProviderService.CREDENTIAL_PATH, passkeyPath)
+      passkeyEntries.add(
+        PublicKeyCredentialEntry.Builder(
+            context = context,
+            username = displayPath,
+            pendingIntent =
+              createPendingIntent(
+                UDCakeCredentialProviderService.GET_PASSKEY_INTENT_ACTION,
+                data,
+              ),
+            beginGetPublicKeyCredentialOption = option,
+          )
+          .setDisplayName(displayUser)
+          .also { builder -> lastUsedTime?.let { builder.setLastUsedTime(it) } }
           .build()
       )
-      .build()
+    }
+
+    return passkeyEntries
   }
 
   private fun appInfoToOrigin(info: CallingAppInfo): String {
@@ -156,6 +261,15 @@ object CredmanUtils {
       }
   }
 
+  // find RP's most preferred algorithm that our app supports, with ES256 as fallback
+  fun getPreferredAlgorithm(requestOptions: PublicKeyCredentialCreationOptions): Algorithm {
+    // RP's supported key algorithms, in decending order of preference
+    val preferenceOrderOfAlgorithms =
+      requestOptions.pubKeyCredParams.mapNotNull { Algorithm.fromId(it.alg.toInt()) }
+
+    return preferenceOrderOfAlgorithms.firstOrNull() ?: Algorithm.ES256
+  }
+
   fun createPasskeyCredential(
     requestOptions: PublicKeyCredentialCreationOptions,
     credentialHexId: String,
@@ -164,20 +278,16 @@ object CredmanUtils {
       // preference
       requestOptions.pubKeyCredParams.map { it.alg.toInt() }
 
-    // RP's most preferred algorithm that our app supports, with ALG_ES256 as fallback
-    val chosenAlgorithm =
-      preferenceOrderOfAlgorithms
-        .filter { it in listOf(ALG_EDDSA, ALG_ES256, ALG_RS256) }
-        .firstOrNull() ?: ALG_ES256
+    val chosenAlgorithm = getPreferredAlgorithm(requestOptions)
 
     val keyPairGenerator =
       when (chosenAlgorithm) {
-        ALG_EDDSA -> // EdDSA aka Ed25519, state-of-the-art
+        Algorithm.EDDSA -> // EdDSA aka Ed25519, state-of-the-art
         KeyPairGenerator.getInstance("EdDSA", BouncyCastleProvider()).also {
             it.initialize(ECGenParameterSpec("ed25519"), SecureRandom())
           }
-        ALG_ES256 -> // ES256, still state-of-the-art, create Signature instance with
-          // Signature.getInstance("SHA256withECDSA", "BC")
+        Algorithm.ES256 -> // ECDSA using P-256 and SHA-256, still state-of-the-art,
+          // create Signature instance with Signature.getInstance("SHA256withECDSA", "BC")
           KeyPairGenerator.getInstance("EC", BouncyCastleProvider()).also {
             it.initialize(ECGenParameterSpec("secp256r1"), SecureRandom())
           }
