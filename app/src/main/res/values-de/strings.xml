@@ -499,9 +499,11 @@
 
   <!-- Passkeys -->
 
-  <string name="key_create_passkey">Neuer Passkey</string>
   <string name="cred_id_hint">WebAuthn-Anmeldedaten-ID</string>
+  <string name="cred_algorithm_hint">Typ</string>
   <string name="rp_name_hint">Gegenstellen-ID</string>
   <string name="fullname_hint">Vollständiger Benutzername</string>
+  <string name="reveal_passkey_username">Benutzernamen in der Passkey-Auswahl anzeigen</string>
+
 
 </resources>

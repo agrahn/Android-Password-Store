@@ -7,14 +7,17 @@ package app.passwordstore.util.passkey
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import app.passwordstore.util.credman.CredmanUtils
+import app.passwordstore.util.extensions.b64Encode
 import app.passwordstore.util.extensions.unsafeLazy
+import app.passwordstore.util.extensions.wipe
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.cbor.databind.CBORMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.runCatching
+import java.security.Signature
 import java.security.KeyFactory
 import java.security.PrivateKey
 import java.security.spec.PKCS8EncodedKeySpec
@@ -23,6 +26,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
+import org.bouncycastle.asn1.ASN1Integer
+import org.bouncycastle.asn1.ASN1Sequence
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
@@ -40,6 +45,17 @@ data class StoredCredential(
   val discoverable: Boolean = true,
   val extensions: CredentialExtensions = CredentialExtensions(),
 ) {
+
+  fun getAlgorithmName(): String? = PasskeyCredential.Algorithm.fromId(alg)?.algorithmName
+
+  fun getAlgorithmString(): String? = PasskeyCredential.Algorithm.fromId(alg)?.toString()
+
+  fun incrementSignCount(): StoredCredential = copy(signCount = signCount + 1u)
+
+  fun idBase64(): String = id.b64Encode().concatToString()
+
+  fun idHex(): String = id.toHexString()
+
   /**
    * Serialize this StoredCredential instance to CBOR format. throws Exception if serialization
    * fails
@@ -54,22 +70,74 @@ data class StoredCredential(
     cborMapper.writeValueAsBytes(this)
   }
 
-  fun decodePrivateKey(): Result<PrivateKey, Throwable> = runCatching {
+  fun clearPrivateKey() {
+    privateKey.wipe()
+  }
+
+  fun signData(dataToSign: ByteArray): Result<ByteArray, Throwable> = runCatching {
     val keySpec = PKCS8EncodedKeySpec(privateKey)
     val keyFactory =
       KeyFactory.getInstance(
-        when (alg) {
-          CredmanUtils.ALG_EDDSA -> "Ed25519"
-          CredmanUtils.ALG_ES256 -> "EC"
-          CredmanUtils.ALG_RS256 -> "RSA"
+        when (PasskeyCredential.Algorithm.fromId(alg)) {
+          PasskeyCredential.Algorithm.EDDSA -> "Ed25519"
+          PasskeyCredential.Algorithm.ES256 -> "EC"
+          PasskeyCredential.Algorithm.RS256 -> "RSA"
           else -> {
             throw IllegalStateException("Unsupported passkey algorithm, COSE alg=${alg}")
           }
         },
         BouncyCastleProvider(),
       )
+    val jcaPrivateKey = keyFactory.generatePrivate(keySpec)
 
-    keyFactory.generatePrivate(keySpec)
+    val algorithm = PasskeyCredential.Algorithm.fromId(alg)
+
+    val engine =
+      Signature.getInstance(
+        when (algorithm) {
+          PasskeyCredential.Algorithm.EDDSA -> "Ed25519"
+          PasskeyCredential.Algorithm.ES256 -> "SHA256withECDSA"
+          PasskeyCredential.Algorithm.RS256 -> "SHA256withRSA"
+          else -> {
+            throw IllegalStateException(
+              "Creating Signature instance from unsupported passkey algorithm, COSE alg=${alg}"
+            )
+          }
+        },
+        BouncyCastleProvider(),
+      )
+
+    engine.initSign(jcaPrivateKey)
+    engine.update(dataToSign)
+    val jcaOutput = engine.sign()
+
+    if (PasskeyCredential.Algorithm.fromId(alg) == PasskeyCredential.Algorithm.ES256)
+      derToRawEs256(jcaOutput)
+    else jcaOutput
+  }
+
+  /**
+   * For ES256 Signing: Converts ASN.1 DER signature from JCA to raw 64-byte (r || s) WebAuthn
+   * format.
+   */
+  private fun derToRawEs256(derSignature: ByteArray): ByteArray {
+    val seq = ASN1Sequence.getInstance(derSignature)
+    val rInt = ASN1Integer.getInstance(seq.getObjectAt(0)).value
+    val sInt = ASN1Integer.getInstance(seq.getObjectAt(1)).value
+
+    val rawSignature = ByteArray(64)
+    copyToWindow(rInt.toByteArray(), rawSignature, 0)
+    copyToWindow(sInt.toByteArray(), rawSignature, 32)
+    return rawSignature
+  }
+
+  private fun copyToWindow(valueBytes: ByteArray, target: ByteArray, offset: Int) {
+    val len = valueBytes.size
+    if (len > 32) {
+      System.arraycopy(valueBytes, len - 32, target, offset, 32)
+    } else {
+      System.arraycopy(valueBytes, 0, target, offset + (32 - len), len)
+    }
   }
 
   fun creationDateTimeString(formatStyle: FormatStyle = FormatStyle.LONG): String {
@@ -113,7 +181,10 @@ data class StoredCredential(
 
   companion object {
     private val cborMapper: ObjectMapper by unsafeLazy { // initialised once, on first use
-      CBORMapper().registerModule(kotlinModule())
+      CBORMapper().apply {
+        registerModule(kotlinModule())
+        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+      }
     }
 
     /** Parse [cborBytes] into a StoredCredential instance. */
@@ -134,7 +205,7 @@ data class StoredCredential(
               credential.user.displayName,
             ),
           signCount = credential.signCount,
-          alg = credential.algorithm,
+          alg = credential.algorithm.id,
           privateKey = credential.keyPair.private.encoded,
           created = credential.createdAt.getEpochSecond(),
           zone = credential.zoneId.toString(),
@@ -171,6 +242,7 @@ data class UserInfo(
   val id: ByteArray,
   val name: String,
   @JsonProperty("display_name") val displayName: String? = null,
+  @JsonProperty("reveal_name") var revealName: Boolean = false,
 ) {
   // override auto-generated equals() and hashCode() methods which do not work correctly since they
   // compare by ref not by content
@@ -179,6 +251,7 @@ data class UserInfo(
     if (other !is UserInfo) return false
     if (!id.contentEquals(other.id)) return false
     if (name != other.name) return false
+    if (revealName != other.revealName) return false
     if (displayName != other.displayName) return false
     return true
   }
@@ -186,9 +259,14 @@ data class UserInfo(
   override fun hashCode(): Int {
     var result = id.contentHashCode()
     result = 31 * result + name.hashCode()
+    result = 31 * result + revealName.hashCode()
     result = 31 * result + (displayName?.hashCode() ?: 0)
     return result
   }
+
+  fun idBase64(): String = id.b64Encode().concatToString()
+
+  fun idHex(): String = id.toHexString()
 }
 
 data class RelyingPartyInfo(

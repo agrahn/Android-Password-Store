@@ -6,8 +6,8 @@
 package app.passwordstore.ui.crypto
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
@@ -37,11 +37,14 @@ import app.passwordstore.data.passfile.splitToCharArrayListAt
 import app.passwordstore.data.passfile.trimEnd
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.PasskeyCreationActivityBinding
+import app.passwordstore.injection.prefs.CredentialUsernames
+import app.passwordstore.injection.prefs.PasswordHistory
 import app.passwordstore.ui.dialogs.OtpImportDialogFragment
 import app.passwordstore.ui.folderselect.SelectFolderActivity
 import app.passwordstore.ui.passwords.PasswordStore
 import app.passwordstore.util.credman.CredmanUtils
 import app.passwordstore.util.crypto.AESEncryption
+import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.asLog
 import app.passwordstore.util.extensions.b64Encode
 import app.passwordstore.util.extensions.base64
@@ -55,6 +58,7 @@ import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.passkey.StoredCredential
+import app.passwordstore.util.services.UDCakeCredentialProviderService
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onErr
@@ -95,18 +99,26 @@ import logcat.logcat
 @SuppressLint("RestrictedApi")
 class PasskeyCreationActivity : BasePGPActivity() {
 
+  @CredentialUsernames @Inject lateinit var credentialUsernames: SharedPreferences
+  @PasswordHistory @Inject lateinit var passwordHistory: SharedPreferences
+
   private val binding by viewBinding(PasskeyCreationActivityBinding::inflate)
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
 
   private val suggestedName by unsafeLazy {
     intent.getStringExtra(PasswordCreationActivity.EXTRA_FILE_NAME)
   }
+
   private val suggestedEntryChars by unsafeLazy {
     intent.getCharArrayExtra(PasswordCreationActivity.EXTRA_ENTRY)
   }
 
   private val editing by unsafeLazy {
     intent.getBooleanExtra(PasswordCreationActivity.EXTRA_EDITING, false)
+  }
+
+  private val credentialDataBundle by unsafeLazy {
+    intent.getBundleExtra(UDCakeCredentialProviderService.CREDENTIAL_DATA_EXTRA)
   }
 
   private fun getProviderRequest(): ProviderCreateCredentialRequest? =
@@ -276,6 +288,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
 
         directory.setText(relPath)
         credId.setText(credentialId.toHexString())
+        credAlgorithm.setText(CredmanUtils.getPreferredAlgorithm(requestOptions).toString())
         username.setText(requestOptions.user.name)
         requestOptions.user.displayName?.let {
           fullname.setText(it)
@@ -296,7 +309,9 @@ class PasskeyCreationActivity : BasePGPActivity() {
         val passkey = suggestedEntry?.let { retrievePasskey(it, stripped = true) }
 
         credId.setText(passkey?.id?.toHexString())
+        credAlgorithm.setText(passkey?.getAlgorithmString())
         username.setText(passkey?.user?.name)
+        revealPasskeyUsername.isChecked = passkey?.user?.revealName ?: false
         passkey?.user?.displayName?.let {
           fullname.setText(it)
           fullnameLayout.isVisible = it != passkey?.user?.name
@@ -375,7 +390,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
 
       lifecycleScope.launch(dispatcherProvider.main()) {
         runCatching {
-            var credentialId = binding.credId.text.toString()
+            var credentialHexId = binding.credId.text.toString()
 
             // passkey creation
             val providerRequest = getProviderRequest()
@@ -384,7 +399,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
               PublicKeyCredentialCreationOptions(it.requestJson)
             }
             val passkeyCredential = requestOptions?.let { options ->
-              CredmanUtils.createPasskeyCredential(options, credentialId)
+              CredmanUtils.createPasskeyCredential(options, credentialHexId)
             }
 
             val createPublicKeyCredentialResponse = passkeyCredential?.let { credential ->
@@ -409,18 +424,26 @@ class PasskeyCreationActivity : BasePGPActivity() {
               if (passkeyCredential != null) {
                 // new passkey
                 StoredCredential.fromPasskeyCredential(passkeyCredential).get()?.let { stored ->
+                  stored.user.revealName = revealPasskeyUsername.isChecked
                   stored.toCbor()?.b64Encode().also { stored.privateKey.wipe() }
                 }
               } else {
-                // modify Store entry, use existing passkey as is
-                val suggestedEntry = suggestedEntryChars?.let { encrypted ->
+                // edit passkey
+                suggestedEntryChars?.let { encrypted ->
                   AESEncryption.decrypt(encrypted)?.let { decrypted ->
-                    passwordEntryFactory.create(decrypted).also { decrypted.wipe() }
+                    val entry = passwordEntryFactory.create(decrypted).also { decrypted.wipe() }
+                    val storedCredential = retrievePasskey(entry).also { entry.clear() }
+                    storedCredential?.user?.revealName?.let {
+                      storedCredential.user.revealName = revealPasskeyUsername.isChecked
+                    }
+                    storedCredential?.toCbor()?.b64Encode()?.also {
+                      storedCredential.clearPrivateKey()
+                    }
                   }
                 }
-                suggestedEntry?.password
               } ?: throw NullPointerException()
 
+            // apply any modifications done on the entry, and encrypt it for storage
             var editExtra =
               extraContent.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
 
@@ -478,7 +501,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
                 return@runCatching
               }
 
-              "${passwordDirectory.pathString}/$credentialId.gpg"
+              "${passwordDirectory.pathString}/$credentialHexId.gpg"
             }
 
             val passwordFile = Paths.get(path)
@@ -503,15 +526,16 @@ class PasskeyCreationActivity : BasePGPActivity() {
               passwordFile.writeBytes(encryptionResult.getOrThrow().toByteArray())
             }
 
-            // associate the new password name with the last name's timestamp in history
-            val preference = getSharedPreferences("recent_password_history", Context.MODE_PRIVATE)
-            val oldFilePathHash = "${fullPath.trimEnd('/')}/$suggestedName.gpg".base64()
-            val timestamp = preference.getString(oldFilePathHash)
-            if (timestamp != null) {
-              preference.edit {
+            // create/update timestamp on the current passkey file
+            passwordHistory.edit {
+              suggestedName?.let { oldFile ->
+                val oldFilePathHash = "${fullPath.trimEnd('/')}/$oldFile.gpg".base64()
                 remove(oldFilePathHash)
-                putString(passwordFile.absolutePathString().base64(), timestamp)
               }
+              putString(
+                passwordFile.absolutePathString().base64(),
+                System.currentTimeMillis().toString(),
+              )
             }
 
             lifecycleScope.launch {
@@ -521,11 +545,31 @@ class PasskeyCreationActivity : BasePGPActivity() {
               commitChange(
                   resources.getString(
                     commitMessageRes,
-                    PasswordRepository.getLongName(fullPath, repoPath, credentialId),
+                    PasswordRepository.getLongName(fullPath, repoPath, credentialHexId),
                   )
                 )
                 .onOk {
                   setResult(RESULT_OK, returnIntent)
+
+                  // maintain cred hex ID <-> user name map for display on passkey selector
+                  credentialUsernames.edit {
+                    if (revealPasskeyUsername.isChecked) {
+                      val displayUser =
+                        if ("${fullname.text}" != "${username.text}")
+                          "${username.text} (${fullname.text})"
+                        else "${username.text}"
+                      putString(
+                        credentialHexId,
+                        AESEncryption.encrypt(
+                            displayUser.toCharArray(),
+                            keyType = KeyType.PERSISTENT,
+                          )
+                          ?.concatToString(),
+                      )
+                    } else {
+                      remove(credentialHexId)
+                    }
+                  }
 
                   val dialog =
                     MaterialAlertDialogBuilder(this@PasskeyCreationActivity)

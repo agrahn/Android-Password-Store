@@ -12,6 +12,7 @@ import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.CreateCredentialException
 import androidx.credentials.exceptions.CreateCredentialUnknownException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.GetCredentialUnknownException
 import androidx.credentials.provider.BeginCreateCredentialRequest
 import androidx.credentials.provider.BeginCreateCredentialResponse
 import androidx.credentials.provider.BeginGetCredentialRequest
@@ -34,9 +35,7 @@ class UDCakeCredentialProviderService : CredentialProviderService() {
   ) {
     val response: BeginCreateCredentialResponse? =
       CredmanUtils.processCreateCredentialRequest(request)
-    logcat {
-      "++++++++++++++++++++ onBegin CREATE CredentialRequest ++++++++++++++++++++"
-    }
+    logcat { "++++++++++++++++++++ onBegin CREATE CredentialRequest ++++++++++++++++++++" }
     if (response != null) {
       runCatching {
           callback.onResult(response)
@@ -55,13 +54,13 @@ class UDCakeCredentialProviderService : CredentialProviderService() {
     callback: OutcomeReceiver<BeginGetCredentialResponse, GetCredentialException>,
   ) {
     logcat { "++++++++++++++++++++ onBegin GET CredentialRequest ++++++++++++++++++++" }
-    // try {
-    //
-    // callback.onResult(OpenPasskeyAuthServiceUtils.processGetCredentialRequest(this.application,
-    // this, request))
-    // } catch (_: GetCredentialException) {
-    //    callback.onError(GetCredentialUnknownException())
-    // }
+    runCatching {
+        val response = CredmanUtils.processGetCredentialRequest(request)
+        callback.onResult(response)
+      }
+      .onErr { e ->
+        callback.onError(GetCredentialUnknownException())
+      }
   }
 
   override fun onClearCredentialStateRequest(
@@ -73,14 +72,13 @@ class UDCakeCredentialProviderService : CredentialProviderService() {
   }
 
   companion object {
+    const val ACCOUNT_ID = "${BuildConfig.APPLICATION_ID}"
+    const val CREDENTIAL_DATA_EXTRA = "credential_data_extra"
+    const val CREDENTIAL_PATH = "credential_path"
+
     // These intent actions are specified for corresponding activities
     // that are to be invoked through the PendingIntent(s)
     const val GET_PASSKEY_INTENT_ACTION = "${BuildConfig.APPLICATION_ID}.action.GET_PASSKEY"
     const val CREATE_PASSKEY_INTENT_ACTION = "${BuildConfig.APPLICATION_ID}.action.CREATE_PASSKEY"
-    const val CREDENTIAL_DATA_EXTRA = "${BuildConfig.APPLICATION_ID}.CREDENTIAL_DATA"
-    const val UNLOCK_APP_INTENT_ACTION = "${BuildConfig.APPLICATION_ID}.action.UNLOCK_APP"
-    const val CREDENTIAL_ID = "credentialId"
-    const val ACCOUNT_ID = "accountId"
-    const val DEVICE_ACCOUNT = "DEVICE_ACCOUNT_ID"
   }
 }

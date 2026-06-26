@@ -62,6 +62,27 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
+      android:id="@+id/cred_algorithm_layout"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_margin="8dp"
+      android:hint="@string/cred_algorithm_hint"
+      app:boxStrokeColor="?attr/colorControlNormal"
+      android:textColorHint="?attr/colorControlNormal"
+      android:alpha="0.6"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@id/cred_id_layout">
+
+      <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/cred_algorithm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:alpha="0.6"
+        android:focusable="false"
+        android:inputType="none"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
       android:id="@+id/username_layout"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
@@ -71,7 +92,7 @@
       android:textColorHint="?attr/colorControlNormal"
       android:alpha="0.6"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@id/cred_id_layout">
+      app:layout_constraintTop_toBottomOf="@id/cred_algorithm_layout">
 
       <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/username"
@@ -92,7 +113,7 @@
       android:textColorHint="?attr/colorControlNormal"
       android:alpha="0.6"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@id/username_layout">
+      app:layout_constraintTop_toBottomOf="@+id/username_layout">
 
       <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/fullname"
@@ -103,6 +124,15 @@
         android:inputType="none"/>
     </com.google.android.material.textfield.TextInputLayout>
 
+    <com.google.android.material.checkbox.MaterialCheckBox
+      android:id="@+id/reveal_passkey_username"
+      android:text="@string/reveal_passkey_username"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      app:layout_constraintRight_toRightOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/fullname_layout" />
+
     <com.google.android.material.textfield.TextInputLayout
       android:id="@+id/extra_input_layout"
       android:layout_width="match_parent"
@@ -110,7 +140,7 @@
       android:layout_margin="8dp"
       android:hint="@string/crypto_extra_label"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@id/fullname_layout">
+      app:layout_constraintTop_toBottomOf="@id/reveal_passkey_username">
 
       <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/extra_content"

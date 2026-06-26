@@ -5,8 +5,8 @@
 
 package app.passwordstore.ui.crypto
 
-import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
@@ -33,6 +33,7 @@ import app.passwordstore.data.passfile.splitToCharArrayListAt
 import app.passwordstore.data.passfile.trimEnd
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.PasswordCreationActivityBinding
+import app.passwordstore.injection.prefs.PasswordHistory
 import app.passwordstore.ui.dialogs.DicewarePasswordGeneratorDialogFragment
 import app.passwordstore.ui.dialogs.OtpImportDialogFragment
 import app.passwordstore.ui.dialogs.PasswordGeneratorDialogFragment
@@ -86,6 +87,8 @@ import logcat.logcat
 
 @AndroidEntryPoint
 class PasswordCreationActivity : BasePGPActivity() {
+
+  @PasswordHistory @Inject lateinit var passwordHistory: SharedPreferences
 
   private val binding by viewBinding(PasswordCreationActivityBinding::inflate)
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
@@ -514,8 +517,7 @@ class PasswordCreationActivity : BasePGPActivity() {
             }
 
             // create/update timestamp on the current password file
-            val preference = getSharedPreferences("recent_password_history", Context.MODE_PRIVATE)
-            preference.edit {
+            passwordHistory.edit {
               suggestedName?.let { oldFile ->
                 val oldFilePathHash = "${fullPath.trimEnd('/')}/$oldFile.gpg".base64()
                 remove(oldFilePathHash)

@@ -501,9 +501,10 @@
 
   <!-- Passkeys -->
   <string name="passkey">Passkey</string>
-  <string name="key_create_passkey">New passkey</string>
   <string name="cred_id_hint">WebAuthn credential ID</string>
+  <string name="cred_algorithm_hint">Type</string>
   <string name="rp_name_hint">Relying party ID</string>
   <string name="fullname_hint">Real username</string>
+  <string name="reveal_passkey_username">Reveal username on passkey selector</string>
 
 </resources>

@@ -29,6 +29,7 @@ import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.data.password.PasswordItem
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.PasswordRecyclerViewBinding
+import app.passwordstore.injection.prefs.PasswordHistory
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.ui.adapters.PasswordItemRecyclerAdapter
 import app.passwordstore.ui.dialogs.BasicBottomSheet
@@ -66,6 +67,7 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
   @Inject lateinit var shortcutHandler: ShortcutHandler
   @Inject lateinit var dispatcherProvider: DispatcherProvider
   @Inject @SettingsPreferences lateinit var prefs: SharedPreferences
+  @Inject @PasswordHistory lateinit var passwordHistory: SharedPreferences
   private lateinit var recyclerAdapter: PasswordItemRecyclerAdapter
   private lateinit var listener: OnFragmentInteractionListener
   private lateinit var settings: SharedPreferences
@@ -372,9 +374,7 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
                   PasswordSortOrder.RECENTLY_USED.name
               ) {
                 // save the time when password was used
-                val preferences =
-                  context.getSharedPreferences("recent_password_history", Context.MODE_PRIVATE)
-                preferences.edit {
+                passwordHistory.edit {
                   putString(item.file.absolutePath.base64(), System.currentTimeMillis().toString())
                 }
               }

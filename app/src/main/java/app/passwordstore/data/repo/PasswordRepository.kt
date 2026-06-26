@@ -15,6 +15,12 @@ import com.github.michaelbull.result.getOrElse
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.name
+import kotlin.streams.asSequence
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.BranchTrackingStatus
 import org.eclipse.jgit.lib.Constants
@@ -255,5 +261,38 @@ object PasswordRepository {
     }
     passwordList.sortWith(sortOrder.comparator)
     return passwordList
+  }
+
+  fun findFilesByName(
+    rootPath: String,
+    fileName: String,
+    ignoreCase: Boolean = false,
+  ): List<String> {
+    return Files.walk(Paths.get(rootPath)).use { stream ->
+      stream
+        .asSequence()
+        .filter { Files.isRegularFile(it) }
+        .filter { it.name.equals(fileName, ignoreCase = ignoreCase) }
+        .map { it.absolutePathString() }
+        .toList()
+    }
+  }
+
+  fun findFilesByParentName(
+    rootPath: String,
+    parentName: String,
+    ignoreCase: Boolean = false,
+  ): List<String> {
+    return Files.walk(Paths.get(rootPath)).use { stream ->
+      stream
+        .asSequence()
+        .filter { Files.isRegularFile(it) }
+        .filter { path ->
+          val parent: Path? = path.parent
+          parent != null && parent.name.equals(parentName, ignoreCase = ignoreCase)
+        }
+        .map { it.absolutePathString() }
+        .toList()
+    }
   }
 }

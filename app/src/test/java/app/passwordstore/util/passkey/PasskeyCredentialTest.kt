@@ -6,6 +6,8 @@
 
 package app.passwordstore.util.passkey
 
+import app.passwordstore.util.passkey.PasskeyCredential.Algorithm
+import app.passwordstore.util.passkey.PasskeyCredential.FidoUser
 import com.github.michaelbull.result.get
 import java.security.KeyPair
 import java.security.KeyPairGenerator
@@ -59,7 +61,7 @@ class PasskeyCredentialTest {
       PasskeyCredential(
         credentialId = credentialId,
         keyPair = keyPairEC,
-        algorithm = -7,
+        algorithm = Algorithm.ES256,
         rpId = "example.org",
         user =
           FidoUser(
@@ -75,7 +77,7 @@ class PasskeyCredentialTest {
       PasskeyCredential(
         credentialId = credentialId,
         keyPair = keyPairEC,
-        algorithm = -7,
+        algorithm = Algorithm.ES256,
         rpId = "example.org",
         user =
           FidoUser(
@@ -94,7 +96,7 @@ class PasskeyCredentialTest {
       PasskeyCredential(
         credentialId = credentialId,
         keyPair = keyPairEdDSA,
-        algorithm = -8,
+        algorithm = Algorithm.EDDSA,
         rpId = "example.org",
         user =
           FidoUser(
@@ -116,7 +118,7 @@ class PasskeyCredentialTest {
       PasskeyCredential(
         credentialId = credentialId,
         keyPair = keyPairEC,
-        algorithm = -7,
+        algorithm = Algorithm.ES256,
         rpId = "example.org",
         user =
           FidoUser(
@@ -130,7 +132,7 @@ class PasskeyCredentialTest {
 
     val storedCredential = StoredCredential.fromPasskeyCredential(passkeyCredential).get()
     assertNotNull(storedCredential)
-    assertTrue(storedCredential.alg == -7) // ECDSA
+    assertTrue(storedCredential.alg == Algorithm.ES256.id) // EC (-7)
 
     val storedCredentialCbor = storedCredential.toCborResult().get()
     assertNotNull(storedCredentialCbor)
@@ -149,7 +151,7 @@ class PasskeyCredentialTest {
       PasskeyCredential(
         credentialId = credentialId,
         keyPair = keyPairEdDSA,
-        algorithm = -8,
+        algorithm = Algorithm.EDDSA,
         rpId = "example.org",
         user =
           FidoUser(
@@ -162,6 +164,11 @@ class PasskeyCredentialTest {
       )
     val storedCredentialOther = StoredCredential.fromPasskeyCredential(passkeyCredentialOther).get()
     assertNotNull(storedCredentialOther)
-    assertTrue(storedCredentialOther.alg == -8) // EdDSA
+    assertTrue(storedCredentialOther.alg == Algorithm.EDDSA.id) // EdDSA (-8)
+
+    assertTrue(storedCredential.user.revealName == false)
+    storedCredential.user.revealName = true
+    val storedCredentialModifCbor = storedCredential.toCbor()
+    assertTrue(StoredCredential.fromCbor(storedCredentialModifCbor).get()?.user?.revealName == true)
   }
 }

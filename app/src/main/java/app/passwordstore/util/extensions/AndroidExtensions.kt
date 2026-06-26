@@ -8,6 +8,7 @@ package app.passwordstore.util.extensions
 import android.app.KeyguardManager
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
@@ -47,19 +48,23 @@ val Context.keyguardManager: KeyguardManager
 
 /** Get the default [SharedPreferences] instance */
 val Context.sharedPrefs: SharedPreferences
-  get() = getSharedPreferences("${BuildConfig.APPLICATION_ID}_preferences", 0)
+  get() = getSharedPreferences("${BuildConfig.APPLICATION_ID}_preferences", MODE_PRIVATE)
 
 /** Get the persistent passphrases [SharedPreferences] instance */
 val Context.persistentPassphrases: SharedPreferences
-  get() = getSharedPreferences("${BuildConfig.APPLICATION_ID}_passphrases", 0)
+  get() = getSharedPreferences("${BuildConfig.APPLICATION_ID}_passphrases", MODE_PRIVATE)
 
 /** Get the persistent Git server secrets [SharedPreferences] instance */
 val Context.gitSecrets: SharedPreferences
-  get() = getSharedPreferences("${BuildConfig.APPLICATION_ID}_git_secrets", 0)
+  get() = getSharedPreferences("${BuildConfig.APPLICATION_ID}_git_secrets", MODE_PRIVATE)
 
 /** Get the persistent pass file timestamps */
 val Context.passwordHistory: SharedPreferences
-  get() = getSharedPreferences("recent_password_history", 0)
+  get() = getSharedPreferences("recent_password_history", MODE_PRIVATE)
+
+/** Get the persistent pass file timestamps */
+val Context.credentialUsernames: SharedPreferences
+  get() = getSharedPreferences("credential_usernames", MODE_PRIVATE)
 
 /** Resolve [attr] from the [Context]'s theme */
 fun Context.resolveAttribute(attr: Int): Int {
