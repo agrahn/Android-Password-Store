@@ -80,7 +80,6 @@ dependencies {
   implementation(libs.thirdparty.kotlinResult)
   implementation(libs.thirdparty.logcat)
   implementation(libs.thirdparty.modernAndroidPrefs)
-  implementation(libs.thirdparty.leakcanary.plumber)
   implementation(libs.thirdparty.sshj)
   implementation(libs.thirdparty.bouncycastle.bcprov)
   implementation(libs.thirdparty.bouncycastle.bcutil)
@@ -93,6 +92,7 @@ dependencies {
   testImplementation(libs.testing.robolectric)
   testImplementation(libs.testing.sharedPrefsMock)
   testImplementation(libs.bundles.testDependencies)
+  // implementation(libs.thirdparty.leakcanary.plumber)
 }
 
 // temporary fix for hilt-2.60, https://github.com/google/dagger/issues/5203

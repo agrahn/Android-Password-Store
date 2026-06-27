@@ -67,18 +67,18 @@ gradlePlugin {
 dependencies {
   implementation(platform(libs.kotlin.bom))
   implementation(libs.build.agp)
-  implementation(libs.build.diffutils)
-  implementation(libs.build.download)
-  implementation(libs.build.javapoet)
   implementation(libs.build.kotlin)
-  implementation(libs.build.moshi)
-  implementation(libs.build.moshi.kotlin)
   implementation(libs.build.okhttp)
   implementation(libs.build.r8)
   implementation(libs.build.semver)
   implementation(libs.build.spotless)
   implementation(libs.build.vcu)
   implementation(libs.kotlinx.coroutines.core)
+  // implementation(libs.build.diffutils)
+  // implementation(libs.build.download)
+  // implementation(libs.build.javapoet)
+  // implementation(libs.build.moshi)
+  // implementation(libs.build.moshi.kotlin)
 
   // Expose the generated version catalog API to the plugin.
   implementation(files(libs::class.java.superclass.protectionDomain.codeSource.location))
