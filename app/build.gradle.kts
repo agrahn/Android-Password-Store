@@ -94,3 +94,8 @@ dependencies {
   testImplementation(libs.testing.sharedPrefsMock)
   testImplementation(libs.bundles.testDependencies)
 }
+
+// temporary fix for hilt-2.60, https://github.com/google/dagger/issues/5203
+tasks.withType<JavaCompile>().configureEach {
+  options.compilerArgs.add("-Adagger.fastInit=enabled")
+}
