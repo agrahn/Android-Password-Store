@@ -1,4 +1,4 @@
-141509
+141697
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -2066,14 +2066,17 @@ ddl.fr-par.scw.cloud
 ddl.nl-ams.scw.cloud
 ddl.pl-waw.scw.cloud
 ddns-ip.net
+ddns.berlin
 ddns.me
 ddns.net
+ddns.wtf
 ddnsfree.com
 ddnsgeek.com
 ddnsguru.com
 ddnsking.com
 ddnss.de
 ddnss.org
+ddnssec.de
 dds
 de
 de.com
@@ -2192,7 +2195,11 @@ dnsdojo.com
 dnsdojo.net
 dnsdojo.org
 dnsfor.me
+dnshome.at
+dnshome.cloud
 dnshome.de
+dnshome.eu
+dnshome.it
 dnsiskinky.com
 dnsking.ch
 dnsup.net
@@ -2264,6 +2271,7 @@ dyn.addr.tools
 dyn.cosidns.de
 dyn.ddnss.de
 dyn.home-webserver.de
+dyn.now
 dynalias.com
 dynalias.net
 dynalias.org
@@ -2292,6 +2300,7 @@ dyndns.org
 dyndns.tv
 dyndns.ws
 dyndns1.de
+dyndnssec.de
 dynns.com
 dynserv.org
 dynu.net
@@ -3671,6 +3680,8 @@ health.vn
 healthcare
 heavy.jp
 heguri.nara.jp
+heimdns.de
+heimdns.online
 heiyu.space
 hekinan.aichi.jp
 helioho.st
@@ -5651,6 +5662,7 @@ mjøndalen.no
 mk
 mk.eu.org
 mk.ua
+mkm.fan
 mktg.ec
 ml
 mlb
@@ -7231,6 +7243,9 @@ punyu.jp
 pup.gov.pl
 pupu.jp
 pussycat.jp
+puter.app
+puter.site
+puter.work
 pv.it
 pvh.br
 pvt.ge
@@ -7385,6 +7400,7 @@ reservd.disrec.thingdust.io
 reservd.testing.thingdust.io
 reserve-online.net
 resindevice.io
+resolve.bar
 rest
 restaurant
 restaurant.bj
@@ -8424,6 +8440,7 @@ srht.site
 srl
 srv.br
 srv.us
+srvdns.de
 sryze.cc
 ss
 ss.it
