@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Ignore Kotlin interop nullness checks on auto-generated code -->
+    <issue id="UnknownNullness">
+        <ignore path="**/build/generated/**" />
+    </issue>
+</lint>
