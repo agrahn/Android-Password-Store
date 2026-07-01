@@ -181,15 +181,16 @@ object SshKey {
     else false
   }
 
-  public enum class Type(val value: String) {
+  enum class Type(val value: String) {
     Imported("imported"),
     KeystoreNative("keystore_native"),
     KeystoreWrappedEd25519("keystore_wrapped_eddsa"),
     ImportedPGP("imported_pgp");
 
     companion object {
+      private val mapByValue = entries.associateBy { it.value }
 
-      fun fromValue(value: String?): Type? = entries.associateBy { it.value }[value]
+      fun fromValue(value: String?): Type? = mapByValue[value]
     }
   }
 
