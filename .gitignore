@@ -66,8 +66,25 @@ proguard/
 captures/
 .navigation/
 *.ipr
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+Session.vim
+Sessionx.vim
+
+.netrwhist
 *~
-*.swp
+
+# Auto-generated tag files
+tags
+# Persistent undo
+[._]*.un~
+# /Vim
 
 # Android Patch
 gen-external-apklibs
