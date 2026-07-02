@@ -36,6 +36,7 @@ import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.gitSecrets
 import app.passwordstore.util.extensions.launchActivity
+import app.passwordstore.util.extensions.passwordHistory
 import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
@@ -352,6 +353,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
                 removeDynamicShortcuts(dynamicShortcuts.map { it.id }.toMutableList())
               }
               activity.sharedPrefs.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, false) }
+              activity.passwordHistory.edit { clear() }
               dialogInterface.cancel()
               activity.finish()
             }
