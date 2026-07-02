@@ -496,15 +496,17 @@ class PasswordCreationActivity : BasePGPActivity() {
               passwordFile.writeBytes(result.getOrThrow().toByteArray())
             }
 
-            // associate the new password name with the last name's timestamp in history
+            // create/update timestamp on the current password file
             val preference = getSharedPreferences("recent_password_history", Context.MODE_PRIVATE)
-            val oldFilePathHash = "${fullPath.trimEnd('/')}/$suggestedName.gpg".base64()
-            val timestamp = preference.getString(oldFilePathHash)
-            if (timestamp != null) {
-              preference.edit {
+            preference.edit {
+              suggestedName?.let { oldFile ->
+                val oldFilePathHash = "${fullPath.trimEnd('/')}/$oldFile.gpg".base64()
                 remove(oldFilePathHash)
-                putString(passwordFile.absolutePathString().base64(), timestamp)
               }
+              putString(
+                passwordFile.absolutePathString().base64(),
+                System.currentTimeMillis().toString(),
+              )
             }
 
             val returnIntent = Intent()
