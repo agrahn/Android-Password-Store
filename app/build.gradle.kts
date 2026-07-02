@@ -95,7 +95,9 @@ dependencies {
   // implementation(libs.thirdparty.leakcanary.plumber)
 }
 
-// temporary fix for hilt-2.60, https://github.com/google/dagger/issues/5203
-tasks.withType<JavaCompile>().configureEach {
-  options.compilerArgs.add("-Adagger.fastInit=enabled")
-}
+/*
+ // temporary fix for hilt-2.60, https://github.com/google/dagger/issues/5203
+ tasks.withType<JavaCompile>().configureEach {
+   options.compilerArgs.add("-Adagger.fastInit=enabled")
+ }
+ */
