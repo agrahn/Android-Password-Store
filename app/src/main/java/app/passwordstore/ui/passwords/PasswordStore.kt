@@ -481,6 +481,13 @@ class PasswordStore : BaseGitActivity() {
           if (item.file.isDirectory) filesToDelete.addAll(item.file.listFilesRecursively())
           else filesToDelete.add(item.file)
         }
+        // remove to-be-deleted files from history
+        val preference = getSharedPreferences("recent_password_history", Context.MODE_PRIVATE)
+        preference.edit {
+          filesToDelete.forEach { file ->
+            remove(file.absolutePath.base64())
+          }
+        }
         selectedItems.map { item -> item.file.deleteRecursively() }
         refreshPasswordList()
         AutofillMatcher.updateMatches(applicationContext, delete = filesToDelete)
