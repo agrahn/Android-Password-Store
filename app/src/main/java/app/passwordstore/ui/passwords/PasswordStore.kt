@@ -664,6 +664,16 @@ class PasswordStore : BaseGitActivity() {
           .show()
       }
     } else {
+      // update timestamp cache with the new file locations
+      val preference = getSharedPreferences("recent_password_history", Context.MODE_PRIVATE)
+      preference.edit {
+        sourceDestinationMap.forEach { (src, dest) ->
+          val srcPathHash = src.absolutePath.base64()
+          val timestamp = preference.getString(srcPathHash)
+          remove(srcPathHash)
+          putString(dest.absolutePath.base64(), timestamp)
+        }
+      }
       AutofillMatcher.updateMatches(this, sourceDestinationMap)
     }
   }
