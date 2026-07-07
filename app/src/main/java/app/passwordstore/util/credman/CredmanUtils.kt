@@ -58,7 +58,6 @@ import java.security.spec.ECGenParameterSpec
 import java.security.spec.RSAKeyGenParameterSpec
 import java.time.Instant
 import java.time.ZoneId
-import kotlin.io.path.absolutePathString
 import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
 import logcat.logcat
@@ -188,9 +187,7 @@ object CredmanUtils {
       val credentialHexId = Paths.get(passkeyPath).nameWithoutExtension
       val shortenedHexId = credentialHexId.take(7)
       val displayPath =
-        Paths.get(PasswordRepository.getRelativePath(passkeyPath, repoPath))
-          .parent
-          .absolutePathString() + "/" + shortenedHexId + "…"
+        PasswordRepository.getParentPath(passkeyPath, repoPath) + shortenedHexId + "…"
 
       val displayUser =
         context.credentialUsernames.getString(credentialHexId, null)?.let {
@@ -225,7 +222,7 @@ object CredmanUtils {
     return passkeyEntries
   }
 
-  private fun appInfoToOrigin(info: CallingAppInfo): String {
+  fun appInfoToOrigin(info: CallingAppInfo): String {
     val cert = info.signingInfo.apkContentsSigners[0].toByteArray()
     val md = MessageDigest.getInstance("SHA-256")
     val certHash = md.digest(cert)

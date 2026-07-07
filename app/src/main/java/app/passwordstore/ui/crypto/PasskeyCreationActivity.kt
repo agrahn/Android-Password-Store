@@ -58,7 +58,6 @@ import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.passkey.StoredCredential
-import app.passwordstore.util.services.UDCakeCredentialProviderService
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onErr
@@ -117,19 +116,13 @@ class PasskeyCreationActivity : BasePGPActivity() {
     intent.getBooleanExtra(PasswordCreationActivity.EXTRA_EDITING, false)
   }
 
-  private val credentialDataBundle by unsafeLazy {
-    intent.getBundleExtra(UDCakeCredentialProviderService.CREDENTIAL_DATA_EXTRA)
-  }
-
   private fun getProviderRequest(): ProviderCreateCredentialRequest? =
     PendingIntentHandler.retrieveProviderCreateCredentialRequest(intent)
 
   private fun getPublicKeyRequest(
-    providerRequest: ProviderCreateCredentialRequest?
+    providerRequest: ProviderCreateCredentialRequest
   ): CreatePublicKeyCredentialRequest? =
-    if (
-      providerRequest != null && providerRequest.callingRequest is CreatePublicKeyCredentialRequest
-    )
+    if (providerRequest.callingRequest is CreatePublicKeyCredentialRequest)
       providerRequest.callingRequest as CreatePublicKeyCredentialRequest
     else null
 
