@@ -17,9 +17,8 @@ import com.fasterxml.jackson.dataformat.cbor.databind.CBORMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.runCatching
-import java.security.Signature
 import java.security.KeyFactory
-import java.security.PrivateKey
+import java.security.Signature
 import java.security.spec.PKCS8EncodedKeySpec
 import java.time.Instant
 import java.time.ZoneId
@@ -109,35 +108,7 @@ data class StoredCredential(
 
     engine.initSign(jcaPrivateKey)
     engine.update(dataToSign)
-    val jcaOutput = engine.sign()
-
-    if (PasskeyCredential.Algorithm.fromId(alg) == PasskeyCredential.Algorithm.ES256)
-      derToRawEs256(jcaOutput)
-    else jcaOutput
-  }
-
-  /**
-   * For ES256 Signing: Converts ASN.1 DER signature from JCA to raw 64-byte (r || s) WebAuthn
-   * format.
-   */
-  private fun derToRawEs256(derSignature: ByteArray): ByteArray {
-    val seq = ASN1Sequence.getInstance(derSignature)
-    val rInt = ASN1Integer.getInstance(seq.getObjectAt(0)).value
-    val sInt = ASN1Integer.getInstance(seq.getObjectAt(1)).value
-
-    val rawSignature = ByteArray(64)
-    copyToWindow(rInt.toByteArray(), rawSignature, 0)
-    copyToWindow(sInt.toByteArray(), rawSignature, 32)
-    return rawSignature
-  }
-
-  private fun copyToWindow(valueBytes: ByteArray, target: ByteArray, offset: Int) {
-    val len = valueBytes.size
-    if (len > 32) {
-      System.arraycopy(valueBytes, len - 32, target, offset, 32)
-    } else {
-      System.arraycopy(valueBytes, 0, target, offset + (32 - len), len)
-    }
+    engine.sign()
   }
 
   fun creationDateTimeString(formatStyle: FormatStyle = FormatStyle.LONG): String {

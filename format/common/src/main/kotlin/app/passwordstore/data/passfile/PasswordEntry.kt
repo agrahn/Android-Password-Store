@@ -88,6 +88,10 @@ constructor(
     extraContentChars?.fill('\u0000')
   }
 
+  public fun clearPassword() {
+    password?.fill('\u0000')
+  }
+
   public fun clearExtra() {
     extraContent.values.forEach { it?.fill('\u0000') }
     extraContentChars?.fill('\u0000')

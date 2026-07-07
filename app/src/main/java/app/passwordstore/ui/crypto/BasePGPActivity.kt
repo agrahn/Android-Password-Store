@@ -802,7 +802,7 @@ open class BasePGPActivity : AppCompatActivity() {
   @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
   protected fun retrievePasskey(
     entry: PasswordEntry,
-    stripped: Boolean = false,
+    stripped: Boolean = false, // whether to wipe private key material
   ): StoredCredential? =
     entry.password
       ?.let {
