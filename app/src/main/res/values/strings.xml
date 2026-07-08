@@ -506,9 +506,9 @@
   <string name="rp_name_hint">Relying party ID</string>
   <string name="fullname_hint">Real username</string>
   <string name="reveal_passkey_username">Reveal username on passkey selector</string>
-  <string name="passkey_parse_error_title">Parsing error</string>
-  <string name="passkey_parse_error_message">Failed to parse\n\n%1$\n\nThe file does not appear to contain valid passkey data.</string>
-  <string name="passkey_sign_error_title">Signing failure</string>
-  <string name="passkey_sign_error_message">The signature could not be generated:\n\n%1$</string>
+  <string name="passkey_authentication_error_title">Passkey authentication failure</string>
+  <string name="passkey_parse_error_message">Failed to parse\n\n%1$s\n\nThe file does not appear to contain valid passkey data.</string>
+  <string name="passkey_sign_error_message">The signature could not be generated:\n\n%1$s</string>
+  <string name="passkey_request_error_message">No authentication request received from relying party</string>
 
 </resources>

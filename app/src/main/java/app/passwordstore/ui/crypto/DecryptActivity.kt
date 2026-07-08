@@ -22,9 +22,11 @@ import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.password.FieldItem
 import app.passwordstore.databinding.DecryptLayoutBinding
 import app.passwordstore.injection.prefs.CredentialUsernames
+import app.passwordstore.injection.prefs.PasswordHistory
 import app.passwordstore.ui.adapters.FieldItemAdapter
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
+import app.passwordstore.util.extensions.base64
 import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.snackbar
@@ -50,6 +52,7 @@ class DecryptActivity : BasePGPActivity() {
 
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
   @CredentialUsernames @Inject lateinit var credentialUsernames: SharedPreferences
+  @PasswordHistory @Inject lateinit var passwordHistory: SharedPreferences
 
   private var itemsAdapter: FieldItemAdapter? = null
   private val binding by viewBinding(DecryptLayoutBinding::inflate)
@@ -106,6 +109,13 @@ class DecryptActivity : BasePGPActivity() {
       decryptedEntryChars.wipe()
       entry.clearExtraChars()
       createPasswordUI(entry)
+
+      passwordHistory.edit { // create/update timestamp on the current password file
+        putString(
+          fullPath.base64(),
+          System.currentTimeMillis().toString(),
+        )
+      }
       onSuccess(lastResult.first) // pass ID for which the entry was successfully decrypted
     } else {
       passphrases.values.forEach { it?.wipe() }

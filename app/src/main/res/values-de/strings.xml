@@ -131,7 +131,7 @@
   <string name="pref_file_first_sort_order">Dateien zuerst</string>
   <string name="pref_type_independent_sort_order">typunabhängig</string>
   <string name="pref_recently_used_sort_order">Zuletzt verwendet</string>
-  <string name="pref_category_autofill_title">Automatisch ausfüllen</string>
+  <string name="pref_category_autofill_title">Automatisches Ausfüllen</string>
   <string name="pref_autofill_enable_title">Autofill aktivieren</string>
   <string name="pref_category_misc_title">Verschiedenes</string>
   <string name="pref_clear_clipboard_title">Zwischenablagenverlauf umgehen</string>
@@ -504,9 +504,9 @@
   <string name="rp_name_hint">Gegenstellen-ID</string>
   <string name="fullname_hint">Vollständiger Benutzername</string>
   <string name="reveal_passkey_username">Benutzernamen in der Passkey-Auswahl anzeigen</string>
-  <string name="passkey_parse_error_title">Lesefehler</string>
-  <string name="passkey_parse_error_message">Fehler beim Lesen von\n\n%1$\n\nDie Datei scheint keine gültigen Passkey-Daten zu enthalten.</string>
-  <string name="passkey_sign_error_title">Fehler beim Signieren</string>
-  <string name="passkey_sign_error_message">Die Signatur konnte nicht erzeugt werden:\n\n%1$</string>
+  <string name="passkey_authentication_error_title">Fehler bei der Passkey-Authentifizierung</string>
+  <string name="passkey_parse_error_message">Fehler beim Lesen von\n\n%1$s\n\nDie Datei scheint keine gültigen Passkey-Daten zu enthalten.</string>
+  <string name="passkey_sign_error_message">Die Signatur konnte nicht erzeugt werden:\n\n%1$s</string>
+  <string name="passkey_request_error_message">Keine Aufforderung zum Authentisieren von der Gegenstelle empfangen</string>
 
 </resources>

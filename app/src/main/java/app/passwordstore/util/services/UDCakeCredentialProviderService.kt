@@ -35,7 +35,7 @@ class UDCakeCredentialProviderService : CredentialProviderService() {
   ) {
     val response: BeginCreateCredentialResponse? =
       CredmanUtils.processCreateCredentialRequest(request)
-    logcat { "++++++++++++++++++++ onBegin CREATE CredentialRequest ++++++++++++++++++++" }
+    logcat { "BeginCreateCredentialRequest" }
     if (response != null) {
       runCatching {
           callback.onResult(response)
@@ -53,7 +53,7 @@ class UDCakeCredentialProviderService : CredentialProviderService() {
     cancellationSignal: CancellationSignal,
     callback: OutcomeReceiver<BeginGetCredentialResponse, GetCredentialException>,
   ) {
-    logcat { "++++++++++++++++++++ onBegin GET CredentialRequest ++++++++++++++++++++" }
+    logcat { "BeginGetCredentialRequest" }
     runCatching {
         val response = CredmanUtils.processGetCredentialRequest(request)
         callback.onResult(response)
@@ -68,7 +68,7 @@ class UDCakeCredentialProviderService : CredentialProviderService() {
     cancellationSignal: CancellationSignal,
     callback: OutcomeReceiver<Void?, ClearCredentialException>,
   ) {
-    logcat { "Not implemented: onClearCredentialStateRequest" }
+    logcat { "Not implemented: ClearCredentialStateRequest" }
   }
 
   companion object {
