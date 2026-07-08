@@ -86,6 +86,7 @@ dependencies {
   implementation(libs.thirdparty.logcat)
   implementation(libs.thirdparty.modernAndroidPrefs)
   implementation(libs.thirdparty.sshj)
+  implementation(libs.thirdparty.bouncycastle.bcpkix)
   implementation(libs.thirdparty.bouncycastle.bcprov)
   implementation(libs.thirdparty.bouncycastle.bcutil)
   implementation(libs.thirdparty.bouncycastle.bcpg)

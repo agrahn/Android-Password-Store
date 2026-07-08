@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright © 2014-2026 The Android Password Store Authors. All Rights Reserved.
+  ~ SPDX-License-Identifier: GPL-3.0-only
+  -->
+
+<resources>
+  <string name="pref_category_autofill_title">Autofill &amp; Passkeys</string>
+  <string name="pref_autofill_enable_title">Enable Autofill &amp; Passkeys</string>
+  <string name="oreo_autofill_enable_dialog_description">Password Store can offer to fill login forms and even save credentials you enter in apps or on websites. It can also act as an Android WebAuthn/passkey Credential Provider, allowing stored credentials to satisfy passkey requests from other apps and websites.</string>
+</resources>

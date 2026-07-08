@@ -497,26 +497,25 @@ class PasskeyCreationActivity : BasePGPActivity() {
               "${passwordDirectory.pathString}/$credentialHexId.gpg"
             }
 
-            val passwordFile = Paths.get(path)
+            val passkeyFile = Paths.get(path)
             /* If we were editing and the incoming and outgoing file paths differ, it means we renamed. Ensure
              * that the target doesn't already exist to prevent an accidental overwrite. */
             if (
               editing &&
-                "${fullPath.trimEnd('/')}/$suggestedName.gpg" !=
-                  passwordFile.absolutePathString() &&
-                passwordFile.exists()
+                "${fullPath.trimEnd('/')}/$suggestedName.gpg" != passkeyFile.absolutePathString() &&
+                passkeyFile.exists()
             ) {
               snackbar(message = getString(R.string.password_creation_duplicate_error))
               return@runCatching
             }
 
-            if (!passwordFile.toFile().isInsideRepository()) {
+            if (!passkeyFile.toFile().isInsideRepository()) {
               snackbar(message = getString(R.string.message_error_destination_outside_repo))
               return@runCatching
             }
 
             withContext(dispatcherProvider.io()) {
-              passwordFile.writeBytes(encryptionResult.getOrThrow().toByteArray())
+              passkeyFile.writeBytes(encryptionResult.getOrThrow().toByteArray())
             }
 
             // create/update timestamp on the current passkey file
@@ -526,7 +525,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
                 remove(oldFilePathHash)
               }
               putString(
-                passwordFile.absolutePathString().base64(),
+                passkeyFile.absolutePathString().base64(),
                 System.currentTimeMillis().toString(),
               )
             }

@@ -12,6 +12,9 @@ import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.credentials.CreatePublicKeyCredentialResponse
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.GetPublicKeyCredentialOption
+import androidx.credentials.PublicKeyCredential
 import androidx.credentials.provider.BeginCreateCredentialRequest
 import androidx.credentials.provider.BeginCreateCredentialResponse
 import androidx.credentials.provider.BeginCreatePublicKeyCredentialRequest
@@ -21,7 +24,9 @@ import androidx.credentials.provider.BeginGetPublicKeyCredentialOption
 import androidx.credentials.provider.CallingAppInfo
 import androidx.credentials.provider.CreateEntry
 import androidx.credentials.provider.CredentialEntry
+import androidx.credentials.provider.ProviderGetCredentialRequest
 import androidx.credentials.provider.PublicKeyCredentialEntry
+import androidx.credentials.webauthn.AuthenticatorAssertionResponse
 import androidx.credentials.webauthn.AuthenticatorAttestationResponse
 import androidx.credentials.webauthn.FidoPublicKeyCredential
 import androidx.credentials.webauthn.PublicKeyCredentialCreationOptions
@@ -31,6 +36,7 @@ import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.b64Encode
+import app.passwordstore.util.extensions.base64
 import app.passwordstore.util.extensions.credentialUsernames
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.passwordHistory
@@ -38,13 +44,16 @@ import app.passwordstore.util.extensions.toByteArray
 import app.passwordstore.util.passkey.PasskeyCredential
 import app.passwordstore.util.passkey.PasskeyCredential.Algorithm
 import app.passwordstore.util.passkey.PasskeyCredential.FidoUser
+import app.passwordstore.util.passkey.StoredCredential
 import app.passwordstore.util.services.UDCakeCredentialProviderService
 import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
+import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getOrElse
+import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.runCatching
 import java.nio.file.Paths
 import java.security.KeyPair
@@ -183,6 +192,13 @@ object CredmanUtils {
       )
     }
 
+    /*
+        // redundant, since we set lastUsedTime on each PublicKeyCredentialEntry
+        passkeyCandidates.sortByDescending {
+          context.passwordHistory.getString(it.base64(), null)?.toLongOrNull() ?: 0L
+        }
+    */
+
     passkeyCandidates.forEach { passkeyPath ->
       val credentialHexId = Paths.get(passkeyPath).nameWithoutExtension
       val shortenedHexId = credentialHexId.take(7)
@@ -196,8 +212,8 @@ object CredmanUtils {
 
       val lastUsedTime =
         context.passwordHistory
-          .getString(passkeyPath, null)
-          ?.let { it.toLongOrNull() }
+          .getString(passkeyPath.base64(), null)
+          ?.let { it.toLongOrNull() ?: 0L }
           ?.let { Instant.ofEpochMilli(it) }
 
       val data = Bundle()
@@ -428,6 +444,46 @@ object CredmanUtils {
       populateEasyAccessorFields(fidoCredential, credential)
 
     return CreatePublicKeyCredentialResponse(credentialJson)
+  }
+
+  fun buildGetCredentialResponse(
+    providerRequest: ProviderGetCredentialRequest,
+    passkey: StoredCredential,
+  ): Result<GetCredentialResponse, Throwable> = runCatching {
+    val origin = appInfoToOrigin(providerRequest.callingAppInfo)
+    val packageName = providerRequest.callingAppInfo.packageName
+
+    val publicKeyRequest = providerRequest.credentialOptions.first() as GetPublicKeyCredentialOption
+    val requestOptions =
+      androidx.credentials.webauthn.PublicKeyCredentialRequestOptions(publicKeyRequest.requestJson)
+
+    val response =
+      AuthenticatorAssertionResponse(
+        requestOptions = requestOptions,
+        credentialId = passkey.id,
+        origin = origin,
+        up = true,
+        uv = true,
+        be = true,
+        bs = true,
+        userHandle = passkey.user.id,
+        packageName = packageName,
+        clientDataHash = publicKeyRequest.clientDataHash,
+      )
+
+    val signature = passkey.signData(response.dataToSign()).getOrThrow()
+
+    response.signature = signature
+
+    val fidoCredential =
+      FidoPublicKeyCredential(
+        rawId = passkey.id,
+        response = response,
+        authenticatorAttachment = "platform",
+      )
+
+    val passkeyCredential = PublicKeyCredential(fidoCredential.json())
+    GetCredentialResponse(passkeyCredential)
   }
 
   /**

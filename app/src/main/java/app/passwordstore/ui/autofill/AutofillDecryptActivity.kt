@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.view.autofill.AutofillManager
@@ -18,9 +19,11 @@ import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.injection.prefs.PasswordHistory
 import app.passwordstore.ui.crypto.BasePGPActivity
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.autofill.AutofillResponseBuilder
+import app.passwordstore.util.extensions.base64
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.toCharArray
 import app.passwordstore.util.extensions.wipe
@@ -28,7 +31,6 @@ import app.passwordstore.util.settings.PreferenceKeys
 import com.github.androidpasswordstore.autofillparser.AutofillAction
 import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.getOrThrow
-import com.github.michaelbull.result.onSuccess
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -38,12 +40,14 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
+import logcat.asLog
 import logcat.logcat
 
 @AndroidEntryPoint
 class AutofillDecryptActivity : BasePGPActivity() {
 
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
+  @PasswordHistory @Inject lateinit var passwordHistory: SharedPreferences
 
   private lateinit var filePath: String
   private lateinit var repositoryPath: String
@@ -130,7 +134,15 @@ class AutofillDecryptActivity : BasePGPActivity() {
           )
         }
       }
+
+      passwordHistory.edit { // create/update timestamp on the current password file
+        putString(
+          filePath.base64(),
+          System.currentTimeMillis().toString(),
+        )
+      }
       onSuccess(lastResult.first) // pass ID
+
       withContext(dispatcherProvider.main()) { finish() }
     } else {
       passphrases.values.forEach { it?.wipe() }
@@ -160,6 +172,9 @@ class AutofillDecryptActivity : BasePGPActivity() {
         val timer = Executors.newSingleThreadScheduledExecutor()
         timer.schedule({ finish() }, 4.toLong(), TimeUnit.SECONDS)
       }
+      results
+        .filter { it.second.getError() is Throwable }
+        .forEach { logcat { it.second.getError()?.asLog() ?: "unknown error" } }
     }
     if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {
       cachedPassphrases.values.forEach { it.wipe() }

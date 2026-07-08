@@ -17,17 +17,26 @@ import com.fasterxml.jackson.dataformat.cbor.databind.CBORMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.runCatching
+import java.math.BigInteger
+import java.security.AlgorithmParameters
 import java.security.KeyFactory
+import java.security.PrivateKey
 import java.security.Signature
-import java.security.spec.PKCS8EncodedKeySpec
+import java.security.interfaces.ECPrivateKey
+import java.security.interfaces.RSAPrivateKey
+import java.security.spec.ECPrivateKeySpec
+import java.security.spec.RSAPrivateKeySpec
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
-import org.bouncycastle.asn1.ASN1Integer
-import org.bouncycastle.asn1.ASN1Sequence
+import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
+import org.bouncycastle.crypto.util.PrivateKeyFactory
+import org.bouncycastle.crypto.util.PrivateKeyInfoFactory
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.bouncycastle.jce.spec.ECParameterSpec
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 data class StoredCredential(
@@ -74,26 +83,11 @@ data class StoredCredential(
   }
 
   fun signData(dataToSign: ByteArray): Result<ByteArray, Throwable> = runCatching {
-    val keySpec = PKCS8EncodedKeySpec(privateKey)
-    val keyFactory =
-      KeyFactory.getInstance(
-        when (PasskeyCredential.Algorithm.fromId(alg)) {
-          PasskeyCredential.Algorithm.EDDSA -> "Ed25519"
-          PasskeyCredential.Algorithm.ES256 -> "EC"
-          PasskeyCredential.Algorithm.RS256 -> "RSA"
-          else -> {
-            throw IllegalStateException("Unsupported passkey algorithm, COSE alg=${alg}")
-          }
-        },
-        BouncyCastleProvider(),
-      )
-    val jcaPrivateKey = keyFactory.generatePrivate(keySpec)
-
-    val algorithm = PasskeyCredential.Algorithm.fromId(alg)
+    val jcaPrivateKey = loadPrivateKey()
 
     val engine =
       Signature.getInstance(
-        when (algorithm) {
+        when (PasskeyCredential.Algorithm.fromId(alg)) {
           PasskeyCredential.Algorithm.EDDSA -> "Ed25519"
           PasskeyCredential.Algorithm.ES256 -> "SHA256withECDSA"
           PasskeyCredential.Algorithm.RS256 -> "SHA256withRSA"
@@ -177,84 +171,194 @@ data class StoredCredential(
             ),
           signCount = credential.signCount,
           alg = credential.algorithm.id,
-          privateKey = credential.keyPair.private.encoded,
+          privateKey =
+            getPrivateKeyRawBytes(
+              privateKey = credential.keyPair.private,
+              alg = credential.algorithm.id,
+            ),
           created = credential.createdAt.getEpochSecond(),
           zone = credential.zoneId.toString(),
           discoverable = true,
           extensions = CredentialExtensions(),
         )
       }
-  }
-}
 
-data class CredentialExtensions(
-  @JsonProperty("cred_protect") val credProtect: UByte? = null,
-  @JsonProperty("hmac_secret") val hmacSecret: Boolean? = null,
-  @JsonProperty("cred_random") val credRandom: ByteArray? = null,
-) {
-  override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-    if (other !is CredentialExtensions) return false
-    if (credProtect != other.credProtect) return false
-    if (hmacSecret != other.hmacSecret) return false
-    if (!credRandom.contentEquals(other.credRandom)) return false
-    return true
-  }
+    /*
+     * PrivateKey conversions to raw bytes, implementations by Gemini
+     */
+    private fun getPrivateKeyRawBytes(privateKey: PrivateKey, alg: Int): ByteArray =
+      when (PasskeyCredential.Algorithm.fromId(alg)) {
+        PasskeyCredential.Algorithm.EDDSA -> getEd25519PrivateKeyRawBytes(privateKey)
+        PasskeyCredential.Algorithm.ES256 -> getEC256PrivateKeyRawBytes(privateKey)
+        PasskeyCredential.Algorithm.RS256 -> getRsaCustom512PrivateKeyRawBytes(privateKey)
+        else -> throw IllegalStateException("Unsupported passkey algorithm, COSE alg=${alg}")
+      }
 
-  override fun hashCode(): Int {
-    var result = credProtect.hashCode()
-    result = 31 * result + hmacSecret.hashCode()
-    result = 31 * result + credRandom.contentHashCode()
-    return result
-  }
-}
+    private fun getEC256PrivateKeyRawBytes(privateKey: PrivateKey): ByteArray {
+      val ecKey = privateKey as ECPrivateKey
 
-data class UserInfo(
-  val id: ByteArray,
-  val name: String,
-  @JsonProperty("display_name") val displayName: String? = null,
-  @JsonProperty("reveal_name") var revealName: Boolean = false,
-) {
-  // override auto-generated equals() and hashCode() methods which do not work correctly since they
-  // compare by ref not by content
-  override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-    if (other !is UserInfo) return false
-    if (!id.contentEquals(other.id)) return false
-    if (name != other.name) return false
-    if (revealName != other.revealName) return false
-    if (displayName != other.displayName) return false
-    return true
-  }
+      // Extract the raw BigInteger scalar d
+      val d: java.math.BigInteger = ecKey.s
 
-  override fun hashCode(): Int {
-    var result = id.contentHashCode()
-    result = 31 * result + name.hashCode()
-    result = 31 * result + revealName.hashCode()
-    result = 31 * result + (displayName?.hashCode() ?: 0)
-    return result
-  }
+      // Convert BigInteger to a byte array
+      val rawBytes = d.toByteArray()
 
-  fun idBase64(): String = id.b64Encode().concatToString()
+      return when {
+        // Case 1: Exactly 32 bytes (Perfect fit)
+        rawBytes.size == 32 -> rawBytes
 
-  fun idHex(): String = id.toHexString()
-}
+        // Case 2: 33 bytes due to an extra zero sign-bit padding from BigInteger
+        rawBytes.size == 33 && rawBytes[0] == 0.toByte() -> rawBytes.copyOfRange(1, 33)
 
-data class RelyingPartyInfo(
-  val id: String,
-  val name: String? = null,
-) {
-  override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-    if (other !is RelyingPartyInfo) return false
-    if (id != other.id) return false
-    if (name != other.name) return false
-    return true
+        // Case 3: Smaller than 32 bytes (Needs leading zero padding)
+        else -> {
+          val padded = ByteArray(32)
+          System.arraycopy(rawBytes, 0, padded, 32 - rawBytes.size, rawBytes.size)
+          padded
+        }
+      }
+    }
+
+    private fun getEd25519PrivateKeyRawBytes(privateKey: PrivateKey): ByteArray =
+      (PrivateKeyFactory.createKey(privateKey.encoded) as Ed25519PrivateKeyParameters).encoded
+
+    private fun getRsaCustom512PrivateKeyRawBytes(privateKey: PrivateKey): ByteArray {
+      val rsaKey = privateKey as RSAPrivateKey
+      val nBytes = rsaKey.modulus.to256Bytes()
+      val dBytes = rsaKey.privateExponent.to256Bytes()
+      return nBytes + dBytes
+    }
+
+    // Helper to pad BigInteger out to exactly 256 bytes
+    private fun BigInteger.to256Bytes(): ByteArray {
+      val raw = this.toByteArray()
+      return when {
+        raw.size == 256 -> raw
+        raw.size == 257 && raw[0] == 0.toByte() -> raw.copyOfRange(1, 257)
+        else -> ByteArray(256).apply { System.arraycopy(raw, 0, this, 256 - raw.size, raw.size) }
+      }
+    }
   }
 
-  override fun hashCode(): Int {
-    var result = id.hashCode()
-    result = 31 * result + name.hashCode()
-    return result
+  /*
+   * PrivateKey conversions from raw bytes, implementations by Gemini
+   */
+  private fun loadPrivateKey(): PrivateKey =
+    when (PasskeyCredential.Algorithm.fromId(alg)) {
+      PasskeyCredential.Algorithm.EDDSA -> rebuildEd25519FromPrivateKeyRawBytes()
+      PasskeyCredential.Algorithm.ES256 -> rebuildEC256FromPrivateKeyRawBytes()
+      PasskeyCredential.Algorithm.RS256 -> rebuildRsaFromCustom512PivateKeyRawBytes()
+      else -> throw IllegalStateException("Unsupported passkey algorithm, COSE alg=${alg}")
+    }
+
+  private fun rebuildEC256FromPrivateKeyRawBytes(): PrivateKey {
+    require(privateKey.size == 32) { "ECDSA P-256 raw private key must be 32 bytes" }
+    // Force the byte array to be interpreted as a POSITIVE number (signum = 1)
+    // This safely strips or corrects any missing leading zero bytes from BigInteger conversion.
+    val s = BigInteger(1, privateKey)
+
+    // Fetch the standard secp256r1 (NIST P-256) curve parameters
+    val params =
+      AlgorithmParameters.getInstance("EC", BouncyCastleProvider()).apply {
+        init(java.security.spec.ECGenParameterSpec("secp256r1"))
+      }
+    val ecParameters = params.getParameterSpec(java.security.spec.ECParameterSpec::class.java)
+
+    // Generate the KeySpec and build the private key
+    val keySpec = ECPrivateKeySpec(s, ecParameters)
+    val keyFactory = KeyFactory.getInstance("EC", BouncyCastleProvider())
+
+    return keyFactory.generatePrivate(keySpec)
+  }
+
+  private fun rebuildEd25519FromPrivateKeyRawBytes(): PrivateKey {
+    require(privateKey.size == 32) { "Ed25519 raw private key must be 32 bytes" }
+
+    val privKeyParams = Ed25519PrivateKeyParameters(privateKey, 0)
+    val privKeyInfo = PrivateKeyInfoFactory.createPrivateKeyInfo(privKeyParams)
+
+    return JcaPEMKeyConverter().setProvider(BouncyCastleProvider()).getPrivateKey(privKeyInfo)
+  }
+
+  private fun rebuildRsaFromCustom512PivateKeyRawBytes(): PrivateKey {
+    require(privateKey.size == 512) { "Buffer must be exactly 512 bytes" }
+    val n = BigInteger(1, privateKey.copyOfRange(0, 256))
+    val d = BigInteger(1, privateKey.copyOfRange(256, 512))
+
+    val keySpec = RSAPrivateKeySpec(n, d)
+    return KeyFactory.getInstance("RSA", BouncyCastleProvider()).generatePrivate(keySpec)
+  }
+
+  data class CredentialExtensions(
+    @JsonProperty("cred_protect") val credProtect: UByte? = null,
+    @JsonProperty("hmac_secret") val hmacSecret: Boolean? = null,
+    @JsonProperty("cred_random") val credRandom: ByteArray? = null,
+  ) {
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (other !is CredentialExtensions) return false
+      if (credProtect != other.credProtect) return false
+      if (hmacSecret != other.hmacSecret) return false
+      if (!credRandom.contentEquals(other.credRandom)) return false
+      return true
+    }
+
+    override fun hashCode(): Int {
+      var result = credProtect.hashCode()
+      result = 31 * result + hmacSecret.hashCode()
+      result = 31 * result + credRandom.contentHashCode()
+      return result
+    }
+  }
+
+  data class UserInfo(
+    val id: ByteArray,
+    val name: String,
+    @JsonProperty("display_name") val displayName: String? = null,
+    @JsonProperty("reveal_name") var revealName: Boolean = false,
+  ) {
+    // override auto-generated equals() and hashCode() methods which do not work correctly since
+    // they
+    // compare by ref not by content
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (other !is UserInfo) return false
+      if (!id.contentEquals(other.id)) return false
+      if (name != other.name) return false
+      if (revealName != other.revealName) return false
+      if (displayName != other.displayName) return false
+      return true
+    }
+
+    override fun hashCode(): Int {
+      var result = id.contentHashCode()
+      result = 31 * result + name.hashCode()
+      result = 31 * result + revealName.hashCode()
+      result = 31 * result + (displayName?.hashCode() ?: 0)
+      return result
+    }
+
+    fun idBase64(): String = id.b64Encode().concatToString()
+
+    fun idHex(): String = id.toHexString()
+  }
+
+  data class RelyingPartyInfo(
+    val id: String,
+    val name: String? = null,
+  ) {
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (other !is RelyingPartyInfo) return false
+      if (id != other.id) return false
+      if (name != other.name) return false
+      return true
+    }
+
+    override fun hashCode(): Int {
+      var result = id.hashCode()
+      result = 31 * result + name.hashCode()
+      return result
+    }
   }
 }
