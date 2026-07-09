@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file
 ### Fixed
 
 - Accidental overwriting of existing password items of same file name after editing
+- Empty preference value after fresh install for PIN/biometrics expiration timeout may cause the app to crash
 
 ## [1.16.3] - 2026-04-15
 

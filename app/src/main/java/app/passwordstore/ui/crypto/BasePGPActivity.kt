@@ -624,7 +624,8 @@ open class BasePGPActivity : AppCompatActivity() {
     val biometrics_and_pin_last_use =
       persistentPassphrases.getLong(PreferenceKeys.BIOMETRICS_AND_PIN_LAST_USE, 0L)
     val biometrics_and_pin_timeout =
-      settings.getString(PreferenceKeys.BIOMETRICS_AND_PIN_TIMEOUT)?.toLong() ?: 3L
+      settings.getString(PreferenceKeys.BIOMETRICS_AND_PIN_TIMEOUT)?.toLongOrNull()
+        ?: Constants.DEFAULT_BIOMETRICS_AND_PIN_TIMEOUT.toLong()
     if (
       biometrics_and_pin_timeout > 0L &&
         now - biometrics_and_pin_last_use >= TimeUnit.DAYS.toMillis(biometrics_and_pin_timeout)

@@ -7,4 +7,5 @@ package app.passwordstore.util.settings
 
 object Constants {
   const val DEFAULT_DECRYPTION_TIMEOUT = 60
+  const val DEFAULT_BIOMETRICS_AND_PIN_TIMEOUT = 3
 }
