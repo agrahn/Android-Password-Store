@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+## [1.16.4] - 2026-07-10
+
 ### Added
 
 - Search result filter options "exact match" and "fuzzy" in Settings --> General
@@ -665,7 +667,8 @@ All notable changes to this project will be documented in this file
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.3...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.4...HEAD
+[1.16.4]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.3...v1.16.4
 [1.16.3]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.2...v1.16.3
 [1.16.2]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.1...v1.16.2
 [1.16.1]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.0...v1.16.1
