@@ -57,7 +57,6 @@ import app.passwordstore.util.extensions.toByteArray
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.extensions.wipe
-import app.passwordstore.util.passkey.StoredCredential
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onErr
@@ -275,7 +274,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
         val requestOptions = PublicKeyCredentialCreationOptions(request.requestJson)
 
         val suggestedFullPath =
-          findSubdirectoryRecursive(repoPath, requestOptions.rp.id)
+          findSubdirectoryRecursively(repoPath, requestOptions.rp.id)
             ?: Paths.get(repoPath, requestOptions.rp.id).absolutePathString()
         val relPath = PasswordRepository.getRelativePath(suggestedFullPath, repoPath)
 
@@ -391,46 +390,41 @@ class PasskeyCreationActivity : BasePGPActivity() {
             val requestOptions = publicKeyRequest?.let {
               PublicKeyCredentialCreationOptions(it.requestJson)
             }
-            val passkeyCredential = requestOptions?.let { options ->
-              CredmanUtils.createPasskeyCredential(options, credentialHexId)
-            }
 
-            val createPublicKeyCredentialResponse = passkeyCredential?.let { credential ->
+            val passkeyAndCreatePublicKeyCredentialResponse = requestOptions?.let { options ->
               requireNotNull(providerRequest) { "providerRequest must not be null here" }
               requireNotNull(publicKeyRequest) { "publicKeyRequest must not be null here" }
-              requireNotNull(requestOptions) { "requestOptions must not be null here" }
               CredmanUtils.buildCreatePublicKeyCredentialResponse(
-                requestOptions,
-                credential,
+                options,
+                credentialHexId,
                 providerRequest.callingAppInfo,
                 publicKeyRequest.clientDataHash,
               )
             }
 
             val returnIntent = Intent()
-            createPublicKeyCredentialResponse?.let { response ->
-              PendingIntentHandler.setCreateCredentialResponse(returnIntent, response)
+            val passkey = passkeyAndCreatePublicKeyCredentialResponse?.let { response ->
+              PendingIntentHandler.setCreateCredentialResponse(returnIntent, response.second)
+              response.first
             }
 
             // passkey as b64url-encoded cbor for storage in password file
-            val storedCredentialCborBase64 =
-              if (passkeyCredential != null) {
+            val passkeyCborBase64 =
+              if (passkey != null) {
                 // new passkey
-                StoredCredential.fromPasskeyCredential(passkeyCredential).get()?.let { stored ->
-                  stored.user.revealName = revealPasskeyUsername.isChecked
-                  stored.toCbor()?.b64Encode().also { stored.privateKey.wipe() }
-                }
+                passkey.user.revealName = revealPasskeyUsername.isChecked
+                passkey.toCbor()?.b64Encode().also { passkey.privateKey.wipe() }
               } else {
                 // edit passkey
                 suggestedEntryChars?.let { encrypted ->
                   AESEncryption.decrypt(encrypted)?.let { decrypted ->
                     val entry = passwordEntryFactory.create(decrypted).also { decrypted.wipe() }
-                    val storedCredential = retrievePasskey(entry).also { entry.clear() }
-                    storedCredential?.user?.revealName?.let {
-                      storedCredential.user.revealName = revealPasskeyUsername.isChecked
+                    val storedPasskey = retrievePasskey(entry).also { entry.clear() }
+                    storedPasskey?.user?.revealName?.let {
+                      storedPasskey.user.revealName = revealPasskeyUsername.isChecked
                     }
-                    storedCredential?.toCbor()?.b64Encode()?.also {
-                      storedCredential.clearPrivateKey()
+                    storedPasskey?.toCbor()?.b64Encode()?.also {
+                      storedPasskey.clearPrivateKey()
                     }
                   }
                 }
@@ -452,10 +446,10 @@ class PasskeyCreationActivity : BasePGPActivity() {
               }
             }
 
-            val contentChars = (storedCredentialCborBase64 + '\n' + editExtra)
+            val contentChars = (passkeyCborBase64 + '\n' + editExtra)
             val contentBytes = contentChars.toByteArray()
             contentChars.wipe()
-            storedCredentialCborBase64.wipe()
+            passkeyCborBase64.wipe()
             editExtra?.wipe()
 
             val (succeededUserEmails, encryptionResult) =
@@ -617,7 +611,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
     }
   }
 
-  private fun findSubdirectoryRecursive(rootPath: String, targetName: String): String? {
+  private fun findSubdirectoryRecursively(rootPath: String, targetName: String): String? {
     val match =
       Files.walk(Paths.get(rootPath))
         .filter { it.isDirectory() && it.fileName.toString() == targetName }

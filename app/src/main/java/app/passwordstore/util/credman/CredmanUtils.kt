@@ -41,10 +41,8 @@ import app.passwordstore.util.extensions.credentialUsernames
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.passwordHistory
 import app.passwordstore.util.extensions.toByteArray
+import app.passwordstore.util.passkey.Algorithm
 import app.passwordstore.util.passkey.PasskeyCredential
-import app.passwordstore.util.passkey.PasskeyCredential.Algorithm
-import app.passwordstore.util.passkey.PasskeyCredential.FidoUser
-import app.passwordstore.util.passkey.StoredCredential
 import app.passwordstore.util.services.UDCakeCredentialProviderService
 import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -66,7 +64,6 @@ import java.security.interfaces.RSAPublicKey
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.RSAKeyGenParameterSpec
 import java.time.Instant
-import java.time.ZoneId
 import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
 import logcat.logcat
@@ -283,53 +280,7 @@ object CredmanUtils {
     return preferenceOrderOfAlgorithms.firstOrNull() ?: Algorithm.ES256
   }
 
-  fun createPasskeyCredential(
-    requestOptions: PublicKeyCredentialCreationOptions,
-    credentialHexId: String,
-  ): PasskeyCredential {
-    val preferenceOrderOfAlgorithms = // RP's supported key algorithms, in decending order of
-      // preference
-      requestOptions.pubKeyCredParams.map { it.alg.toInt() }
-
-    val chosenAlgorithm = getPreferredAlgorithm(requestOptions)
-
-    val keyPairGenerator =
-      when (chosenAlgorithm) {
-        Algorithm.EDDSA -> // EdDSA aka Ed25519, state-of-the-art
-        KeyPairGenerator.getInstance("EdDSA", BouncyCastleProvider()).also {
-            it.initialize(ECGenParameterSpec("ed25519"), SecureRandom())
-          }
-        Algorithm.ES256 -> // ECDSA using P-256 and SHA-256, still state-of-the-art,
-          // create Signature instance with Signature.getInstance("SHA256withECDSA", "BC")
-          KeyPairGenerator.getInstance("EC", BouncyCastleProvider()).also {
-            it.initialize(ECGenParameterSpec("secp256r1"), SecureRandom())
-          }
-        else -> // RSA-2048, legacy, create Signature instance with
-          // Signature.getInstance("SHA256withRSA", "BC")
-          KeyPairGenerator.getInstance("RSA", BouncyCastleProvider()).also {
-            it.initialize(RSAKeyGenParameterSpec(2048, RSAKeyGenParameterSpec.F4), SecureRandom())
-          }
-      }
-
-    val keyPair = keyPairGenerator.generateKeyPair()
-
-    return PasskeyCredential(
-      credentialId = credentialHexId.hexToByteArray(),
-      keyPair = keyPair,
-      algorithm = chosenAlgorithm,
-      rpId = requestOptions.rp.id,
-      user =
-        FidoUser(
-          id = requestOptions.user.id,
-          name = requestOptions.user.name,
-          displayName = requestOptions.user.displayName,
-        ),
-      createdAt = Instant.now(),
-      zoneId = ZoneId.systemDefault(),
-    )
-  }
-
-  /** Serialises any of the supported PublicKeys into the standard WebAuthn CBOR byte array. */
+  // Serialises any of the supported PublicKeys into the standard WebAuthn CBOR byte array
   private fun packPublicKeyToCbor(keyPair: KeyPair): ByteArray =
     keyPair.public.let { publicKey ->
       when (publicKey) {
@@ -349,7 +300,7 @@ object CredmanUtils {
       }
     }
 
-  /** Packs Ed25519 (EdDSA) public key */
+  // Packs Ed25519 (EdDSA) public key
   private fun buildEd25519Cose(key: PublicKey): ByteArray =
     /*
      * A4 -> CBOR map with 4 pairs (0xA0 + 4)
@@ -363,7 +314,7 @@ object CredmanUtils {
   private fun getRawEd25519Bytes(key: PublicKey): ByteArray =
     SubjectPublicKeyInfo.getInstance(key.getEncoded()).getPublicKeyData().getOctets()
 
-  /** Packs ECC (NIST P-256 / ES256) public key */
+  // Packs ECC (NIST P-256 / ES256) public key
   private fun buildEccCose(key: ECPublicKey): ByteArray {
     // curve points, converted from BigInteger to ByteArray
     val xBytes =
@@ -382,7 +333,7 @@ object CredmanUtils {
     return "A5010203262001215820".hexToByteArray() + xBytes + "225820".hexToByteArray() + yBytes
   }
 
-  /** Packs RSA (RS256) Public Key */
+  // Packs RSA (RS256) Public Key
   private fun buildRsaCose(key: RSAPublicKey): ByteArray {
     // extract and normalise modulus (n)
     val modulus = ByteArray(256) + key.modulus.toByteArray()
@@ -411,18 +362,53 @@ object CredmanUtils {
 
   fun buildCreatePublicKeyCredentialResponse(
     requestOptions: PublicKeyCredentialCreationOptions,
-    credential: PasskeyCredential,
+    credentialHexId: String,
     callingAppInfo: CallingAppInfo?,
     clientDataHash: ByteArray?,
-  ): CreatePublicKeyCredentialResponse {
+  ): Pair<PasskeyCredential, CreatePublicKeyCredentialResponse> {
     requireNotNull(callingAppInfo) { "callingAppInfo must not be null here" }
+
+    val credentialId = credentialHexId.hexToByteArray()
+
+    val chosenAlgorithm = getPreferredAlgorithm(requestOptions)
+
+    val keyPairGenerator =
+      when (chosenAlgorithm) {
+        Algorithm.EDDSA -> // EdDSA aka Ed25519, state-of-the-art
+        KeyPairGenerator.getInstance("EdDSA", BouncyCastleProvider()).also {
+            it.initialize(ECGenParameterSpec("ed25519"), SecureRandom())
+          }
+        Algorithm.ES256 -> // ECDSA using P-256 and SHA-256, still state-of-the-art
+        KeyPairGenerator.getInstance("EC", BouncyCastleProvider()).also {
+            it.initialize(ECGenParameterSpec("secp256r1"), SecureRandom())
+          }
+        else -> // RSA-2048, legacy
+        KeyPairGenerator.getInstance("RSA", BouncyCastleProvider()).also {
+            it.initialize(RSAKeyGenParameterSpec(2048, RSAKeyGenParameterSpec.F4), SecureRandom())
+          }
+      }
+
+    val keyPair = keyPairGenerator.generateKeyPair()
+    val publicKeyCbor = packPublicKeyToCbor(keyPair)
+
+    val passkey =
+      PasskeyCredential.createNew(
+        credentialId = credentialId,
+        rpId = requestOptions.rp.id,
+        rpName = requestOptions.rp.name,
+        userId = requestOptions.user.id,
+        userName = requestOptions.user.name,
+        userDisplayName = requestOptions.user.displayName,
+        algorithm = chosenAlgorithm,
+        keyPair = keyPair,
+      )
 
     // to be passed to FidoPublicKeyCredential
     val response =
       AuthenticatorAttestationResponse(
         requestOptions = requestOptions,
-        credentialId = credential.credentialId,
-        credentialPublicKey = packPublicKeyToCbor(credential.keyPair),
+        credentialId = credentialId,
+        credentialPublicKey = publicKeyCbor,
         origin = appInfoToOrigin(callingAppInfo),
         up = true,
         uv = true,
@@ -434,21 +420,82 @@ object CredmanUtils {
 
     val fidoCredential =
       FidoPublicKeyCredential(
-        rawId = credential.credentialId,
+        rawId = credentialId,
         response = response,
         authenticatorAttachment = "platform",
       )
 
     val credentialJson =
       // this step is required for a successful registration ceremony in chromium browsers
-      populateEasyAccessorFields(fidoCredential, credential)
+      populateEasyAccessorFields(fidoCredential, passkey, keyPair.public, publicKeyCbor)
 
-    return CreatePublicKeyCredentialResponse(credentialJson)
+    return passkey to CreatePublicKeyCredentialResponse(credentialJson)
+  }
+
+  /**
+   * "Easily accessing credential data" fields in JSON, as defined in
+   * https://github.com/w3c/webauthn/pull/1887, taken from
+   * https://github.com/ko-koiwai/MyCredentialManager example
+   */
+  private fun populateEasyAccessorFields(
+    fidoCredential: FidoPublicKeyCredential,
+    passkey: PasskeyCredential,
+    publicKey: PublicKey,
+    publicKeyCbor: ByteArray,
+  ): String {
+
+    val response =
+      jsonMapper.readValue(fidoCredential.json(), CreatePublicKeyCredentialResponseJson::class.java)
+
+    response.response.publicKeyAlgorithm = passkey.alg.toLong()
+    response.response.publicKey = publicKey.encoded.b64Encode().concatToString()
+    response.response.authenticatorData = getAuthData(passkey, publicKeyCbor)
+
+    return jsonMapper.writeValueAsString(response)
+  }
+
+  private fun getAuthData(passkey: PasskeyCredential, publicKeyCbor: ByteArray): String {
+    // all zeros -> our app is not officially registered authenticator
+    val AAGUID = "00000000000000000000000000000000" // must have an even length
+
+    val rpIdHash: ByteArray =
+      MessageDigest.getInstance("SHA-256").digest(passkey.rp.id.toByteArray())
+
+    val flags: ByteArray = byteArrayOf(0x5d.toByte())
+    val signCount: ByteArray = byteArrayOf(0x00, 0x00, 0x00, 0x00)
+    val aaguid = AAGUID.hexToByteArray()
+    val credentialIdLength: ByteArray = byteArrayOf(0x00, passkey.id.size.toByte())
+
+    return (rpIdHash + flags + signCount + aaguid + credentialIdLength + passkey.id + publicKeyCbor)
+      .b64Encode()
+      .concatToString()
+  }
+
+  private data class CreatePublicKeyCredentialResponseJson(
+    // RegistrationResponseJSON
+    val id: String,
+    val rawId: String,
+    val response: Response,
+    val authenticatorAttachment: String?,
+    val clientExtensionResults: EmptyClass = EmptyClass(),
+    val type: String,
+  ) {
+    data class Response(
+      // AuthenticatorAttestationResponseJSON
+      val clientDataJSON: String? = null,
+      var authenticatorData: String? = null,
+      val transports: List<String>? = arrayOf("internal").toList(),
+      var publicKey: String? = null, // easy accessors fields
+      var publicKeyAlgorithm: Long? = null, // easy accessors fields
+      val attestationObject: String?, // easy accessors fields
+    )
+
+    class EmptyClass
   }
 
   fun buildGetCredentialResponse(
     providerRequest: ProviderGetCredentialRequest,
-    passkey: StoredCredential,
+    passkey: PasskeyCredential,
   ): Result<GetCredentialResponse, Throwable> = runCatching {
     val origin = appInfoToOrigin(providerRequest.callingAppInfo)
     val packageName = providerRequest.callingAppInfo.packageName
@@ -484,73 +531,6 @@ object CredmanUtils {
 
     val passkeyCredential = PublicKeyCredential(fidoCredential.json())
     GetCredentialResponse(passkeyCredential)
-  }
-
-  /**
-   * "Easily accessing credential data" fields in JSON, as defined in
-   * https://github.com/w3c/webauthn/pull/1887, taken from
-   * https://github.com/ko-koiwai/MyCredentialManager example
-   */
-  private fun populateEasyAccessorFields(
-    fidoCredential: FidoPublicKeyCredential,
-    credential: PasskeyCredential,
-  ): String {
-
-    val response =
-      jsonMapper.readValue(fidoCredential.json(), CreatePublicKeyCredentialResponseJson::class.java)
-
-    response.response.publicKeyAlgorithm = credential.algorithm.toLong()
-    response.response.publicKey = credential.keyPair.public.encoded.b64Encode().concatToString()
-    response.response.authenticatorData = getAuthData(credential)
-
-    return jsonMapper.writeValueAsString(response)
-  }
-
-  private fun getAuthData(credential: PasskeyCredential): String {
-    // all zeros -> our app is not officially registered authenticator
-    val AAGUID = "00000000000000000000000000000000" // must have an even length
-
-    val rpIdHash: ByteArray =
-      MessageDigest.getInstance("SHA-256").digest(credential.rpId.toByteArray())
-
-    val flags: ByteArray = byteArrayOf(0x5d.toByte())
-    val signCount: ByteArray = byteArrayOf(0x00, 0x00, 0x00, 0x00)
-    val aaguid = AAGUID.hexToByteArray()
-    val credentialIdLength: ByteArray =
-      byteArrayOf(0x00, credential.credentialId.size.toByte()) // = 20 bytes
-    val credentialPublicKey: ByteArray = packPublicKeyToCbor(credential.keyPair)
-
-    return (rpIdHash +
-        flags +
-        signCount +
-        aaguid +
-        credentialIdLength +
-        credential.credentialId +
-        credentialPublicKey)
-      .b64Encode()
-      .concatToString()
-  }
-
-  private data class CreatePublicKeyCredentialResponseJson(
-    // RegistrationResponseJSON
-    val id: String,
-    val rawId: String,
-    val response: Response,
-    val authenticatorAttachment: String?,
-    val clientExtensionResults: EmptyClass = EmptyClass(),
-    val type: String,
-  ) {
-    data class Response(
-      // AuthenticatorAttestationResponseJSON
-      val clientDataJSON: String? = null,
-      var authenticatorData: String? = null,
-      val transports: List<String>? = arrayOf("internal").toList(),
-      var publicKey: String? = null, // easy accessors fields
-      var publicKeyAlgorithm: Long? = null, // easy accessors fields
-      val attestationObject: String?, // easy accessors fields
-    )
-
-    class EmptyClass
   }
 
   private fun mergeJsonArrays(
