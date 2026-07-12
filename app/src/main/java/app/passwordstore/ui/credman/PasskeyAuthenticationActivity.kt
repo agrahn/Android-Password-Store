@@ -104,8 +104,6 @@ class PasskeyAuthenticationActivity : BasePGPActivity() {
       decryptedEntryBytes.wipe()
       val entry = passwordEntryFactory.create(decryptedEntryChars)
 
-      val result = Intent()
-
       runCatching {
           val passkey = retrievePasskey(entry)
           entry.clearPassword()

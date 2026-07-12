@@ -43,7 +43,7 @@ import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.substringBefore
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.wipe
-import app.passwordstore.util.passkey.StoredCredential
+import app.passwordstore.util.passkey.PasskeyCredential
 import app.passwordstore.util.settings.Constants
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.get
@@ -803,12 +803,12 @@ open class BasePGPActivity : AppCompatActivity() {
   protected fun retrievePasskey(
     entry: PasswordEntry,
     stripped: Boolean = false, // whether to wipe private key material
-  ): StoredCredential? =
+  ): PasskeyCredential? =
     entry.password
       ?.let {
         val cbor = it.b64Decode()
         cbor?.let { cb ->
-          StoredCredential.fromCbor(cb).get().also { cb.wipe() }
+          PasskeyCredential.fromCbor(cb).get().also { cb.wipe() }
         }
       }
       ?.also { if (stripped) it.privateKey?.wipe() }
