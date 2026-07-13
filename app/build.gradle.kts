@@ -29,7 +29,10 @@ android {
 
   androidResources { generateLocaleConfig = true }
 
-  packaging { resources.excludes.add("META-INF/versions/**") }
+  packaging {
+    resources.excludes.add("META-INF/versions/**")
+    resources.excludes.add("META-INF/LICENSE.md")
+  }
 }
 
 dependencies {
