@@ -217,27 +217,27 @@ class GitServerConfigActivity : BaseGitActivity() {
         .setCancelable(false)
         .setPositiveButton(R.string.dialog_delete) { dialog, _ ->
           runCatching {
-              lifecycleScope.launch {
-                val snackbar =
-                  snackbar(
-                    message = getString(R.string.delete_directory_progress_text),
-                    length = Snackbar.LENGTH_INDEFINITE,
-                  )
-                withContext(dispatcherProvider.io()) {
-                  localDir.deleteRecursively()
-                  localDir.mkdirs()
-                }
-                snackbar.dismiss()
-                launchGitOperation(GitOp.CLONE)
-                  .fold(
-                    success = {
-                      setResult(RESULT_OK)
-                      finish()
-                    },
-                    failure = { err -> promptOnErrorHandler(err) { finish() } },
-                  )
+            lifecycleScope.launch {
+              val snackbar =
+                snackbar(
+                  message = getString(R.string.delete_directory_progress_text),
+                  length = Snackbar.LENGTH_INDEFINITE,
+                )
+              withContext(dispatcherProvider.io()) {
+                localDir.deleteRecursively()
+                localDir.mkdirs()
               }
+              snackbar.dismiss()
+              launchGitOperation(GitOp.CLONE)
+                .fold(
+                  success = {
+                    setResult(RESULT_OK)
+                    finish()
+                  },
+                  failure = { err -> promptOnErrorHandler(err) { finish() } },
+                )
             }
+          }
             .onErr { e ->
               e.printStackTrace()
               MaterialAlertDialogBuilder(this).setMessage(e.message).show()
@@ -248,11 +248,11 @@ class GitServerConfigActivity : BaseGitActivity() {
         .show()
     } else {
       runCatching {
-          // Silently delete & replace the lone .git folder if it exists
-          if (localDir.exists() && localDirFiles.size == 1 && localDirFiles[0].name == ".git") {
-            localDir.deleteRecursively()
-          }
+        // Silently delete & replace the lone .git folder if it exists
+        if (localDir.exists() && localDirFiles.size == 1 && localDirFiles[0].name == ".git") {
+          localDir.deleteRecursively()
         }
+      }
         .onErr { e ->
           logcat(ERROR) { e.asLog() }
           MaterialAlertDialogBuilder(this).setMessage(e.message).show()

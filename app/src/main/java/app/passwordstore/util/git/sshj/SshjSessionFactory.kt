@@ -91,9 +91,10 @@ private fun makeTofuHostKeyVerifier(
     return object : HostKeyVerifier {
       override fun verify(hostname: String?, port: Int, key: PublicKey?): Boolean {
         val normalizedKey = key?.let { normalizeForSshj(it) }
-        val digest =
-          runCatching { SecurityUtils.getMessageDigest("SHA-256") }
-            .getOrElse { e -> throw SSHRuntimeException(e) }
+        val digest = runCatching {
+          SecurityUtils.getMessageDigest("SHA-256")
+        }
+          .getOrElse { e -> throw SSHRuntimeException(e) }
         digest.update(PlainBuffer().putPublicKey(normalizedKey).compactData)
         val digestData = digest.digest()
         val keyType = KeyType.fromKey(normalizedKey)

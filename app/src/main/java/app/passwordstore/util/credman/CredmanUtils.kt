@@ -264,8 +264,8 @@ object CredmanUtils {
       )
 
     return runCatching {
-        info.getOrigin(privilegedAllowlist) ?: throw NullPointerException()
-      }
+      info.getOrigin(privilegedAllowlist) ?: throw NullPointerException()
+    }
       .getOrElse { error ->
         "android:apk-key-hash:${certHash.b64Encode().concatToString()}"
       }
@@ -575,22 +575,21 @@ object CredmanUtils {
       .toString()
   }
 
-  private fun getNestedValue(obj: JSONObject, path: String): String? =
-    runCatching {
-        val keys = path.split(".")
-        var current: Any? = obj
+  private fun getNestedValue(obj: JSONObject, path: String): String? = runCatching {
+    val keys = path.split(".")
+    var current: Any? = obj
 
-        for (key in keys) {
-          current =
-            when (current) {
-              is JSONObject -> current.opt(key)
-              else -> return null
-            }
-
-          if (current == null) return null
+    for (key in keys) {
+      current =
+        when (current) {
+          is JSONObject -> current.opt(key)
+          else -> return null
         }
 
-        current.toString()
-      }
-      .get()
+      if (current == null) return null
+    }
+
+    current.toString()
+  }
+    .get()
 }

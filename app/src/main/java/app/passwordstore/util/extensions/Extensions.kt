@@ -116,8 +116,8 @@ fun ByteArray.b64Encode(): CharArray {
 
 fun CharArray.b64Decode(): ByteArray? {
   return runCatching {
-      val base64Bytes = ByteArray(this.size) { i -> this[i].code.toByte() }
-      (Base64.decode(base64Bytes, Base64.URL_SAFE)).also { base64Bytes.wipe() }
-    }
+    val base64Bytes = ByteArray(this.size) { i -> this[i].code.toByte() }
+    (Base64.decode(base64Bytes, Base64.URL_SAFE)).also { base64Bytes.wipe() }
+  }
     .get()
 }
