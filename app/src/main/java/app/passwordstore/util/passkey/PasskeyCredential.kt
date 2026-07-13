@@ -53,7 +53,6 @@ data class PasskeyCredential(
   val created: Long,
   val zone: String,
   val discoverable: Boolean = true,
-  val extensions: CredentialExtensions = CredentialExtensions(),
 ) {
 
   fun getAlgorithmName(): String? = Algorithm.fromId(alg)?.algorithmName
@@ -128,7 +127,6 @@ data class PasskeyCredential(
     if (created != other.created) return false
     if (zone != other.zone) return false
     if (discoverable != other.discoverable) return false
-    if (extensions != other.extensions) return false
     return true
   }
 
@@ -142,7 +140,6 @@ data class PasskeyCredential(
     result = 31 * result + created.hashCode()
     result = 31 * result + zone.hashCode()
     result = 31 * result + discoverable.hashCode()
-    result = 31 * result + (extensions?.hashCode() ?: 0)
     return result
   }
 
@@ -197,72 +194,57 @@ data class PasskeyCredential(
     fun getPrivateKeyRawBytes(keyPair: KeyPair, algorithm: Algorithm): ByteArray =
       when (algorithm) {
         Algorithm.EDDSA -> getEd25519PrivateKeyRawBytes(keyPair.private)
-        Algorithm.ES256 -> getEC256PrivateKeyRawBytes(keyPair.private)
-        Algorithm.RS256 -> getRsaCustom512PrivateKeyRawBytes(keyPair.private)
+        Algorithm.ES256 -> getES256PrivateKeyRawBytes(keyPair.private)
+        Algorithm.RS256 -> getRS256PrivateKeyRawBytes(keyPair.private)
       }
 
-    // PrivateKey conversions to raw bytes, implementations by Gemini
-    private fun getEC256PrivateKeyRawBytes(privateKey: PrivateKey): ByteArray {
-      val ecKey = privateKey as ECPrivateKey
+    // PrivateKey conversions to raw bytes, found with the help of Gemini
 
-      // Extract the raw BigInteger scalar d
-      val d: java.math.BigInteger = ecKey.s
-
-      // Convert BigInteger to a byte array
-      val rawBytes = d.toByteArray()
-
-      return when {
-        // Case 1: Exactly 32 bytes (Perfect fit)
-        rawBytes.size == 32 -> rawBytes
-
-        // Case 2: 33 bytes due to an extra zero sign-bit padding from BigInteger
-        rawBytes.size == 33 && rawBytes[0] == 0.toByte() -> rawBytes.copyOfRange(1, 33)
-
-        // Case 3: Smaller than 32 bytes (Needs leading zero padding)
-        else -> {
-          val padded = ByteArray(32)
-          System.arraycopy(rawBytes, 0, padded, 32 - rawBytes.size, rawBytes.size)
-          padded
-        }
+    /* ECDSA P-256 private key as raw BigInteger scalar, converted to zero-padded, size 32 ByteArray
+     * with leading sign byte stripped */
+    private fun getES256PrivateKeyRawBytes(privateKey: PrivateKey): ByteArray =
+      (ByteArray(32) + (privateKey as ECPrivateKey).s.toByteArray()).let {
+        it.copyOfRange(it.size - 32, it.size)
       }
-    }
 
+    /* Ed25519 private key, converted to raw size 32 ByteArray using BouncyCastle */
     private fun getEd25519PrivateKeyRawBytes(privateKey: PrivateKey): ByteArray =
       (PrivateKeyFactory.createKey(privateKey.encoded) as Ed25519PrivateKeyParameters).encoded
 
-    private fun getRsaCustom512PrivateKeyRawBytes(privateKey: PrivateKey): ByteArray {
+    // RSA-2048 private key, with modulus and exponent concatenated to size 512 ByteArray
+    private fun getRS256PrivateKeyRawBytes(privateKey: PrivateKey): ByteArray {
       val rsaKey = privateKey as RSAPrivateKey
-      val nBytes = rsaKey.modulus.to256Bytes()
-      val dBytes = rsaKey.privateExponent.to256Bytes()
+      val nBytes =
+        (ByteArray(256) + rsaKey.modulus.toByteArray()).let {
+          it.copyOfRange(it.size - 256, it.size)
+        }
+      val dBytes =
+        (ByteArray(256) + rsaKey.privateExponent.toByteArray()).let {
+          it.copyOfRange(it.size - 256, it.size)
+        }
       return nBytes + dBytes
-    }
-
-    // Helper to pad BigInteger out to exactly 256 bytes
-    private fun BigInteger.to256Bytes(): ByteArray {
-      val raw = this.toByteArray()
-      return when {
-        raw.size == 256 -> raw
-        raw.size == 257 && raw[0] == 0.toByte() -> raw.copyOfRange(1, 257)
-        else -> ByteArray(256).apply { System.arraycopy(raw, 0, this, 256 - raw.size, raw.size) }
-      }
     }
   }
 
   private fun loadPrivateKey(): PrivateKey =
     when (Algorithm.fromId(alg)) {
       Algorithm.EDDSA -> rebuildEd25519FromPrivateKeyRawBytes()
-      Algorithm.ES256 -> rebuildEC256FromPrivateKeyRawBytes()
-      Algorithm.RS256 -> rebuildRsaFromCustom512PivateKeyRawBytes()
+      Algorithm.ES256 -> rebuildES256FromPrivateKeyRawBytes()
+      Algorithm.RS256 -> rebuildRS256FromPrivateKeyRawBytes()
       else -> throw IllegalStateException("Unsupported passkey algorithm, COSE alg=${alg}")
     }
 
   // PrivateKey conversions from raw bytes, implementations by Gemini
-  private fun rebuildEC256FromPrivateKeyRawBytes(): PrivateKey {
+  private fun rebuildES256FromPrivateKeyRawBytes(): PrivateKey {
     require(privateKey.size == 32) { "ECDSA P-256 raw private key must be 32 bytes" }
     /* Force the byte array to be interpreted as a POSITIVE number (signum = 1).
      * This safely strips or corrects any missing leading zero bytes from BigInteger
      * conversion. */
     val s = BigInteger(1, privateKey)
+
+    // private key scalar validation
+    val n = org.bouncycastle.crypto.ec.CustomNamedCurves.getByName("secp256r1").n
+    require(s >= BigInteger.ONE && s < n) { "Private key scalar out of valid range" }
 
     // Fetch the standard secp256r1 (NIST P-256) curve parameters
     val params =
@@ -281,41 +263,19 @@ data class PasskeyCredential(
   private fun rebuildEd25519FromPrivateKeyRawBytes(): PrivateKey {
     require(privateKey.size == 32) { "Ed25519 raw private key must be 32 bytes" }
 
-    val privKeyParams = Ed25519PrivateKeyParameters(privateKey, 0)
-    val privKeyInfo = PrivateKeyInfoFactory.createPrivateKeyInfo(privKeyParams)
+    val privateKeyParams = Ed25519PrivateKeyParameters(privateKey, 0)
+    val privateKeyInfo = PrivateKeyInfoFactory.createPrivateKeyInfo(privateKeyParams)
 
-    return JcaPEMKeyConverter().setProvider(BouncyCastleProvider()).getPrivateKey(privKeyInfo)
+    return JcaPEMKeyConverter().setProvider(BouncyCastleProvider()).getPrivateKey(privateKeyInfo)
   }
 
-  private fun rebuildRsaFromCustom512PivateKeyRawBytes(): PrivateKey {
+  private fun rebuildRS256FromPrivateKeyRawBytes(): PrivateKey {
     require(privateKey.size == 512) { "Buffer must be exactly 512 bytes" }
     val n = BigInteger(1, privateKey.copyOfRange(0, 256))
     val d = BigInteger(1, privateKey.copyOfRange(256, 512))
 
     val keySpec = RSAPrivateKeySpec(n, d)
     return KeyFactory.getInstance("RSA", BouncyCastleProvider()).generatePrivate(keySpec)
-  }
-
-  data class CredentialExtensions(
-    @JsonProperty("cred_protect") val credProtect: UByte? = null,
-    @JsonProperty("hmac_secret") val hmacSecret: Boolean? = null,
-    @JsonProperty("cred_random") val credRandom: ByteArray? = null,
-  ) {
-    override fun equals(other: Any?): Boolean {
-      if (this === other) return true
-      if (other !is CredentialExtensions) return false
-      if (credProtect != other.credProtect) return false
-      if (hmacSecret != other.hmacSecret) return false
-      if (!credRandom.contentEquals(other.credRandom)) return false
-      return true
-    }
-
-    override fun hashCode(): Int {
-      var result = credProtect.hashCode()
-      result = 31 * result + hmacSecret.hashCode()
-      result = 31 * result + credRandom.contentHashCode()
-      return result
-    }
   }
 
   data class UserInfo(

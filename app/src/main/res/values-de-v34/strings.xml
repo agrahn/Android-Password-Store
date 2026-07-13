@@ -4,7 +4,7 @@
   -->
 
 <resources xmlns:tools="http://schemas.android.com/tools">
-  <string name="oreo_autofill_enable_dialog_description">Password Store kann das Ausfüllen von Anmeldeformularen und sogar das Speichern von Anmeldedaten in Apps oder auf Webseiten übernehmen. Zudem kann die App als Anbieter für WebAuthn-/Passkey-Zugangsdaten unter Android fungieren, sodass gespeicherte Zugangsdaten genutzt werden können, um Passkey-Anfragen anderer Apps und Websites zu erfüllen.</string>
+  <string name="oreo_autofill_enable_dialog_description">Password Store kann das Ausfüllen von Anmeldeformularen und sogar das Speichern von Anmeldedaten in Apps oder auf Webseiten übernehmen. Zudem kann die App als Passkey-Manager unter Android fungieren und Passkey-Anfragen anderer Apps und Websites erfüllen.</string>
   <string name="pref_category_autofill_title">Automatisches Ausfüllen &amp; Passkeys</string>
   <string name="pref_autofill_enable_title">Autofill &amp; Passkeys aktivieren</string>
 </resources>

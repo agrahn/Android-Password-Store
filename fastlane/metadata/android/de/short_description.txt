@@ -1,1 +1,1 @@
-Passwörter verwalten
+Passwörter und Passkeys verwalten

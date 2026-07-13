@@ -24,6 +24,7 @@
 
   <!-- Password Store -->
   <string name="creation_dialog_text">Password Store is not fully initialised. Please clone or create a new repository below before you add a password or run a synchronisation operation.</string>
+  <string name="delete_dialog_title">Confirm deletion</string>
   <plurals name="delete_dialog_text">
     <item quantity="one">Are you sure you want to delete the selected item?</item>
     <item quantity="other">Are you sure you want to delete the %d selected items?</item>
@@ -327,13 +328,13 @@
   <string name="preference_custom_public_suffixes_hint">company.com\npersonal.com</string>
 
   <!-- Password creation/edit -->
-  <string name="password_creation_edit_file_encryption_success_title">Password item edited</string>
-  <string name="password_creation_new_file_encryption_success_title">New password item</string>
+  <string name="password_creation_edit_file_encryption_success_title">Entry edited</string>
+  <string name="password_creation_new_file_encryption_success_title">New Entry</string>
   <string name="password_creation_file_encryption_partial_success_title">Encryption partially failed</string>
-  <string name="password_creation_file_encryption_succeeded_ids_message">Password item successfully encrypted for %1$s</string>
+  <string name="password_creation_file_encryption_succeeded_ids_message">Entry successfully encrypted for %1$s</string>
   <string name="password_creation_file_encryption_failed_ids_message">\n\nEncryption failed for%1$s</string>
   <string name="password_creation_file_encryption_failed_expired_key">expired key</string>
-  <string name="password_creation_file_write_fail_message">Failed to write password file to the store, please try again.</string>
+  <string name="password_creation_file_write_fail_message">Failed to write encrypted file to the store, please try again.</string>
   <string name="password_creation_unusable_encryption_key_error_message">Encryption failure. Check expiration date and revocation status of the PGP key(s) using an external utility.</string>
   <string name="password_creation_no_keys_provided_message">No matching PGP keys found.</string>
   <string name="password_creation_duplicate_error">File already exists, please use a different name.</string>
