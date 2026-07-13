@@ -481,6 +481,7 @@ class PasswordStore : BaseGitActivity() {
       return
     }
     MaterialAlertDialogBuilder(this)
+      .setTitle(R.string.delete_dialog_title)
       .setMessage(resources.getQuantityString(R.plurals.delete_dialog_text, size, size))
       .setPositiveButton(R.string.dialog_yes) { _, _ ->
         val filesToDelete = arrayListOf<File>()

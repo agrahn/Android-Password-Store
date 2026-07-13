@@ -23,6 +23,7 @@
 
   <!-- Password Store -->
   <string name="creation_dialog_text">Password Store ist nicht vollständig eingerichtet. Bitte klonen oder erstellen Sie ein neues Repository, bevor Sie ein Passwort hinzufügen oder eine Synchronisations-Operation durchführen.</string>
+  <string name="delete_dialog_title">Löschen bestätigen</string>
   <plurals name="delete_dialog_text">
     <item quantity="one">Möchten Sie das ausgewählte Element wirklich löschen?</item>
     <item quantity="other">Möchten Sie die %d ausgewählten Elemente wirklich löschen?</item>
@@ -331,8 +332,8 @@
   <string name="password_creation_file_encryption_succeeded_ids_message">Eintrag erfolgreich verschlüsselt für\n%1$s</string>
   <string name="password_creation_file_encryption_failed_ids_message">\n\nVerschlüsselung fehlgeschlagen für%1$s</string>
   <string name="password_creation_file_encryption_failed_expired_key">Schlüssel abgelaufen</string>
-  <string name="password_creation_file_write_fail_message">Fehler beim Speichern der Passwortdatei im Password Store, bitte versuchen Sie es erneut.</string>
-  <string name="password_creation_unusable_encryption_key_error_message">Verschlüsseln fehlgeschlagen. Überprüfen Sie Ablaufdatum und Widerrufstatus der PGP-Schlüssel mithilfe eines externen Programms.</string>
+  <string name="password_creation_file_write_fail_message">Fehler beim Speichern der verschlüsselten Datei im Password Store, bitte versuchen Sie es erneut.</string>
+  <string name="password_creation_unusable_encryption_key_error_message">Verschlüsseln fehlgeschlagen. Überprüfen Sie Ablaufdatum und Widerrufsstatus der PGP-Schlüssel mithilfe eines externen Programms.</string>
   <string name="password_creation_no_keys_provided_message">Keine passenden PGP-Schlüssel gefunden.</string>
   <string name="password_creation_duplicate_error">Datei existiert bereits, bitte verwenden Sie einen anderen Dateinamen.</string>
   <string name="add_otp">OTP hinzufügen</string>
