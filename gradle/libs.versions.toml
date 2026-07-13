@@ -1,7 +1,7 @@
 [versions]
 agp = "9.2.1"
 androidxActivity = "1.13.0"
-bouncycastle = "1.84"
+bouncycastle = "1.85"
 coroutines = "1.11.0"
 flowbinding = "1.2.0"
 hilt = "2.60.1"
