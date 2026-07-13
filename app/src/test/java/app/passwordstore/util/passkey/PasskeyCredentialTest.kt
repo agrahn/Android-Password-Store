@@ -100,7 +100,9 @@ class PasskeyCredentialTest {
     assertTrue(passkeyCredentialEC.user.revealName == false)
     passkeyCredentialEC.user.revealName = true
     val passkeyCredentialModifCbor = passkeyCredentialEC.toCbor()
-    assertTrue(PasskeyCredential.fromCbor(passkeyCredentialModifCbor).get()?.user?.revealName == true)
+    assertTrue(
+      PasskeyCredential.fromCbor(passkeyCredentialModifCbor).get()?.user?.revealName == true
+    )
 
     val passkeyCredentialEdDSA =
       PasskeyCredential.createNew(

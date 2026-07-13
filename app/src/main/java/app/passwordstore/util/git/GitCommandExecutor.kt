@@ -53,76 +53,76 @@ class GitCommandExecutor(
     // Count the number of uncommitted files
     var nbChanges = 0
     return runCatching {
-        for (command in operation.commands) {
-          when (command) {
-            is StatusCommand -> {
-              val res = withContext(dispatcherProvider.io()) { command.call() }
-              nbChanges = res.uncommittedChanges.size
-            }
-            is CommitCommand -> {
-              // the previous status will eventually be used to avoid a commit
-              if (nbChanges > 0) {
-                withContext(dispatcherProvider.io()) {
-                  val name = gitSettings.authorName.ifEmpty { "root" }
-                  val email = gitSettings.authorEmail.ifEmpty { "localhost" }
-                  val identity = PersonIdent(name, email)
-                  command.setAuthor(identity).setCommitter(identity).call()
-                }
+      for (command in operation.commands) {
+        when (command) {
+          is StatusCommand -> {
+            val res = withContext(dispatcherProvider.io()) { command.call() }
+            nbChanges = res.uncommittedChanges.size
+          }
+          is CommitCommand -> {
+            // the previous status will eventually be used to avoid a commit
+            if (nbChanges > 0) {
+              withContext(dispatcherProvider.io()) {
+                val name = gitSettings.authorName.ifEmpty { "root" }
+                val email = gitSettings.authorEmail.ifEmpty { "localhost" }
+                val identity = PersonIdent(name, email)
+                command.setAuthor(identity).setCommitter(identity).call()
               }
             }
-            is PullCommand -> {
-              val result = withContext(dispatcherProvider.io()) { command.call() }
-              if (result.rebaseResult != null) {
-                if (!result.rebaseResult.status.isSuccessful) {
-                  throw PullException.PullRebaseFailed
-                }
-              } else if (result.mergeResult != null) {
-                if (!result.mergeResult.mergeStatus.isSuccessful) {
-                  throw PullException.PullMergeFailed
-                }
+          }
+          is PullCommand -> {
+            val result = withContext(dispatcherProvider.io()) { command.call() }
+            if (result.rebaseResult != null) {
+              if (!result.rebaseResult.status.isSuccessful) {
+                throw PullException.PullRebaseFailed
+              }
+            } else if (result.mergeResult != null) {
+              if (!result.mergeResult.mergeStatus.isSuccessful) {
+                throw PullException.PullMergeFailed
               }
             }
-            is PushCommand -> {
-              val results = withContext(dispatcherProvider.io()) { command.call() }
-              for (result in results) {
-                // Code imported (modified) from Gerrit PushOp, license Apache v2
-                for (rru in result.remoteUpdates) {
-                  when (rru.status) {
-                    RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD ->
-                      throw PushException.NonFastForward
-                    RemoteRefUpdate.Status.REJECTED_NODELETE,
-                    RemoteRefUpdate.Status.REJECTED_REMOTE_CHANGED,
-                    RemoteRefUpdate.Status.NON_EXISTING,
-                    RemoteRefUpdate.Status.NOT_ATTEMPTED ->
-                      throw PushException.Generic(rru.status.name)
-                    RemoteRefUpdate.Status.REJECTED_OTHER_REASON -> {
-                      throw if ("non-fast-forward" == rru.message) {
-                        PushException.RemoteRejected
-                      } else {
-                        PushException.Generic(rru.message)
-                      }
+          }
+          is PushCommand -> {
+            val results = withContext(dispatcherProvider.io()) { command.call() }
+            for (result in results) {
+              // Code imported (modified) from Gerrit PushOp, license Apache v2
+              for (rru in result.remoteUpdates) {
+                when (rru.status) {
+                  RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD ->
+                    throw PushException.NonFastForward
+                  RemoteRefUpdate.Status.REJECTED_NODELETE,
+                  RemoteRefUpdate.Status.REJECTED_REMOTE_CHANGED,
+                  RemoteRefUpdate.Status.NON_EXISTING,
+                  RemoteRefUpdate.Status.NOT_ATTEMPTED ->
+                    throw PushException.Generic(rru.status.name)
+                  RemoteRefUpdate.Status.REJECTED_OTHER_REASON -> {
+                    throw if ("non-fast-forward" == rru.message) {
+                      PushException.RemoteRejected
+                    } else {
+                      PushException.Generic(rru.message)
                     }
-                    RemoteRefUpdate.Status.UP_TO_DATE -> {
-                      withContext(dispatcherProvider.main()) {
-                        Toast.makeText(
-                            activity,
-                            activity.applicationContext.getString(R.string.git_push_up_to_date),
-                            Toast.LENGTH_SHORT,
-                          )
-                          .show()
-                      }
-                    }
-                    else -> {}
                   }
+                  RemoteRefUpdate.Status.UP_TO_DATE -> {
+                    withContext(dispatcherProvider.main()) {
+                      Toast.makeText(
+                          activity,
+                          activity.applicationContext.getString(R.string.git_push_up_to_date),
+                          Toast.LENGTH_SHORT,
+                        )
+                        .show()
+                    }
+                  }
+                  else -> {}
                 }
               }
             }
-            else -> {
-              withContext(dispatcherProvider.io()) { command.call() }
-            }
+          }
+          else -> {
+            withContext(dispatcherProvider.io()) { command.call() }
           }
         }
       }
+    }
       .also { snackbar.dismiss() }
   }
 

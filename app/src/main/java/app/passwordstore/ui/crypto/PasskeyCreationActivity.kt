@@ -159,16 +159,16 @@ class PasskeyCreationActivity : BasePGPActivity() {
 
       val reader = QRCodeReader()
       runCatching {
-          val result = reader.decode(binaryBitmap)
-          val text = result.text
-          binding.extraContent.text?.let { currentExtras ->
-            if (currentExtras.isNotEmpty() && currentExtras.last() != '\n')
-              binding.extraContent.append("\n$text")
-            else binding.extraContent.append(text)
-          }
-          snackbar(message = getString(R.string.otp_import_success))
-          binding.otpImportButton.isVisible = false
+        val result = reader.decode(binaryBitmap)
+        val text = result.text
+        binding.extraContent.text?.let { currentExtras ->
+          if (currentExtras.isNotEmpty() && currentExtras.last() != '\n')
+            binding.extraContent.append("\n$text")
+          else binding.extraContent.append(text)
         }
+        snackbar(message = getString(R.string.otp_import_success))
+        binding.otpImportButton.isVisible = false
+      }
         .onErr { snackbar(message = getString(R.string.otp_import_failure_generic)) }
     }
 
@@ -382,211 +382,209 @@ class PasskeyCreationActivity : BasePGPActivity() {
 
       lifecycleScope.launch(dispatcherProvider.main()) {
         runCatching {
-            var credentialHexId = binding.credId.text.toString()
+          var credentialHexId = binding.credId.text.toString()
 
-            // passkey creation
-            val providerRequest = getProviderRequest()
-            val publicKeyRequest = providerRequest?.let { getPublicKeyRequest(it) }
-            val requestOptions = publicKeyRequest?.let {
-              PublicKeyCredentialCreationOptions(it.requestJson)
-            }
+          // passkey creation
+          val providerRequest = getProviderRequest()
+          val publicKeyRequest = providerRequest?.let { getPublicKeyRequest(it) }
+          val requestOptions = publicKeyRequest?.let {
+            PublicKeyCredentialCreationOptions(it.requestJson)
+          }
 
-            val passkeyAndCreatePublicKeyCredentialResponse = requestOptions?.let { options ->
-              requireNotNull(providerRequest) { "providerRequest must not be null here" }
-              requireNotNull(publicKeyRequest) { "publicKeyRequest must not be null here" }
-              CredmanUtils.buildCreatePublicKeyCredentialResponse(
-                options,
-                credentialHexId,
-                providerRequest.callingAppInfo,
-                publicKeyRequest.clientDataHash,
-              )
-            }
+          val passkeyAndCreatePublicKeyCredentialResponse = requestOptions?.let { options ->
+            requireNotNull(providerRequest) { "providerRequest must not be null here" }
+            requireNotNull(publicKeyRequest) { "publicKeyRequest must not be null here" }
+            CredmanUtils.buildCreatePublicKeyCredentialResponse(
+              options,
+              credentialHexId,
+              providerRequest.callingAppInfo,
+              publicKeyRequest.clientDataHash,
+            )
+          }
 
-            val returnIntent = Intent()
-            val passkey = passkeyAndCreatePublicKeyCredentialResponse?.let { response ->
-              PendingIntentHandler.setCreateCredentialResponse(returnIntent, response.second)
-              response.first
-            }
+          val returnIntent = Intent()
+          val passkey = passkeyAndCreatePublicKeyCredentialResponse?.let { response ->
+            PendingIntentHandler.setCreateCredentialResponse(returnIntent, response.second)
+            response.first
+          }
 
-            // passkey as b64url-encoded cbor for storage in password file
-            val passkeyCborBase64 =
-              if (passkey != null) {
-                // new passkey
-                passkey.user.revealName = revealPasskeyUsername.isChecked
-                passkey.toCbor()?.b64Encode().also { passkey.privateKey.wipe() }
-              } else {
-                // edit passkey
-                suggestedEntryChars?.let { encrypted ->
-                  AESEncryption.decrypt(encrypted)?.let { decrypted ->
-                    val entry = passwordEntryFactory.create(decrypted).also { decrypted.wipe() }
-                    val storedPasskey = retrievePasskey(entry).also { entry.clear() }
-                    storedPasskey?.user?.revealName?.let {
-                      storedPasskey.user.revealName = revealPasskeyUsername.isChecked
-                    }
-                    storedPasskey?.toCbor()?.b64Encode()?.also {
-                      storedPasskey.clearPrivateKey()
-                    }
+          // passkey as b64url-encoded cbor for storage in password file
+          val passkeyCborBase64 =
+            if (passkey != null) {
+              // new passkey
+              passkey.user.revealName = revealPasskeyUsername.isChecked
+              passkey.toCbor()?.b64Encode().also { passkey.privateKey.wipe() }
+            } else {
+              // edit passkey
+              suggestedEntryChars?.let { encrypted ->
+                AESEncryption.decrypt(encrypted)?.let { decrypted ->
+                  val entry = passwordEntryFactory.create(decrypted).also { decrypted.wipe() }
+                  val storedPasskey = retrievePasskey(entry).also { entry.clear() }
+                  storedPasskey?.user?.revealName?.let {
+                    storedPasskey.user.revealName = revealPasskeyUsername.isChecked
+                  }
+                  storedPasskey?.toCbor()?.b64Encode()?.also {
+                    storedPasskey.clearPrivateKey()
                   }
                 }
-              } ?: throw NullPointerException()
-
-            // apply any modifications done on the entry, and encrypt it for storage
-            var editExtra =
-              extraContent.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
-
-            // fix extra content formatting
-            if (!editExtra.isEmpty()) {
-              editExtra = editExtra.let {
-                val extraLines = it.splitToCharArrayListAt('\n').map { it.trimEnd() }
-                it?.wipe()
-                val editExtra = extraLines.joinToCharArray('\n')?.trimEnd()
-                val editExtraPlusLineFeed = editExtra?.let { it + '\n' }
-                editExtra?.wipe()
-                editExtraPlusLineFeed ?: charArrayOf()
               }
-            }
+            } ?: throw NullPointerException()
 
-            val contentChars = (passkeyCborBase64 + '\n' + editExtra)
-            val contentBytes = contentChars.toByteArray()
-            contentChars.wipe()
-            passkeyCborBase64.wipe()
-            editExtra?.wipe()
+          // apply any modifications done on the entry, and encrypt it for storage
+          var editExtra =
+            extraContent.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
 
-            val (succeededUserEmails, encryptionResult) =
-              withContext(dispatcherProvider.io()) {
-                repository.encrypt(
-                  identifiers,
-                  ByteArrayInputStream(contentBytes),
-                  ByteArrayOutputStream(),
-                )
-              }
-            contentBytes.wipe()
-
-            if (encryptionResult.isErr) throw encryptionResult.unwrapError()
-            if (succeededUserEmails.isNullOrEmpty()) throw UnusableKeyException
-
-            val failedUserEmails =
-              identifiers
-                .map { id ->
-                  repository.getEmailFromKeyId(id)
-                    ?: run {
-                      if (!repository.hasKey(id))
-                        "\n${id}: ${getString(R.string.pgp_unknown_key_identifier)}"
-                      else
-                        "\n${id}: ${getString(R.string.password_creation_file_encryption_failed_expired_key)}"
-                    }
-                }
-                .distinct()
-                .filter { it !in succeededUserEmails ?: emptyList() }
-
-            val path = run { // password item's full file path string
-              val editRelativePath = directory.text.toString().trim()
-              val passwordDirectory = Paths.get(repoPath, editRelativePath.trim('/'))
-              passwordDirectory.createDirectories() // ensure destination dir exists
-              if (!passwordDirectory.exists()) { // should not happen
-                snackbar(message = "Failed to create directory ${editRelativePath.trimEnd('/')}")
-                return@runCatching
-              }
-
-              "${passwordDirectory.pathString}/$credentialHexId.gpg"
-            }
-
-            val passkeyFile = Paths.get(path)
-            /* If we were editing and the incoming and outgoing file paths differ, it means we renamed. Ensure
-             * that the target doesn't already exist to prevent an accidental overwrite. */
-            if (
-              editing &&
-                "${fullPath.trimEnd('/')}/$suggestedName.gpg" != passkeyFile.absolutePathString() &&
-                passkeyFile.exists()
-            ) {
-              snackbar(message = getString(R.string.password_creation_duplicate_error))
-              return@runCatching
-            }
-
-            if (!passkeyFile.toFile().isInsideRepository()) {
-              snackbar(message = getString(R.string.message_error_destination_outside_repo))
-              return@runCatching
-            }
-
-            withContext(dispatcherProvider.io()) {
-              passkeyFile.writeBytes(encryptionResult.getOrThrow().toByteArray())
-            }
-
-            // create/update timestamp on the current passkey file
-            passwordHistory.edit {
-              suggestedName?.let { oldFile ->
-                val oldFilePathHash = "${fullPath.trimEnd('/')}/$oldFile.gpg".base64()
-                remove(oldFilePathHash)
-              }
-              putString(
-                passkeyFile.absolutePathString().base64(),
-                System.currentTimeMillis().toString(),
-              )
-            }
-
-            lifecycleScope.launch {
-              val commitMessageRes =
-                if (editing) R.string.git_commit_edit_text else R.string.git_commit_add_text
-
-              commitChange(
-                  resources.getString(
-                    commitMessageRes,
-                    PasswordRepository.getLongName(fullPath, repoPath, credentialHexId),
-                  )
-                )
-                .onOk {
-                  setResult(RESULT_OK, returnIntent)
-
-                  // maintain cred hex ID <-> user name map for display on passkey selector
-                  credentialUsernames.edit {
-                    if (revealPasskeyUsername.isChecked) {
-                      val displayUser =
-                        if ("${fullname.text}" != "${username.text}")
-                          "${username.text} (${fullname.text})"
-                        else "${username.text}"
-                      putString(
-                        credentialHexId,
-                        AESEncryption.encrypt(
-                            displayUser.toCharArray(),
-                            keyType = KeyType.PERSISTENT,
-                          )
-                          ?.concatToString(),
-                      )
-                    } else {
-                      remove(credentialHexId)
-                    }
-                  }
-
-                  val dialog =
-                    MaterialAlertDialogBuilder(this@PasskeyCreationActivity)
-                      .setCancelable(false)
-                      .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
-                  var messageText =
-                    getString(
-                      R.string.password_creation_file_encryption_succeeded_ids_message,
-                      succeededUserEmails.joinToString(),
-                    )
-                  if (!failedUserEmails.isEmpty()) {
-                    dialog.setTitle(
-                      R.string.password_creation_file_encryption_partial_success_title
-                    )
-                    messageText +=
-                      getString(
-                        R.string.password_creation_file_encryption_failed_ids_message,
-                        failedUserEmails.joinToString(),
-                      )
-                  } else {
-                    val title =
-                      if (editing)
-                        getString(R.string.password_creation_edit_file_encryption_success_title)
-                      else getString(R.string.password_creation_new_file_encryption_success_title)
-                    dialog.setTitle(title)
-                  }
-                  dialog.setMessage(messageText)
-                  dialog.show()
-                }
+          // fix extra content formatting
+          if (!editExtra.isEmpty()) {
+            editExtra = editExtra.let {
+              val extraLines = it.splitToCharArrayListAt('\n').map { it.trimEnd() }
+              it?.wipe()
+              val editExtra = extraLines.joinToCharArray('\n')?.trimEnd()
+              val editExtraPlusLineFeed = editExtra?.let { it + '\n' }
+              editExtra?.wipe()
+              editExtraPlusLineFeed ?: charArrayOf()
             }
           }
+
+          val contentChars = (passkeyCborBase64 + '\n' + editExtra)
+          val contentBytes = contentChars.toByteArray()
+          contentChars.wipe()
+          passkeyCborBase64.wipe()
+          editExtra?.wipe()
+
+          val (succeededUserEmails, encryptionResult) =
+            withContext(dispatcherProvider.io()) {
+              repository.encrypt(
+                identifiers,
+                ByteArrayInputStream(contentBytes),
+                ByteArrayOutputStream(),
+              )
+            }
+          contentBytes.wipe()
+
+          if (encryptionResult.isErr) throw encryptionResult.unwrapError()
+          if (succeededUserEmails.isNullOrEmpty()) throw UnusableKeyException
+
+          val failedUserEmails =
+            identifiers
+              .map { id ->
+                repository.getEmailFromKeyId(id)
+                  ?: run {
+                    if (!repository.hasKey(id))
+                      "\n${id}: ${getString(R.string.pgp_unknown_key_identifier)}"
+                    else
+                      "\n${id}: ${getString(R.string.password_creation_file_encryption_failed_expired_key)}"
+                  }
+              }
+              .distinct()
+              .filter { it !in succeededUserEmails ?: emptyList() }
+
+          val path = run { // password item's full file path string
+            val editRelativePath = directory.text.toString().trim()
+            val passwordDirectory = Paths.get(repoPath, editRelativePath.trim('/'))
+            passwordDirectory.createDirectories() // ensure destination dir exists
+            if (!passwordDirectory.exists()) { // should not happen
+              snackbar(message = "Failed to create directory ${editRelativePath.trimEnd('/')}")
+              return@runCatching
+            }
+
+            "${passwordDirectory.pathString}/$credentialHexId.gpg"
+          }
+
+          val passkeyFile = Paths.get(path)
+          /* If we were editing and the incoming and outgoing file paths differ, it means we renamed. Ensure
+           * that the target doesn't already exist to prevent an accidental overwrite. */
+          if (
+            editing &&
+              "${fullPath.trimEnd('/')}/$suggestedName.gpg" != passkeyFile.absolutePathString() &&
+              passkeyFile.exists()
+          ) {
+            snackbar(message = getString(R.string.password_creation_duplicate_error))
+            return@runCatching
+          }
+
+          if (!passkeyFile.toFile().isInsideRepository()) {
+            snackbar(message = getString(R.string.message_error_destination_outside_repo))
+            return@runCatching
+          }
+
+          withContext(dispatcherProvider.io()) {
+            passkeyFile.writeBytes(encryptionResult.getOrThrow().toByteArray())
+          }
+
+          // create/update timestamp on the current passkey file
+          passwordHistory.edit {
+            suggestedName?.let { oldFile ->
+              val oldFilePathHash = "${fullPath.trimEnd('/')}/$oldFile.gpg".base64()
+              remove(oldFilePathHash)
+            }
+            putString(
+              passkeyFile.absolutePathString().base64(),
+              System.currentTimeMillis().toString(),
+            )
+          }
+
+          lifecycleScope.launch {
+            val commitMessageRes =
+              if (editing) R.string.git_commit_edit_text else R.string.git_commit_add_text
+
+            commitChange(
+                resources.getString(
+                  commitMessageRes,
+                  PasswordRepository.getLongName(fullPath, repoPath, credentialHexId),
+                )
+              )
+              .onOk {
+                setResult(RESULT_OK, returnIntent)
+
+                // maintain cred hex ID <-> user name map for display on passkey selector
+                credentialUsernames.edit {
+                  if (revealPasskeyUsername.isChecked) {
+                    val displayUser =
+                      if ("${fullname.text}" != "${username.text}")
+                        "${username.text} (${fullname.text})"
+                      else "${username.text}"
+                    putString(
+                      credentialHexId,
+                      AESEncryption.encrypt(
+                          displayUser.toCharArray(),
+                          keyType = KeyType.PERSISTENT,
+                        )
+                        ?.concatToString(),
+                    )
+                  } else {
+                    remove(credentialHexId)
+                  }
+                }
+
+                val dialog =
+                  MaterialAlertDialogBuilder(this@PasskeyCreationActivity)
+                    .setCancelable(false)
+                    .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
+                var messageText =
+                  getString(
+                    R.string.password_creation_file_encryption_succeeded_ids_message,
+                    succeededUserEmails.joinToString(),
+                  )
+                if (!failedUserEmails.isEmpty()) {
+                  dialog.setTitle(R.string.password_creation_file_encryption_partial_success_title)
+                  messageText +=
+                    getString(
+                      R.string.password_creation_file_encryption_failed_ids_message,
+                      failedUserEmails.joinToString(),
+                    )
+                } else {
+                  val title =
+                    if (editing)
+                      getString(R.string.password_creation_edit_file_encryption_success_title)
+                    else getString(R.string.password_creation_new_file_encryption_success_title)
+                  dialog.setTitle(title)
+                }
+                dialog.setMessage(messageText)
+                dialog.show()
+              }
+          }
+        }
           .onErr { e ->
             logcat(ERROR) { e.asLog() }
             setResult(RESULT_CANCELED)

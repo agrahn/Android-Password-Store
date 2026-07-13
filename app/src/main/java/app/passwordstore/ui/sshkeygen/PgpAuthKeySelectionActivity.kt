@@ -87,10 +87,10 @@ class PgpAuthKeySelectionActivity : AppCompatActivity() {
 
   private fun selectPgpKey() {
     runCatching {
-        pgpKeySelectionAction.launch(
-          PGPKeyListActivity.newIntent(this, keySelection = true, singleSelection = true)
-        )
-      }
+      pgpKeySelectionAction.launch(
+        PGPKeyListActivity.newIntent(this, keySelection = true, singleSelection = true)
+      )
+    }
       .onErr { e ->
         logcat(ERROR) { e.asLog() }
         e.message?.let { message -> snackbar(message = message) }

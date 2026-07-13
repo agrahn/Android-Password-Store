@@ -102,18 +102,18 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
   override fun onAttach(context: Context) {
     super.onAttach(context)
     runCatching {
-        listener =
-          object : OnFragmentInteractionListener {
-            override fun onFragmentInteraction(item: PasswordItem) {
-              if (item.type == PasswordItem.TYPE_CATEGORY) {
-                model.navigateTo(item.file, listMode = ListMode.DirectoriesOnly)
-                (requireActivity() as AppCompatActivity)
-                  .supportActionBar
-                  ?.setDisplayHomeAsUpEnabled(true)
-              }
+      listener =
+        object : OnFragmentInteractionListener {
+          override fun onFragmentInteraction(item: PasswordItem) {
+            if (item.type == PasswordItem.TYPE_CATEGORY) {
+              model.navigateTo(item.file, listMode = ListMode.DirectoriesOnly)
+              (requireActivity() as AppCompatActivity)
+                .supportActionBar
+                ?.setDisplayHomeAsUpEnabled(true)
             }
           }
-      }
+        }
+    }
       .onErr { throw ClassCastException("$context must implement OnFragmentInteractionListener") }
   }
 

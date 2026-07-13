@@ -105,47 +105,47 @@ class PasskeyAuthenticationActivity : BasePGPActivity() {
       val entry = passwordEntryFactory.create(decryptedEntryChars)
 
       runCatching {
-          val passkey = retrievePasskey(entry)
-          entry.clearPassword()
-          if (passkey == null) throw GetCredentialUnknownException(INVALID_PASSKEY_DATA)
+        val passkey = retrievePasskey(entry)
+        entry.clearPassword()
+        if (passkey == null) throw GetCredentialUnknownException(INVALID_PASSKEY_DATA)
 
-          val providerRequest =
-            PendingIntentHandler.retrieveProviderGetCredentialRequest(intent)
-              ?: throw GetCredentialUnknownException(PROVIDER_REQUEST_NULL)
+        val providerRequest =
+          PendingIntentHandler.retrieveProviderGetCredentialRequest(intent)
+            ?: throw GetCredentialUnknownException(PROVIDER_REQUEST_NULL)
 
-          val getCredentialResponse =
-            CredmanUtils.buildGetCredentialResponse(providerRequest, passkey).getOrThrow()
+        val getCredentialResponse =
+          CredmanUtils.buildGetCredentialResponse(providerRequest, passkey).getOrThrow()
 
-          withContext(dispatcherProvider.main()) {
-            val result = Intent()
-            PendingIntentHandler.setGetCredentialResponse(result, getCredentialResponse)
-            setResult(RESULT_OK, result)
+        withContext(dispatcherProvider.main()) {
+          val result = Intent()
+          PendingIntentHandler.setGetCredentialResponse(result, getCredentialResponse)
+          setResult(RESULT_OK, result)
 
-            if (entry.hasTotp()) {
-              val otp = entry.currentOtp
-              val remainingTime = otp.remainingTime.inWholeSeconds
-              copyTextToClipboard(otp.value.toCharArray(), isSensitive = false)
-              otpTimer?.shutdownNow()
-              val otpTimerNew = Executors.newSingleThreadScheduledExecutor()
-              otpTimer = otpTimerNew
-              otpTimerNew.schedule( // refresh otp once
-                { copyTextToClipboard(entry.currentOtp.value.toCharArray(), isSensitive = false) },
-                remainingTime,
-                TimeUnit.SECONDS,
-              )
-            }
-          }
-
-          passwordHistory.edit { // create/update timestamp on the current password file
-            putString(
-              passkeyPath.base64(),
-              System.currentTimeMillis().toString(),
+          if (entry.hasTotp()) {
+            val otp = entry.currentOtp
+            val remainingTime = otp.remainingTime.inWholeSeconds
+            copyTextToClipboard(otp.value.toCharArray(), isSensitive = false)
+            otpTimer?.shutdownNow()
+            val otpTimerNew = Executors.newSingleThreadScheduledExecutor()
+            otpTimer = otpTimerNew
+            otpTimerNew.schedule( // refresh otp once
+              { copyTextToClipboard(entry.currentOtp.value.toCharArray(), isSensitive = false) },
+              remainingTime,
+              TimeUnit.SECONDS,
             )
           }
-          onSuccess(lastResult.first) // pass PGP ID for passphrase caching
-
-          withContext(dispatcherProvider.main()) { finish() }
         }
+
+        passwordHistory.edit { // create/update timestamp on the current password file
+          putString(
+            passkeyPath.base64(),
+            System.currentTimeMillis().toString(),
+          )
+        }
+        onSuccess(lastResult.first) // pass PGP ID for passphrase caching
+
+        withContext(dispatcherProvider.main()) { finish() }
+      }
         .onErr { e ->
           logcat(ERROR) { e.asLog() }
           val errMessage =

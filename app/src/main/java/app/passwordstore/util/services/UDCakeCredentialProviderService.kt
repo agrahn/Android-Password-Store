@@ -38,8 +38,8 @@ class UDCakeCredentialProviderService : CredentialProviderService() {
     logcat { "BeginCreateCredentialRequest" }
     if (response != null) {
       runCatching {
-          callback.onResult(response)
-        }
+        callback.onResult(response)
+      }
         .onErr { e ->
           logcat { e.toString() }
         }
@@ -55,9 +55,9 @@ class UDCakeCredentialProviderService : CredentialProviderService() {
   ) {
     logcat { "BeginGetCredentialRequest" }
     runCatching {
-        val response = CredmanUtils.processGetCredentialRequest(request)
-        callback.onResult(response)
-      }
+      val response = CredmanUtils.processGetCredentialRequest(request)
+      callback.onResult(response)
+    }
       .onErr { e ->
         callback.onError(GetCredentialUnknownException())
       }
