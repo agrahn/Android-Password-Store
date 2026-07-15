@@ -19,10 +19,10 @@ object LintConfig {
     noLines = false
     showAll = true
     explainIssues = true
-    textReport = false
+    /* textReport = false
     xmlReport = false
     htmlReport = true
-    sarifReport = true
+    sarifReport = true */
     // Noisy, not particularly actionable
     disable += "DuplicateStrings"
     // We deal with dependency upgrades separately
