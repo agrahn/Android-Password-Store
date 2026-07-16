@@ -1,6 +1,6 @@
 # Password Store
 
-Password Store is a [`pass`](https://www.passwordstore.org/)-compatible password manager, WebAuthn/passkey credential provider and autofill service for Android.
+Password Store is a [`pass`](https://www.passwordstore.org/)-compatible **password manager**, **passkey credential provider** and **autofill service** for Android.
 
 As a credential provider, it can respond to passkey creation and authentication requests from browsers and native apps. Supported passkey types are **EdDSA (Ed25519)**, **ES256**, and **RS256**. Passkey functionality is available on devices with Android 14 and above.
 
@@ -18,7 +18,7 @@ Forked from the archived [Password Store](https://github.com/android-password-st
 
 The original documentation can be found [here](https://docs.passwordstore.app) and [there](https://github.com/android-password-store/Android-Password-Store/wiki/).
 
-To activate passkey (Android 14+) and autofill support, go to Settings → Autofill & passkeys and choose Password Store as your preferred service. For Chrome and Chromium-based browsers, you might additionally need to enable "Autofill using another service" within the browser's own settings.
+To activate passkey (Android 14+) and autofill support, go to Settings → Autofill & Passkeys and choose Password Store as your preferred service. For Chrome and Chromium-based browsers, you might additionally need to enable "Autofill using another service" within the browser's own settings.
 
 Utilizing the standard `pass` file structure, passkey data is stored on the first line, followed by optional extra content, as line-oriented plain text secured by PGP encryption. Details on passkey encoding and storage are given [here](PasskeyStorage.md).
 
@@ -39,7 +39,7 @@ File `myKeyForPass.sec.asc` can be directly imported into Password Store via Set
 
 ## Contributing
 
-Issues and pull request are welcome, but avoid bulky, hard to digest multi-feature contributions, especially AI-generated ones.
+Issues and pull requests are welcome, but avoid bulky, hard to digest multi-feature contributions, especially AI-generated ones. Refer to the [Changelog](CHANGELOG.md) for the latest fixes and additions.
 
 ## Donations
 

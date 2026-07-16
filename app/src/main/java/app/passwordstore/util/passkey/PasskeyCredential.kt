@@ -79,9 +79,7 @@ data class PasskeyCredential(
     cborMapper.writeValueAsBytes(this)
   }
 
-  fun clearPrivateKey() {
-    privateKey.wipe()
-  }
+  fun clearPrivateKey() = privateKey.wipe()
 
   fun signData(dataToSign: ByteArray): Result<ByteArray, Throwable> = runCatching {
     val jcaPrivateKey = loadPrivateKey()
@@ -198,31 +196,45 @@ data class PasskeyCredential(
         Algorithm.RS256 -> getRS256PrivateKeyRawBytes(keyPair.private)
       }
 
-    // PrivateKey conversions to raw bytes, found with the help of Gemini
+    // PrivateKey conversions to raw bytes
 
     /* ECDSA P-256 private key as raw BigInteger scalar, converted to zero-padded, size 32 ByteArray
      * with leading sign byte stripped */
-    private fun getES256PrivateKeyRawBytes(privateKey: PrivateKey): ByteArray =
-      (ByteArray(32) + (privateKey as ECPrivateKey).s.toByteArray()).let {
-        it.copyOfRange(it.size - 32, it.size)
-      }
+    private fun getES256PrivateKeyRawBytes(privateKey: PrivateKey): ByteArray {
+      val s = (privateKey as ECPrivateKey).s.toByteArray()
+      val sPadded = ByteArray(32) + s
+      s.wipe()
+      return sPadded.copyOfRange(sPadded.size - 32, sPadded.size).also { sPadded.wipe() }
+    }
 
     /* Ed25519 private key, converted to raw size 32 ByteArray using BouncyCastle */
-    private fun getEd25519PrivateKeyRawBytes(privateKey: PrivateKey): ByteArray =
-      (PrivateKeyFactory.createKey(privateKey.encoded) as Ed25519PrivateKeyParameters).encoded
+    private fun getEd25519PrivateKeyRawBytes(privateKey: PrivateKey): ByteArray {
+      val encoded = privateKey.encoded
+      return (PrivateKeyFactory.createKey(encoded) as Ed25519PrivateKeyParameters).encoded.also {
+        encoded.wipe()
+      }
+    }
 
     // RSA-2048 private key, with modulus and exponent concatenated to size 512 ByteArray
     private fun getRS256PrivateKeyRawBytes(privateKey: PrivateKey): ByteArray {
       val rsaKey = privateKey as RSAPrivateKey
-      val nBytes =
-        (ByteArray(256) + rsaKey.modulus.toByteArray()).let {
-          it.copyOfRange(it.size - 256, it.size)
-        }
-      val dBytes =
-        (ByteArray(256) + rsaKey.privateExponent.toByteArray()).let {
-          it.copyOfRange(it.size - 256, it.size)
-        }
-      return nBytes + dBytes
+
+      val mod = rsaKey.modulus.toByteArray()
+      val modPadded = ByteArray(256) + mod
+      mod.wipe()
+      val nBytes = modPadded.copyOfRange(modPadded.size - 256, modPadded.size)
+      modPadded.wipe()
+
+      val exp = rsaKey.privateExponent.toByteArray()
+      val expPadded = ByteArray(256) + exp
+      exp.wipe()
+      val dBytes = expPadded.copyOfRange(expPadded.size - 256, expPadded.size)
+      expPadded.wipe()
+
+      return (nBytes + dBytes).also {
+        nBytes.wipe()
+        dBytes.wipe()
+      }
     }
   }
 
@@ -234,7 +246,7 @@ data class PasskeyCredential(
       else -> throw IllegalStateException("Unsupported passkey algorithm, COSE alg=${alg}")
     }
 
-  // PrivateKey conversions from raw bytes, implementations by Gemini
+  // PrivateKey conversions from raw bytes
   private fun rebuildES256FromPrivateKeyRawBytes(): PrivateKey {
     require(privateKey.size == 32) { "ECDSA P-256 raw private key must be 32 bytes" }
     /* Force the byte array to be interpreted as a POSITIVE number (signum = 1).
@@ -262,10 +274,8 @@ data class PasskeyCredential(
 
   private fun rebuildEd25519FromPrivateKeyRawBytes(): PrivateKey {
     require(privateKey.size == 32) { "Ed25519 raw private key must be 32 bytes" }
-
     val privateKeyParams = Ed25519PrivateKeyParameters(privateKey, 0)
     val privateKeyInfo = PrivateKeyInfoFactory.createPrivateKeyInfo(privateKeyParams)
-
     return JcaPEMKeyConverter().setProvider(BouncyCastleProvider()).getPrivateKey(privateKeyInfo)
   }
 
@@ -273,7 +283,6 @@ data class PasskeyCredential(
     require(privateKey.size == 512) { "Buffer must be exactly 512 bytes" }
     val n = BigInteger(1, privateKey.copyOfRange(0, 256))
     val d = BigInteger(1, privateKey.copyOfRange(256, 512))
-
     val keySpec = RSAPrivateKeySpec(n, d)
     return KeyFactory.getInstance("RSA", BouncyCastleProvider()).generatePrivate(keySpec)
   }
@@ -291,16 +300,16 @@ data class PasskeyCredential(
       if (other !is UserInfo) return false
       if (!id.contentEquals(other.id)) return false
       if (name != other.name) return false
-      if (revealName != other.revealName) return false
       if (displayName != other.displayName) return false
+      if (revealName != other.revealName) return false
       return true
     }
 
     override fun hashCode(): Int {
       var result = id.contentHashCode()
       result = 31 * result + name.hashCode()
-      result = 31 * result + revealName.hashCode()
       result = 31 * result + (displayName?.hashCode() ?: 0)
+      result = 31 * result + revealName.hashCode()
       return result
     }
 

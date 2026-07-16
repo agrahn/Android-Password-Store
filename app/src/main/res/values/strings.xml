@@ -258,7 +258,7 @@
   <string name="oreo_autofill_flaky_fill_support">Fill passwords (may require restarting the browser from time to time)</string>
   <string name="oreo_autofill_no_support">No support</string>
   <string name="oreo_autofill_enable_dialog_description">Password Store can offer to fill login forms and even save credentials you enter in apps or on websites.</string>
-  <string name="oreo_autofill_enable_dialog_instructions">To enable this feature, tap OK to go to Autofill settings. There, select Password Store from the list and confirm the confirmation prompt with OK.</string>
+  <string name="oreo_autofill_enable_dialog_instructions">To enable this feature, tap OK to go to Autofill settings. There, select Password Store from the list and confirm the confirmation prompt with OK.\n\nIn some browsers, the option “Autofill using another service” or similar must also be enabled.</string>
   <string name="oreo_autofill_enable_dialog_installed_browsers">Autofill support with installed browsers: </string>
 
   <string name="ssh_key_does_not_exist">Unable to open the ssh private key, please check that the file exists</string>
@@ -462,7 +462,7 @@
   <string name="pgp_new_passphrase">New passphrase</string>
   <string name="pgp_new_passphrase_repeated">Repeat new passphrase</string>
   <string name="git_utils_reset_remote_branch_title">Remote branch name</string>
-  <string name="pgp_key_manager_no_keys_guidance">Add a key using the \"+\" button below</string>
+  <string name="pgp_key_manager_no_keys_guidance">Add a key using the “+” button below</string>
   <string name="no_keys_selected_dialog_title">No key selected</string>
   <string name="no_keys_imported_dialog_title">No keys available</string>
   <string name="no_keys_imported_dialog_message">No PGP keys have been added to the app yet. Import a key file or create a new key in the PGP key manager.</string>
