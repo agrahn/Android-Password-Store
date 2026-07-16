@@ -17,8 +17,10 @@ import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
+import app.passwordstore.data.crypto.PasswordReferenceResolver
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.password.FieldItem
+import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.DecryptLayoutBinding
 import app.passwordstore.injection.prefs.CredentialUsernames
 import app.passwordstore.injection.prefs.PasswordHistory
@@ -50,6 +52,7 @@ import kotlinx.coroutines.withContext
 class DecryptActivity : BasePGPActivity() {
 
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
+  @Inject lateinit var referenceResolver: PasswordReferenceResolver
   @CredentialUsernames @Inject lateinit var credentialUsernames: SharedPreferences
   @PasswordHistory @Inject lateinit var passwordHistory: SharedPreferences
 
@@ -57,7 +60,9 @@ class DecryptActivity : BasePGPActivity() {
   private val binding by viewBinding(DecryptLayoutBinding::inflate)
 
   // temporarily AES-encrypted password entry
-  private var encryptedEntryChars: CharArray? = null // AES encrypted password entry
+  private var encryptedEntryChars: CharArray? = null // AES encrypted (reference-resolved) entry
+  // original, unresolved content (with any gopass:// reference intact) for editing
+  private var originalEncryptedEntryChars: CharArray? = null
 
   private fun CharArray.isBlank() = this.isEmpty() || this.all { it.isWhitespace() }
 
@@ -85,6 +90,7 @@ class DecryptActivity : BasePGPActivity() {
 
   override fun onDestroy() {
     encryptedEntryChars?.wipe()
+    originalEncryptedEntryChars?.wipe()
     itemsAdapter?.clearItems()
     super.onDestroy()
   }
@@ -103,8 +109,16 @@ class DecryptActivity : BasePGPActivity() {
       lastResult.second.getOrThrow().wipe()
       val decryptedEntryChars = decryptedEntryBytes.toCharArray()
       decryptedEntryBytes.wipe()
-      val entry = passwordEntryFactory.create(decryptedEntryChars)
-      encryptedEntryChars = AESEncryption.encrypt(decryptedEntryChars)
+
+      // Resolve any gopass:// password reference to the target entry's password.
+      val effectiveChars = resolveReferences(decryptedEntryChars)
+
+      val entry = passwordEntryFactory.create(effectiveChars.copyOf())
+      encryptedEntryChars = AESEncryption.encrypt(effectiveChars)
+      effectiveChars.wipe()
+      // Keep the original (unresolved) content so that editing shows the gopass:// reference itself
+      // rather than the resolved password.
+      originalEncryptedEntryChars = AESEncryption.encrypt(decryptedEntryChars)
       decryptedEntryChars.wipe()
       entry.clearExtraChars()
       createPasswordUI(entry)
@@ -183,6 +197,29 @@ class DecryptActivity : BasePGPActivity() {
     return true
   }
 
+  /**
+   * If [plaintext] is a gopass-style `gopass://` reference, returns the effective content with the
+   * referenced entry's password (and, as a fallback, its username/OTP) substituted in; otherwise
+   * returns a copy of [plaintext]. On failure the original content is shown and a notice is
+   * surfaced.
+   */
+  private suspend fun resolveReferences(plaintext: CharArray): CharArray {
+    val resolved =
+      referenceResolver.resolve(
+        plaintext = plaintext.copyOf(),
+        repoRoot = PasswordRepository.getRepositoryDirectory(),
+        originPath = fullPath,
+        decrypt = { file -> decryptReferencedFile(file) },
+      )
+    return when (resolved) {
+      is PasswordReferenceResolver.Result.Resolved -> resolved.plaintext
+      is PasswordReferenceResolver.Result.Unresolved -> {
+        snackbar(message = getString(R.string.password_reference_unresolved))
+        plaintext.copyOf()
+      }
+    }
+  }
+
   private fun copyPassword() {
     encryptedEntryChars?.let { encrypted ->
       AESEncryption.decrypt(encrypted)?.let { decrypted ->
@@ -198,7 +235,7 @@ class DecryptActivity : BasePGPActivity() {
   }
 
   private fun editPassword() {
-    encryptedEntryChars?.let { encrypted ->
+    (originalEncryptedEntryChars ?: encryptedEntryChars)?.let { encrypted ->
       val intent = Intent(this, PasswordCreationActivity::class.java)
       intent.action = Intent.ACTION_VIEW
       intent.putExtra(EXTRA_FILE_PATH, Paths.get(fullPath).parent.pathString)
@@ -212,7 +249,7 @@ class DecryptActivity : BasePGPActivity() {
   }
 
   private fun editPasskey() {
-    encryptedEntryChars?.let { encrypted ->
+    (originalEncryptedEntryChars ?: encryptedEntryChars)?.let { encrypted ->
       val intent = Intent(this, PasskeyCreationActivity::class.java)
       intent.action = Intent.ACTION_VIEW
       intent.putExtra(EXTRA_FILE_PATH, Paths.get(fullPath).parent.pathString)

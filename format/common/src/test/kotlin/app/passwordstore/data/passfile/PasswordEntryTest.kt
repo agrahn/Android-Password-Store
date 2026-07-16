@@ -119,6 +119,27 @@ class PasswordEntryTest {
   }
 
   @Test
+  fun detectsReference() {
+    val ref = makeEntry("gopass://services/db/pg")
+    assertTrue(ref.isReference())
+    assertEquals("services/db/pg", ref.referencePath())
+
+    // scheme is case-insensitive and leading slashes / whitespace are trimmed
+    val messyRef = makeEntry("GOPASS:///services/db/pg  \nnote: shared\n")
+    assertTrue(messyRef.isReference())
+    assertEquals("services/db/pg", messyRef.referencePath())
+
+    // a reference only counts when it is the password (first) line
+    val notRef = makeEntry("hunter2\nurl: gopass://services/db/pg")
+    assertFalse(notRef.isReference())
+    assertNull(notRef.referencePath())
+
+    val plain = makeEntry("hunter2\nusername: alice")
+    assertFalse(plain.isReference())
+    assertNull(plain.referencePath())
+  }
+
+  @Test
   fun getUsername() {
     for (field in PasswordEntry.USERNAME_FIELDS) {
       assertEquals("username", makeEntry("\n$field username").username?.let { String(it) })

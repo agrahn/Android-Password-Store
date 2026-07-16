@@ -140,6 +140,25 @@ constructor(
     return totpSecret != null
   }
 
+  /**
+   * Whether this entry's password is a gopass-style cross-secret reference, i.e. its password is a
+   * `gopass://<path>` URI pointing at another entry whose password should be used instead. See
+   * [referencePath] to obtain the referenced entry's store-relative path.
+   */
+  public fun isReference(): Boolean =
+    password?.startsWith(REFERENCE_SCHEME, ignoreCase = true) == true
+
+  /**
+   * The store-relative path of the entry referenced by this entry's `gopass://` password, or `null`
+   * if this entry is not a [reference][isReference]. The returned path has no leading slash and no
+   * `.gpg` suffix, matching gopass semantics (e.g. `gopass://services/db/pg` -> `services/db/pg`).
+   */
+  public fun referencePath(): String? {
+    val pass = password ?: return null
+    if (!pass.startsWith(REFERENCE_SCHEME, ignoreCase = true)) return null
+    return String(pass.copyOfRange(REFERENCE_SCHEME.length, pass.size)).trim().trimStart('/')
+  }
+
   @Suppress("ReturnCount")
   private fun findAndStripPassword(
     passContent: List<CharArray>
@@ -325,6 +344,9 @@ constructor(
   public companion object {
 
     public val EXTRA_CONTENT: String = "EXTRA_CONTENT"
+
+    /** URI scheme marking a gopass-style cross-secret password reference. */
+    public const val REFERENCE_SCHEME: String = "gopass://"
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public val USERNAME_FIELDS: Array<String> =

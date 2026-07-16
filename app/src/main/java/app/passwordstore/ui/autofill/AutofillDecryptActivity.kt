@@ -17,6 +17,7 @@ import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
+import app.passwordstore.data.crypto.PasswordReferenceResolver
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.prefs.PasswordHistory
@@ -47,6 +48,7 @@ import logcat.logcat
 class AutofillDecryptActivity : BasePGPActivity() {
 
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
+  @Inject lateinit var referenceResolver: PasswordReferenceResolver
   @PasswordHistory @Inject lateinit var passwordHistory: SharedPreferences
 
   private lateinit var filePath: String
@@ -98,7 +100,12 @@ class AutofillDecryptActivity : BasePGPActivity() {
       lastResult.second.getOrThrow().wipe()
       val decryptedEntryChars = decryptedEntryBytes.toCharArray()
       decryptedEntryBytes.wipe()
-      val entry = passwordEntryFactory.create(decryptedEntryChars)
+
+      // Resolve any gopass:// password reference to the target entry's credentials.
+      val effectiveChars = resolveReferences(decryptedEntryChars)
+      decryptedEntryChars.wipe()
+
+      val entry = passwordEntryFactory.create(effectiveChars)
       entry.clearExtra()
       val directoryStructure = AutofillPreferences.directoryStructure(this)
       val credentials =
@@ -179,6 +186,25 @@ class AutofillDecryptActivity : BasePGPActivity() {
     if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {
       cachedPassphrases.values.forEach { it.wipe() }
       cachedPassphrases.clear()
+    }
+  }
+
+  /**
+   * If [plaintext] is a gopass-style `gopass://` reference, returns the effective content with the
+   * referenced entry's password (and, as a fallback, its username/OTP) substituted in; otherwise
+   * returns a copy of [plaintext]. On failure the original content is used unchanged.
+   */
+  private suspend fun resolveReferences(plaintext: CharArray): CharArray {
+    val resolved =
+      referenceResolver.resolve(
+        plaintext = plaintext.copyOf(),
+        repoRoot = PasswordRepository.getRepositoryDirectory(),
+        originPath = filePath,
+        decrypt = { file -> decryptReferencedFile(file) },
+      )
+    return when (resolved) {
+      is PasswordReferenceResolver.Result.Resolved -> resolved.plaintext
+      is PasswordReferenceResolver.Result.Unresolved -> plaintext.copyOf()
     }
   }
 

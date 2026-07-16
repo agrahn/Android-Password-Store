@@ -21,6 +21,7 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
+import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.repo.PasswordRepository
@@ -40,16 +41,20 @@ import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.substringBefore
+import app.passwordstore.util.extensions.toCharArray
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.passkey.PasskeyCredential
 import app.passwordstore.util.settings.Constants
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.get
+import com.github.michaelbull.result.getError
+import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.CharBuffer
 import java.time.Instant
@@ -57,6 +62,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -159,6 +165,17 @@ open class BasePGPActivity : AppCompatActivity() {
 
   @Inject lateinit var repository: CryptoRepository
   @Inject lateinit var dispatcherProvider: DispatcherProvider
+
+  /**
+   * State for [decryptReferencedFile]. When [activeReferenceDecrypt] is true the shared unlock
+   * machinery ([decrypt]/[askPassphrase]) delivers plaintext to [referenceDecryptSink] instead of
+   * the subclass's [decryptWithPassphrase], so a `gopass://` referenced entry can be unlocked
+   * interactively while reusing all passphrase/biometric/PIN handling.
+   */
+  private var activeReferenceDecrypt = false
+  private var referenceDecryptPath = ""
+  private var referenceDecryptSink: (suspend (CharArray, String) -> Unit)? = null
+  private var referenceDecryptFailure: (() -> Unit)? = null
 
   /**
    * [onCreate] sets the window up with the right flags to prevent auth leaks through screenshots or
@@ -482,7 +499,7 @@ open class BasePGPActivity : AppCompatActivity() {
           }
         var cacheEnabled = bundle.getBoolean(PasswordDialog.PASSWORD_CACHE_KEY)
         lifecycleScope.launch(dispatcherProvider.main()) {
-          decryptWithPassphrase(mapOf("" to passphrase), identifiers) { id -> // onSuccess
+          deliverDecrypt(mapOf("" to passphrase), identifiers) { id -> // onSuccess
             runCatching {
               // update temporary passphrase cache
               val isHardwareBacked = AESEncryption.isHardwareBacked()
@@ -777,17 +794,33 @@ open class BasePGPActivity : AppCompatActivity() {
     lifecycleScope.launch(dispatcherProvider.main()) {
       if (!repository.isPasswordProtected(identifiers) && !isError) {
         // try passphraseless decryption first
-        decryptWithPassphrase(mapOf("" to null), identifiers)
+        deliverDecrypt(mapOf("" to null), identifiers)
       } else if (!isError && !passphrases.isEmpty()) {
         // try cached passphrases
         val decryptedCachedPassphrases = passphrases.mapValues {
           AESEncryption.decrypt(it.value) ?: charArrayOf()
         }
-        decryptWithPassphrase(decryptedCachedPassphrases, identifiers)
+        deliverDecrypt(decryptedCachedPassphrases, identifiers)
         decryptedCachedPassphrases.values.forEach { it.wipe() }
       } else {
         askPassphrase(isError, identifiers)
       }
+    }
+  }
+
+  /**
+   * Routes a decrypted-message request to the currently active sink: the reference-resolution sink
+   * while [activeReferenceDecrypt] is set, otherwise the subclass's [decryptWithPassphrase].
+   */
+  private suspend fun deliverDecrypt(
+    passphrases: Map<String, CharArray?>,
+    identifiers: List<PGPIdentifier>,
+    onSuccess: suspend (String) -> Unit = {},
+  ) {
+    if (activeReferenceDecrypt) {
+      decryptReferenceWithPassphrase(passphrases, identifiers, onSuccess)
+    } else {
+      decryptWithPassphrase(passphrases, identifiers, onSuccess)
     }
   }
 
@@ -797,6 +830,88 @@ open class BasePGPActivity : AppCompatActivity() {
     identifiers: List<PGPIdentifier>,
     onSuccess: suspend (String) -> Unit = {},
   ) {}
+
+  /**
+   * Interactively unlocks the `gopass://` referenced file at [file], reusing the same
+   * key-check/passphrase/biometric/PIN flow as the primary entry, and returns its decrypted
+   * plaintext. Returns `null` if the user aborts or no decryption key is available. The caller owns
+   * (and must wipe) the returned array.
+   */
+  protected suspend fun decryptReferencedFile(file: File): CharArray? {
+    val deferred = CompletableDeferred<CharArray?>()
+    withContext(dispatcherProvider.main()) {
+      referenceDecryptPath = file.absolutePath
+      referenceDecryptSink = { plaintext, _ -> deferred.complete(plaintext) }
+      referenceDecryptFailure = { deferred.complete(null) }
+      activeReferenceDecrypt = true
+      requireKeysExist {
+        requireDecryptionKeysExist(PasswordRepository.getParentPath(file.absolutePath, repoPath)) {
+          ids ->
+          getPersistentAndDecrypt(ids)
+        }
+      }
+    }
+    return try {
+      deferred.await()
+    } finally {
+      activeReferenceDecrypt = false
+      referenceDecryptSink = null
+      referenceDecryptFailure = null
+    }
+  }
+
+  /**
+   * Reference-resolution counterpart of [decryptWithPassphrase]: reads [referenceDecryptPath],
+   * decrypts it and hands the plaintext to [referenceDecryptSink]. Mirrors the shared error
+   * handling (wrong-passphrase retry, cache clearing) but performs no entry-specific work — no UI,
+   * history, or finishing.
+   */
+  private suspend fun decryptReferenceWithPassphrase(
+    passphrases: Map<String, CharArray?>,
+    identifiers: List<PGPIdentifier>,
+    onSuccess: suspend (String) -> Unit,
+  ) {
+    val message =
+      withContext(dispatcherProvider.io()) { File(referenceDecryptPath).readBytes().inputStream() }
+    val outputStream = ByteArrayOutputStream()
+    val results = repository.decrypt(passphrases, identifiers, message, outputStream)
+    val lastResult = results.last()
+    if (lastResult.second.isOk) {
+      val decryptedEntryBytes = lastResult.second.getOrThrow().toByteArray()
+      lastResult.second.getOrThrow().wipe()
+      val decryptedEntryChars = decryptedEntryBytes.toCharArray()
+      decryptedEntryBytes.wipe()
+      referenceDecryptSink?.invoke(decryptedEntryChars, lastResult.first)
+      onSuccess(lastResult.first)
+    } else {
+      passphrases.values.forEach { it?.wipe() }
+      if (
+        results
+          .filter { result ->
+            if (result.second.getError() is IncorrectPassphraseException) {
+              /* Remove wrong passphrases from temporary and persistent caches */
+              persistentPassphrases.edit { remove(result.first) }
+              cachedPassphrases[result.first]?.wipe()
+              cachedPassphrases.remove(result.first)
+              true
+            } else false
+          }
+          .any()
+      ) {
+        /* Retry */
+        decrypt(identifiers, isError = true)
+      } else {
+        referenceDecryptFailure?.invoke()
+      }
+      results
+        .filter { it.second.getError() is Throwable }
+        .forEach { logcat { it.second.getError()?.asLog() ?: "unknown error" } }
+    }
+    if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {
+      cachedPassphrases.values.forEach { it.wipe() }
+      cachedPassphrases.clear()
+    }
+  }
 
   protected fun retrievePasskey(
     entry: PasswordEntry,
