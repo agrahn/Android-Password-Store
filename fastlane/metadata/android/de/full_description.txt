@@ -5,5 +5,5 @@ Mit der Kommandozeilenanwendung „Pass“ von ZX2C4 kompatibler Passwort- und P
 • Passworteinträge anzeigen, hinzufügen und editieren<br>
 • Unterstützt zeitbasierte Einmalpasswörter (TOTP) für die Zwei-Faktor-Authentifizierung<br>
 • Zugangsdaten in Apps und unterstützten Browsern automatisch ausfüllen und speichern<br>
-• WebAuthn-/Passkey-Authentifizierung in Browsern und nativen Apps<br>
+• Passkey-Authentifizierung in Browsern und nativen Apps<br>
 

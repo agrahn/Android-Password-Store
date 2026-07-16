@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file
 
 ### Added
 
-- **WebAuthn/Passkey support:** ES256, Ed25519 and RS256 credential types, selection upon passkey creation based on the relying party's preference order
+- **Passkey support:** ES256, Ed25519 and RS256 credential types, selection upon passkey creation based on the relying party's preference order
 - Android Credential Manager integration: handling passkey creation and authentication requests from browsers and native apps
 
 ## [1.16.4] - 2026-07-10

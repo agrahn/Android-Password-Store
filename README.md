@@ -1,6 +1,6 @@
 # Password Store
 
-Password Store is a [`pass`](https://www.passwordstore.org/)-compatible password manager, WebAuthn/passkey credential provider and autofill service for Android.
+Password Store is a [`pass`](https://www.passwordstore.org/)-compatible **password manager**, **passkey credential provider** and **autofill service** for Android.
 
 As a credential provider, it can respond to passkey creation and authentication requests from browsers and native apps. Supported passkey types are **EdDSA (Ed25519)**, **ES256**, and **RS256**. Passkey functionality is available on devices with Android 14 and above.
 
@@ -39,7 +39,7 @@ File `myKeyForPass.sec.asc` can be directly imported into Password Store via Set
 
 ## Contributing
 
-Issues and pull request are welcome, but avoid bulky, hard to digest multi-feature contributions, especially AI-generated ones.
+Issues and pull requests are welcome, but avoid bulky, hard to digest multi-feature contributions, especially AI-generated ones. Refer to the [Changelog](CHANGELOG.md) for the latest fixes and additions.
 
 ## Donations
 

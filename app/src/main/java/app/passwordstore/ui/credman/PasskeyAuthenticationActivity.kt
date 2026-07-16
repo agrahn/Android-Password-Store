@@ -106,19 +106,26 @@ class PasskeyAuthenticationActivity : BasePGPActivity() {
 
       runCatching {
         val passkey = retrievePasskey(entry)
-        entry.clearPassword()
+        entry.clearPassword() // wipe passkey data from memory
         if (passkey == null) throw GetCredentialUnknownException(INVALID_PASSKEY_DATA)
 
         val providerRequest =
           PendingIntentHandler.retrieveProviderGetCredentialRequest(intent)
             ?: throw GetCredentialUnknownException(PROVIDER_REQUEST_NULL)
 
-        val getCredentialResponse =
-          CredmanUtils.buildGetCredentialResponse(providerRequest, passkey).getOrThrow()
+        val resultGetCredentialResponse =
+          CredmanUtils.buildGetCredentialResponse(providerRequest, passkey)
+
+        /* It is not needed any longer and can be safely wiped from memory to keep
+         * attacker's window of opportunity small. */
+        passkey.clearPrivateKey()
 
         withContext(dispatcherProvider.main()) {
           val result = Intent()
-          PendingIntentHandler.setGetCredentialResponse(result, getCredentialResponse)
+          PendingIntentHandler.setGetCredentialResponse(
+            result,
+            resultGetCredentialResponse.getOrThrow(),
+          )
           setResult(RESULT_OK, result)
 
           if (entry.hasTotp()) {

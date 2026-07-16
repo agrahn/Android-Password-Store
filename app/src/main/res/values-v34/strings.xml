@@ -6,5 +6,5 @@
 <resources>
   <string name="pref_category_autofill_title">Autofill &amp; Passkeys</string>
   <string name="pref_autofill_enable_title">Enable Autofill &amp; Passkeys</string>
-  <string name="oreo_autofill_enable_dialog_description">Password Store can offer to fill login forms and even save credentials you enter in apps or on websites. It can also act as an Android WebAuthn/passkey Credential Provider, allowing stored credentials to satisfy passkey requests from other apps and websites.</string>
+  <string name="oreo_autofill_enable_dialog_description">Password Store can offer to fill login forms and even save credentials you enter in apps or on websites. It can also act as an Android passkey credential provider, allowing stored credentials to satisfy passkey requests from other apps and websites.</string>
 </resources>

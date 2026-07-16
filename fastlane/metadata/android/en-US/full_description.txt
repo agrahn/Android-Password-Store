@@ -5,4 +5,4 @@ Password and passkey manager that is compatible with ZX2C4's Pass commandline ap
 • View, add, and edit password entries.<br>
 • Supports time-based one-time passwords (TOTP) for two-step authentication<br>
 • Automatically fill and save credentials in apps and supported browsers<br>
-• Respond to WebAuthn/passkey creation and authentication requests from browsers and native apps<br>
+• Respond to passkey creation and authentication requests from browsers and native apps<br>
