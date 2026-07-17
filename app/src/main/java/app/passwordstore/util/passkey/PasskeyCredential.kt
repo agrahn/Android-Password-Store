@@ -84,7 +84,7 @@ data class PasskeyCredential(
     passkeyMap["created"] = created
     passkeyMap["zone"] = zone
 
-    return Cbor().encode(passkeyMap)
+    return cborEngine.encode(passkeyMap)
   }
 
   /**
@@ -155,6 +155,8 @@ data class PasskeyCredential(
 
   companion object {
 
+    private val cborEngine: Cbor by unsafeLazy { Cbor() }
+
     fun createNew(
       credentialId: ByteArray,
       rpId: String,
@@ -192,10 +194,7 @@ data class PasskeyCredential(
 
     // Parse [cborBytes] into a PasskeyCredential instance.
     @Suppress("UNCHECKED_CAST")
-    fun fromCbor(
-      cborBytes: ByteArray,
-      cborEngine: Cbor = Cbor(),
-    ): Result<PasskeyCredential, Throwable> = runCatching {
+    fun fromCbor(cborBytes: ByteArray): Result<PasskeyCredential, Throwable> = runCatching {
       val rootMap = cborEngine.decode(cborBytes) as Map<String, Any>
 
       // Helper to check if a value is absent, or explicitly encoded as CBOR null (Unit)
@@ -324,8 +323,12 @@ data class PasskeyCredential(
 
   private fun rebuildRS256FromPrivateKeyRawBytes(): PrivateKey {
     require(privateKey.size == 512) { "Buffer must be exactly 512 bytes" }
-    val n = BigInteger(1, privateKey.copyOfRange(0, 256))
-    val d = BigInteger(1, privateKey.copyOfRange(256, 512))
+    val nBytes = privateKey.copyOfRange(0, 256)
+    val n = BigInteger(1, nBytes)
+    nBytes.wipe()
+    val dBytes = privateKey.copyOfRange(256, 512)
+    val d = BigInteger(1, dBytes)
+    dBytes.wipe()
     val keySpec = RSAPrivateKeySpec(n, d)
     return KeyFactory.getInstance("RSA", BouncyCastleProvider()).generatePrivate(keySpec)
   }
