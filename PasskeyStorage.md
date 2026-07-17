@@ -16,19 +16,18 @@ Passkey credentials are first serialized as CBOR binary data and then encoded in
   "id": ByteArray,          // credential ID (32 bytes)
   "rp": {                   // relying party info
     "id": String,           //   "example.com",
-    "name": String?,        //   "Example Ltd.", may be null
+    "name": String?,        //   "Example Ltd.", may be null or missing
   },
   "user": {                 // credential owner info
     "id": ByteArray,        //   user handle, as sent by relying party
     "name": String,         //   log-in name, e. g. "alice.doe@example.com", "alice"
-    "display_name": String? //   "Alice Doe", may be null
+    "display_name": String? //   "Alice Doe", may be null or missing
   },
-  "sign_count": UInt,       // kept at 0 in APS to allow for cloned passkey
-  "alg": Int,               // COSE algorithm identifier: ES256 (-7), Ed25519 (-8) or RS256 (-257)
+  "sign_count": Long,       // kept at 0 in APS to allow for cloned passkey
+  "alg": Long,              // COSE algorithm identifier: ES256 (-7), Ed25519 (-8) or RS256 (-257)
   "private_key": ByteArray, // "raw" private key bytes, see below
   "created": Long,          // seconds since Epoch, java.time.Instant.now().getEpochSecond()
   "zone": String,           // time zone info string, java.time.ZoneId.systemDefault().toString()
-  "discoverable": Boolean   // always true in APS
 }
 ````
 

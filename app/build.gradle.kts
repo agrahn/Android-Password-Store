@@ -95,7 +95,6 @@ dependencies {
     because("SSHJ now uses SLF4J 2.0 which we don't want")
   }
 
-  implementation(libs.thirdparty.jackson.cbor)
   implementation(libs.thirdparty.jackson.databind)
   implementation(libs.thirdparty.jackson.core)
   implementation(libs.thirdparty.jackson.kotlin)
