@@ -13,6 +13,7 @@ import app.passwordstore.util.crypto.OpenPgpCardPrompt
 import app.passwordstore.util.extensions.wipe
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.runCatching
+import com.hierynomus.sshj.key.KeyAlgorithm
 import java.io.IOException
 import java.math.BigInteger
 import java.security.MessageDigest
@@ -24,6 +25,7 @@ import net.schmizz.sshj.common.DisconnectReason
 import net.schmizz.sshj.common.KeyType
 import net.schmizz.sshj.common.SSHException
 import net.schmizz.sshj.common.SSHPacket
+import net.schmizz.sshj.userauth.UserAuthException
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider
 import net.schmizz.sshj.userauth.method.AuthPublickey
 
@@ -41,24 +43,62 @@ class PgpCardSshKeyProvider(private val publicKey: PublicKey) : KeyProvider {
 }
 
 /**
- * [AuthPublickey] that produces the authentication signature on an OpenPGP smartcard instead of with
- * a local private key. It overrides [putSig] to assemble the exact data SSH signs — `string(session
- * id) ‖ request-so-far` — hand it to [signer], and append the resulting SSH signature blob. Host-key
- * verification and everything else stay on sshj's default path.
+ * [AuthPublickey] that produces the authentication signature on an OpenPGP smartcard instead of
+ * with a local private key. It overrides [putPubKey]/[putSig] to advertise and sign with the
+ * *negotiated* public-key algorithm rather than the key's base type: for RSA these differ
+ * (`rsa-sha2-512` / `rsa-sha2-256` / `ssh-rsa`), and the algorithm name in the request must match
+ * the one in the signature blob. The exact data SSH signs -- `string(session id) ||
+ * request-so-far` -- is handed to [signer], which drives the card. Host-key verification and
+ * everything else stay on sshj's default path.
+ *
+ * sshj's [net.schmizz.sshj.userauth.method.KeyedAuthMethod] keeps its chosen [KeyAlgorithm] queue
+ * private and drops the head on [shouldRetry] to fall back to the next algorithm. Because the card
+ * replaces both [putPubKey] and [putSig], this class tracks the same queue itself so the advertised
+ * key algorithm, the signed algorithm, and the retry fallback stay in lockstep.
  */
 class CardSshAuthPublickey(
-  keyProvider: KeyProvider,
+  private val keyProvider: KeyProvider,
   private val signer: CardSshSigner,
 ) : AuthPublickey(keyProvider) {
 
+  private var algorithms: MutableList<KeyAlgorithm>? = null
+
+  private fun currentAlgorithm(): KeyAlgorithm {
+    val queue =
+      algorithms
+        ?: params.transport
+          .getClientKeyAlgorithms(KeyType.fromKey(keyProvider.public))
+          .toMutableList()
+          .also { algorithms = it }
+    return queue.firstOrNull()
+      ?: throw UserAuthException(
+        "No key algorithm configured for ${KeyType.fromKey(keyProvider.public)}"
+      )
+  }
+
+  public override fun putPubKey(reqData: SSHPacket): SSHPacket {
+    // Public key as 2 strings: [ negotiated key algorithm | key blob ], as sshj's putPubKey does.
+    reqData
+      .putString(currentAlgorithm().keyAlgorithm)
+      .putString(PlainBuffer().putPublicKey(keyProvider.public).compactData)
+    return reqData
+  }
+
   public override fun putSig(reqData: SSHPacket): SSHPacket {
+    val algorithmName = currentAlgorithm().keyAlgorithm
     val sessionId = params.transport.sessionID
     val dataToSign = PlainBuffer().putString(sessionId).putBuffer(reqData).compactData
-    val (algorithmName, signature) = signer.sign(dataToSign)
+    val signature = signer.sign(dataToSign, algorithmName)
     // SSH signature field: string( string(algorithm) ‖ string(signature) ).
     val signatureBlob = PlainBuffer().putString(algorithmName).putString(signature).compactData
     reqData.putString(signatureBlob)
     return reqData
+  }
+
+  override fun shouldRetry(): Boolean {
+    val queue = algorithms ?: return false
+    if (queue.isNotEmpty()) queue.removeAt(0)
+    return queue.isNotEmpty()
   }
 }
 
@@ -76,10 +116,12 @@ class CardSshSigner(
 ) {
 
   /**
-   * Signs [dataToSign] on the card and returns the SSH `(algorithm-name, signature-blob)` pair. The
-   * algorithm name matches the public-key algorithm sshj advertises for Ed25519/ECDSA keys.
+   * Signs [dataToSign] on the card and returns the SSH signature blob. [sshAlgorithmName] is the
+   * public-key algorithm the auth request advertised: for Ed25519/ECDSA it equals the key type, but
+   * for RSA it is the negotiated `rsa-sha2-512` / `rsa-sha2-256` / `ssh-rsa`, which selects the
+   * hash the card signs over.
    */
-  fun sign(dataToSign: ByteArray): Pair<String, ByteArray> {
+  fun sign(dataToSign: ByteArray, sshAlgorithmName: String): ByteArray {
     val keyType = KeyType.fromKey(publicKey)
     val cardInput: ByteArray
     val encode: (ByteArray) -> ByteArray
@@ -102,12 +144,18 @@ class CardSshSigner(
         cardInput = digest("SHA-512", dataToSign)
         encode = { raw -> encodeEcdsaSignature(raw, fieldBytes = 66) }
       }
+      // RSA: the card wraps the DigestInfo we supply in PKCS#1 v1.5 padding and returns the raw
+      // modulus-sized signature, which is exactly the SSH rsa_signature_blob (string(s), no mpint).
+      KeyType.RSA -> {
+        cardInput = pkcs1DigestInfo(sshAlgorithmName, dataToSign)
+        encode = { raw -> raw }
+      }
       else ->
         throw SSHException(
           "Smartcard-based SSH authentication is not yet supported for $keyType keys"
         )
     }
-    return keyType.toString() to encode(driveCard(cardInput))
+    return encode(driveCard(cardInput))
   }
 
   private fun driveCard(input: ByteArray): ByteArray {
@@ -152,13 +200,12 @@ class CardSshSigner(
         val currentPin = requireNotNull(pin) { "PIN must be set before contacting the card" }
         // PW1 in mode 0x82 authorises INTERNAL AUTHENTICATE (the auth key slot), unlike PSO:CDS
         // (mode 0x81) used for commit signing.
-        val attempt =
-          runBlocking {
-            prompt.attempt(activeReader, cardMessage) { card ->
-              card.verifyUserPin(currentPin)
-              card.internalAuthenticate(input)
-            }
+        val attempt = runBlocking {
+          prompt.attempt(activeReader, cardMessage) { card ->
+            card.verifyUserPin(currentPin)
+            card.internalAuthenticate(input)
           }
+        }
         when (attempt) {
           is OpenPgpCardPrompt.Attempt.Success -> {
             runBlocking { prompt.dismissDialog() }
@@ -230,10 +277,95 @@ class CardSshSigner(
    */
   private fun encodeEcdsaSignature(raw: ByteArray, fieldBytes: Int): ByteArray {
     if (raw.size != fieldBytes * 2) {
-      throw SSHException("Unexpected ECDSA signature length ${raw.size} (expected ${fieldBytes * 2})")
+      throw SSHException(
+        "Unexpected ECDSA signature length ${raw.size} (expected ${fieldBytes * 2})"
+      )
     }
     val r = BigInteger(1, raw.copyOfRange(0, fieldBytes))
     val s = BigInteger(1, raw.copyOfRange(fieldBytes, raw.size))
     return PlainBuffer().putMPInt(r).putMPInt(s).compactData
+  }
+
+  /**
+   * Builds the PKCS#1 v1.5 DigestInfo (ASN.1 DER `hash-algorithm identifier || digest`) that an
+   * OpenPGP card expects as the INTERNAL AUTHENTICATE input for an RSA key; the card supplies the
+   * surrounding PKCS#1 padding frame and does the modular exponentiation. The hash follows the SSH
+   * signature algorithm: `rsa-sha2-512` -> SHA-512, `rsa-sha2-256` -> SHA-256, `ssh-rsa` -> SHA-1.
+   */
+  private fun pkcs1DigestInfo(sshAlgorithmName: String, dataToSign: ByteArray): ByteArray {
+    val (jcaDigest, digestInfoPrefix) =
+      when (sshAlgorithmName) {
+        "rsa-sha2-512" -> "SHA-512" to SHA512_DIGEST_INFO_PREFIX
+        "rsa-sha2-256" -> "SHA-256" to SHA256_DIGEST_INFO_PREFIX
+        "ssh-rsa" -> "SHA-1" to SHA1_DIGEST_INFO_PREFIX
+        else -> throw SSHException("Unsupported RSA SSH signature algorithm $sshAlgorithmName")
+      }
+    return digestInfoPrefix + digest(jcaDigest, dataToSign)
+  }
+
+  private companion object {
+    // DigestInfo DER prefixes from RFC 8017 sec. 9.2 (EMSA-PKCS1-v1_5), prepended to the raw hash.
+    val SHA1_DIGEST_INFO_PREFIX =
+      byteArrayOf(
+        0x30,
+        0x21,
+        0x30,
+        0x09,
+        0x06,
+        0x05,
+        0x2b,
+        0x0e,
+        0x03,
+        0x02,
+        0x1a,
+        0x05,
+        0x00,
+        0x04,
+        0x14,
+      )
+    val SHA256_DIGEST_INFO_PREFIX =
+      byteArrayOf(
+        0x30,
+        0x31,
+        0x30,
+        0x0d,
+        0x06,
+        0x09,
+        0x60,
+        0x86.toByte(),
+        0x48,
+        0x01,
+        0x65,
+        0x03,
+        0x04,
+        0x02,
+        0x01,
+        0x05,
+        0x00,
+        0x04,
+        0x20,
+      )
+    val SHA512_DIGEST_INFO_PREFIX =
+      byteArrayOf(
+        0x30,
+        0x51,
+        0x30,
+        0x0d,
+        0x06,
+        0x09,
+        0x60,
+        0x86.toByte(),
+        0x48,
+        0x01,
+        0x65,
+        0x03,
+        0x04,
+        0x02,
+        0x03,
+        0x05,
+        0x00,
+        0x04,
+        0x40,
+      )
   }
 }
