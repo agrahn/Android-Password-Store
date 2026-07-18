@@ -58,7 +58,7 @@ class Cbor {
     if (data is List<*>) {
       var ret = createArg(TYPE_ARRAY, data.size.toLong())
       for (i in data) {
-        ret += encode(i!!)
+        ret += encode(i ?: throw NullPointerException())
       }
       return ret
     }
@@ -66,14 +66,17 @@ class Cbor {
       var ret = createArg(TYPE_MAP, data.size.toLong())
       var byteMap: MutableMap<ByteArray, ByteArray> = mutableMapOf()
       for (i in data) {
-        byteMap.put(encode(i.key!!), encode(i.value!!))
+        byteMap.put(
+          encode(i.key ?: throw NullPointerException()),
+          encode(i.value ?: throw NullPointerException()),
+        )
       }
 
       var keysList = ArrayList<ByteArray>(byteMap.keys)
       keysList.sortedWith(
         Comparator<ByteArray> { a, b ->
-          var aBytes = byteMap.get(a)!!
-          var bBytes = byteMap.get(b)!!
+          var aBytes = byteMap.get(a) ?: throw NullPointerException()
+          var bBytes = byteMap.get(b) ?: throw NullPointerException()
           when {
             a.size > b.size -> 1
             a.size < b.size -> -1
@@ -86,7 +89,7 @@ class Cbor {
 
       for (key in keysList) {
         ret += key
-        ret += byteMap.get(key)!!
+        ret += byteMap.get(key) ?: throw NullPointerException()
       }
       return ret
     }
