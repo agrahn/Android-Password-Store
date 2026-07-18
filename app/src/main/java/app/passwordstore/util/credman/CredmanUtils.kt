@@ -35,6 +35,7 @@ import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
+import app.passwordstore.util.extensions.b64Decode
 import app.passwordstore.util.extensions.b64Encode
 import app.passwordstore.util.extensions.base64
 import app.passwordstore.util.extensions.credentialUsernames
@@ -44,10 +45,6 @@ import app.passwordstore.util.extensions.toByteArray
 import app.passwordstore.util.passkey.Algorithm
 import app.passwordstore.util.passkey.PasskeyCredential
 import app.passwordstore.util.services.UDCakeCredentialProviderService
-import com.fasterxml.jackson.core.JsonFactory
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getOrElse
@@ -66,24 +63,32 @@ import java.security.spec.RSAKeyGenParameterSpec
 import java.time.Instant
 import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import logcat.logcat
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.json.JSONArray
-import org.json.JSONObject
 
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @SuppressLint("RestrictedApi")
 object CredmanUtils {
 
+  public val json: Json = Json {
+    ignoreUnknownKeys = true
+    encodeDefaults = true
+  }
+
   private val context: Context
     get() = Application.instance.applicationContext
-
-  private val jsonMapper =
-    ObjectMapper(JsonFactory()).apply {
-      registerModule(kotlinModule())
-      configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    }
 
   /* Creates a new pending intent of type [action]
    *
@@ -155,7 +160,7 @@ object CredmanUtils {
 
     val passkeyEntries = mutableListOf<CredentialEntry>()
     val requestOptions =
-      jsonMapper.readValue(option.requestJson, PublicKeyCredentialRequestOptions::class.java)
+      json.decodeFromString<PublicKeyCredentialRequestOptions>(option.requestJson)
 
     val allowCredentialsHex = requestOptions.allowCredentials.map { it.idHex() }
 
@@ -445,13 +450,13 @@ object CredmanUtils {
   ): String {
 
     val response =
-      jsonMapper.readValue(fidoCredential.json(), CreatePublicKeyCredentialResponseJson::class.java)
+      json.decodeFromString<CreatePublicKeyCredentialResponseJson>(fidoCredential.json())
 
     response.response.publicKeyAlgorithm = passkey.alg.toLong()
     response.response.publicKey = publicKey.encoded.b64Encode().concatToString()
     response.response.authenticatorData = getAuthData(passkey, publicKeyCbor)
 
-    return jsonMapper.writeValueAsString(response)
+    return json.encodeToString(response)
   }
 
   private fun getAuthData(passkey: PasskeyCredential, publicKeyCbor: ByteArray): String {
@@ -471,26 +476,45 @@ object CredmanUtils {
       .concatToString()
   }
 
+  @Serializable
   private data class CreatePublicKeyCredentialResponseJson(
     // RegistrationResponseJSON
-    val id: String,
-    val rawId: String,
-    val response: Response,
-    val authenticatorAttachment: String?,
-    val clientExtensionResults: EmptyClass = EmptyClass(),
-    val type: String,
+    @SerialName("id") val id: String,
+    @SerialName("rawId") val rawId: String,
+    @SerialName("response") val response: Response,
+    @SerialName("authenticatorAttachment") val authenticatorAttachment: String?,
+    @SerialName("type") val type: String,
   ) {
+    @Serializable
     data class Response(
       // AuthenticatorAttestationResponseJSON
-      val clientDataJSON: String? = null,
-      var authenticatorData: String? = null,
-      val transports: List<String>? = arrayOf("internal").toList(),
-      var publicKey: String? = null, // easy accessors fields
+      @SerialName("clientDataJSON") val clientDataJSON: String? = null,
+      @SerialName("authenticatorData") var authenticatorData: String? = null,
+      @SerialName("transports") val transports: List<String>? = arrayOf("internal").toList(),
+      @SerialName("publicKey") var publicKey: String? = null, // easy accessors fields
+      @SerialName("publicKeyAlgorithm")
       var publicKeyAlgorithm: Long? = null, // easy accessors fields
-      val attestationObject: String?, // easy accessors fields
+      @SerialName("attestationObject") val attestationObject: String?, // easy accessors fields
     )
+  }
 
-    class EmptyClass
+  @Serializable
+  private data class PublicKeyCredentialRequestOptions(
+    @SerialName("challenge") val challenge: String = "",
+    @SerialName("timeout") val timeout: Long = 0,
+    @SerialName("rpId") val rpId: String = "",
+    @SerialName("allowCredentials")
+    val allowCredentials: List<PublicKeyCredentialDescriptor> = emptyList(),
+    @SerialName("userVerification") val userVerification: String = "",
+  ) {
+    @Serializable
+    data class PublicKeyCredentialDescriptor(
+      @SerialName("id") val id: String = "",
+      @SerialName("type") val type: String = "",
+      @SerialName("transports") val transports: List<String> = emptyList(),
+    ) {
+      fun idHex(): String? = id.toCharArray().b64Decode()?.toHexString()
+    }
   }
 
   fun buildGetCredentialResponse(
@@ -538,58 +562,63 @@ object CredmanUtils {
     arrayName: String,
     deduplicateByIdPath: String? = null,
   ): String {
+    // 1. Parse all inputs safely into JsonObjects and extract the target arrays
     val arrays = jsonStrings.map {
-      JSONObject(it).getJSONArray(arrayName)
+      Json.parseToJsonElement(it).jsonObject[arrayName]?.jsonArray ?: JsonArray(emptyList())
     }
 
-    val elementsById = deduplicateByIdPath?.let {
-      linkedMapOf<String, JSONObject>()
-    }
-
-    val mergedArray = JSONArray()
+    // 2. Track deduplicated elements if a path is provided
+    val elementsById = deduplicateByIdPath?.let { linkedMapOf<String, JsonObject>() }
+    // Track non-object elements or elements mixed in when deduplication is disabled
+    val rawElements = mutableListOf<JsonElement>()
 
     arrays.forEach { array ->
-      for (i in 0 until array.length()) {
-        val element = array.get(i)
-
-        if (elementsById != null && element is JSONObject) {
+      array.forEach { element ->
+        if (elementsById != null && element is JsonObject) {
+          // Find ID using the path picker, fallback to memory identity hash code if missing
           val id =
             getNestedValue(element, deduplicateByIdPath)
               ?: "auto_${System.identityHashCode(element)}"
           elementsById[id] = element
         } else {
-          mergedArray.put(element)
+          rawElements.add(element)
         }
       }
     }
 
-    // Add deduplicated elements if deduplication was enabled
-    elementsById?.let {
-      it.values.forEach { mergedArray.put(it) }
+    // 3. Construct the immutable payload using structural builders
+    val finalJson = buildJsonObject {
+      put(
+        arrayName,
+        buildJsonArray {
+          // Add raw/non-deduplicated elements first to mimic original logic behavior
+          rawElements.forEach { add(it) }
+          // Add your deduplicated objects
+          elementsById?.values?.forEach { add(it) }
+        },
+      )
     }
 
-    return JSONObject()
-      .apply {
-        put(arrayName, mergedArray)
-      }
-      .toString()
+    return finalJson.toString()
   }
 
-  private fun getNestedValue(obj: JSONObject, path: String): String? = runCatching {
+  private fun getNestedValue(obj: JsonObject, path: String): String? {
     val keys = path.split(".")
-    var current: Any? = obj
+    var current: JsonElement? = obj
 
     for (key in keys) {
       current =
         when (current) {
-          is JSONObject -> current.opt(key)
+          is JsonObject -> current[key]
           else -> return null
         }
-
       if (current == null) return null
     }
 
-    current.toString()
+    // Safely unwrap json primitives to string literal text (avoids double quotes)
+    return when (current) {
+      is JsonPrimitive -> current.content
+      else -> current.toString()
+    }
   }
-    .get()
 }

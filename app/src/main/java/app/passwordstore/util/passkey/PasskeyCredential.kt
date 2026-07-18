@@ -10,11 +10,6 @@ import androidx.annotation.RequiresApi
 import app.passwordstore.util.extensions.b64Encode
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.wipe
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.cbor.databind.CBORMapper
-import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.runCatching
 import java.math.BigInteger
@@ -47,12 +42,11 @@ data class PasskeyCredential(
 
   /* maps between signCount (class property, camelCase) to sign_count (CBOR fieldname,
    * snake_case) */
-  @JsonProperty("sign_count") val signCount: UInt = 0u,
+  val signCount: UInt = 0u,
   val alg: Int,
-  @JsonProperty("private_key") val privateKey: ByteArray,
+  val privateKey: ByteArray,
   val created: Long,
   val zone: String,
-  val discoverable: Boolean = true,
 ) {
 
   fun getAlgorithmName(): String? = Algorithm.fromId(alg)?.algorithmName
@@ -69,15 +63,35 @@ data class PasskeyCredential(
    * Serialize this PasskeyCredential instance to CBOR format. throws Exception if serialization
    * fails
    */
-  fun toCbor(): ByteArray = cborMapper.writeValueAsBytes(this)
+  fun toCbor(): ByteArray {
+    val rpInfoMap = mutableMapOf<String, Any>()
+    rpInfoMap["id"] = rp.id
+    rp.name?.let { rpInfoMap["name"] = it }
+
+    val userInfoMap = mutableMapOf<String, Any>()
+    userInfoMap["id"] = user.id
+    userInfoMap["name"] = user.name
+    user.displayName?.let { userInfoMap["display_name"] = it }
+    userInfoMap["reveal_name"] = user.revealName
+
+    val passkeyMap = mutableMapOf<String, Any>()
+    passkeyMap["id"] = id
+    passkeyMap["rp"] = rpInfoMap
+    passkeyMap["user"] = userInfoMap
+    passkeyMap["sign_count"] = signCount
+    passkeyMap["alg"] = alg
+    passkeyMap["private_key"] = privateKey
+    passkeyMap["created"] = created
+    passkeyMap["zone"] = zone
+
+    return cborEngine.encode(passkeyMap)
+  }
 
   /**
    * Serialize this PasskeyCredential instance to CBOR format. Returns a Result type for error
    * handling.
    */
-  fun toCborResult(): Result<ByteArray, Throwable> = runCatching {
-    cborMapper.writeValueAsBytes(this)
-  }
+  fun toCborResult(): Result<ByteArray, Throwable> = runCatching { toCbor() }
 
   fun clearPrivateKey() = privateKey.wipe()
 
@@ -124,7 +138,6 @@ data class PasskeyCredential(
     if (!privateKey.contentEquals(other.privateKey)) return false
     if (created != other.created) return false
     if (zone != other.zone) return false
-    if (discoverable != other.discoverable) return false
     return true
   }
 
@@ -137,17 +150,12 @@ data class PasskeyCredential(
     result = 31 * result + privateKey.contentHashCode()
     result = 31 * result + created.hashCode()
     result = 31 * result + zone.hashCode()
-    result = 31 * result + discoverable.hashCode()
     return result
   }
 
   companion object {
-    private val cborMapper: ObjectMapper by unsafeLazy { // initialised once, on first use
-      CBORMapper().apply {
-        registerModule(kotlinModule())
-        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-      }
-    }
+
+    private val cborEngine: Cbor by unsafeLazy { Cbor() }
 
     fun createNew(
       credentialId: ByteArray,
@@ -185,8 +193,42 @@ data class PasskeyCredential(
       )
 
     // Parse [cborBytes] into a PasskeyCredential instance.
+    @Suppress("UNCHECKED_CAST")
     fun fromCbor(cborBytes: ByteArray): Result<PasskeyCredential, Throwable> = runCatching {
-      cborMapper.readValue(cborBytes, PasskeyCredential::class.java)
+      val rootMap = cborEngine.decode(cborBytes) as Map<String, Any>
+
+      // Helper to check if a value is absent, or explicitly encoded as CBOR null (Unit)
+      fun Any?.unwrapNull(): Any? = if (this == Unit || this == null) null else this
+
+      // 1. Decode RelyingPartyInfo tolerating explicit nulls
+      val rpRaw = rootMap["rp"] as? Map<String, Any>
+      val rpInfo =
+        RelyingPartyInfo(
+          id = rpRaw?.get("id")?.unwrapNull() as? String ?: "",
+          name = rpRaw?.get("name")?.unwrapNull() as? String,
+        )
+
+      // 2. Decode UserInfo tolerating explicit nulls
+      val userRaw = rootMap["user"] as? Map<String, Any>
+      val userInfo =
+        UserInfo(
+          id = userRaw?.get("id")?.unwrapNull() as? ByteArray ?: byteArrayOf(),
+          name = userRaw?.get("name")?.unwrapNull() as? String ?: "",
+          displayName = userRaw?.get("display_name")?.unwrapNull() as? String,
+          revealName = userRaw?.get("reveal_name")?.unwrapNull() as? Boolean ?: false,
+        )
+
+      // 3. Decode Root PasskeyCredential tolerating explicit nulls
+      PasskeyCredential(
+        id = rootMap["id"]?.unwrapNull() as? ByteArray ?: byteArrayOf(),
+        rp = rpInfo,
+        user = userInfo,
+        signCount = (rootMap["sign_count"]?.unwrapNull() as? Long)?.toUInt() ?: 0u,
+        alg = (rootMap["alg"]?.unwrapNull() as? Long)?.toInt() ?: 0,
+        privateKey = rootMap["private_key"]?.unwrapNull() as? ByteArray ?: byteArrayOf(),
+        created = rootMap["created"]?.unwrapNull() as? Long ?: 0L,
+        zone = rootMap["zone"]?.unwrapNull() as? String ?: "UTC",
+      )
     }
 
     fun getPrivateKeyRawBytes(keyPair: KeyPair, algorithm: Algorithm): ByteArray =
@@ -281,8 +323,12 @@ data class PasskeyCredential(
 
   private fun rebuildRS256FromPrivateKeyRawBytes(): PrivateKey {
     require(privateKey.size == 512) { "Buffer must be exactly 512 bytes" }
-    val n = BigInteger(1, privateKey.copyOfRange(0, 256))
-    val d = BigInteger(1, privateKey.copyOfRange(256, 512))
+    val nBytes = privateKey.copyOfRange(0, 256)
+    val n = BigInteger(1, nBytes)
+    nBytes.wipe()
+    val dBytes = privateKey.copyOfRange(256, 512)
+    val d = BigInteger(1, dBytes)
+    dBytes.wipe()
     val keySpec = RSAPrivateKeySpec(n, d)
     return KeyFactory.getInstance("RSA", BouncyCastleProvider()).generatePrivate(keySpec)
   }
@@ -290,8 +336,8 @@ data class PasskeyCredential(
   data class UserInfo(
     val id: ByteArray,
     val name: String,
-    @JsonProperty("display_name") val displayName: String? = null,
-    @JsonProperty("reveal_name") var revealName: Boolean = false,
+    val displayName: String? = null,
+    var revealName: Boolean = false,
   ) {
     /* override auto-generated equals() and hashCode() methods which do not work correctly
      * since they compare by ref not by content */

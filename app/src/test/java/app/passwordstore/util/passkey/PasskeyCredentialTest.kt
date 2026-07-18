@@ -99,7 +99,7 @@ class PasskeyCredentialTest {
 
     assertTrue(passkeyCredentialEC.user.revealName == false)
     passkeyCredentialEC.user.revealName = true
-    val passkeyCredentialModifCbor = passkeyCredentialEC.toCbor()
+    val passkeyCredentialModifCbor = passkeyCredentialEC.toCborResult().getOrThrow()
     assertTrue(
       PasskeyCredential.fromCbor(passkeyCredentialModifCbor).get()?.user?.revealName == true
     )
@@ -136,8 +136,8 @@ class PasskeyCredentialTest {
     val signatureBytesRSA = passkeyCredentialRSA.signData(dataToSign).getOrThrow()
     assertTrue(sigVerifierRSA.verify(signatureBytesRSA))
 
-    // try restoring passkey from garbage bytes
+    // try restoring passkey from garbage bytes/empty data
     assertNull(PasskeyCredential.fromCbor("lot of garbage garbage garbage".toByteArray()).get())
-    assertNull(PasskeyCredential.fromCbor(byteArrayOf()).get()) // test on empty ByteArray
+    assertNull(PasskeyCredential.fromCbor(byteArrayOf()).get())
   }
 }

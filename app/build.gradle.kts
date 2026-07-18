@@ -13,6 +13,7 @@ plugins {
   alias(libs.plugins.hilt)
   alias(libs.plugins.kotlin.composeCompiler)
   alias(libs.plugins.ksp)
+  alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -94,11 +95,6 @@ dependencies {
   implementation(libs.thirdparty.slf4j.api) {
     because("SSHJ now uses SLF4J 2.0 which we don't want")
   }
-
-  implementation(libs.thirdparty.jackson.cbor)
-  implementation(libs.thirdparty.jackson.databind)
-  implementation(libs.thirdparty.jackson.core)
-  implementation(libs.thirdparty.jackson.kotlin)
 
   testImplementation(libs.testing.robolectric)
   testImplementation(libs.testing.sharedPrefsMock)
