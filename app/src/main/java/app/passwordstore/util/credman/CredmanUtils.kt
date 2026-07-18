@@ -483,6 +483,7 @@ object CredmanUtils {
     @SerialName("rawId") val rawId: String,
     @SerialName("response") val response: Response,
     @SerialName("authenticatorAttachment") val authenticatorAttachment: String?,
+    @SerialName("clientExtensionResults") val clientExtensionResults: EmptyClass = EmptyClass(),
     @SerialName("type") val type: String,
   ) {
     @Serializable
@@ -496,6 +497,8 @@ object CredmanUtils {
       var publicKeyAlgorithm: Long? = null, // easy accessors fields
       @SerialName("attestationObject") val attestationObject: String?, // easy accessors fields
     )
+
+    @Serializable class EmptyClass
   }
 
   @Serializable
