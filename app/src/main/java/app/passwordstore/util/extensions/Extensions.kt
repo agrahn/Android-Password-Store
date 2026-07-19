@@ -94,9 +94,12 @@ fun ByteArray.toCharArray(charset: Charset = StandardCharsets.UTF_8): CharArray 
   return chars
 }
 
-fun ByteArray.wipe() {
-  fill(0)
-  drop(size)
+fun ByteArray.wipe(start: Int = 0, end: Int = this.size) {
+  if (start == 0 && end == this.size) {
+    this.fill(0.toByte())
+  } else {
+    this.fill(0.toByte(), start, end)
+  }
 }
 
 fun ByteArrayOutputStream.wipe() {

@@ -10,7 +10,7 @@ e. g. `path/to/webauthn.io/a1b2c3d4...9f.gpg`
 Binary passkey data is stored as a Base64URL-encoded string on the first line of the password file. Just like in traditional `pass` files, the passkey data can be followed by additional lines containing TOTP data, `key: value` pairs, or freeform text. Freeform text is separated from the previous structured content by an empty line.
 
 ## Passkey data format
-Passkey credentials are first serialized as CBOR binary data and then encoded into a Base64URL string. The CBOR structure is as follows:
+Passkey credentials are first serialized as CBOR binary data with keys sorted lexicographically and then encoded into a Base64URL string. The input to CBOR serialisation is as follows:
 ````kotlin
 {
   "id": ByteArray,          // credential ID (32 bytes)

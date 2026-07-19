@@ -39,9 +39,6 @@ data class PasskeyCredential(
   val id: ByteArray,
   val rp: RelyingPartyInfo,
   val user: UserInfo,
-
-  /* maps between signCount (class property, camelCase) to sign_count (CBOR fieldname,
-   * snake_case) */
   val signCount: UInt = 0u,
   val alg: Int,
   val privateKey: ByteArray,

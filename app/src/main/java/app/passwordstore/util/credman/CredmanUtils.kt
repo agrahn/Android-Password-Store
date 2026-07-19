@@ -565,12 +565,12 @@ object CredmanUtils {
     arrayName: String,
     deduplicateByIdPath: String? = null,
   ): String {
-    // 1. Parse all inputs safely into JsonObjects and extract the target arrays
+    // Parse all inputs safely into JsonObjects and extract the target arrays
     val arrays = jsonStrings.map {
       Json.parseToJsonElement(it).jsonObject[arrayName]?.jsonArray ?: JsonArray(emptyList())
     }
 
-    // 2. Track deduplicated elements if a path is provided
+    // Track deduplicated elements if a path is provided
     val elementsById = deduplicateByIdPath?.let { linkedMapOf<String, JsonObject>() }
     // Track non-object elements or elements mixed in when deduplication is disabled
     val rawElements = mutableListOf<JsonElement>()
@@ -589,7 +589,7 @@ object CredmanUtils {
       }
     }
 
-    // 3. Construct the immutable payload using structural builders
+    // Construct the immutable payload using structural builders
     val finalJson = buildJsonObject {
       put(
         arrayName,
