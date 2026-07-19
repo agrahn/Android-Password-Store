@@ -7,7 +7,6 @@ package app.passwordstore.ui.crypto
 
 import android.content.Intent
 import android.content.SharedPreferences
-import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -253,10 +252,7 @@ class DecryptActivity : BasePGPActivity() {
     withContext(dispatcherProvider.main()) {
       entry.extraContentChars?.wipe() // not used here
 
-      val passkey =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
-          retrievePasskey(entry, stripped = true)
-        else null
+      val passkey = retrievePasskey(entry, stripped = true)
 
       isPasskey = passkey != null
 
@@ -264,7 +260,7 @@ class DecryptActivity : BasePGPActivity() {
 
       val items = arrayListOf<FieldItem>()
 
-      if (passkey != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+      if (passkey != null) {
         items.add(
           FieldItem.createNoCopyFreeformField(
             getString(R.string.passkey),

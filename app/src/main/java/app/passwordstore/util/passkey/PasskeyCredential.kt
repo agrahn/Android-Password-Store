@@ -5,8 +5,6 @@
 
 package app.passwordstore.util.passkey
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import app.passwordstore.util.extensions.b64Encode
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.wipe
@@ -34,7 +32,6 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.jce.spec.ECParameterSpec
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 
-@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 data class PasskeyCredential(
   val id: ByteArray,
   val rp: RelyingPartyInfo,

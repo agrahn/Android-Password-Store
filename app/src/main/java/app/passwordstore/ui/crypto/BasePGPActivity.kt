@@ -14,7 +14,6 @@ import android.os.PersistableBundle
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.annotation.CallSuper
-import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
@@ -799,7 +798,6 @@ open class BasePGPActivity : AppCompatActivity() {
     onSuccess: suspend (String) -> Unit = {},
   ) {}
 
-  @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
   protected fun retrievePasskey(
     entry: PasswordEntry,
     stripped: Boolean = false, // whether to wipe private key material

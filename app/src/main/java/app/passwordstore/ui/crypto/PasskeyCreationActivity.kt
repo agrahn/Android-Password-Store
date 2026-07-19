@@ -13,6 +13,7 @@ import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.text.InputType
 import android.view.Menu
 import android.view.MenuItem
@@ -93,7 +94,6 @@ import logcat.asLog
 import logcat.logcat
 
 @AndroidEntryPoint
-@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @SuppressLint("RestrictedApi")
 class PasskeyCreationActivity : BasePGPActivity() {
 
@@ -115,9 +115,11 @@ class PasskeyCreationActivity : BasePGPActivity() {
     intent.getBooleanExtra(PasswordCreationActivity.EXTRA_EDITING, false)
   }
 
+  @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
   private fun getProviderRequest(): ProviderCreateCredentialRequest? =
     PendingIntentHandler.retrieveProviderCreateCredentialRequest(intent)
 
+  @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
   private fun getPublicKeyRequest(
     providerRequest: ProviderCreateCredentialRequest
   ): CreatePublicKeyCredentialRequest? =
@@ -149,8 +151,12 @@ class PasskeyCreationActivity : BasePGPActivity() {
         return@registerForActivityResult
       }
       val bitmap =
-        ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, imageUri))
-          .copy(Bitmap.Config.ARGB_8888, true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+          ImageDecoder.decodeBitmap(ImageDecoder.createSource(contentResolver, imageUri))
+            .copy(Bitmap.Config.ARGB_8888, true)
+        } else {
+          @Suppress("DEPRECATION") MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
+        }
       val intArray = IntArray(bitmap.width * bitmap.height)
       // copy pixel data from the Bitmap into the 'intArray' array
       bitmap.getPixels(intArray, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
@@ -265,26 +271,28 @@ class PasskeyCreationActivity : BasePGPActivity() {
         selectFolderAction.launch(intent)
       }
 
-      val providerRequest = getProviderRequest()
-      val publicKeyRequest = providerRequest?.let { getPublicKeyRequest(it) }
-      publicKeyRequest?.let { request -> // passkey creation requested
-        val credentialId = ByteArray(32)
-        SecureRandom().nextBytes(credentialId)
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        val providerRequest = getProviderRequest()
+        val publicKeyRequest = providerRequest?.let { getPublicKeyRequest(it) }
+        publicKeyRequest?.let { request -> // passkey creation requested
+          val credentialId = ByteArray(32)
+          SecureRandom().nextBytes(credentialId)
 
-        val requestOptions = PublicKeyCredentialCreationOptions(request.requestJson)
+          val requestOptions = PublicKeyCredentialCreationOptions(request.requestJson)
 
-        val suggestedFullPath =
-          findSubdirectoryRecursively(repoPath, requestOptions.rp.id)
-            ?: Paths.get(repoPath, requestOptions.rp.id).absolutePathString()
-        val relPath = PasswordRepository.getRelativePath(suggestedFullPath, repoPath)
+          val suggestedFullPath =
+            findSubdirectoryRecursively(repoPath, requestOptions.rp.id)
+              ?: Paths.get(repoPath, requestOptions.rp.id).absolutePathString()
+          val relPath = PasswordRepository.getRelativePath(suggestedFullPath, repoPath)
 
-        directory.setText(relPath)
-        credId.setText(credentialId.toHexString())
-        credAlgorithm.setText(CredmanUtils.getPreferredAlgorithm(requestOptions).toString())
-        username.setText(requestOptions.user.name)
-        requestOptions.user.displayName?.let {
-          fullname.setText(it)
-          fullnameLayout.isVisible = it != requestOptions.user.name
+          directory.setText(relPath)
+          credId.setText(credentialId.toHexString())
+          credAlgorithm.setText(CredmanUtils.getPreferredAlgorithm(requestOptions).toString())
+          username.setText(requestOptions.user.name)
+          requestOptions.user.displayName?.let {
+            fullname.setText(it)
+            fullnameLayout.isVisible = it != requestOptions.user.name
+          }
         }
       }
 
@@ -384,29 +392,33 @@ class PasskeyCreationActivity : BasePGPActivity() {
         runCatching {
           var credentialHexId = binding.credId.text.toString()
 
-          // passkey creation
-          val providerRequest = getProviderRequest()
-          val publicKeyRequest = providerRequest?.let { getPublicKeyRequest(it) }
-          val requestOptions = publicKeyRequest?.let {
-            PublicKeyCredentialCreationOptions(it.requestJson)
-          }
-
-          val passkeyAndCreatePublicKeyCredentialResponse = requestOptions?.let { options ->
-            requireNotNull(providerRequest) { "providerRequest must not be null here" }
-            requireNotNull(publicKeyRequest) { "publicKeyRequest must not be null here" }
-            CredmanUtils.buildCreatePublicKeyCredentialResponse(
-              options,
-              credentialHexId,
-              providerRequest.callingAppInfo,
-              publicKeyRequest.clientDataHash,
-            )
-          }
-
           val returnIntent = Intent()
-          val passkey = passkeyAndCreatePublicKeyCredentialResponse?.let { response ->
-            PendingIntentHandler.setCreateCredentialResponse(returnIntent, response.second)
-            response.first
-          }
+
+          // passkey creation
+          val passkey =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+              val providerRequest = getProviderRequest()
+              val publicKeyRequest = providerRequest?.let { getPublicKeyRequest(it) }
+              val requestOptions = publicKeyRequest?.let {
+                PublicKeyCredentialCreationOptions(it.requestJson)
+              }
+
+              val passkeyAndCreatePublicKeyCredentialResponse = requestOptions?.let { options ->
+                requireNotNull(providerRequest) { "providerRequest must not be null here" }
+                requireNotNull(publicKeyRequest) { "publicKeyRequest must not be null here" }
+                CredmanUtils.buildCreatePublicKeyCredentialResponse(
+                  options,
+                  credentialHexId,
+                  providerRequest.callingAppInfo,
+                  publicKeyRequest.clientDataHash,
+                )
+              }
+
+              passkeyAndCreatePublicKeyCredentialResponse?.let { response ->
+                PendingIntentHandler.setCreateCredentialResponse(returnIntent, response.second)
+                response.first
+              }
+            } else null
 
           // passkey as b64url-encoded cbor for storage in password file
           val passkeyCborBase64 =
