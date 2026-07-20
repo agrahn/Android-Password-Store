@@ -1,4 +1,4 @@
-141700
+141874
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -417,7 +417,6 @@ ac.rw
 ac.se
 ac.sz
 ac.th
-ac.tj
 ac.tz
 ac.ug
 ac.uk
@@ -469,6 +468,7 @@ aem.network
 aem.page
 aem.reviews
 aero
+aero.in
 aero.mv
 aerobatic.aero
 aeroclub.aero
@@ -595,6 +595,7 @@ alta.no
 altervista.org
 alto-adige.it
 altoadige.it
+alumni.in
 alvdal.no
 alwaysdata.net
 am
@@ -833,7 +834,7 @@ auction
 audi
 audible
 audio
-audnedaln.no
+audnedal.no
 augustow.pl
 aukra.no
 aure.no
@@ -2012,6 +2013,7 @@ cx
 cx.ua
 cy
 cy.eu.org
+cyb.ge
 cymru
 cyon.link
 cyon.site
@@ -2978,7 +2980,6 @@ freedesktop.org
 freemyip.com
 freesite.host
 freetls.fastly.net
-frei.no
 freight.aero
 frenchkiss.jp
 fresenius
@@ -3204,6 +3205,7 @@ gh.srv.us
 gi
 gialai.vn
 giehtavuoatna.no
+gielda.no
 gift
 gifts
 gifu.gifu.jp
@@ -3616,6 +3618,7 @@ hamada.shimane.jp
 hamamatsu.shizuoka.jp
 hamar.no
 hamaroy.no
+hamarøy.no
 hamatama.saga.jp
 hamatonbetsu.hokkaido.jp
 hamburg
@@ -3828,6 +3831,7 @@ holy.jp
 home-webserver.de
 home.arpa
 home.dyndns.org
+home64.de
 homebuilt.aero
 homedepot
 homedns.org
@@ -4173,6 +4177,8 @@ ipfs.storacha.link
 ipfs.w3s.link
 ipifony.net
 ipiranga
+ipv64.de
+ipv64.net
 iq
 ir
 ir.md
@@ -4593,6 +4599,7 @@ karelia.su
 kariwa.niigata.jp
 kariya.aichi.jp
 karlsoy.no
+karlsøy.no
 karmoy.no
 karmøy.no
 karpacz.pl
@@ -5169,6 +5176,7 @@ living
 livorno.it
 lk
 llc
+llc.ge
 llp
 ln.cn
 lo.it
@@ -5857,6 +5865,7 @@ myfritz.link
 myfritz.net
 myftp.biz
 myftp.org
+mygov.scot
 myhome-server.de
 myiphost.com
 myjino.ru
@@ -6637,6 +6646,7 @@ onion
 onjuku.chiba.jp
 onl
 online
+online.ge
 online.th
 onna.okinawa.jp
 ono.fukui.jp
@@ -7328,6 +7338,7 @@ rdy.jp
 re
 re.it
 re.kr
+re.no
 read
 read-books.org
 readmyblog.org
@@ -8015,6 +8026,7 @@ schokokeks.net
 scholarships
 school
 school.ge
+school.in
 school.nz
 school.za
 schoolbus.jp
@@ -8579,6 +8591,7 @@ sunagawa.hokkaido.jp
 sund.no
 sunndal.no
 sunnyday.jp
+suohkan.no
 supabase.co
 supabase.in
 supabase.net
@@ -8833,6 +8846,7 @@ tirol
 tj
 tj.cn
 tjeldsund.no
+tjielte.no
 tjmaxx
 tjome.no
 tjx
@@ -8860,6 +8874,7 @@ tn
 tn.it
 tn.oxa.cloud
 tn.us
+tnx.ge
 to
 to.gov.br
 to.it
@@ -9184,6 +9199,7 @@ u.se
 u2-local.xnbay.com
 u2.xnbay.com
 ua
+ub.in
 ubank
 ube.yamaguchi.jp
 uber.space
@@ -9200,6 +9216,7 @@ udono.mie.jp
 ueda.nagano.jp
 ueno.gunma.jp
 uenohara.yamanashi.jp
+uenorge.no
 ufcfan.org
 ug
 ug.gov.pl
@@ -9225,6 +9242,7 @@ ukiha.fukuoka.jp
 ullensaker.no
 ullensvang.no
 ulsan.kr
+ulstein.no
 ulvik.no
 um.gov.pl
 umaji.kochi.jp
