@@ -809,7 +809,7 @@ open class BasePGPActivity : AppCompatActivity() {
           PasskeyCredential.fromCbor(cb).get().also { cb.wipe() }
         }
       }
-      ?.also { if (stripped) it.privateKey?.wipe() }
+      ?.also { if (stripped) it.clearPrivateKey() }
 
   companion object {
 

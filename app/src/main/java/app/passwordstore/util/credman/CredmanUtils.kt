@@ -78,6 +78,7 @@ import logcat.logcat
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 
+@OptIn(kotlin.ExperimentalUnsignedTypes::class)
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @SuppressLint("RestrictedApi")
 object CredmanUtils {
@@ -471,7 +472,13 @@ object CredmanUtils {
     val aaguid = AAGUID.hexToByteArray()
     val credentialIdLength: ByteArray = byteArrayOf(0x00, passkey.id.size.toByte())
 
-    return (rpIdHash + flags + signCount + aaguid + credentialIdLength + passkey.id + publicKeyCbor)
+    return (rpIdHash +
+        flags +
+        signCount +
+        aaguid +
+        credentialIdLength +
+        passkey.idByteArray() +
+        publicKeyCbor)
       .b64Encode()
       .concatToString()
   }
@@ -536,13 +543,13 @@ object CredmanUtils {
     val response =
       AuthenticatorAssertionResponse(
         requestOptions = requestOptions,
-        credentialId = passkey.id,
+        credentialId = passkey.idByteArray(),
         origin = origin,
         up = true,
         uv = true,
         be = true,
         bs = true,
-        userHandle = passkey.user.id,
+        userHandle = passkey.user.idByteArray(),
         packageName = packageName,
         clientDataHash = publicKeyRequest.clientDataHash,
       )
@@ -553,7 +560,7 @@ object CredmanUtils {
 
     val fidoCredential =
       FidoPublicKeyCredential(
-        rawId = passkey.id,
+        rawId = passkey.idByteArray(),
         response = response,
         authenticatorAttachment = "platform",
       )
