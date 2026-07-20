@@ -501,6 +501,8 @@ object CredmanUtils {
     @Serializable class EmptyClass
   }
 
+  /* Our version that parses `allowCredentials` list from request; Android's version
+   * misses to do that */
   @Serializable
   private data class PublicKeyCredentialRequestOptions(
     @SerialName("challenge") val challenge: String = "",
