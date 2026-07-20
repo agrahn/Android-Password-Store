@@ -31,14 +31,18 @@ import org.bouncycastle.crypto.util.PrivateKeyInfoFactory
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.jce.spec.ECParameterSpec
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
+import kotlinx.serialization.*
+import kotlinx.serialization.cbor.*
 
+@OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+@Serializable
 data class PasskeyCredential(
   val id: ByteArray,
   val rp: RelyingPartyInfo,
   val user: UserInfo,
-  val signCount: UInt = 0u,
+  @SerialName("sign_count") val signCount: UInt = 0u,
   val alg: Int,
-  val privateKey: ByteArray,
+  @SerialName("private_key") val privateKey: ByteArray,
   val created: Long,
   val zone: String,
 ) {
@@ -57,29 +61,7 @@ data class PasskeyCredential(
    * Serialize this PasskeyCredential instance to CBOR format. throws Exception if serialization
    * fails
    */
-  fun toCbor(): ByteArray {
-    val rpInfoMap = mutableMapOf<String, Any>()
-    rpInfoMap["id"] = rp.id
-    rp.name?.let { rpInfoMap["name"] = it }
-
-    val userInfoMap = mutableMapOf<String, Any>()
-    userInfoMap["id"] = user.id
-    userInfoMap["name"] = user.name
-    user.displayName?.let { userInfoMap["display_name"] = it }
-    userInfoMap["reveal_name"] = user.revealName
-
-    val passkeyMap = mutableMapOf<String, Any>()
-    passkeyMap["id"] = id
-    passkeyMap["rp"] = rpInfoMap
-    passkeyMap["user"] = userInfoMap
-    passkeyMap["sign_count"] = signCount
-    passkeyMap["alg"] = alg
-    passkeyMap["private_key"] = privateKey
-    passkeyMap["created"] = created
-    passkeyMap["zone"] = zone
-
-    return cborEngine.encode(passkeyMap)
-  }
+  fun toCbor(): ByteArray = cborEngine.encodeToByteArray(PasskeyCredential.serializer(), this)
 
   /**
    * Serialize this PasskeyCredential instance to CBOR format. Returns a Result type for error
@@ -149,7 +131,13 @@ data class PasskeyCredential(
 
   companion object {
 
-    private val cborEngine: Cbor by unsafeLazy { Cbor() }
+    //private val cborEngine: Cbor by unsafeLazy { Cbor() }
+
+    private val cborEngine: Cbor = Cbor {
+      ignoreUnknownKeys = true
+      encodeDefaults = true
+    }
+
 
     fun createNew(
       credentialId: ByteArray,
@@ -189,40 +177,7 @@ data class PasskeyCredential(
     // Parse [cborBytes] into a PasskeyCredential instance.
     @Suppress("UNCHECKED_CAST")
     fun fromCbor(cborBytes: ByteArray): Result<PasskeyCredential, Throwable> = runCatching {
-      val rootMap = cborEngine.decode(cborBytes) as Map<String, Any>
-
-      // Helper to check if a value is absent, or explicitly encoded as CBOR null (Unit)
-      fun Any?.unwrapNull(): Any? = if (this == Unit || this == null) null else this
-
-      // 1. Decode RelyingPartyInfo tolerating explicit nulls
-      val rpRaw = rootMap["rp"] as? Map<String, Any>
-      val rpInfo =
-        RelyingPartyInfo(
-          id = rpRaw?.get("id")?.unwrapNull() as? String ?: "",
-          name = rpRaw?.get("name")?.unwrapNull() as? String,
-        )
-
-      // 2. Decode UserInfo tolerating explicit nulls
-      val userRaw = rootMap["user"] as? Map<String, Any>
-      val userInfo =
-        UserInfo(
-          id = userRaw?.get("id")?.unwrapNull() as? ByteArray ?: byteArrayOf(),
-          name = userRaw?.get("name")?.unwrapNull() as? String ?: "",
-          displayName = userRaw?.get("display_name")?.unwrapNull() as? String,
-          revealName = userRaw?.get("reveal_name")?.unwrapNull() as? Boolean ?: false,
-        )
-
-      // 3. Decode Root PasskeyCredential tolerating explicit nulls
-      PasskeyCredential(
-        id = rootMap["id"]?.unwrapNull() as? ByteArray ?: byteArrayOf(),
-        rp = rpInfo,
-        user = userInfo,
-        signCount = (rootMap["sign_count"]?.unwrapNull() as? Long)?.toUInt() ?: 0u,
-        alg = (rootMap["alg"]?.unwrapNull() as? Long)?.toInt() ?: 0,
-        privateKey = rootMap["private_key"]?.unwrapNull() as? ByteArray ?: byteArrayOf(),
-        created = rootMap["created"]?.unwrapNull() as? Long ?: 0L,
-        zone = rootMap["zone"]?.unwrapNull() as? String ?: "UTC",
-      )
+      cborEngine.decodeFromByteArray(PasskeyCredential.serializer(), cborBytes)
     }
 
     fun getPrivateKeyRawBytes(keyPair: KeyPair, algorithm: Algorithm): ByteArray =
@@ -327,11 +282,12 @@ data class PasskeyCredential(
     return KeyFactory.getInstance("RSA", BouncyCastleProvider()).generatePrivate(keySpec)
   }
 
+  @Serializable
   data class UserInfo(
     val id: ByteArray,
     val name: String,
-    val displayName: String? = null,
-    var revealName: Boolean = false,
+    @SerialName("display_name") val displayName: String? = null,
+    @SerialName("reveal_name") var revealName: Boolean = false,
   ) {
     /* override auto-generated equals() and hashCode() methods which do not work correctly
      * since they compare by ref not by content */
@@ -358,6 +314,7 @@ data class PasskeyCredential(
     fun idHex(): String = id.toHexString()
   }
 
+  @Serializable
   data class RelyingPartyInfo(
     val id: String,
     val name: String? = null,
