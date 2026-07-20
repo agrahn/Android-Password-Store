@@ -6,8 +6,9 @@ All notable changes to this project will be documented in this file
 
 ### Added
 
-- **Passkey support:** ES256, Ed25519 and RS256 credential types, selection upon passkey creation based on the relying party's preference order
-- Android Credential Manager integration: handling passkey creation and authentication requests from browsers and native apps
+- **Passkey support**, available on devices with **Android 14** and above;<br/>
+Supported passkey types: **ES256**, **Ed25519** and **RS256**; selection upon passkey creation, based on the relying party's preference order;<br/>
+Android Credential Manager integration: handling passkey creation and authentication requests from browsers and native apps
 
 ## [1.16.4] - 2026-07-10
 

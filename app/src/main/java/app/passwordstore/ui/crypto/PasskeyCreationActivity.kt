@@ -93,6 +93,7 @@ import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
 
+@OptIn(kotlin.ExperimentalUnsignedTypes::class)
 @AndroidEntryPoint
 @SuppressLint("RestrictedApi")
 class PasskeyCreationActivity : BasePGPActivity() {
@@ -308,7 +309,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
 
         val passkey = suggestedEntry?.let { retrievePasskey(it, stripped = true) }
 
-        credId.setText(passkey?.id?.toHexString())
+        credId.setText(passkey?.idHex())
         credAlgorithm.setText(passkey?.getAlgorithmString())
         username.setText(passkey?.user?.name)
         revealPasskeyUsername.isChecked = passkey?.user?.revealName ?: false
@@ -425,7 +426,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
             if (passkey != null) {
               // new passkey
               passkey.user.revealName = revealPasskeyUsername.isChecked
-              passkey.toCbor()?.b64Encode().also { passkey.privateKey.wipe() }
+              passkey.toCbor()?.b64Encode().also { passkey.clearPrivateKey() }
             } else {
               // edit passkey
               suggestedEntryChars?.let { encrypted ->

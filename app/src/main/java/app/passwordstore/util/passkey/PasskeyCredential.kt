@@ -5,8 +5,6 @@
 
 package app.passwordstore.util.passkey
 
-import app.passwordstore.util.extensions.b64Encode
-import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.wipe
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.runCatching
@@ -25,26 +23,29 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
+import kotlinx.serialization.*
+import kotlinx.serialization.cbor.*
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
 import org.bouncycastle.crypto.util.PrivateKeyFactory
 import org.bouncycastle.crypto.util.PrivateKeyInfoFactory
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.jce.spec.ECParameterSpec
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
-import kotlinx.serialization.*
-import kotlinx.serialization.cbor.*
 
-@OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+@OptIn(
+  kotlin.ExperimentalUnsignedTypes::class,
+  kotlinx.serialization.ExperimentalSerializationApi::class,
+)
 @Serializable
 data class PasskeyCredential(
-  val id: ByteArray,
-  val rp: RelyingPartyInfo,
-  val user: UserInfo,
+  @SerialName("id") val id: UShortArray,
+  @SerialName("rp") val rp: RelyingPartyInfo,
+  @SerialName("user") val user: UserInfo,
   @SerialName("sign_count") val signCount: UInt = 0u,
-  val alg: Int,
-  @SerialName("private_key") val privateKey: ByteArray,
-  val created: Long,
-  val zone: String,
+  @SerialName("alg") val alg: Int,
+  @SerialName("private_key") val privateKey: UShortArray,
+  @SerialName("created") val created: Long,
+  @SerialName("zone") val zone: String = "UTC",
 ) {
 
   fun getAlgorithmName(): String? = Algorithm.fromId(alg)?.algorithmName
@@ -53,9 +54,9 @@ data class PasskeyCredential(
 
   fun incrementSignCount(): PasskeyCredential = copy(signCount = signCount + 1u)
 
-  fun idBase64(): String = id.b64Encode().concatToString()
+  fun idHex(): String = id.joinToString("") { String.format("%02x", it.toInt()) }
 
-  fun idHex(): String = id.toHexString()
+  fun idByteArray(): ByteArray = ByteArray(id.size) { id[it].toByte() }
 
   /**
    * Serialize this PasskeyCredential instance to CBOR format. throws Exception if serialization
@@ -69,7 +70,7 @@ data class PasskeyCredential(
    */
   fun toCborResult(): Result<ByteArray, Throwable> = runCatching { toCbor() }
 
-  fun clearPrivateKey() = privateKey.wipe()
+  fun clearPrivateKey() = privateKey.fill(0u)
 
   fun signData(dataToSign: ByteArray): Result<ByteArray, Throwable> = runCatching {
     val jcaPrivateKey = loadPrivateKey()
@@ -131,13 +132,14 @@ data class PasskeyCredential(
 
   companion object {
 
-    //private val cborEngine: Cbor by unsafeLazy { Cbor() }
-
     private val cborEngine: Cbor = Cbor {
       ignoreUnknownKeys = true
+      useDefiniteLengthEncoding = true
       encodeDefaults = true
     }
 
+    private fun ByteArray.toUShortArray(): UShortArray =
+      UShortArray(size) { this[it].toUByte().toUShort() }
 
     fun createNew(
       credentialId: ByteArray,
@@ -152,7 +154,7 @@ data class PasskeyCredential(
       zoneId: ZoneId = ZoneId.systemDefault(),
     ): PasskeyCredential =
       PasskeyCredential(
-        id = credentialId,
+        id = credentialId.toUShortArray(),
         rp =
           RelyingPartyInfo(
             id = rpId,
@@ -160,13 +162,13 @@ data class PasskeyCredential(
           ),
         user =
           UserInfo(
-            id = userId,
+            id = userId.toUShortArray(),
             name = userName,
             displayName = userDisplayName,
           ),
         alg = algorithm.id,
         privateKey =
-          getPrivateKeyRawBytes(
+          getPrivateKeyRawBytesAsUShortArray(
             keyPair = keyPair,
             algorithm = algorithm,
           ),
@@ -180,12 +182,18 @@ data class PasskeyCredential(
       cborEngine.decodeFromByteArray(PasskeyCredential.serializer(), cborBytes)
     }
 
-    fun getPrivateKeyRawBytes(keyPair: KeyPair, algorithm: Algorithm): ByteArray =
-      when (algorithm) {
-        Algorithm.EDDSA -> getEd25519PrivateKeyRawBytes(keyPair.private)
-        Algorithm.ES256 -> getES256PrivateKeyRawBytes(keyPair.private)
-        Algorithm.RS256 -> getRS256PrivateKeyRawBytes(keyPair.private)
-      }
+    private fun getPrivateKeyRawBytesAsUShortArray(
+      keyPair: KeyPair,
+      algorithm: Algorithm,
+    ): UShortArray {
+      val bytes =
+        when (algorithm) {
+          Algorithm.EDDSA -> getEd25519PrivateKeyRawBytes(keyPair.private)
+          Algorithm.ES256 -> getES256PrivateKeyRawBytes(keyPair.private)
+          Algorithm.RS256 -> getRS256PrivateKeyRawBytes(keyPair.private)
+        }
+      return bytes.toUShortArray().also { bytes.wipe() }
+    }
 
     // PrivateKey conversions to raw bytes
 
@@ -231,19 +239,23 @@ data class PasskeyCredential(
 
   private fun loadPrivateKey(): PrivateKey =
     when (Algorithm.fromId(alg)) {
-      Algorithm.EDDSA -> rebuildEd25519FromPrivateKeyRawBytes()
-      Algorithm.ES256 -> rebuildES256FromPrivateKeyRawBytes()
-      Algorithm.RS256 -> rebuildRS256FromPrivateKeyRawBytes()
+      Algorithm.EDDSA -> rebuildEd25519FromPrivateKeyRawUShortArray()
+      Algorithm.ES256 -> rebuildES256FromPrivateKeyRawUShortArray()
+      Algorithm.RS256 -> rebuildRS256FromPrivateKeyRawUShortArray()
       else -> throw IllegalStateException("Unsupported passkey algorithm, COSE alg=${alg}")
     }
 
   // PrivateKey conversions from raw bytes
-  private fun rebuildES256FromPrivateKeyRawBytes(): PrivateKey {
+
+  private fun rebuildES256FromPrivateKeyRawUShortArray(): PrivateKey {
     require(privateKey.size == 32) { "ECDSA P-256 raw private key must be 32 bytes" }
+    val bytes = ByteArray(32) { privateKey[it].toByte() }
+
     /* Force the byte array to be interpreted as a POSITIVE number (signum = 1).
      * This safely strips or corrects any missing leading zero bytes from BigInteger
      * conversion. */
-    val s = BigInteger(1, privateKey)
+    val s = BigInteger(1, bytes)
+    bytes.wipe()
 
     // private key scalar validation
     val n = org.bouncycastle.crypto.ec.CustomNamedCurves.getByName("secp256r1").n
@@ -263,29 +275,35 @@ data class PasskeyCredential(
     return keyFactory.generatePrivate(keySpec)
   }
 
-  private fun rebuildEd25519FromPrivateKeyRawBytes(): PrivateKey {
+  private fun rebuildEd25519FromPrivateKeyRawUShortArray(): PrivateKey {
     require(privateKey.size == 32) { "Ed25519 raw private key must be 32 bytes" }
-    val privateKeyParams = Ed25519PrivateKeyParameters(privateKey, 0)
+    val bytes = ByteArray(32) { privateKey[it].toByte() }
+
+    val privateKeyParams = Ed25519PrivateKeyParameters(bytes)
+    bytes.wipe()
     val privateKeyInfo = PrivateKeyInfoFactory.createPrivateKeyInfo(privateKeyParams)
     return JcaPEMKeyConverter().setProvider(BouncyCastleProvider()).getPrivateKey(privateKeyInfo)
   }
 
-  private fun rebuildRS256FromPrivateKeyRawBytes(): PrivateKey {
+  private fun rebuildRS256FromPrivateKeyRawUShortArray(): PrivateKey {
     require(privateKey.size == 512) { "Buffer must be exactly 512 bytes" }
-    val nBytes = privateKey.copyOfRange(0, 256)
+    val bytes = ByteArray(512) { privateKey[it].toByte() }
+
+    val nBytes = bytes.copyOfRange(0, 256)
     val n = BigInteger(1, nBytes)
     nBytes.wipe()
-    val dBytes = privateKey.copyOfRange(256, 512)
+    val dBytes = bytes.copyOfRange(256, 512)
     val d = BigInteger(1, dBytes)
     dBytes.wipe()
+    bytes.wipe()
     val keySpec = RSAPrivateKeySpec(n, d)
     return KeyFactory.getInstance("RSA", BouncyCastleProvider()).generatePrivate(keySpec)
   }
 
   @Serializable
   data class UserInfo(
-    val id: ByteArray,
-    val name: String,
+    @SerialName("id") val id: UShortArray,
+    @SerialName("name") val name: String,
     @SerialName("display_name") val displayName: String? = null,
     @SerialName("reveal_name") var revealName: Boolean = false,
   ) {
@@ -309,15 +327,15 @@ data class PasskeyCredential(
       return result
     }
 
-    fun idBase64(): String = id.b64Encode().concatToString()
+    fun idHex(): String = id.joinToString("") { String.format("%02x", it.toInt()) }
 
-    fun idHex(): String = id.toHexString()
+    fun idByteArray(): ByteArray = ByteArray(id.size) { id[it].toByte() }
   }
 
   @Serializable
   data class RelyingPartyInfo(
-    val id: String,
-    val name: String? = null,
+    @SerialName("id") val id: String,
+    @SerialName("name") val name: String? = null,
   ) {
     override fun equals(other: Any?): Boolean {
       if (this === other) return true
