@@ -39,11 +39,13 @@
   <string name="password_move_error_message">Verschieben von %1$s nach %2$s fehlgeschlagen.</string>
 
   <!-- git commits -->
-  <string name="git_commit_add_text">Füge erstelltes Passwort für %1$s mittels Android Password Store hinzu.</string>
-  <string name="git_commit_edit_text">Bearbeite das Passwort für %1$s mittels Android Password Store.</string>
-  <string name="git_commit_remove_text">%1$s aus Android Password Store entfernen.</string>
-  <string name="git_commit_move_text">Benenne %1$s in %2$s um.</string>
-  <string name="git_commit_move_multiple_text">Verschiebe mehrere Passwörter nach %1$s.</string>
+  <string name="git_commit_add_text">Neues Passwort %1$s mit Android Password Store hinzugefügt</string>
+  <string name="git_commit_edit_text">Bestehendes Passwort %1$s in Android Password Store bearbeitet</string>
+  <string name="git_commit_add_passkey_text">Neuen Passkey %1$s mit Android Password Store hinzugefügt</string>
+  <string name="git_commit_edit_passkey_text">Bestehenden Passkey %1$s in Android Password Store bearbeitet</string>
+  <string name="git_commit_remove_text">%1$s aus Android Password Store entfernt</string>
+  <string name="git_commit_move_text">%1$s in %2$s umbenannt</string>
+  <string name="git_commit_move_multiple_text">Mehrere Passwörter nach %1$s verschoben</string>
   <string name="git_commit_gpg_id">Initialisiere PGP-IDs in %1$s.</string>
 
   <!-- PGPHandler -->
