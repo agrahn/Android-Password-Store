@@ -486,23 +486,11 @@ open class BasePGPActivity : AppCompatActivity() {
   private suspend fun askPassphrase(isError: Boolean, identifiers: List<PGPIdentifier>) {
     if (++retries > MAX_RETRIES) finish()
 
-    val needsSmartcardPin = needsSmartcardPin(identifiers)
     val dialog =
-      if (needsSmartcardPin) {
-        PasswordDialog.newInstance(
-          getIdentityLabelForIdentifiers(identifiers),
-          cacheOptionVisible = true,
-          titleRes = R.string.openpgp_card_pin_title,
-          hintRes = R.string.openpgp_card_pin_hint,
-          errorRes = R.string.openpgp_card_wrong_pin,
-          cacheLabelRes = R.string.cache_openpgp_card_pin_until_screen_off,
-        )
-      } else {
-        PasswordDialog.newInstance(
-          getIdentityLabelForIdentifiers(identifiers),
-          cacheOptionVisible = true,
-        )
-      }
+      PasswordDialog.newInstance(
+        getIdentityLabelForIdentifiers(identifiers),
+        cacheOptionVisible = true,
+      )
     if (isError) dialog.setError()
     dialog.show(supportFragmentManager, "PASSWORD_DIALOG")
     dialog.setFragmentResultListener(PasswordDialog.PASSWORD_RESULT_KEY) { key, bundle ->
@@ -514,27 +502,6 @@ open class BasePGPActivity : AppCompatActivity() {
         var cacheEnabled = bundle.getBoolean(PasswordDialog.PASSWORD_CACHE_KEY)
         lifecycleScope.launch(dispatcherProvider.main()) {
           decryptWithPassphrase(mapOf("" to passphrase), identifiers) { id -> // onSuccess
-            if (needsSmartcardPin) {
-              runCatching {
-                val isHardwareBacked = AESEncryption.isHardwareBacked()
-                val encryptedPin = AESEncryption.encrypt(passphrase)
-                if (isHardwareBacked && cacheEnabled && encryptedPin != null) {
-                  cachedPassphrases.put(id, encryptedPin)
-                } else {
-                  cachedPassphrases[id]?.wipe()
-                  cachedPassphrases.remove(id)
-                }
-                settings.edit {
-                  putBoolean(
-                    PreferenceKeys.CACHE_PASSPHRASE,
-                    isHardwareBacked && cacheEnabled && encryptedPin != null,
-                  )
-                }
-              }
-                .onErr { e -> logcat { e.asLog() } }
-              passphrase.wipe()
-              return@decryptWithPassphrase
-            }
             var fastUnlockingSetupCompletion: CompletableDeferred<Unit>? = null
             runCatching {
               // update temporary passphrase cache
