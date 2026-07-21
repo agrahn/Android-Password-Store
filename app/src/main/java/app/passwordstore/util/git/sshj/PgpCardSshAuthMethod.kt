@@ -25,6 +25,11 @@ import net.schmizz.sshj.common.SSHPacket
 import net.schmizz.sshj.userauth.UserAuthException
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider
 import net.schmizz.sshj.userauth.method.AuthPublickey
+import org.bouncycastle.asn1.DERNull
+import org.bouncycastle.asn1.nist.NISTObjectIdentifiers
+import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier
+import org.bouncycastle.asn1.x509.DigestInfo
 
 /**
  * A [KeyProvider] for a smartcard-backed PGP authentication key. Only the public half is known to
@@ -239,79 +244,16 @@ class CardSshSigner(
    * signature algorithm: `rsa-sha2-512` -> SHA-512, `rsa-sha2-256` -> SHA-256, `ssh-rsa` -> SHA-1.
    */
   private fun pkcs1DigestInfo(sshAlgorithmName: String, dataToSign: ByteArray): ByteArray {
-    val (jcaDigest, digestInfoPrefix) =
+    // Let BouncyCastle emit the RFC 8017 sec. 9.2 (EMSA-PKCS1-v1_5) DigestInfo DER rather than
+    // carrying hardcoded per-hash prefixes; OpenPgpCommitSigner builds its DigestInfo the same way.
+    val (jcaDigest, oid) =
       when (sshAlgorithmName) {
-        "rsa-sha2-512" -> "SHA-512" to SHA512_DIGEST_INFO_PREFIX
-        "rsa-sha2-256" -> "SHA-256" to SHA256_DIGEST_INFO_PREFIX
-        "ssh-rsa" -> "SHA-1" to SHA1_DIGEST_INFO_PREFIX
+        "rsa-sha2-512" -> "SHA-512" to NISTObjectIdentifiers.id_sha512
+        "rsa-sha2-256" -> "SHA-256" to NISTObjectIdentifiers.id_sha256
+        "ssh-rsa" -> "SHA-1" to OIWObjectIdentifiers.idSHA1
         else -> throw SSHException("Unsupported RSA SSH signature algorithm $sshAlgorithmName")
       }
-    return digestInfoPrefix + digest(jcaDigest, dataToSign)
-  }
-
-  private companion object {
-    // DigestInfo DER prefixes from RFC 8017 sec. 9.2 (EMSA-PKCS1-v1_5), prepended to the raw hash.
-    val SHA1_DIGEST_INFO_PREFIX =
-      byteArrayOf(
-        0x30,
-        0x21,
-        0x30,
-        0x09,
-        0x06,
-        0x05,
-        0x2b,
-        0x0e,
-        0x03,
-        0x02,
-        0x1a,
-        0x05,
-        0x00,
-        0x04,
-        0x14,
-      )
-    val SHA256_DIGEST_INFO_PREFIX =
-      byteArrayOf(
-        0x30,
-        0x31,
-        0x30,
-        0x0d,
-        0x06,
-        0x09,
-        0x60,
-        0x86.toByte(),
-        0x48,
-        0x01,
-        0x65,
-        0x03,
-        0x04,
-        0x02,
-        0x01,
-        0x05,
-        0x00,
-        0x04,
-        0x20,
-      )
-    val SHA512_DIGEST_INFO_PREFIX =
-      byteArrayOf(
-        0x30,
-        0x51,
-        0x30,
-        0x0d,
-        0x06,
-        0x09,
-        0x60,
-        0x86.toByte(),
-        0x48,
-        0x01,
-        0x65,
-        0x03,
-        0x04,
-        0x02,
-        0x03,
-        0x05,
-        0x00,
-        0x04,
-        0x40,
-      )
+    return DigestInfo(AlgorithmIdentifier(oid, DERNull.INSTANCE), digest(jcaDigest, dataToSign))
+      .encoded
   }
 }
