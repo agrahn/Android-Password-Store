@@ -383,6 +383,12 @@ class OpenPgpCardPrompt(
     return result.await()
   }
 
+  // Callers namespace [cacheKey] per operation ("decrypt:", "sign:", "ssh:"). On most cards the
+  // decryption/auth (PW1 mode 0x82) and signing (PW1 mode 0x81) PINs are the same physical PW1, so
+  // a user may be prompted -- and the PIN cached -- separately per operation. This is deliberate:
+  // it keeps the caches independent and avoids assuming the slots share a secret, which is not
+  // guaranteed across cards.
+
   /** Reads and decrypts a screen-off-cached PIN for [cacheKey], or null if none. */
   fun readCachedPin(cacheKey: String): CharArray? {
     val encrypted = BasePGPActivity.cachedPassphrases[cacheKey] ?: return null
