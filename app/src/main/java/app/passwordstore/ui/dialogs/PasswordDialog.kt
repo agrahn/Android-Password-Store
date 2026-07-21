@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
+import androidx.annotation.StringRes
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.setFragmentResult
@@ -36,7 +37,8 @@ class PasswordDialog : DialogFragment() {
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val builder = MaterialAlertDialogBuilder(requireContext())
     builder.setView(binding.root)
-    builder.setTitle(R.string.ssh_keygen_passphrase)
+    builder.setTitle(requireArguments().getInt(TITLE_RES_EXTRA))
+    binding.passwordField.setHint(requireArguments().getInt(HINT_RES_EXTRA))
 
     userIds = requireArguments().getString(USER_IDS_EXTRA)
     userIds?.let {
@@ -49,6 +51,7 @@ class PasswordDialog : DialogFragment() {
     cacheEnabledChecked =
       requireContext().sharedPrefs.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)
     binding.cacheEnabled.apply {
+      setText(requireArguments().getInt(CACHE_LABEL_RES_EXTRA))
       isChecked = cacheEnabledChecked
       setOnCheckedChangeListener { _, isChecked -> cacheEnabledChecked = isChecked }
     }
@@ -57,7 +60,7 @@ class PasswordDialog : DialogFragment() {
     dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
     dialog.setOnShowListener {
       if (isError) {
-        binding.passwordField.error = getString(R.string.pgp_wrong_passphrase_input)
+        binding.passwordField.error = getString(requireArguments().getInt(ERROR_RES_EXTRA))
       }
       binding.passwordEditText.apply {
         doOnTextChanged { _, _, _, _ -> binding.passwordField.error = null }
@@ -105,6 +108,10 @@ class PasswordDialog : DialogFragment() {
 
     private const val USER_IDS_EXTRA = "user_ids"
     private const val CACHE_OPTION_EXTRA = "cache_option"
+    private const val TITLE_RES_EXTRA = "title_res"
+    private const val HINT_RES_EXTRA = "hint_res"
+    private const val ERROR_RES_EXTRA = "error_res"
+    private const val CACHE_LABEL_RES_EXTRA = "cache_label_res"
     private const val ON_CANCEL_FINISH = "finish_option"
 
     const val PASSWORD_RESULT_KEY = "password_result"
@@ -115,6 +122,10 @@ class PasswordDialog : DialogFragment() {
       userIds: String? = null,
       cacheOptionVisible: Boolean = false,
       onCancelFinish: Boolean = true,
+      @StringRes titleRes: Int = R.string.ssh_keygen_passphrase,
+      @StringRes hintRes: Int = R.string.ssh_keygen_passphrase,
+      @StringRes errorRes: Int = R.string.pgp_wrong_passphrase_input,
+      @StringRes cacheLabelRes: Int = R.string.cache_password_until_screen_off,
     ): PasswordDialog {
       val extras =
         Bundle().also {
@@ -122,6 +133,10 @@ class PasswordDialog : DialogFragment() {
             putString(USER_IDS_EXTRA, userIds)
             putBoolean(CACHE_OPTION_EXTRA, cacheOptionVisible)
             putBoolean(ON_CANCEL_FINISH, onCancelFinish)
+            putInt(TITLE_RES_EXTRA, titleRes)
+            putInt(HINT_RES_EXTRA, hintRes)
+            putInt(ERROR_RES_EXTRA, errorRes)
+            putInt(CACHE_LABEL_RES_EXTRA, cacheLabelRes)
           }
         }
       val fragment = PasswordDialog()

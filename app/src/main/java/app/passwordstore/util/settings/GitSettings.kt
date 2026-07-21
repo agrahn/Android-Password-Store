@@ -89,6 +89,12 @@ constructor(
       settings.edit { putString(PreferenceKeys.GIT_CONFIG_AUTHOR_EMAIL, value) }
     }
 
+  var signCommits
+    get() = settings.getBoolean(PreferenceKeys.GIT_CONFIG_SIGN_COMMITS, false)
+    set(value) {
+      settings.edit { putBoolean(PreferenceKeys.GIT_CONFIG_SIGN_COMMITS, value) }
+    }
+
   var useMultiplexing
     get() = settings.getBoolean(PreferenceKeys.GIT_REMOTE_USE_MULTIPLEXING, true)
     set(value) {

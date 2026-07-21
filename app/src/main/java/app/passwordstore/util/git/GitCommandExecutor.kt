@@ -8,7 +8,10 @@ package app.passwordstore.util.git
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
+import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.util.coroutines.DispatcherProvider
+import app.passwordstore.util.crypto.OpenPgpSmartcardStore
+import app.passwordstore.util.extensions.hideKeyboard
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.git.GitException.PullException
@@ -45,6 +48,9 @@ class GitCommandExecutor(
   suspend fun execute(): Result<Unit, Throwable> {
     val gitSettings = hiltEntryPoint.gitSettings()
     val dispatcherProvider = hiltEntryPoint.dispatcherProvider()
+    // Collapse any keyboard left focused by an entry form so it can't overlap the status snackbar
+    // or the dialogs shown while the operation runs (or the error/success UI when it finishes).
+    activity.hideKeyboard()
     val snackbar =
       activity.snackbar(
         message = activity.resources.getString(R.string.git_operation_running),
@@ -66,6 +72,18 @@ class GitCommandExecutor(
                 val name = gitSettings.authorName.ifEmpty { "root" }
                 val email = gitSettings.authorEmail.ifEmpty { "localhost" }
                 val identity = PersonIdent(name, email)
+                if (gitSettings.signCommits) {
+                  command
+                    .setSign(true)
+                    .setGpgSigner(
+                      OpenPgpCommitSigner(
+                        activity,
+                        hiltEntryPoint.pgpKeyManager(),
+                        hiltEntryPoint.smartcardStore(),
+                        dispatcherProvider,
+                      )
+                    )
+                }
                 command.setAuthor(identity).setCommitter(identity).call()
               }
             }
@@ -133,5 +151,9 @@ class GitCommandExecutor(
     fun gitSettings(): GitSettings
 
     fun dispatcherProvider(): DispatcherProvider
+
+    fun pgpKeyManager(): PGPKeyManager
+
+    fun smartcardStore(): OpenPgpSmartcardStore
   }
 }

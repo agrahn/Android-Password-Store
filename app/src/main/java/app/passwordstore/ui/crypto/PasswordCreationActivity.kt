@@ -41,6 +41,7 @@ import app.passwordstore.ui.folderselect.SelectFolderActivity
 import app.passwordstore.ui.passwords.PasswordStore
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.crypto.AESEncryption
+import app.passwordstore.util.crypto.OpenPgpCardPrompt
 import app.passwordstore.util.extensions.asLog
 import app.passwordstore.util.extensions.base64
 import app.passwordstore.util.extensions.commitChange
@@ -52,6 +53,7 @@ import app.passwordstore.util.extensions.toByteArray
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.extensions.wipe
+import app.passwordstore.util.git.ErrorMessages
 import app.passwordstore.util.settings.DirectoryStructure
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.getOrThrow
@@ -84,6 +86,7 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
+import org.eclipse.jgit.api.errors.CanceledException
 
 @AndroidEntryPoint
 class PasswordCreationActivity : BasePGPActivity() {
@@ -512,20 +515,26 @@ class PasswordCreationActivity : BasePGPActivity() {
             return@runCatching
           }
 
+          val passwordFileExisted = passwordFile.exists()
+          val previousPasswordBytes =
+            withContext(dispatcherProvider.io()) {
+              if (passwordFileExisted) passwordFile.toFile().readBytes() else null
+            }
+          val newFilePathHash = passwordFile.absolutePathString().base64()
+          val oldFilePathHash = suggestedName?.let { oldFile ->
+            "${fullPath.trimEnd('/')}/$oldFile.gpg".base64()
+          }
+          val previousNewHistory = passwordHistory.getString(newFilePathHash, null)
+          val previousOldHistory = oldFilePathHash?.let { passwordHistory.getString(it, null) }
+
           withContext(dispatcherProvider.io()) {
             passwordFile.writeBytes(result.getOrThrow().toByteArray())
           }
 
           // create/update timestamp on the current password file
           passwordHistory.edit {
-            suggestedName?.let { oldFile ->
-              val oldFilePathHash = "${fullPath.trimEnd('/')}/$oldFile.gpg".base64()
-              remove(oldFilePathHash)
-            }
-            putString(
-              passwordFile.absolutePathString().base64(),
-              System.currentTimeMillis().toString(),
-            )
+            oldFilePathHash?.let(::remove)
+            putString(newFilePathHash, System.currentTimeMillis().toString())
           }
 
           val returnIntent = Intent()
@@ -553,50 +562,71 @@ class PasswordCreationActivity : BasePGPActivity() {
             entry.clear()
           }
 
-          editPass?.wipe()
-          editUsername?.wipe()
-          editExtra?.wipe()
-
           val commitMessageRes =
             if (editing) R.string.git_commit_edit_text else R.string.git_commit_add_text
-
-          lifecycleScope.launch {
-            commitChange(
-                resources.getString(
-                  commitMessageRes,
-                  PasswordRepository.getLongName(fullPath, repoPath, editName),
-                )
+          commitChange(
+              resources.getString(
+                commitMessageRes,
+                PasswordRepository.getLongName(fullPath, repoPath, editName),
               )
-              .onOk {
-                setResult(RESULT_OK, returnIntent)
-
-                val dialog =
-                  MaterialAlertDialogBuilder(this@PasswordCreationActivity)
-                    .setCancelable(false)
-                    .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
-                var messageText =
+            )
+            .onOk {
+              editPass?.wipe()
+              editUsername?.wipe()
+              editExtra?.wipe()
+              setResult(RESULT_OK, returnIntent)
+              val dialog =
+                MaterialAlertDialogBuilder(this@PasswordCreationActivity)
+                  .setCancelable(false)
+                  .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
+              var messageText =
+                getString(
+                  R.string.password_creation_file_encryption_succeeded_ids_message,
+                  succeededUserEmails.joinToString(),
+                )
+              if (!failedUserEmails.isEmpty()) {
+                dialog.setTitle(R.string.password_creation_file_encryption_partial_success_title)
+                messageText +=
                   getString(
-                    R.string.password_creation_file_encryption_succeeded_ids_message,
-                    succeededUserEmails.joinToString(),
+                    R.string.password_creation_file_encryption_failed_ids_message,
+                    failedUserEmails.joinToString(),
                   )
-                if (!failedUserEmails.isEmpty()) {
-                  dialog.setTitle(R.string.password_creation_file_encryption_partial_success_title)
-                  messageText +=
-                    getString(
-                      R.string.password_creation_file_encryption_failed_ids_message,
-                      failedUserEmails.joinToString(),
-                    )
-                } else {
-                  val title =
-                    if (editing)
-                      getString(R.string.password_creation_edit_file_encryption_success_title)
-                    else getString(R.string.password_creation_new_file_encryption_success_title)
-                  dialog.setTitle(title)
-                }
-                dialog.setMessage(messageText)
-                dialog.show()
+              } else {
+                val title =
+                  if (editing)
+                    getString(R.string.password_creation_edit_file_encryption_success_title)
+                  else getString(R.string.password_creation_new_file_encryption_success_title)
+                dialog.setTitle(title)
               }
-          }
+              dialog.setMessage(messageText)
+              dialog.show()
+            }
+            .onErr { e ->
+              logcat(ERROR) { e.asLog("Failed to commit password changes") }
+              withContext(dispatcherProvider.io()) {
+                if (passwordFileExisted && previousPasswordBytes != null) {
+                  passwordFile.writeBytes(previousPasswordBytes)
+                } else {
+                  passwordFile.toFile().delete()
+                }
+              }
+              passwordHistory.edit {
+                if (previousNewHistory == null) remove(newFilePathHash)
+                else putString(newFilePathHash, previousNewHistory)
+                oldFilePathHash?.let { key ->
+                  if (previousOldHistory == null) remove(key)
+                  else putString(key, previousOldHistory)
+                }
+              }
+              // Don't nag with a bar when the user cancelled signing, or when the failure was
+              // already shown in a dialog (e.g. a blocked smartcard PIN).
+              if (
+                !OpenPgpCardPrompt.isHandled(e) &&
+                  generateSequence(e) { it.cause }.none { it is CanceledException }
+              ) {
+                snackbar(message = ErrorMessages[e])
+              }
+            }
         }
           .onErr { e ->
             logcat(ERROR) { e.asLog() }

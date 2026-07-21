@@ -39,10 +39,12 @@ import app.passwordstore.ui.APSAppBar
 import app.passwordstore.ui.compose.theme.APSTheme
 import app.passwordstore.ui.dialogs.AddPgpKeyBottomSheet
 import app.passwordstore.ui.dialogs.PasswordDialog
+import app.passwordstore.ui.pgp.PGPKeyImportActivity.Companion.EXTRA_IMPORT_FROM_NFC
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.git.sshj.SshKey
 import app.passwordstore.util.viewmodel.PGPKeyListViewModel
+import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
@@ -121,6 +123,12 @@ class PGPKeyListActivity : AppCompatActivity() {
           keyAction.launch(Intent(this, PGPKeyImportActivity::class.java))
           isAddingKeys = true
         }
+        ACTION_IMPORT_NFC -> {
+          keyAction.launch(
+            Intent(this, PGPKeyImportActivity::class.java).putExtra(EXTRA_IMPORT_FROM_NFC, true)
+          )
+          isAddingKeys = true
+        }
         ACTION_NEW_PGP_KEY -> {
           keyAction.launch(Intent(this, PGPKeyCreationActivity::class.java))
           isAddingKeys = true
@@ -195,6 +203,8 @@ class PGPKeyListActivity : AppCompatActivity() {
           KeyList(
             identifiers = viewModel.keys, // Pair<KeyId,UserId>
             isSecretKey = ::isSecretKey,
+            isStubKey = ::isStubKey,
+            onKeyInfoClick = ::showKeyInfo,
             onChangePassphraseClick = ::changeKeyPassphrase,
             onDeleteItemClick = ::deleteKey,
             onExportItemClick = ::exportKey,
@@ -213,6 +223,10 @@ class PGPKeyListActivity : AppCompatActivity() {
                 }
               } else null,
             singleSelection = singleSelection,
+            // Selecting an SSH authentication key (single-selection mode): grey out keys that can't
+            // authenticate — public-only keys, and stubs without an associated smartcard.
+            isKeyEnabled =
+              if (singleSelection) cryptoRepository::canUseForSshAuth else { { true } },
           )
         }
       }
@@ -221,6 +235,52 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   private fun isSecretKey(identifier: PGPIdentifier): Boolean =
     cryptoRepository.isSecretKey(identifier)
+
+  /** A key whose private material lives on hardware (a smartcard) or was otherwise stripped. */
+  private fun isStubKey(identifier: PGPIdentifier): Boolean =
+    cryptoRepository.isSmartcardBacked(identifier) ||
+      cryptoRepository.hasOnlyStubDecKey(identifier)
+
+  private fun showKeyInfo(identifier: PGPIdentifier) {
+    val fingerprint =
+      pgpKeyManager.getKeyById(identifier).get()?.let { key ->
+        KeyUtils.tryGetFingerprints(key).firstOrNull()?.let(::formatFingerprint)
+      }
+    val type =
+      when {
+        // Both a registered smartcard and a bare stub mean the private key lives on hardware;
+        // mirror isStubKey() so the info label matches the hardware icon shown in the list.
+        cryptoRepository.isSmartcardBacked(identifier) ||
+          cryptoRepository.hasOnlyStubDecKey(identifier) ->
+          getString(R.string.pgp_key_info_type_hardware)
+        cryptoRepository.isSecretKey(identifier) -> getString(R.string.pgp_key_info_type_secret)
+        else -> getString(R.string.pgp_key_info_type_public)
+      }
+    val message = buildString {
+      cryptoRepository.getUserIdFromKeyId(identifier)?.takeIf { it != "null" }?.let {
+        appendLine(getString(R.string.pgp_key_info_user_id, it))
+      }
+      cryptoRepository.getEmailFromKeyId(identifier)?.let {
+        appendLine(getString(R.string.pgp_key_info_email, it))
+      }
+      cryptoRepository.getLongKeyIdFromKeyId(identifier)?.let {
+        appendLine(getString(R.string.pgp_key_info_key_id, it))
+      }
+      fingerprint?.let { appendLine(getString(R.string.pgp_key_info_fingerprint, it)) }
+      append(getString(R.string.pgp_key_info_type, type))
+    }
+    MaterialAlertDialogBuilder(this)
+      .setTitle(R.string.pgp_key_info_title)
+      .setMessage(message)
+      .setPositiveButton(R.string.dialog_ok, null)
+      .show()
+  }
+
+  private fun formatFingerprint(fingerprint: ByteArray): String =
+    fingerprint
+      .joinToString(separator = "") { "%02X".format(it.toInt() and 0xFF) }
+      .chunked(4)
+      .joinToString(separator = " ")
 
   private fun changeKeyPassphrase(identifier: PGPIdentifier) {
     val intent = Intent(this, PGPKeyChangePassphraseActivity::class.java)
@@ -372,6 +432,7 @@ class PGPKeyListActivity : AppCompatActivity() {
     const val PGP_KEY_ADD_REQUEST_KEY = "add_pgp_key"
     const val ACTION_KEY = "action"
     const val ACTION_IMPORT_FILE = "from_file"
+    const val ACTION_IMPORT_NFC = "from_nfc"
     const val ACTION_NEW_PGP_KEY = "generate_new"
 
     fun newIntent(

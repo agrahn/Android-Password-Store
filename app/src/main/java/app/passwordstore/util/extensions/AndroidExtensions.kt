@@ -20,6 +20,7 @@ import android.os.Build
 import android.util.TypedValue
 import android.view.View
 import android.view.autofill.AutofillManager
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
@@ -37,6 +38,18 @@ import logcat.logcat
 /** Get an instance of [AutofillManager]. Only available on Android Oreo and above */
 val Context.autofillManager: AutofillManager?
   get() = getSystemService()
+
+/**
+ * Hides the soft keyboard and clears the focused view, so a focused text field cannot resurface the
+ * keyboard over a dialog, snackbar, or the status bar once overlaying dialogs close. Must be called
+ * on the main thread.
+ */
+fun FragmentActivity.hideKeyboard() {
+  val imm = getSystemService<InputMethodManager>() ?: return
+  val focus = currentFocus
+  imm.hideSoftInputFromWindow((focus ?: window.decorView).windowToken, 0)
+  focus?.clearFocus()
+}
 
 /** Get an instance of [ClipboardManager] */
 val Context.clipboard
@@ -115,6 +128,9 @@ fun FragmentActivity.snackbar(
   message: String,
   length: Int = Snackbar.LENGTH_SHORT,
 ): Snackbar {
+  // Collapse the soft keyboard so the status bar isn't hidden behind it (a snackbar shown while the
+  // keyboard is up would otherwise sit under it).
+  hideKeyboard()
   val snackbar = Snackbar.make(view, message, length)
   snackbar.anchorView = findViewById(R.id.fab)
   snackbar.show()

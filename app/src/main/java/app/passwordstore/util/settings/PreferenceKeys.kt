@@ -27,6 +27,7 @@ object PreferenceKeys {
   const val GIT_CONFIG = "git_config"
   const val GIT_CONFIG_AUTHOR_EMAIL = "git_config_user_email"
   const val GIT_CONFIG_AUTHOR_NAME = "git_config_user_name"
+  const val GIT_CONFIG_SIGN_COMMITS = "git_config_sign_commits"
 
   @Deprecated(message = "We're removing support for external storage")
   const val GIT_EXTERNAL = "git_external"

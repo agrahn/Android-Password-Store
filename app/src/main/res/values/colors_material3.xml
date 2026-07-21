@@ -61,4 +61,6 @@
 
   <!-- Multiselect color -->
   <color name="list_multiselect_background">#668eacbb</color>
+  <color name="git_commit_signature_signed">#2E7D32</color>
+  <color name="git_commit_signature_unsigned">#8A8A8A</color>
 </resources>

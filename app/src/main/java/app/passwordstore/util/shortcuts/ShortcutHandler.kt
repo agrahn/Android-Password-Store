@@ -13,8 +13,12 @@ import android.graphics.drawable.Icon
 import androidx.core.content.getSystemService
 import app.passwordstore.R
 import app.passwordstore.data.password.PasswordItem
+import app.passwordstore.ui.crypto.BasePGPActivity
+import com.github.michaelbull.result.onErr
+import com.github.michaelbull.result.runCatching
 import dagger.Reusable
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
 import javax.inject.Inject
 import logcat.logcat
 
@@ -69,6 +73,27 @@ class ShortcutHandler @Inject constructor(@ApplicationContext val context: Conte
     }
     val shortcut = buildShortcut(item, intent)
     shortcutManager.requestPinShortcut(shortcut, null)
+  }
+
+  /**
+   * Removes dynamic shortcuts whose target password file no longer exists (e.g. after the entry was
+   * deleted or moved), so that long-pressing the launcher icon never offers passwords that would
+   * fail to decrypt.
+   */
+  fun pruneDynamicShortcuts() {
+    runCatching {
+        val shortcutManager: ShortcutManager = context.getSystemService() ?: return
+        val staleIds =
+          shortcutManager.dynamicShortcuts.mapNotNull { shortcut ->
+            val path = shortcut.intent?.getStringExtra(BasePGPActivity.EXTRA_FILE_PATH)
+            if (path != null && !File(path).exists()) shortcut.id else null
+          }
+        if (staleIds.isNotEmpty()) {
+          logcat { "Pruning ${staleIds.size} stale dynamic shortcut(s)" }
+          shortcutManager.removeDynamicShortcuts(staleIds)
+        }
+      }
+      .onErr { logcat { "Failed to prune dynamic shortcuts: ${it.message}" } }
   }
 
   /** Creates a [ShortcutInfo] from [item] and assigns [intent] to it. */

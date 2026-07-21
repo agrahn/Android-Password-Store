@@ -440,11 +440,26 @@ open class BasePGPActivity : AppCompatActivity() {
     return gpgIdentifiers
   }
 
-  private fun getEmailsFromIdentifiers(identifiers: List<PGPIdentifier>): String? {
-    val emails = identifiers.map { repository.getEmailFromKeyId(it) }.filterNotNull().distinct()
-    if (emails.isEmpty()) return null
-    val label = if (emails.size > 1) R.string.pgp_id_label_plural else R.string.pgp_id_label
-    return "${getString(label)} ${emails.joinToString(", ")}"
+  /**
+   * Builds a short label naming the key(s) a passphrase/PIN is being requested for, so the prompt
+   * makes clear which key is being unlocked. Shows the key's user ID exactly as the key list does,
+   * falling back to the email and then the key ID so the label is never empty for a known key.
+   */
+  protected fun getIdentityLabelForIdentifiers(identifiers: List<PGPIdentifier>): String? {
+    if (identifiers.isEmpty()) return null
+    return identifiers
+      .map { id ->
+        repository.getUserIdFromKeyId(id)?.takeIf { it.isNotBlank() && it != "null" }
+          ?: repository.getEmailFromKeyId(id)
+          ?: repository.getLongKeyIdFromKeyId(id)
+          ?: id.toString()
+      }
+      .distinct()
+      .joinToString(", ")
+  }
+
+  protected fun needsSmartcardPin(identifiers: List<PGPIdentifier>): Boolean = identifiers.any {
+    repository.hasOnlyStubDecKey(it) || repository.isSmartcardBacked(it)
   }
 
   @Suppress("ReturnCount")
@@ -471,8 +486,23 @@ open class BasePGPActivity : AppCompatActivity() {
   private suspend fun askPassphrase(isError: Boolean, identifiers: List<PGPIdentifier>) {
     if (++retries > MAX_RETRIES) finish()
 
+    val needsSmartcardPin = needsSmartcardPin(identifiers)
     val dialog =
-      PasswordDialog.newInstance(getEmailsFromIdentifiers(identifiers), cacheOptionVisible = true)
+      if (needsSmartcardPin) {
+        PasswordDialog.newInstance(
+          getIdentityLabelForIdentifiers(identifiers),
+          cacheOptionVisible = true,
+          titleRes = R.string.openpgp_card_pin_title,
+          hintRes = R.string.openpgp_card_pin_hint,
+          errorRes = R.string.openpgp_card_wrong_pin,
+          cacheLabelRes = R.string.cache_openpgp_card_pin_until_screen_off,
+        )
+      } else {
+        PasswordDialog.newInstance(
+          getIdentityLabelForIdentifiers(identifiers),
+          cacheOptionVisible = true,
+        )
+      }
     if (isError) dialog.setError()
     dialog.show(supportFragmentManager, "PASSWORD_DIALOG")
     dialog.setFragmentResultListener(PasswordDialog.PASSWORD_RESULT_KEY) { key, bundle ->
@@ -484,6 +514,27 @@ open class BasePGPActivity : AppCompatActivity() {
         var cacheEnabled = bundle.getBoolean(PasswordDialog.PASSWORD_CACHE_KEY)
         lifecycleScope.launch(dispatcherProvider.main()) {
           decryptWithPassphrase(mapOf("" to passphrase), identifiers) { id -> // onSuccess
+            if (needsSmartcardPin) {
+              runCatching {
+                val isHardwareBacked = AESEncryption.isHardwareBacked()
+                val encryptedPin = AESEncryption.encrypt(passphrase)
+                if (isHardwareBacked && cacheEnabled && encryptedPin != null) {
+                  cachedPassphrases.put(id, encryptedPin)
+                } else {
+                  cachedPassphrases[id]?.wipe()
+                  cachedPassphrases.remove(id)
+                }
+                settings.edit {
+                  putBoolean(
+                    PreferenceKeys.CACHE_PASSPHRASE,
+                    isHardwareBacked && cacheEnabled && encryptedPin != null,
+                  )
+                }
+              }
+                .onErr { e -> logcat { e.asLog() } }
+              passphrase.wipe()
+              return@decryptWithPassphrase
+            }
             var fastUnlockingSetupCompletion: CompletableDeferred<Unit>? = null
             runCatching {
               // update temporary passphrase cache
@@ -786,7 +837,15 @@ open class BasePGPActivity : AppCompatActivity() {
       identifiers.map { it.toString() }.contains(it)
     }
     lifecycleScope.launch(dispatcherProvider.main()) {
-      if (!repository.isPasswordProtected(identifiers) && !isError) {
+      if (needsSmartcardPin(identifiers)) {
+        // Smartcard PIN entry and retries are handled inline by the smartcard decrypt flow; just
+        // pass any cached (e.g. biometric-unlocked) PIN through for the first attempt.
+        val decryptedCachedPins = passphrases.mapValues {
+          AESEncryption.decrypt(it.value) ?: charArrayOf()
+        }
+        decryptWithPassphrase(decryptedCachedPins, identifiers)
+        decryptedCachedPins.values.forEach { it.wipe() }
+      } else if (!repository.isPasswordProtected(identifiers) && !isError) {
         // try passphraseless decryption first
         decryptWithPassphrase(mapOf("" to null), identifiers)
       } else if (!isError && !passphrases.isEmpty()) {

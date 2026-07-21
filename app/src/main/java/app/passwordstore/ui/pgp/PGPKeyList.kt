@@ -8,6 +8,7 @@ package app.passwordstore.ui.pgp
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,11 +38,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import app.passwordstore.R
 import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.crypto.PGPIdentifier.KeyId
@@ -53,6 +57,9 @@ import app.passwordstore.util.git.sshj.SshKey
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+/** Opacity applied to key rows that are not selectable in the current context. */
+private const val DISABLED_KEY_ALPHA = 0.38f
+
 @Composable
 fun KeyList(
   identifiers: ImmutableList<Pair<KeyId?, UserId?>>,
@@ -62,8 +69,11 @@ fun KeyList(
   onExportItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportPublicClick: (identifier: PGPIdentifier) -> Unit,
   modifier: Modifier = Modifier,
+  isStubKey: (identifier: PGPIdentifier) -> Boolean = { false },
+  onKeyInfoClick: (identifier: PGPIdentifier) -> Unit = {},
   onKeySelected: ((identifier: PGPIdentifier, isSelected: Boolean) -> Unit)? = null,
   singleSelection: Boolean = false,
+  isKeyEnabled: (identifier: PGPIdentifier) -> Boolean = { true },
 ) {
   var selectedId by remember {
     mutableStateOf(if (singleSelection) KeyId(SshKey.pgpLongKeyId) else KeyId(0L))
@@ -86,11 +96,14 @@ fun KeyList(
         KeyItem(
           identifier = identifier,
           isSecretKey = isSecretKey,
+          isStubKey = isStubKey,
+          onKeyInfoClick = onKeyInfoClick,
           onChangePassphraseClick = onChangePassphraseClick,
           onDeleteItemClick = onDeleteItemClick,
           onExportItemClick = onExportItemClick,
           onExportPublicClick = onExportPublicClick,
           onKeySelected = onKeySelected,
+          isKeyEnabled = isKeyEnabled,
           /* For single key selection mode: The next two arguments serve to
            * detect key selection and to recompose whole list of keys */
           selectedId = selectedId,
@@ -111,6 +124,8 @@ fun KeyList(
 private fun KeyItem(
   identifier: Pair<KeyId?, UserId?>,
   isSecretKey: (identifier: PGPIdentifier) -> Boolean,
+  isStubKey: (identifier: PGPIdentifier) -> Boolean,
+  onKeyInfoClick: (identifier: PGPIdentifier) -> Unit,
   onChangePassphraseClick: (identifier: PGPIdentifier) -> Unit,
   onDeleteItemClick: (identifier: PGPIdentifier) -> Unit,
   onExportItemClick: (identifier: PGPIdentifier) -> Unit,
@@ -119,9 +134,13 @@ private fun KeyItem(
   onKeySelected: ((identifier: PGPIdentifier, isSelected: Boolean) -> Unit)? = null,
   selectedId: KeyId,
   onSelectedChange: ((KeyId, Boolean) -> Unit)? = null,
+  isKeyEnabled: (identifier: PGPIdentifier) -> Boolean = { true },
 ) {
   var isDeleting by remember { mutableStateOf(false) }
   var keyId = identifier.first ?: throw NullPointerException()
+  // Keys that cannot serve the current purpose (e.g. a public-only key when selecting an SSH
+  // authentication key) are shown greyed out and are not selectable.
+  val enabled = isKeyEnabled(keyId)
   DeleteConfirmationDialog(
     isDeleting = isDeleting,
     isSecretKey = isSecretKey(keyId),
@@ -135,9 +154,8 @@ private fun KeyItem(
   Row(
     modifier =
       modifier
-        .padding(horizontal = SpacingLarge, vertical = SpacingSmall)
         .fillMaxWidth()
-        .conditional(onKeySelected != null) {
+        .conditional(enabled && onKeySelected != null) {
           toggleable(
             value = checked, // set value to the current checked status
             onValueChange = {
@@ -146,10 +164,31 @@ private fun KeyItem(
               checked = it
             },
           )
-        },
+        }
+        // Outside selection mode, tapping a key opens its info dialog.
+        .conditional(onKeySelected == null) { clickable { onKeyInfoClick(keyId) } }
+        .conditional(!enabled) { alpha(DISABLED_KEY_ALPHA) }
+        .padding(horizontal = SpacingLarge, vertical = SpacingSmall),
     horizontalArrangement = Arrangement.SpaceBetween,
     verticalAlignment = Alignment.CenterVertically,
   ) {
+    if (isStubKey(keyId)) {
+      Icon(
+        painter = painterResource(id = R.drawable.ic_hardware_key_24dp),
+        contentDescription = stringResource(R.string.pgp_key_hardware_indicator),
+        tint = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.size(20.dp),
+      )
+      Spacer(modifier = Modifier.width(SpacingSmall))
+    } else if (isSecretKey(keyId)) {
+      Icon(
+        painter = painterResource(id = R.drawable.ic_software_key_24dp),
+        contentDescription = stringResource(R.string.pgp_key_software_indicator),
+        tint = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.size(20.dp),
+      )
+      Spacer(modifier = Modifier.width(SpacingSmall))
+    }
     Text(
       text = identifier.second.toString(),
       modifier = Modifier.weight(1f),

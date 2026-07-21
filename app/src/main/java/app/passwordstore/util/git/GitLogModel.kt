@@ -47,7 +47,15 @@ class GitLogModel {
   // user experience.
   private val cache: MutableList<GitCommit> by unsafeLazy {
     commits()
-      .map { GitCommit(it.hash, it.shortMessage, it.authorIdent.name, it.time) }
+      .map {
+        GitCommit(
+          it.hash,
+          it.shortMessage,
+          it.authorIdent.name,
+          it.time,
+          it.getRawGpgSignature() != null,
+        )
+      }
       .toMutableList()
   }
   val size = cache.size

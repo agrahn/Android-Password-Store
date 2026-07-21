@@ -29,6 +29,10 @@
     <item quantity="one">Are you sure you want to delete the selected item?</item>
     <item quantity="other">Are you sure you want to delete the %d selected items?</item>
   </plurals>
+  <plurals name="password_delete_success">
+    <item quantity="one">Successfully deleted password item.</item>
+    <item quantity="other">Successfully deleted password items.</item>
+  </plurals>
   <string name="delete_directory_progress_text">Deleting…</string>
   <string name="move">Move</string>
   <string name="edit">Edit</string>
@@ -48,6 +52,17 @@
   <string name="git_commit_move_text">Renamed %1$s to %2$s</string>
   <string name="git_commit_move_multiple_text">Multiple items moved to %1$s</string>
   <string name="git_commit_gpg_id">PGP IDs in %1$s initialised</string>
+  <string name="git_sign_commits">Sign Git commits with the store PGP key</string>
+  <string name="git_signing_passphrase_title">PGP signing passphrase</string>
+  <string name="git_signing_card_pin_title">OpenPGP card signing PIN</string>
+  <string name="git_signing_card_title">Sign with OpenPGP card</string>
+  <string name="git_signing_confirm_message">Sign this commit with the store OpenPGP key?</string>
+  <string name="git_signing_confirm_positive">Sign</string>
+  <string name="git_signing_confirm_unsigned">Don\'t sign</string>
+  <string name="git_signing_tap_card">Present your OpenPGP smartcard to sign the commit.</string>
+  <string name="openpgp_nfc_card_comm_failed">Couldn\'t read the card. Present it again and hold it still until the operation finishes.</string>
+  <string name="git_commit_signature_signed">Signed commit</string>
+  <string name="git_commit_signature_unsigned">Unsigned commit</string>
 
   <!-- PGPHandler -->
   <string name="clipboard_copied_text">Copied to clipboard.</string>
@@ -320,6 +335,7 @@
   <string name="bottom_sheet_create_new_password">Create new password</string>
   <string name="bottom_sheet_import_pgp_key">Restore backup/import from file</string>
   <string name="bottom_sheet_create_pgp_key">Create new key</string>
+  <string name="bottom_sheet_import_pgp_key_nfc">Set up NFC smartcard</string>
   <string name="pref_debug_logging_summary">Enable debug logging (requires app restart).</string>
   <string name="pref_debug_logging_title">Debug logging</string>
   <string name="preference_default_username_summary">If the autofill function cannot retrieve the username from the contents of a password file, the value specified here will be used.</string>
@@ -355,6 +371,7 @@
   <!-- Password decryption failure -->
   <string name="password_decryption_no_decryption_key">Decryption failed. No suitable decryption key found</string>
   <string name="password_decryption_unknown_error">Unknown decryption error</string>
+  <string name="password_no_longer_exists">This password no longer exists.</string>
 
   <!-- GitException messages -->
   <string name="git_unknown_error">Unknown error</string>
@@ -412,6 +429,37 @@
   <string name="pgp_key_import_failed">Failed to import PGP key</string>
   <string name="pgp_key_import_failed_replace_message">An existing key with the following ID was found:\n\n\t%1$s\n\nDo you want to replace it?</string>
   <string name="pgp_key_import_failed_unusable_message">The given key is not usable for encryption. Please ensure that a subkey for encryption exists and that it has not expired or been revoked.</string>
+  <string name="openpgp_nfc_tap_card">Present your OpenPGP smartcard.</string>
+  <string name="openpgp_nfc_hold_card_title">Smartcard detected</string>
+  <string name="openpgp_nfc_hold_card">Keep the smartcard on your phone. Do not move it until this operation finishes.</string>
+  <string name="openpgp_nfc_unavailable">NFC is unavailable or disabled.</string>
+  <string name="openpgp_nfc_not_iso_dep">This NFC tag is not an ISO-DEP smartcard.</string>
+  <string name="openpgp_nfc_setup_title">NFC smartcard setup</string>
+  <string name="openpgp_nfc_setup_detected_title">Smartcard detected</string>
+  <string name="openpgp_nfc_setup_detected_no_url_message">The app can talk to this OpenPGP card over NFC, but the card does not provide a public-key URL. Import the matching public key or GnuPG stub key file next; the app will verify it against the card fingerprints.</string>
+  <string name="openpgp_nfc_setup_detected_fetch_failed_message">The app can talk to this OpenPGP card over NFC, but could not download the public key from the card URL. Import the matching public key or GnuPG stub key file next; the app will verify it against the card fingerprints.</string>
+  <string name="openpgp_nfc_setup_failed_title">NFC smartcard unavailable</string>
+  <string name="openpgp_nfc_no_fingerprints">The OpenPGP card did not report any key fingerprints.</string>
+  <string name="openpgp_nfc_url_no_openpgp_key">The card URL did not return transferable OpenPGP key data.</string>
+  <string name="openpgp_nfc_fingerprint_mismatch">The imported key does not match the fingerprints reported by the OpenPGP card.</string>
+  <string name="openpgp_card_pin_title">OpenPGP card PIN</string>
+  <string name="openpgp_card_pin_hint">PIN</string>
+  <plurals name="openpgp_card_pin_min_length">
+    <item quantity="one">At least %d character</item>
+    <item quantity="other">At least %d characters</item>
+  </plurals>
+  <string name="openpgp_card_wrong_pin">Wrong OpenPGP card PIN</string>
+  <plurals name="openpgp_card_wrong_pin_remaining">
+    <item quantity="one">Wrong PIN. %d attempt remaining before the card is blocked.</item>
+    <item quantity="other">Wrong PIN. %d attempts remaining before the card is blocked.</item>
+  </plurals>
+  <string name="openpgp_card_pin_blocked">The OpenPGP card signing PIN is blocked. Reset it with an external tool before signing again.</string>
+  <string name="cache_openpgp_card_pin_until_screen_off">Keep PIN until screen-off</string>
+  <string name="openpgp_nfc_decrypt_title">Decrypt with OpenPGP card</string>
+  <string name="openpgp_nfc_ssh_title">SSH authentication with OpenPGP card</string>
+  <string name="openpgp_nfc_remove_card_title">Remove your card</string>
+  <string name="openpgp_nfc_remove_card_message">Authentication succeeded. Lift your OpenPGP card off the phone to continue.</string>
+  <string name="openpgp_nfc_decrypt_failed_title">OpenPGP card decryption failed</string>
   <string name="pgp_key_import_skipped_existing">Key already exists (replacement skipped)</string>
   <plurals name="pgp_key_import_success_title">
     <item quantity="one">PGP key successfully imported</item>
@@ -452,6 +500,11 @@
   <string name="pref_category_pgp_title">PGP settings</string>
   <string name="pwgen_some_error_occurred">Some error occurred.</string>
   <string name="git_run_gc_job">Run garbage collection job</string>
+  <string name="git_remove_lock_file">Remove stale Git lock file</string>
+  <string name="git_remove_lock_file_success">Removed stale Git lock file.</string>
+  <string name="git_remove_lock_file_missing">No stale Git lock file was found.</string>
+  <string name="git_remove_lock_file_failed">Failed to remove stale Git lock file.</string>
+  <string name="git_index_locked_error">A previous Git operation left a lock file behind. Remove the stale Git lock file from the Git configuration, then try again.</string>
   <string name="activity_label_pgp_key_manager">PGP key manager</string>
   <string name="activity_label_pgp_key_select">Select one or more PGP keys</string>
   <string name="activity_label_pgp_key_single_select">Choose a PGP key</string>
@@ -465,6 +518,17 @@
   <string name="pgp_new_passphrase_repeated">Repeat new passphrase</string>
   <string name="git_utils_reset_remote_branch_title">Remote branch name</string>
   <string name="pgp_key_manager_no_keys_guidance">Add a key using the “+” button below</string>
+  <string name="pgp_key_hardware_indicator">Hardware-backed key</string>
+  <string name="pgp_key_software_indicator">Software-backed key</string>
+  <string name="pgp_key_info_title">Key information</string>
+  <string name="pgp_key_info_user_id">User ID: %1$s</string>
+  <string name="pgp_key_info_email">Email: %1$s</string>
+  <string name="pgp_key_info_key_id">Key ID: %1$s</string>
+  <string name="pgp_key_info_fingerprint">Fingerprint: %1$s</string>
+  <string name="pgp_key_info_type">Type: %1$s</string>
+  <string name="pgp_key_info_type_secret">Software-backed</string>
+  <string name="pgp_key_info_type_public">Public key</string>
+  <string name="pgp_key_info_type_hardware">Hardware-backed (smartcard)</string>
   <string name="no_keys_selected_dialog_title">No key selected</string>
   <string name="no_keys_imported_dialog_title">No keys available</string>
   <string name="no_keys_imported_dialog_message">No PGP keys have been added to the app yet. Import a key file or create a new key in the PGP key manager.</string>
