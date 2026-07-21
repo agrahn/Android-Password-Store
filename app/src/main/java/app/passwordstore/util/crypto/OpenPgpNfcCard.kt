@@ -213,22 +213,6 @@ class OpenPgpNfcCard(
     return response
   }
 
-  @Suppress("unused")
-  private fun transceiveExtended(ins: Int, p1: Int, p2: Int, payload: ByteArray): ByteArray {
-    val lc = payload.size
-    val command =
-      byteArrayOf(
-        0x00,
-        ins.toByte(),
-        p1.toByte(),
-        p2.toByte(),
-        0x00,
-        ((lc ushr 8) and 0xff).toByte(),
-        (lc and 0xff).toByte(),
-      ) + payload + byteArrayOf(0x00, 0x00)
-    return transceive(command)
-  }
-
   companion object {
     private const val MAX_APDU_NC = 254
 
