@@ -24,6 +24,11 @@ Utilizing the standard `pass` file structure, passkey data is stored on the firs
 
 ## How-To: Transfer a PGP key to Password Store securely
 
+### From an OpenPGP smartcard
+
+1. Go to `Settings > PGP settings > Key manager > +` and select `Set up NFC smartcard`
+2. Present your smartcard behind the phone on the NFC sensor and hold it there
+
 ### From GPG keyring
 ````bash
 gpg --armor --gen-random 1 24 # generate a strong random password; use it in the next step
