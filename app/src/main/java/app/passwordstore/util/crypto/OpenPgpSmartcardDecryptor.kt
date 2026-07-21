@@ -57,7 +57,10 @@ class OpenPgpSmartcardDecryptor @Inject constructor() {
     val anonymousMatches = encryptedDataPackets.filter {
       it.keyIdentifier.isWildcard || it.keyIdentifier.keyId == 0L
     }
-    val candidates = (explicitMatches + anonymousMatches).distinct()
+    // Each candidate triggers a card decipher operation. Wildcard-recipient packets (key id 0) all
+    // match, so a crafted message could enqueue arbitrarily many; cap the attempts to bound the
+    // work a hostile message can push onto the card.
+    val candidates = (explicitMatches + anonymousMatches).distinct().take(MAX_DECRYPT_CANDIDATES)
     if (candidates.isEmpty()) throw PGPException("Message is not encrypted to this OpenPGP card")
 
     val decryptorFactory = OpenPgpCardDecryptorFactory(card)
@@ -179,5 +182,10 @@ class OpenPgpSmartcardDecryptor @Inject constructor() {
       seipd: SymmetricEncIntegrityPacket,
       sessionKey: PGPSessionKey,
     ): PGPDataDecryptor = contentDecryptorFactory.createDataDecryptor(seipd, sessionKey)
+  }
+
+  private companion object {
+    // Upper bound on the number of PKESK packets we will try to decrypt on the card per message.
+    private const val MAX_DECRYPT_CANDIDATES = 16
   }
 }
