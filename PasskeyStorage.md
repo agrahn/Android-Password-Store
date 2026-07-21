@@ -16,19 +16,19 @@ Passkey credentials are first serialised as CBOR (the top-level structure is a m
 {
   "id": array,              # credential ID — array (major type 4) of unsigned integers (0..255), 32 items
   "rp": {                   # relying party info — map (major type 5)
-    "id": tstr,             #   RP id — text string (major type 3), e. g. "example.com"
-    "name": tstr / null     #   RP name — text string or null (may be missing)
+    "id": tstr,             #   RP ID — text string (major type 3), e. g. "example.com"
+    "name": tstr / null     #   RP name (optional) — text string, e. g. "Example Ltd.", or null
   },
   "user": {                 # credential owner info — map (major type 5)
     "id": array,            #   user handle — array (major type 4) of unsigned integers (0..255), variable length
-    "name": tstr,           #   login name — text string
-    "display_name": tstr / null  #   display name — text string or null (may be missing)
+    "name": tstr,           #   login name — text string, e. g. "alice", "alice@example.com"
+    "display_name": tstr / null  #   display name (optional) — text string, e. g. "Alice Doe", or null
   },
-  "sign_count": uint,       # signature counter — unsigned integer (major type 0); APS keeps at 0
+  "sign_count": uint,       # signature counter — unsigned integer (major type 0); APS keeps at 0 to allow for cloned passkeys
   "alg": int,               # COSE algorithm identifier — integer (negative values use major type 1), ES256 = -7, Ed25519 = -8, RS256 = -257
-  "private_key": array,     # raw private key bytes — array (major type 4) of unsigned integers (0..255); see 'Key data in `private_key`'
+  "private_key": array,     # raw private key bytes — array (major type 4) of unsigned integers (0..255); see 'Key data in private_key'
   "created": uint,          # seconds since Epoch — unsigned integer (major type 0)
-  "zone": tstr              # time zone id — text string (major type 3)
+  "zone": tstr              # time zone ID — text string (major type 3)
 }
 ```
 

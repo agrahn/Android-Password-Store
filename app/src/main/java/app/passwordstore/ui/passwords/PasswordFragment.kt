@@ -94,6 +94,9 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
     binding.fabSync.setOnClickListener {
       if (!PasswordRepository.isInitialized) {
         MaterialAlertDialogBuilder(requireContext())
+          .setCancelable(false)
+          .setTitle(R.string.error)
+          .setIcon(R.drawable.ic_crossmark_red_24dp)
           .setMessage(R.string.creation_dialog_text)
           .setPositiveButton(R.string.dialog_ok, null)
           .show()
