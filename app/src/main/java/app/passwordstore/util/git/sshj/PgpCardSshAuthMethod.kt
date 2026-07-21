@@ -10,9 +10,6 @@ import app.passwordstore.crypto.PGPIdentifier.KeyId
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.crypto.CardReader
 import app.passwordstore.util.crypto.OpenPgpCardPrompt
-import app.passwordstore.util.extensions.wipe
-import com.github.michaelbull.result.get
-import com.github.michaelbull.result.runCatching
 import com.hierynomus.sshj.key.KeyAlgorithm
 import java.io.IOException
 import java.math.BigInteger
@@ -161,108 +158,57 @@ class CardSshSigner(
   private fun driveCard(input: ByteArray): ByteArray {
     val prompt = OpenPgpCardPrompt(activity, R.string.openpgp_nfc_ssh_title, dispatcherProvider)
     var reader: CardReader? = null
-    var pin: CharArray? = null
     var readerHandedOff = false
     try {
-      val cacheKey = "ssh:${primaryKeyId.id}"
       val activeReader =
         runBlocking { prompt.createReader() }
           ?: throw IOException(activity.getString(R.string.openpgp_nfc_unavailable))
       reader = activeReader
-      val presentMessage = activity.getString(R.string.openpgp_nfc_tap_card)
-      var pinFromCache = false
-      var cachePin = false
-      var pinErrorMessage: String? = null
-      var cardMessage = presentMessage
-      prompt.readCachedPin(cacheKey)?.let {
-        pin = it
-        pinFromCache = true
-      }
-      while (true) {
-        if (pin == null) {
-          runBlocking { prompt.dismissDialog() }
-          val entry =
-            runBlocking {
-              prompt.askSecret(
-                titleRes = R.string.openpgp_card_pin_title,
-                hintRes = R.string.openpgp_card_pin_hint,
-                showCacheOption = true,
-                errorMessage = pinErrorMessage,
-                minLength = OpenPgpCardPrompt.MIN_PIN_LENGTH,
-              )
-            } ?: throw SSHException(DisconnectReason.AUTH_CANCELLED_BY_USER)
-          pin = entry.secret
-          cachePin = entry.cache
-          pinFromCache = false
-          pinErrorMessage = null
-          cardMessage = presentMessage
-        }
-        val currentPin = requireNotNull(pin) { "PIN must be set before contacting the card" }
-        // PW1 in mode 0x82 authorises INTERNAL AUTHENTICATE (the auth key slot), unlike PSO:CDS
-        // (mode 0x81) used for commit signing.
-        val attempt = runBlocking {
-          prompt.attempt(activeReader, cardMessage) { card ->
+      val outcome =
+        runBlocking {
+          prompt.runWithPin(
+            reader = activeReader,
+            cacheKey = "ssh:${primaryKeyId.id}",
+            pinTitleRes = R.string.openpgp_card_pin_title,
+            pinHintRes = R.string.openpgp_card_pin_hint,
+            identityLabel = null,
+            // PW1 in mode 0x82 authorises INTERNAL AUTHENTICATE (the auth key slot), unlike PSO:CDS
+            // (mode 0x81) used for commit signing.
+            pinMode = OpenPgpCardPrompt.PinMode.USER,
+            presentMessage = activity.getString(R.string.openpgp_nfc_tap_card),
+            commFailedMessage = activity.getString(R.string.openpgp_nfc_card_comm_failed),
+          ) { card, currentPin ->
             card.verifyUserPin(currentPin)
             card.internalAuthenticate(input)
           }
         }
-        when (attempt) {
-          is OpenPgpCardPrompt.Attempt.Success -> {
-            runBlocking { prompt.dismissDialog() }
-            if (!pinFromCache) prompt.storeCachedPin(cacheKey, currentPin, cachePin)
-            readerHandedOff = true
-            val signature = attempt.value
-            // Block until the card is lifted so reader mode stays up (keeping the activity
-            // foreground) and the platform never dispatches the card's NDEF URL once the git push
-            // proceeds and this activity moves on.
-            runBlocking { prompt.awaitCardRemoval(attempt.card, activeReader) }
-            return signature
-          }
-          OpenPgpCardPrompt.Attempt.Cancelled -> {
-            readerHandedOff = true
-            prompt.releaseReaderWhenCardRemoved(null, activeReader)
-            throw SSHException(DisconnectReason.AUTH_CANCELLED_BY_USER)
-          }
-          is OpenPgpCardPrompt.Attempt.Error -> {
-            val e = attempt.error
-            if (OpenPgpCardPrompt.isSmartcardPinFailure(e)) {
-              prompt.clearCachedPin(cacheKey)
-              pin?.wipe()
-              pin = null
-              pinFromCache = false
-              val remaining =
-                OpenPgpCardPrompt.smartcardPinRetriesRemaining(e)
-                  ?: runCatching { attempt.card?.readUserPinRetries() }.get()
-              if (remaining == 0) {
-                readerHandedOff = true
-                prompt.releaseReaderWhenCardRemoved(attempt.card, activeReader)
-                throw SSHException(activity.getString(R.string.openpgp_card_pin_blocked))
-              }
-              runCatching { attempt.card?.close() }
-              pinErrorMessage =
-                if (remaining != null) {
-                  activity.resources.getQuantityString(
-                    R.plurals.openpgp_card_wrong_pin_remaining,
-                    remaining,
-                    remaining,
-                  )
-                } else {
-                  activity.getString(R.string.openpgp_card_wrong_pin)
-                }
-            } else if (OpenPgpCardPrompt.isRetryableCardError(e)) {
-              // Keep the PIN, ask the user to present the card again.
-              runCatching { attempt.card?.close() }
-              cardMessage = activity.getString(R.string.openpgp_nfc_card_comm_failed)
-            } else {
-              readerHandedOff = true
-              prompt.releaseReaderWhenCardRemoved(attempt.card, activeReader)
-              throw SSHException(e?.message ?: "OpenPGP card authentication failed")
-            }
-          }
+      when (outcome) {
+        is OpenPgpCardPrompt.CardOutcome.Success -> {
+          readerHandedOff = true
+          val signature = outcome.value
+          // Block until the card is lifted so reader mode stays up (keeping the activity
+          // foreground) and the platform never dispatches the card's NDEF URL once the git push
+          // proceeds and this activity moves on.
+          runBlocking { prompt.awaitCardRemoval(outcome.card, activeReader) }
+          return signature
+        }
+        OpenPgpCardPrompt.CardOutcome.Cancelled -> {
+          readerHandedOff = true
+          prompt.releaseReaderWhenCardRemoved(null, activeReader)
+          throw SSHException(DisconnectReason.AUTH_CANCELLED_BY_USER)
+        }
+        is OpenPgpCardPrompt.CardOutcome.Blocked -> {
+          readerHandedOff = true
+          prompt.releaseReaderWhenCardRemoved(outcome.card, activeReader)
+          throw SSHException(activity.getString(R.string.openpgp_card_pin_blocked))
+        }
+        is OpenPgpCardPrompt.CardOutcome.Failed -> {
+          readerHandedOff = true
+          prompt.releaseReaderWhenCardRemoved(outcome.card, activeReader)
+          throw SSHException(outcome.error.message ?: "OpenPGP card authentication failed")
         }
       }
     } finally {
-      pin?.wipe()
       runBlocking { prompt.dismissDialog() }
       if (!readerHandedOff && reader != null) prompt.releaseReaderWhenCardRemoved(null, reader)
     }

@@ -22,6 +22,7 @@ import app.passwordstore.util.extensions.hideKeyboard
 import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.PreferenceKeys
+import com.github.michaelbull.result.get
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -126,6 +127,140 @@ class OpenPgpCardPrompt(
       Attempt.Error(e, null)
     }
   }
+
+  /** Which PW1 access slot a wrong-PIN retry counter should be read from. */
+  enum class PinMode {
+    /** PW1 mode 0x82 (decryption / INTERNAL AUTHENTICATE). */
+    USER,
+    /** PW1 mode 0x81 (PSO:CDS commit signing). */
+    SIGNATURE,
+  }
+
+  /** Terminal outcome of [runWithPin]. Any [card] handed back is left open for the caller. */
+  sealed interface CardOutcome<out T> {
+    class Success<T>(val value: T, val card: OpenPgpNfcCard) : CardOutcome<T>
+
+    data object Cancelled : CardOutcome<Nothing>
+
+    class Blocked(val card: OpenPgpNfcCard?) : CardOutcome<Nothing>
+
+    class Failed(val error: Throwable, val card: OpenPgpNfcCard?) : CardOutcome<Nothing>
+  }
+
+  /**
+   * Runs a full smartcard PIN-and-retry session against the already-open [reader], shared by
+   * decryption, commit signing and SSH authentication.
+   *
+   * The PIN is seeded from [seedPin] (e.g. a biometric-unlocked value) or the screen-off cache
+   * under [cacheKey], otherwise the user is prompted (with the OpenPGP-mandated [MIN_PIN_LENGTH]
+   * minimum). [block] verifies the PIN and performs the card operation via [attempt]. On a rejected
+   * PIN the PIN is wiped and dropped from the cache, and the card's own remaining-attempts counter
+   * is consulted -- [pinMode] selects the slot -- to either re-prompt inline or report the card as
+   * [CardOutcome.Blocked]. A transient transport error re-presents the card with
+   * [commFailedMessage]. The PIN is cached only once [block] fully succeeds, so a rejected PIN is
+   * never persisted.
+   *
+   * The present-card dialog is dismissed on success and the PIN is always wiped before returning.
+   * Reader-mode release and turning each [CardOutcome] into a user-facing action stay with the
+   * caller, since those differ per operation.
+   */
+  suspend fun <T> runWithPin(
+    reader: CardReader,
+    cacheKey: String,
+    @StringRes pinTitleRes: Int,
+    @StringRes pinHintRes: Int,
+    identityLabel: String?,
+    pinMode: PinMode,
+    presentMessage: String,
+    commFailedMessage: String,
+    seedPin: CharArray? = null,
+    block: (OpenPgpNfcCard, CharArray) -> T,
+  ): CardOutcome<T> {
+    var pin: CharArray? = seedPin?.takeIf { it.isNotEmpty() } ?: readCachedPin(cacheKey)
+    var pinFromCache = pin != null
+    var cachePin = false
+    var pinErrorMessage: String? = null
+    var cardMessage = presentMessage
+    try {
+      while (true) {
+        if (pin == null) {
+          // Take the card dialog down while the PIN dialog is up so they don't stack.
+          dismissDialog()
+          val entry =
+            askSecret(
+              titleRes = pinTitleRes,
+              hintRes = pinHintRes,
+              showCacheOption = true,
+              errorMessage = pinErrorMessage,
+              minLength = MIN_PIN_LENGTH,
+              identityLabel = identityLabel,
+            ) ?: return CardOutcome.Cancelled
+          pin = entry.secret
+          cachePin = entry.cache
+          pinFromCache = false
+          pinErrorMessage = null
+          cardMessage = presentMessage
+        }
+        val currentPin = requireNotNull(pin) { "PIN must be set before contacting the card" }
+        when (val attempt = attempt(reader, cardMessage) { card -> block(card, currentPin) }) {
+          is Attempt.Success -> {
+            dismissDialog()
+            // Cache the PIN only now that the whole operation has succeeded.
+            if (!pinFromCache) storeCachedPin(cacheKey, currentPin, cachePin)
+            return CardOutcome.Success(attempt.value, attempt.card)
+          }
+          Attempt.Cancelled -> return CardOutcome.Cancelled
+          is Attempt.Error -> {
+            val e = attempt.error
+            if (isSmartcardPinFailure(e)) {
+              // A rejected PIN must never be kept in the cache.
+              clearCachedPin(cacheKey)
+              pin?.wipe()
+              pin = null
+              pinFromCache = false
+              // Trust the card's own retry counter; if the status word omitted it, ask the card
+              // directly with a non-destructive status check so we learn whether it is now blocked.
+              val remaining =
+                smartcardPinRetriesRemaining(e)
+                  ?: withContext(dispatcherProvider.io()) {
+                    runCatching { readPinRetries(attempt.card, pinMode) }.get()
+                  }
+              if (remaining == 0) return CardOutcome.Blocked(attempt.card)
+              runCatching { attempt.card?.close() }
+              pinErrorMessage = wrongPinMessage(remaining)
+              continue
+            }
+            // Any transient NFC/card hiccup never reaches the PIN counter: re-present the card.
+            if (isRetryableCardError(e)) {
+              runCatching { attempt.card?.close() }
+              cardMessage = commFailedMessage
+              continue
+            }
+            return CardOutcome.Failed(e, attempt.card)
+          }
+        }
+      }
+    } finally {
+      pin?.wipe()
+    }
+  }
+
+  private fun readPinRetries(card: OpenPgpNfcCard?, pinMode: PinMode): Int? =
+    when (pinMode) {
+      PinMode.USER -> card?.readUserPinRetries()
+      PinMode.SIGNATURE -> card?.readSignaturePinRetries()
+    }
+
+  private fun wrongPinMessage(remaining: Int?): String =
+    if (remaining != null) {
+      activity.resources.getQuantityString(
+        R.plurals.openpgp_card_wrong_pin_remaining,
+        remaining,
+        remaining,
+      )
+    } else {
+      activity.getString(R.string.openpgp_card_wrong_pin)
+    }
 
   /** Creates the card dialog, or just re-labels it if it is already showing. Main thread. */
   private fun showOrUpdateDialog(message: String) {

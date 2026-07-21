@@ -172,11 +172,11 @@ class OpenPgpCommitSigner(
       SigningChoice.SIGN -> {}
     }
     // The shared prompt keeps reader mode enabled for the whole operation, shows the reused
-    // present/hold-card dialog, and runs the card exchange on the card's own thread. Any smartcard
-    // failure is reported to the user in a dialog (never a snackbar) by the outer catch below.
+    // present/hold-card dialog, and runs the card exchange on the card's own thread via
+    // OpenPgpCardPrompt.runWithPin. Any smartcard failure is reported to the user in a dialog
+    // (never a snackbar) by the outer catch below.
     val prompt = OpenPgpCardPrompt(activity, R.string.git_signing_card_title, dispatcherProvider)
     var reader: CardReader? = null
-    var pin: CharArray? = null
     // Reader mode is released via the removal watcher (which disables it once the card leaves) on
     // every terminal outcome — success or failure — so the finally only closes it if we exit
     // unexpectedly.
@@ -190,42 +190,21 @@ class OpenPgpCommitSigner(
         runBlocking { prompt.createReader() }
           ?: throw IOException(activity.getString(R.string.openpgp_nfc_unavailable))
       reader = activeReader
-      val presentMessage = activity.getString(R.string.git_signing_tap_card)
-      var pinFromCache = false
-      var cachePin = false
-      var pinErrorMessage: String? = null
-      var cardMessage = presentMessage
-      prompt.readCachedPin(cacheKey)?.let {
-        pin = it
-        pinFromCache = true
-      }
-      while (true) {
-        if (pin == null) {
-          // Take the card dialog down while the PIN dialog is up so they don't stack.
-          runBlocking { prompt.dismissDialog() }
-          val entry =
-            runBlocking {
-              prompt.askSecret(
-                titleRes = R.string.git_signing_card_pin_title,
-                hintRes = R.string.openpgp_card_pin_hint,
-                showCacheOption = true,
-                errorMessage = pinErrorMessage,
-                minLength = OpenPgpCardPrompt.MIN_PIN_LENGTH,
-                identityLabel = identityLabel(key),
-              )
-            } ?: throw CanceledException(activity.getString(R.string.dialog_cancel))
-          pin = entry.secret
-          cachePin = entry.cache
-          pinFromCache = false
-          pinErrorMessage = null
-          cardMessage = presentMessage
-        }
-        val currentPin = requireNotNull(pin) { "PIN must be set before contacting the card" }
-        // The whole card exchange (applet select → verify → sign) runs on a single thread with no
-        // hop, so a genuine wrong PIN reliably comes back as a card status word (e.g. 63 Cx) rather
-        // than a transceive error caused by racing the NFC presence check.
-        val attempt = runBlocking {
-          prompt.attempt(activeReader, cardMessage) { card ->
+      val outcome =
+        runBlocking {
+          prompt.runWithPin(
+            reader = activeReader,
+            cacheKey = cacheKey,
+            pinTitleRes = R.string.git_signing_card_pin_title,
+            pinHintRes = R.string.openpgp_card_pin_hint,
+            identityLabel = identityLabel(key),
+            pinMode = OpenPgpCardPrompt.PinMode.SIGNATURE,
+            presentMessage = activity.getString(R.string.git_signing_tap_card),
+            commFailedMessage = activity.getString(R.string.openpgp_nfc_card_comm_failed),
+          ) { card, currentPin ->
+            // The whole card exchange (applet select -> verify -> sign) runs on a single thread
+            // with no hop, so a genuine wrong PIN reliably comes back as a card status word (e.g.
+            // 63 Cx) rather than a transceive error caused by racing the NFC presence check.
             card.verifySignaturePin(currentPin)
             val privateKey = PGPPrivateKey(publicKey.keyID, publicKey.publicKeyPacket, null)
             buildDetachedSignature(
@@ -236,71 +215,30 @@ class OpenPgpCommitSigner(
             )
           }
         }
-        when (attempt) {
-          is OpenPgpCardPrompt.Attempt.Success -> {
-            runBlocking { prompt.dismissDialog() }
-            // Cache the PIN only now that the whole signing operation has succeeded, so a rejected
-            // PIN is never persisted.
-            if (!pinFromCache) prompt.storeCachedPin(cacheKey, currentPin, cachePin)
-            // Keep reader mode on until the card is physically lifted so the platform never
-            // dispatches its NDEF URL while it is still present (e.g. while the success dialog is
-            // up).
-            readerHandedOff = true
-            prompt.releaseReaderWhenCardRemoved(attempt.card, activeReader)
-            return attempt.value
-          }
-          OpenPgpCardPrompt.Attempt.Cancelled -> {
-            readerHandedOff = true
-            prompt.releaseReaderWhenCardRemoved(null, activeReader)
-            throw CanceledException(activity.getString(R.string.dialog_cancel))
-          }
-          is OpenPgpCardPrompt.Attempt.Error -> {
-            val e = attempt.error
-            if (OpenPgpCardPrompt.isSmartcardPinFailure(e)) {
-              // A rejected PIN must never be kept in the cache.
-              prompt.clearCachedPin(cacheKey)
-              pin?.wipe()
-              pin = null
-              pinFromCache = false
-              // Trust the card's own retry counter rather than tracking attempts in the app; if it
-              // didn't put the count in 63 Cx, ask it directly with a non-destructive status check
-              // so we learn the real state (in particular whether the card is now blocked) even
-              // after a status word that omits it (69 82, a 6A 80 length/format rejection, …).
-              val remaining =
-                OpenPgpCardPrompt.smartcardPinRetriesRemaining(e)
-                  ?: runCatching { attempt.card?.readSignaturePinRetries() }.get()
-              if (remaining == 0) {
-                // Blocked: hold reader mode until the card is lifted, then abort — the outer catch
-                // reports it in a dialog. Stop asking for a PIN.
-                readerHandedOff = true
-                prompt.releaseReaderWhenCardRemoved(attempt.card, activeReader)
-                throw PGPException(activity.getString(R.string.openpgp_card_pin_blocked))
-              }
-              runCatching { attempt.card?.close() }
-              pinErrorMessage =
-                if (remaining != null) {
-                  activity.resources.getQuantityString(
-                    R.plurals.openpgp_card_wrong_pin_remaining,
-                    remaining,
-                    remaining,
-                  )
-                } else {
-                  activity.getString(R.string.openpgp_card_wrong_pin)
-                }
-              continue
-            }
-            // Any other NFC/card hiccup (tag lost mid-exchange, transient 6A 80, …) never reaches
-            // the card's PIN counter: let the user present the card again.
-            if (OpenPgpCardPrompt.isRetryableCardError(e)) {
-              runCatching { attempt.card?.close() }
-              cardMessage = activity.getString(R.string.openpgp_nfc_card_comm_failed)
-              continue
-            }
-            // Any other terminal error: hold reader mode until the card is lifted, then propagate.
-            readerHandedOff = true
-            prompt.releaseReaderWhenCardRemoved(attempt.card, activeReader)
-            throw e
-          }
+      when (outcome) {
+        is OpenPgpCardPrompt.CardOutcome.Success -> {
+          // Keep reader mode on until the card is physically lifted, so the platform never
+          // dispatches its NDEF URL while it is still present (e.g. while the success dialog is
+          // up).
+          readerHandedOff = true
+          prompt.releaseReaderWhenCardRemoved(outcome.card, activeReader)
+          return outcome.value
+        }
+        OpenPgpCardPrompt.CardOutcome.Cancelled -> {
+          readerHandedOff = true
+          prompt.releaseReaderWhenCardRemoved(null, activeReader)
+          throw CanceledException(activity.getString(R.string.dialog_cancel))
+        }
+        is OpenPgpCardPrompt.CardOutcome.Blocked -> {
+          // Hold reader mode until the card is lifted, then abort - the outer catch reports it.
+          readerHandedOff = true
+          prompt.releaseReaderWhenCardRemoved(outcome.card, activeReader)
+          throw PGPException(activity.getString(R.string.openpgp_card_pin_blocked))
+        }
+        is OpenPgpCardPrompt.CardOutcome.Failed -> {
+          readerHandedOff = true
+          prompt.releaseReaderWhenCardRemoved(outcome.card, activeReader)
+          throw outcome.error
         }
       }
     } catch (e: Throwable) {
@@ -316,7 +254,6 @@ class OpenPgpCommitSigner(
       }
       throw SmartcardOperationHandledException(e.message)
     } finally {
-      pin?.wipe()
       runBlocking { prompt.dismissDialog() }
       if (!readerHandedOff && reader != null) prompt.releaseReaderWhenCardRemoved(null, reader)
     }
