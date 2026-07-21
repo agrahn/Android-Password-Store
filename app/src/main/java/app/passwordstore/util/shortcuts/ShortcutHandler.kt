@@ -82,17 +82,17 @@ class ShortcutHandler @Inject constructor(@ApplicationContext val context: Conte
    */
   fun pruneDynamicShortcuts() {
     runCatching {
-        val shortcutManager: ShortcutManager = context.getSystemService() ?: return
-        val staleIds =
-          shortcutManager.dynamicShortcuts.mapNotNull { shortcut ->
-            val path = shortcut.intent?.getStringExtra(BasePGPActivity.EXTRA_FILE_PATH)
-            if (path != null && !File(path).exists()) shortcut.id else null
-          }
-        if (staleIds.isNotEmpty()) {
-          logcat { "Pruning ${staleIds.size} stale dynamic shortcut(s)" }
-          shortcutManager.removeDynamicShortcuts(staleIds)
+      val shortcutManager: ShortcutManager = context.getSystemService() ?: return
+      val staleIds =
+        shortcutManager.dynamicShortcuts.mapNotNull { shortcut ->
+          val path = shortcut.intent?.getStringExtra(BasePGPActivity.EXTRA_FILE_PATH)
+          if (path != null && !File(path).exists()) shortcut.id else null
         }
+      if (staleIds.isNotEmpty()) {
+        logcat { "Pruning ${staleIds.size} stale dynamic shortcut(s)" }
+        shortcutManager.removeDynamicShortcuts(staleIds)
       }
+    }
       .onErr { logcat { "Failed to prune dynamic shortcuts: ${it.message}" } }
   }
 

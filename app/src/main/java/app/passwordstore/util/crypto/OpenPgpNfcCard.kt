@@ -117,7 +117,8 @@ class OpenPgpNfcCard(
    * SSH public-key authentication.
    */
   fun internalAuthenticate(input: ByteArray): ByteArray {
-    // Le = 0 → request up to 256 bytes; longer responses (e.g. RSA) are pulled in via 61xx chaining.
+    // Le = 0 → request up to 256 bytes; longer responses (e.g. RSA) are pulled in via 61xx
+    // chaining.
     return transceiveData(0x88, 0x00, 0x00, input, expectedLength = 0)
   }
 
@@ -134,13 +135,12 @@ class OpenPgpNfcCard(
    * the card has physically left the field. Uses a short transceive timeout so a removed card is
    * reported quickly instead of blocking for the (long) signing timeout before throwing.
    */
-  fun isPresent(): Boolean =
-    runCatching {
-        isoDep.timeout = PRESENCE_PROBE_TIMEOUT_MS
-        isoDep.transceive(GET_APPLICATION_RELATED_DATA)
-        true
-      }
-      .getOr(false)
+  fun isPresent(): Boolean = runCatching {
+    isoDep.timeout = PRESENCE_PROBE_TIMEOUT_MS
+    isoDep.transceive(GET_APPLICATION_RELATED_DATA)
+    true
+  }
+    .getOr(false)
 
   override fun close() {
     runCatching { isoDep.close() }

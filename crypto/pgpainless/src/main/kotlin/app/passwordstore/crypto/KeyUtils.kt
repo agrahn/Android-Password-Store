@@ -25,8 +25,9 @@ import org.pgpainless.key.info.KeyRingInfo
 public object KeyUtils {
 
   /**
-   * Key-usage flags that make a (sub)key usable for authentication, in preference order: a dedicated
-   * Authentication subkey first, then a Signing subkey, then the primary Certification key.
+   * Key-usage flags that make a (sub)key usable for authentication, in preference order: a
+   * dedicated Authentication subkey first, then a Signing subkey, then the primary Certification
+   * key.
    */
   private val AUTH_CAPABILITY_RANKING =
     listOf(KeyFlags.AUTHENTICATION, KeyFlags.SIGN_DATA, KeyFlags.CERTIFY_OTHER)
@@ -192,15 +193,14 @@ public object KeyUtils {
    * empty private material) — in both cases the key is still authentication-capable (the card, or a
    * private key held elsewhere, does the actual signing).
    */
-  public fun hasAuthKey(cert: OpenPGPCertificate): Boolean =
-    AUTH_CAPABILITY_RANKING.any { flag ->
-      cert.getComponentKeysWithFlag(Date(), flag).isNotEmpty()
-    }
+  public fun hasAuthKey(cert: OpenPGPCertificate): Boolean = AUTH_CAPABILITY_RANKING.any { flag ->
+    cert.getComponentKeysWithFlag(Date(), flag).isNotEmpty()
+  }
 
   /**
    * Tests if the given [PGPKey] provides an authentication-capable secret subkey whose private key
-   * is present locally (i.e. can sign without a smartcard). Used to decide whether a key can be used
-   * for SSH authentication on its own.
+   * is present locally (i.e. can sign without a smartcard). Used to decide whether a key can be
+   * used for SSH authentication on its own.
    */
   public fun hasPrivateAuthKey(key: PGPKey): Boolean =
     tryParseCertificateOrKey(key)?.let { hasPrivateAuthKey(it) } ?: false
@@ -231,13 +231,14 @@ public object KeyUtils {
    * happens later, on the card.
    */
   public fun extractPublicAuthKey(cert: OpenPGPCertificate): PublicKey? {
-    // A and S subkeys as well as the primary C key are equally suitable for authentication; pick the
+    // A and S subkeys as well as the primary C key are equally suitable for authentication; pick
+    // the
     // newest key matching one of the capabilities in the given ranking order.
     val authKey =
       AUTH_CAPABILITY_RANKING.firstNotNullOfOrNull { flag ->
-        cert
-          .getComponentKeysWithFlag(Date(), flag)
-          .maxByOrNull { it.getCreationTime() } // newest first
+        cert.getComponentKeysWithFlag(Date(), flag).maxByOrNull {
+          it.getCreationTime()
+        } // newest first
       } ?: return null
 
     return JcaPGPKeyConverter()

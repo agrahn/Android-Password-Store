@@ -129,13 +129,13 @@ class OpenPgpCommitSigner(
     }
     val passphrase =
       runBlocking {
-          OpenPgpCardPrompt(activity, R.string.git_signing_passphrase_title, dispatcherProvider)
-            .askSecret(
-              titleRes = R.string.git_signing_passphrase_title,
-              hintRes = R.string.ssh_keygen_passphrase,
-              identityLabel = identityLabel(key),
-            )
-        }
+        OpenPgpCardPrompt(activity, R.string.git_signing_passphrase_title, dispatcherProvider)
+          .askSecret(
+            titleRes = R.string.git_signing_passphrase_title,
+            hintRes = R.string.ssh_keygen_passphrase,
+            identityLabel = identityLabel(key),
+          )
+      }
         ?.secret ?: throw CanceledException(activity.getString(R.string.dialog_cancel))
     try {
       val decryptor =
@@ -190,31 +190,30 @@ class OpenPgpCommitSigner(
         runBlocking { prompt.createReader() }
           ?: throw IOException(activity.getString(R.string.openpgp_nfc_unavailable))
       reader = activeReader
-      val outcome =
-        runBlocking {
-          prompt.runWithPin(
-            reader = activeReader,
-            cacheKey = cacheKey,
-            pinTitleRes = R.string.git_signing_card_pin_title,
-            pinHintRes = R.string.openpgp_card_pin_hint,
-            identityLabel = identityLabel(key),
-            pinMode = OpenPgpCardPrompt.PinMode.SIGNATURE,
-            presentMessage = activity.getString(R.string.git_signing_tap_card),
-            commFailedMessage = activity.getString(R.string.openpgp_nfc_card_comm_failed),
-          ) { card, currentPin ->
-            // The whole card exchange (applet select -> verify -> sign) runs on a single thread
-            // with no hop, so a genuine wrong PIN reliably comes back as a card status word (e.g.
-            // 63 Cx) rather than a transceive error caused by racing the NFC presence check.
-            card.verifySignaturePin(currentPin)
-            val privateKey = PGPPrivateKey(publicKey.keyID, publicKey.publicKeyPacket, null)
-            buildDetachedSignature(
-              publicKey,
-              CardContentSignerBuilder(publicKey, card),
-              privateKey,
-              payload,
-            )
-          }
+      val outcome = runBlocking {
+        prompt.runWithPin(
+          reader = activeReader,
+          cacheKey = cacheKey,
+          pinTitleRes = R.string.git_signing_card_pin_title,
+          pinHintRes = R.string.openpgp_card_pin_hint,
+          identityLabel = identityLabel(key),
+          pinMode = OpenPgpCardPrompt.PinMode.SIGNATURE,
+          presentMessage = activity.getString(R.string.git_signing_tap_card),
+          commFailedMessage = activity.getString(R.string.openpgp_nfc_card_comm_failed),
+        ) { card, currentPin ->
+          // The whole card exchange (applet select -> verify -> sign) runs on a single thread
+          // with no hop, so a genuine wrong PIN reliably comes back as a card status word (e.g.
+          // 63 Cx) rather than a transceive error caused by racing the NFC presence check.
+          card.verifySignaturePin(currentPin)
+          val privateKey = PGPPrivateKey(publicKey.keyID, publicKey.publicKeyPacket, null)
+          buildDetachedSignature(
+            publicKey,
+            CardContentSignerBuilder(publicKey, card),
+            privateKey,
+            payload,
+          )
         }
+      }
       when (outcome) {
         is OpenPgpCardPrompt.CardOutcome.Success -> {
           // Keep reader mode on until the card is physically lifted, so the platform never
@@ -302,12 +301,12 @@ class OpenPgpCommitSigner(
   }
 
   private fun deemphasizeButton(button: Button) {
-    button.setTextColor(
-      MaterialColors.getColor(button, materialR.attr.colorOnSurfaceVariant)
-    )
+    button.setTextColor(MaterialColors.getColor(button, materialR.attr.colorOnSurfaceVariant))
   }
 
-  /** Short label naming the signing key, so the passphrase/PIN prompt shows which key it unlocks. */
+  /**
+   * Short label naming the signing key, so the passphrase/PIN prompt shows which key it unlocks.
+   */
   private fun identityLabel(key: PGPKey): String? =
     KeyUtils.tryGetUserId(key)?.toString()?.takeIf { it.isNotBlank() && it != "null" }
       ?: KeyUtils.tryGetKeyId(key)?.toString()
@@ -325,26 +324,25 @@ class OpenPgpCommitSigner(
       ?: throw PGPException("No signing-capable OpenPGP secret key found")
   }
 
-  private fun publicKeys(key: PGPKey): Sequence<PGPPublicKey> =
-    runCatching {
-        PGPSecretKeyRingCollection(
-            PGPUtil.getDecoderStream(key.contents.inputStream()),
-            JcaKeyFingerprintCalculator(),
-          )
-          .keyRings
-          .asSequence()
-          .flatMap { it.secretKeys.asSequence() }
-          .map { it.publicKey }
-      }
-      .getOrElse {
-        PGPPublicKeyRingCollection(
-            PGPUtil.getDecoderStream(key.contents.inputStream()),
-            JcaKeyFingerprintCalculator(),
-          )
-          .keyRings
-          .asSequence()
-          .flatMap { it.publicKeys.asSequence() }
-      }
+  private fun publicKeys(key: PGPKey): Sequence<PGPPublicKey> = runCatching {
+    PGPSecretKeyRingCollection(
+        PGPUtil.getDecoderStream(key.contents.inputStream()),
+        JcaKeyFingerprintCalculator(),
+      )
+      .keyRings
+      .asSequence()
+      .flatMap { it.secretKeys.asSequence() }
+      .map { it.publicKey }
+  }
+    .getOrElse {
+      PGPPublicKeyRingCollection(
+          PGPUtil.getDecoderStream(key.contents.inputStream()),
+          JcaKeyFingerprintCalculator(),
+        )
+        .keyRings
+        .asSequence()
+        .flatMap { it.publicKeys.asSequence() }
+    }
 
   private fun findCardSigningKey(key: PGPKey, cardFingerprints: List<ByteArray>): PGPPublicKey {
     return publicKeys(key).firstOrNull { publicKey ->

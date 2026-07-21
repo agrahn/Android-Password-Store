@@ -96,8 +96,8 @@ constructor(
   }
 
   /**
-   * Whether [id] can be used as an SSH authentication key: either it can sign locally (has a private
-   * authentication subkey) or its authentication is delegated to an associated smartcard.
+   * Whether [id] can be used as an SSH authentication key: either it can sign locally (has a
+   * private authentication subkey) or its authentication is delegated to an associated smartcard.
    */
   fun canUseForSshAuth(id: PGPIdentifier): Boolean =
     hasPrivateAuthKey(id) || (isSmartcardBacked(id) && hasAuthKey(id))
@@ -210,16 +210,14 @@ constructor(
     identities.mapUntil({ it.second.isOk }) { id ->
       encryptedMessage.reset()
       message.reset()
-      val result =
-        runCatching {
-            val key = pgpKeyManager.getKeyById(id).getOrThrow()
-            val primaryKeyId = KeyUtils.tryGetKeyId(key)
-            val cardFingerprints =
-              primaryKeyId?.let { smartcardStore.getFingerprints(it) }.orEmpty()
-            smartcardDecryptor.decrypt(key, pin, encryptedMessage, message, card, cardFingerprints)
-            message
-          }
-          .mapError { app.passwordstore.crypto.errors.UnknownError(it.message, it) }
+      val result = runCatching {
+        val key = pgpKeyManager.getKeyById(id).getOrThrow()
+        val primaryKeyId = KeyUtils.tryGetKeyId(key)
+        val cardFingerprints = primaryKeyId?.let { smartcardStore.getFingerprints(it) }.orEmpty()
+        smartcardDecryptor.decrypt(key, pin, encryptedMessage, message, card, cardFingerprints)
+        message
+      }
+        .mapError { app.passwordstore.crypto.errors.UnknownError(it.message, it) }
       result.getError()?.let { logcat { it.asLog() } }
       Pair(id.toString(), result)
     }

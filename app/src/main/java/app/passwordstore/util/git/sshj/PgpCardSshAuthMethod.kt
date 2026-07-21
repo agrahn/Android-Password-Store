@@ -49,9 +49,9 @@ class PgpCardSshKeyProvider(private val publicKey: PublicKey) : KeyProvider {
  * with a local private key. It overrides [putPubKey]/[putSig] to advertise and sign with the
  * *negotiated* public-key algorithm rather than the key's base type: for RSA these differ
  * (`rsa-sha2-512` / `rsa-sha2-256` / `ssh-rsa`), and the algorithm name in the request must match
- * the one in the signature blob. The exact data SSH signs -- `string(session id) ||
- * request-so-far` -- is handed to [signer], which drives the card. Host-key verification and
- * everything else stay on sshj's default path.
+ * the one in the signature blob. The exact data SSH signs -- `string(session id) || request-so-far`
+ * -- is handed to [signer], which drives the card. Host-key verification and everything else stay
+ * on sshj's default path.
  *
  * sshj's [net.schmizz.sshj.userauth.method.KeyedAuthMethod] keeps its chosen [KeyAlgorithm] queue
  * private and drops the head on [shouldRetry] to fall back to the next algorithm. Because the card
@@ -169,24 +169,23 @@ class CardSshSigner(
         runBlocking { prompt.createReader() }
           ?: throw IOException(activity.getString(R.string.openpgp_nfc_unavailable))
       reader = activeReader
-      val outcome =
-        runBlocking {
-          prompt.runWithPin(
-            reader = activeReader,
-            cacheKey = "ssh:${primaryKeyId.id}",
-            pinTitleRes = R.string.openpgp_card_pin_title,
-            pinHintRes = R.string.openpgp_card_pin_hint,
-            identityLabel = null,
-            // PW1 in mode 0x82 authorises INTERNAL AUTHENTICATE (the auth key slot), unlike PSO:CDS
-            // (mode 0x81) used for commit signing.
-            pinMode = OpenPgpCardPrompt.PinMode.USER,
-            presentMessage = activity.getString(R.string.openpgp_nfc_tap_card),
-            commFailedMessage = activity.getString(R.string.openpgp_nfc_card_comm_failed),
-          ) { card, currentPin ->
-            card.verifyUserPin(currentPin)
-            card.internalAuthenticate(input)
-          }
+      val outcome = runBlocking {
+        prompt.runWithPin(
+          reader = activeReader,
+          cacheKey = "ssh:${primaryKeyId.id}",
+          pinTitleRes = R.string.openpgp_card_pin_title,
+          pinHintRes = R.string.openpgp_card_pin_hint,
+          identityLabel = null,
+          // PW1 in mode 0x82 authorises INTERNAL AUTHENTICATE (the auth key slot), unlike PSO:CDS
+          // (mode 0x81) used for commit signing.
+          pinMode = OpenPgpCardPrompt.PinMode.USER,
+          presentMessage = activity.getString(R.string.openpgp_nfc_tap_card),
+          commFailedMessage = activity.getString(R.string.openpgp_nfc_card_comm_failed),
+        ) { card, currentPin ->
+          card.verifyUserPin(currentPin)
+          card.internalAuthenticate(input)
         }
+      }
       when (outcome) {
         is OpenPgpCardPrompt.CardOutcome.Success -> {
           readerHandedOff = true

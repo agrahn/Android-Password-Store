@@ -136,19 +136,19 @@ class PGPKeyImportActivity : AppCompatActivity() {
         progressDialog.setTitle(R.string.openpgp_nfc_setup_title)
         progressDialog.setMessage(getString(R.string.openpgp_nfc_tap_card))
         runCatching {
-            val card =
-              OpenPgpNfcCard.waitForCardOrNull(
-                this@PGPKeyImportActivity,
-                cancelSignal,
-                disableReaderModeOnError = false,
-                disableReaderModeOnClose = false,
-                onCardDetected = {
-                  progressDialog.setTitle(R.string.openpgp_nfc_hold_card_title)
-                  progressDialog.setMessage(getString(R.string.openpgp_nfc_hold_card))
-                },
-              ) ?: return@launch
-            card.use { it.readCardInfo() }
-          }
+          val card =
+            OpenPgpNfcCard.waitForCardOrNull(
+              this@PGPKeyImportActivity,
+              cancelSignal,
+              disableReaderModeOnError = false,
+              disableReaderModeOnClose = false,
+              onCardDetected = {
+                progressDialog.setTitle(R.string.openpgp_nfc_hold_card_title)
+                progressDialog.setMessage(getString(R.string.openpgp_nfc_hold_card))
+              },
+            ) ?: return@launch
+          card.use { it.readCardInfo() }
+        }
           .onOk { cardInfo ->
             progressDialog.dismiss()
             setupSmartcardKey(cardInfo)

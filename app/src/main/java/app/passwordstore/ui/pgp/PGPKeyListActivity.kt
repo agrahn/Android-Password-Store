@@ -226,7 +226,10 @@ class PGPKeyListActivity : AppCompatActivity() {
             // Selecting an SSH authentication key (single-selection mode): grey out keys that can't
             // authenticate — public-only keys, and stubs without an associated smartcard.
             isKeyEnabled =
-              if (singleSelection) cryptoRepository::canUseForSshAuth else { { true } },
+              if (singleSelection) cryptoRepository::canUseForSshAuth
+              else {
+                { true }
+              },
           )
         }
       }
@@ -238,8 +241,7 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   /** A key whose private material lives on hardware (a smartcard) or was otherwise stripped. */
   private fun isStubKey(identifier: PGPIdentifier): Boolean =
-    cryptoRepository.isSmartcardBacked(identifier) ||
-      cryptoRepository.hasOnlyStubDecKey(identifier)
+    cryptoRepository.isSmartcardBacked(identifier) || cryptoRepository.hasOnlyStubDecKey(identifier)
 
   private fun showKeyInfo(identifier: PGPIdentifier) {
     val fingerprint =
@@ -257,9 +259,12 @@ class PGPKeyListActivity : AppCompatActivity() {
         else -> getString(R.string.pgp_key_info_type_public)
       }
     val message = buildString {
-      cryptoRepository.getUserIdFromKeyId(identifier)?.takeIf { it != "null" }?.let {
-        appendLine(getString(R.string.pgp_key_info_user_id, it))
-      }
+      cryptoRepository
+        .getUserIdFromKeyId(identifier)
+        ?.takeIf { it != "null" }
+        ?.let {
+          appendLine(getString(R.string.pgp_key_info_user_id, it))
+        }
       cryptoRepository.getEmailFromKeyId(identifier)?.let {
         appendLine(getString(R.string.pgp_key_info_email, it))
       }

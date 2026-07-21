@@ -403,21 +403,21 @@ class OpenPgpCardPrompt(
   /** Caches [pin] (AES-encrypted, until screen-off) under [cacheKey] when [cache] is set. */
   fun storeCachedPin(cacheKey: String, pin: CharArray, cache: Boolean) {
     runCatching {
-        val hardwareBacked = AESEncryption.isHardwareBacked()
-        val encryptedPin = if (cache) AESEncryption.encrypt(pin) else null
-        if (hardwareBacked && cache && encryptedPin != null) {
-          BasePGPActivity.cachedPassphrases[cacheKey]?.wipe()
-          BasePGPActivity.cachedPassphrases[cacheKey] = encryptedPin
-        } else {
-          clearCachedPin(cacheKey)
-        }
-        activity.sharedPrefs.edit {
-          putBoolean(
-            PreferenceKeys.CACHE_PASSPHRASE,
-            hardwareBacked && cache && encryptedPin != null,
-          )
-        }
+      val hardwareBacked = AESEncryption.isHardwareBacked()
+      val encryptedPin = if (cache) AESEncryption.encrypt(pin) else null
+      if (hardwareBacked && cache && encryptedPin != null) {
+        BasePGPActivity.cachedPassphrases[cacheKey]?.wipe()
+        BasePGPActivity.cachedPassphrases[cacheKey] = encryptedPin
+      } else {
+        clearCachedPin(cacheKey)
       }
+      activity.sharedPrefs.edit {
+        putBoolean(
+          PreferenceKeys.CACHE_PASSPHRASE,
+          hardwareBacked && cache && encryptedPin != null,
+        )
+      }
+    }
       .onErr { e -> logcat { e.asLog() } }
   }
 
@@ -468,8 +468,8 @@ class OpenPgpCardPrompt(
   }
 
   /**
-   * Shows a modal "remove your card" dialog and **suspends** until [card] is physically lifted (or a
-   * timeout elapses), then dismisses the dialog and releases [reader].
+   * Shows a modal "remove your card" dialog and **suspends** until [card] is physically lifted (or
+   * a timeout elapses), then dismisses the dialog and releases [reader].
    *
    * Unlike [releaseReaderWhenCardRemoved] this blocks the caller. NFC reader mode is only active
    * while the hosting activity is resumed, so when an operation would otherwise let its activity
