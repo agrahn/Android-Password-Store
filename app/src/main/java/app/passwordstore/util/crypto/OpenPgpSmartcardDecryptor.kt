@@ -78,12 +78,21 @@ class OpenPgpSmartcardDecryptor @Inject constructor() {
           firstFailure,
         )
 
+    // Reject messages that carry no integrity protection (legacy SED packets) outright, matching
+    // the default policy of the app's main PGPainless decryption path. Without an MDC/SEIPD the
+    // plaintext is unauthenticated and malleable.
+    if (!encryptedData.isIntegrityProtected) {
+      throw PGPException("Refusing to decrypt OpenPGP message without integrity protection")
+    }
+
+    // Streaming decryption necessarily writes the plaintext before verify() can run; [outputStream]
+    // is an in-memory buffer the caller must (and does) discard when this method throws.
     encryptedData.getDataStream(JceSessionKeyDataDecryptorFactoryBuilder().build(sessionKey)).use {
       cleartext ->
       pipeLiteralData(cleartext, outputStream)
     }
 
-    if (encryptedData.isIntegrityProtected && !encryptedData.verify()) {
+    if (!encryptedData.verify()) {
       throw PGPException("OpenPGP message integrity check failed")
     }
   }
