@@ -8,6 +8,8 @@ import android.util.Base64
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
+import app.passwordstore.crypto.PGPIdentifier.KeyId
+import app.passwordstore.ui.git.base.BaseGitActivity
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.git.operation.CredentialFinder
@@ -201,18 +203,35 @@ private class SshjSession(
         ssh.auth(username, passwordAuth)
       }
       is SshAuthMethod.SshKey -> {
-        val pubkeyAuth =
-          AuthPublickey(
-            SshKey.provide(
-              ssh,
-              CredentialFinder(authMethod.activity, AuthMode.SshKey, dispatcherProvider),
-            )
-          )
+        val pubkeyAuth = cardBackedAuth() ?: localKeyAuth(authMethod)
         ssh.auth(username, pubkeyAuth)
       }
     }
     return this
   }
+
+  /**
+   * When the selected PGP SSH key lives on a smartcard, authenticate by delegating the signature to
+   * the card over NFC (INTERNAL AUTHENTICATE) instead of unlocking a local private key. Returns null
+   * for every other key so the normal local-key path is used untouched.
+   */
+  private fun cardBackedAuth(): AuthPublickey? {
+    if (SshKey.type != SshKey.Type.ImportedPGP) return null
+    val pgpKeyId = SshKey.pgpLongKeyId
+    if (pgpKeyId == 0L) return null
+    val repository = (callingActivity as? BaseGitActivity)?.repository ?: return null
+    if (!repository.isSmartcardBacked(KeyId(pgpKeyId))) return null
+    val publicKey =
+      SshKey.sshPublicKey?.let { parseSshPublicKey(it) }
+        ?: throw IOException("Missing SSH public key for card-backed authentication")
+    val signer = CardSshSigner(callingActivity, dispatcherProvider, KeyId(pgpKeyId), publicKey)
+    return CardSshAuthPublickey(PgpCardSshKeyProvider(publicKey), signer)
+  }
+
+  private fun localKeyAuth(authMethod: SshAuthMethod): AuthPublickey =
+    AuthPublickey(
+      SshKey.provide(ssh, CredentialFinder(authMethod.activity, AuthMode.SshKey, dispatcherProvider))
+    )
 
   override fun exec(commandName: String?, timeout: Int): Process {
     if (currentCommand != null) {
