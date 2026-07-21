@@ -356,7 +356,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
           MaterialAlertDialogBuilder(this)
             .setCancelable(false)
             .setTitle(R.string.error)
-            .setIcon(R.drawable.ic_warning_red_24dp)
+            .setIcon(R.drawable.ic_crossmark_red_24dp)
             .setMessage(R.string.creation_dialog_text)
             .setPositiveButton(R.string.dialog_ok) { _, _ ->
               setResult(RESULT_CANCELED)
@@ -539,12 +539,13 @@ class PasskeyCreationActivity : BasePGPActivity() {
 
           lifecycleScope.launch {
             val commitMessageRes =
-              if (editing) R.string.git_commit_edit_text else R.string.git_commit_add_text
+              if (editing) R.string.git_commit_edit_passkey_text
+              else R.string.git_commit_add_passkey_text
 
             commitChange(
                 resources.getString(
                   commitMessageRes,
-                  PasswordRepository.getLongName(fullPath, repoPath, credentialHexId),
+                  directory.text.toString().trim().trim('/') + "/" + credentialHexId,
                 )
               )
               .onOk {
