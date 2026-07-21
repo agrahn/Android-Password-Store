@@ -15,6 +15,7 @@ import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getOr
 import com.github.michaelbull.result.runCatching
 import java.io.IOException
+import java.nio.CharBuffer
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -68,7 +69,10 @@ class OpenPgpNfcCard(
     }
 
   private fun verifyPin(pin: CharArray, reference: Int) {
-    val pinBytes = pin.concatToString().toByteArray(Charsets.UTF_8)
+    // Encode the PIN straight from the CharArray to a wipeable ByteArray. Going through
+    // String.toByteArray() would leave the PIN in an immutable String that cannot be zeroed and
+    // lingers on the heap until garbage collection.
+    val pinBytes = charArrayToUtf8Bytes(pin)
     try {
       transceive(
         byteArrayOf(0x00, 0x20, 0x00, reference.toByte(), pinBytes.size.toByte()) + pinBytes
@@ -82,6 +86,19 @@ class OpenPgpNfcCard(
     } finally {
       pinBytes.fill(0)
     }
+  }
+
+  /**
+   * Encodes [chars] as UTF-8 without ever materializing the secret in an immutable String. The
+   * encoder's backing array is wiped before returning, so the only surviving copy is the
+   * caller-owned result, which the caller can zero once it is done.
+   */
+  private fun charArrayToUtf8Bytes(chars: CharArray): ByteArray {
+    val byteBuffer = Charsets.UTF_8.encode(CharBuffer.wrap(chars))
+    val bytes = ByteArray(byteBuffer.remaining())
+    byteBuffer.get(bytes)
+    if (byteBuffer.hasArray()) byteBuffer.array().fill(0)
+    return bytes
   }
 
   fun decipher(ciphertext: ByteArray): ByteArray {
