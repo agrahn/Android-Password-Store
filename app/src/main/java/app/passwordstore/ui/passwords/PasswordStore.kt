@@ -344,7 +344,7 @@ class PasswordStore : BaseGitActivity() {
       MaterialAlertDialogBuilder(this)
         .setCancelable(false)
         .setTitle(R.string.error)
-        .setIcon(R.drawable.ic_warning_red_24dp)
+        .setIcon(R.drawable.ic_crossmark_red_24dp)
         .setMessage(R.string.creation_dialog_text)
         .setPositiveButton(R.string.dialog_ok, null)
     when (id) {
@@ -443,6 +443,9 @@ class PasswordStore : BaseGitActivity() {
   private fun validateState(): Boolean {
     if (!PasswordRepository.isInitialized) {
       MaterialAlertDialogBuilder(this)
+        .setCancelable(false)
+        .setTitle(R.string.error)
+        .setIcon(R.drawable.ic_crossmark_red_24dp)
         .setMessage(R.string.creation_dialog_text)
         .setPositiveButton(R.string.dialog_ok, null)
         .show()

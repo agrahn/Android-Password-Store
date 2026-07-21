@@ -16,7 +16,7 @@ Passkey credentials are first serialised as CBOR (the top-level structure is a m
 {
   "id": array,              # credential ID — array (major type 4) of unsigned integers (0..255), 32 items
   "rp": {                   # relying party info — map (major type 5)
-    "id": tstr,             #   RP id — text string (major type 3), e. g. "example.com"
+    "id": tstr,             #   RP ID — text string (major type 3), e. g. "example.com"
     "name": tstr / null     #   RP name — text string or null (may be missing)
   },
   "user": {                 # credential owner info — map (major type 5)
@@ -28,7 +28,7 @@ Passkey credentials are first serialised as CBOR (the top-level structure is a m
   "alg": int,               # COSE algorithm identifier — integer (negative values use major type 1), ES256 = -7, Ed25519 = -8, RS256 = -257
   "private_key": array,     # raw private key bytes — array (major type 4) of unsigned integers (0..255); see 'Key data in `private_key`'
   "created": uint,          # seconds since Epoch — unsigned integer (major type 0)
-  "zone": tstr              # time zone id — text string (major type 3)
+  "zone": tstr              # time zone ID — text string (major type 3)
 }
 ```
 

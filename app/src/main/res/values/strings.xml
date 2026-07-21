@@ -23,7 +23,7 @@
   <string name="title_activity_git_log">Commit log</string>
 
   <!-- Password Store -->
-  <string name="creation_dialog_text">Password Store is not fully initialised. Please clone or create a new repository below before you add a password or run a synchronisation operation.</string>
+  <string name="creation_dialog_text">Password Store is not fully initialised. Please clone or create a new repository before you add a password or run a synchronisation operation.</string>
   <string name="delete_dialog_title">Confirm deletion</string>
   <plurals name="delete_dialog_text">
     <item quantity="one">Are you sure you want to delete the selected item?</item>
@@ -40,12 +40,14 @@
   <string name="password_move_error_message">Failed to move %1$s to %2$s</string>
 
   <!-- git commits -->
-  <string name="git_commit_add_text">Add generated password for %1$s using Android Password Store.</string>
-  <string name="git_commit_edit_text">Edit password for %1$s using Android Password Store.</string>
-  <string name="git_commit_remove_text">Remove %1$s from store.</string>
-  <string name="git_commit_move_text">Rename %1$s to %2$s.</string>
-  <string name="git_commit_move_multiple_text">Move multiple passwords to %1$s.</string>
-  <string name="git_commit_gpg_id">Initialise PGP IDs in %1$s.</string>
+  <string name="git_commit_add_text">New password %1$s added using Android Password Store</string>
+  <string name="git_commit_edit_text">Password %1$s edited using Android Password Store</string>
+  <string name="git_commit_add_passkey_text">New passkey %1$s added using Android Password Store</string>
+  <string name="git_commit_edit_passkey_text">Passkey %1$s edited Android Password Store</string>
+  <string name="git_commit_remove_text">%1$s removed from store</string>
+  <string name="git_commit_move_text">Renamed %1$s to %2$s</string>
+  <string name="git_commit_move_multiple_text">Multiple items moved to %1$s</string>
+  <string name="git_commit_gpg_id">PGP IDs in %1$s initialised</string>
 
   <!-- PGPHandler -->
   <string name="clipboard_copied_text">Copied to clipboard.</string>
