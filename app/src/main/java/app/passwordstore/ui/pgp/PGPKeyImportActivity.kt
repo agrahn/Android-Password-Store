@@ -40,6 +40,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.net.URL
 import javax.inject.Inject
 import kotlinx.coroutines.CompletableDeferred
@@ -191,9 +192,7 @@ class PGPKeyImportActivity : AppCompatActivity() {
     }
 
     val downloadResult = runCatching {
-      withContext(dispatcherProvider.io()) {
-        URL(cardInfo.url).openStream().use { it.readBytes() }
-      }
+      withContext(dispatcherProvider.io()) { downloadKeyFromUrl(cardInfo.url) }
     }
     val bytes = downloadResult.get()
     if (bytes == null) {
@@ -206,6 +205,32 @@ class PGPKeyImportActivity : AppCompatActivity() {
     }
     pendingSmartcardInfo = cardInfo
     importAllKeys(bytes, cardInfo.fingerprints)
+  }
+
+  /**
+   * Fetches the public key advertised by the card's URL data object. The URL comes from the card
+   * (potentially attacker-controlled), so only HTTPS is honored -- a plain-HTTP URL is trivially
+   * MITM-able and schemes such as file:// would read local files -- and the download is capped so a
+   * hostile endpoint cannot exhaust memory. A non-HTTPS URL simply falls back to manual import.
+   */
+  private fun downloadKeyFromUrl(url: String): ByteArray {
+    val parsed = URL(url)
+    if (!parsed.protocol.equals("https", ignoreCase = true)) {
+      throw IOException("Refusing to fetch OpenPGP key over non-HTTPS URL")
+    }
+    parsed.openStream().use { stream ->
+      val buffer = ByteArray(MAX_KEY_DOWNLOAD_BYTES)
+      var total = 0
+      while (total < buffer.size) {
+        val read = stream.read(buffer, total, buffer.size - total)
+        if (read == -1) break
+        total += read
+      }
+      if (total == buffer.size && stream.read() != -1) {
+        throw IOException("OpenPGP key at URL exceeds $MAX_KEY_DOWNLOAD_BYTES bytes")
+      }
+      return buffer.copyOf(total)
+    }
   }
 
   private fun showNfcSetupDialog(cardInfo: OpenPgpCardInfo) {
@@ -450,5 +475,8 @@ class PGPKeyImportActivity : AppCompatActivity() {
 
   companion object {
     const val EXTRA_IMPORT_FROM_NFC = "app.passwordstore.extra.IMPORT_FROM_NFC"
+
+    // OpenPGP public keys are a few KiB at most; cap the card-URL download well above that.
+    private const val MAX_KEY_DOWNLOAD_BYTES = 1 * 1024 * 1024
   }
 }
