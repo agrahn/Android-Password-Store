@@ -28,7 +28,7 @@ Passkey credentials are first serialised as CBOR (the top-level structure is a m
   "alg": int,               # COSE algorithm identifier — integer (negative values use major type 1), ES256 = -7, Ed25519 = -8, RS256 = -257
   "private_key": array,     # raw private key bytes — array (major type 4) of unsigned integers (0..255); see 'Key data in private_key'
   "created": uint,          # seconds since Epoch — unsigned integer (major type 0)
-  "zone": tstr              # time zone ID — text string (major type 3)
+  "zone": tstr              # time zone ID — text string (major type 3), e. g. "Europe/Berlin", parsable by `java.time.ZoneId.of(...)`
 }
 ```
 
@@ -91,9 +91,7 @@ fun rebuildES256FromPrivateKeyRawBytes(bytes: ByteArray): PrivateKey {
   val ecParameters = params.getParameterSpec(java.security.spec.ECParameterSpec::class.java)
 
   val keySpec = ECPrivateKeySpec(s, ecParameters)
-  val keyFactory = KeyFactory.getInstance("EC", BouncyCastleProvider())
-
-  return keyFactory.generatePrivate(keySpec)
+  return KeyFactory.getInstance("EC", BouncyCastleProvider()).generatePrivate(keySpec)
 }
 
 fun rebuildEd25519FromPrivateKeyRawBytes(bytes: ByteArray): PrivateKey {

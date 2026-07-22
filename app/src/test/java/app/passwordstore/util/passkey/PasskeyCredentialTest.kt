@@ -14,8 +14,6 @@ import java.security.SecureRandom
 import java.security.Signature
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.RSAKeyGenParameterSpec
-import java.time.Instant
-import java.time.ZoneId
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -32,8 +30,6 @@ class PasskeyCredentialTest {
   private lateinit var keyPairRSA: KeyPair
   private lateinit var credentialId: ByteArray
   private lateinit var userId: ByteArray
-  private lateinit var createdAt: Instant
-  private lateinit var zoneId: ZoneId
 
   private lateinit var sigVerifierEC: Signature
   private lateinit var sigVerifierEdDSA: Signature
@@ -82,7 +78,7 @@ class PasskeyCredentialTest {
   }
 
   @Test
-  fun parsePasslessPasskeyFromCbor() {
+  fun `parse Passless passkey from CBOR`() {
     val cborIn =
       ("a9626964982013188118811865183018c2186718f00f18b718d818a81844" +
           "18b6185f1876185c18bb18c0185918d818d718c6189518a40b187a181d18" +
@@ -119,7 +115,7 @@ class PasskeyCredentialTest {
   }
 
   @Test
-  fun createPasskeyCredentialAndConvertToAndFromCborSignDataAndVerifySignature() {
+  fun `passkey creation, passkey CBOR roundtrip, signing and signature verification for all types`() {
     // testing passkey creation for supported algorithms
     val passkeyCredentialEC =
       PasskeyCredential.createNew(

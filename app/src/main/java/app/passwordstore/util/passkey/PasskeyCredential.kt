@@ -270,9 +270,7 @@ data class PasskeyCredential(
 
     // Generate the KeySpec and build the private key
     val keySpec = ECPrivateKeySpec(s, ecParameters)
-    val keyFactory = KeyFactory.getInstance("EC", BouncyCastleProvider())
-
-    return keyFactory.generatePrivate(keySpec)
+    return KeyFactory.getInstance("EC", BouncyCastleProvider()).generatePrivate(keySpec)
   }
 
   private fun rebuildEd25519FromPrivateKeyRawUShortArray(): PrivateKey {
@@ -286,7 +284,9 @@ data class PasskeyCredential(
   }
 
   private fun rebuildRS256FromPrivateKeyRawUShortArray(): PrivateKey {
-    require(privateKey.size == 512) { "Buffer must be exactly 512 bytes" }
+    require(privateKey.size == 512) {
+      "The expected buffer for an RSA-2048 private key's modulus and exponent must be exactly 512 bytes"
+    }
     val bytes = ByteArray(512) { privateKey[it].toByte() }
 
     val nBytes = bytes.copyOfRange(0, 256)

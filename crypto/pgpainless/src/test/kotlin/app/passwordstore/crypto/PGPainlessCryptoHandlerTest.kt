@@ -90,7 +90,7 @@ class PGPainlessCryptoHandlerTest {
   }
 
   @Test
-  fun decryptSymmtericallyWithWrongPassphrase() {
+  fun decryptSymmetricallyWithWrongPassphrase() {
     val ciphertextStream = ByteArrayOutputStream()
     val encryptRes =
       cryptoHandler.encrypt(
