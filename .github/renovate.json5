@@ -50,8 +50,16 @@
       description: 'Packages to be excluded from updates',
       matchPackageNames: [
         'org.eclipse.jgit', // Android 13+ required for JGit v6.3+
-		'app.passwordstore.agrahn', // prevent infinte self-update loop
       ],
+    },
+    {
+      description: "Ignore github-actions reference to android-password-store, prevent infinite PR loops such as #916",
+      matchManagers: ["github-actions"],
+      customType: 'regex',
+      matchPackagePatterns: [
+        "/^.*android-password-store.*$/"
+      ],
+      enabled: false
     },
   ],
   customManagers: [
