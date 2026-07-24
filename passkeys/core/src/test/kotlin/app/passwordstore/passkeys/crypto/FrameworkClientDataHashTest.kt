@@ -23,13 +23,14 @@ class FrameworkClientDataHashTest {
 
   @Test
   fun `privileged browser assertion signs exact framework-provided hash`() {
-    val credential = createTestCredential()
+    val (credential, privateKey) = createTestCredential()
     val frameworkHash = ByteArray(32) { (it + 42).toByte() }
     val responseJson = """{"type":"webauthn.get","origin":"https://example.com"}""".toByteArray()
 
     val result =
       cryptoHandler.getAssertionWithFrameworkHash(
         credential = credential,
+        privateKey = privateKey,
         rpId = "example.com",
         clientDataHash = frameworkHash,
         responseClientDataJson = responseJson,
@@ -54,13 +55,14 @@ class FrameworkClientDataHashTest {
 
   @Test
   fun `one byte change in hash causes verification failure`() {
-    val credential = createTestCredential()
+    val (credential, privateKey) = createTestCredential()
     val frameworkHash = ByteArray(32) { (it + 42).toByte() }
     val responseJson = """{"type":"webauthn.get"}""".toByteArray()
 
     val result =
       cryptoHandler.getAssertionWithFrameworkHash(
         credential = credential,
+        privateKey = privateKey,
         rpId = "example.com",
         clientDataHash = frameworkHash,
         responseClientDataJson = responseJson,
@@ -83,13 +85,14 @@ class FrameworkClientDataHashTest {
 
   @Test
   fun `framework hash with 31 bytes is rejected`() {
-    val credential = createTestCredential()
+    val (credential, privateKey) = createTestCredential()
     val shortHash = ByteArray(31) { it.toByte() }
     val responseJson = """{"type":"webauthn.get"}""".toByteArray()
 
     val result =
       cryptoHandler.getAssertionWithFrameworkHash(
         credential = credential,
+        privateKey = privateKey,
         rpId = "example.com",
         clientDataHash = shortHash,
         responseClientDataJson = responseJson,
@@ -100,13 +103,14 @@ class FrameworkClientDataHashTest {
 
   @Test
   fun `framework hash with 33 bytes is rejected`() {
-    val credential = createTestCredential()
+    val (credential, privateKey) = createTestCredential()
     val longHash = ByteArray(33) { it.toByte() }
     val responseJson = """{"type":"webauthn.get"}""".toByteArray()
 
     val result =
       cryptoHandler.getAssertionWithFrameworkHash(
         credential = credential,
+        privateKey = privateKey,
         rpId = "example.com",
         clientDataHash = longHash,
         responseClientDataJson = responseJson,
@@ -117,12 +121,13 @@ class FrameworkClientDataHashTest {
 
   @Test
   fun `empty response client data JSON is rejected`() {
-    val credential = createTestCredential()
+    val (credential, privateKey) = createTestCredential()
     val frameworkHash = ByteArray(32) { it.toByte() }
 
     val result =
       cryptoHandler.getAssertionWithFrameworkHash(
         credential = credential,
+        privateKey = privateKey,
         rpId = "example.com",
         clientDataHash = frameworkHash,
         responseClientDataJson = ByteArray(0),
@@ -133,13 +138,14 @@ class FrameworkClientDataHashTest {
 
   @Test
   fun `blank rpId is rejected for framework hash assertion`() {
-    val credential = createTestCredential()
+    val (credential, privateKey) = createTestCredential()
     val frameworkHash = ByteArray(32) { it.toByte() }
     val responseJson = """{"type":"webauthn.get"}""".toByteArray()
 
     val result =
       cryptoHandler.getAssertionWithFrameworkHash(
         credential = credential,
+        privateKey = privateKey,
         rpId = "",
         clientDataHash = frameworkHash,
         responseClientDataJson = responseJson,
@@ -150,7 +156,7 @@ class FrameworkClientDataHashTest {
 
   @Test
   fun `assertion response contains framework response client data JSON`() {
-    val credential = createTestCredential()
+    val (credential, privateKey) = createTestCredential()
     val frameworkHash = ByteArray(32) { (it + 10).toByte() }
     val responseJson =
       """{"type":"webauthn.get","origin":"https://example.com","crossOrigin":false}""".toByteArray()
@@ -158,6 +164,7 @@ class FrameworkClientDataHashTest {
     val result =
       cryptoHandler.getAssertionWithFrameworkHash(
         credential = credential,
+        privateKey = privateKey,
         rpId = "example.com",
         clientDataHash = frameworkHash,
         responseClientDataJson = responseJson,
@@ -172,13 +179,14 @@ class FrameworkClientDataHashTest {
 
   @Test
   fun `signed byte sequence is authenticatorData concat frameworkHash`() {
-    val credential = createTestCredential()
+    val (credential, privateKey) = createTestCredential()
     val frameworkHash = ByteArray(32) { (it + 5).toByte() }
     val responseJson = """{"type":"webauthn.get"}""".toByteArray()
 
     val result =
       cryptoHandler.getAssertionWithFrameworkHash(
         credential = credential,
+        privateKey = privateKey,
         rpId = "example.com",
         clientDataHash = frameworkHash,
         responseClientDataJson = responseJson,
@@ -189,8 +197,7 @@ class FrameworkClientDataHashTest {
     val expectedSignedData = assertion.authenticatorData + frameworkHash
     val expectedHash = MessageDigest.getInstance("SHA-256").digest(expectedSignedData)
 
-    val directSign =
-      cryptoHandler.sign(credential.privateKey, assertion.authenticatorData, frameworkHash)
+    val directSign = cryptoHandler.sign(privateKey, assertion.authenticatorData, frameworkHash)
     val directSignature = directSign.getOrElse { throw AssertionError("Direct sign failed") }
 
     val verifyDirect =
@@ -208,13 +215,14 @@ class FrameworkClientDataHashTest {
 
   @Test
   fun `native provider-constructed assertion uses reconstructed hash`() {
-    val credential = createTestCredential()
+    val (credential, privateKey) = createTestCredential()
     val challenge = ByteArray(32) { it.toByte() }
     val origin = "https://example.com"
 
     val result =
       cryptoHandler.getAssertion(
         credential = credential,
+        privateKey = privateKey,
         rpId = "example.com",
         challenge = challenge,
         origin = origin,
@@ -277,7 +285,6 @@ class FrameworkClientDataHashTest {
     val credential =
       PasskeyCredential(
         credentialId = ByteArray(32) { it.toByte() },
-        privateKey = ByteArray(0),
         publicKey = ByteArray(65) { it.toByte() },
         rpId = "example.com",
         user = FidoUser(id = "user".toByteArray(), name = "test", displayName = "Test"),
@@ -292,6 +299,7 @@ class FrameworkClientDataHashTest {
     val result =
       cryptoHandler.getAssertionWithFrameworkHash(
         credential = credential,
+        privateKey = ByteArray(0),
         rpId = "example.com",
         clientDataHash = frameworkHash,
         responseClientDataJson = responseJson,
@@ -300,18 +308,19 @@ class FrameworkClientDataHashTest {
     assertTrue(result.isErr, "Should reject credential with no private key")
   }
 
-  private fun createTestCredential(): PasskeyCredential {
+  private fun createTestCredential(): Pair<PasskeyCredential, ByteArray> {
     val (privateKey, publicKey) = cryptoHandler.generateKeyPair()
-    return PasskeyCredential(
-      credentialId = ByteArray(32) { it.toByte() },
-      privateKey = privateKey,
-      publicKey = publicKey,
-      rpId = "example.com",
-      user = FidoUser(id = "user-id".toByteArray(), name = "testuser", displayName = "Test User"),
-      signCount = 0u,
-      createdAt = Clock.System.now(),
-      transports = listOf("internal"),
-      uvInitialized = true,
-    )
+    val credential =
+      PasskeyCredential(
+        credentialId = ByteArray(32) { it.toByte() },
+        publicKey = publicKey,
+        rpId = "example.com",
+        user = FidoUser(id = "user-id".toByteArray(), name = "testuser", displayName = "Test User"),
+        signCount = 0u,
+        createdAt = Clock.System.now(),
+        transports = listOf("internal"),
+        uvInitialized = true,
+      )
+    return Pair(credential, privateKey)
   }
 }

@@ -28,7 +28,10 @@ public interface PasskeyStorage {
     return loadForSigning(ref.credentialId)
   }
 
-  public suspend fun saveCredential(credential: PasskeyCredential): Result<Unit, Throwable>
+  public suspend fun saveCredential(
+    credential: PasskeyCredential,
+    privateKey: ByteArray,
+  ): Result<Unit, Throwable>
 
   public suspend fun deleteCredential(credentialId: ByteArray): Result<Boolean, Throwable>
 

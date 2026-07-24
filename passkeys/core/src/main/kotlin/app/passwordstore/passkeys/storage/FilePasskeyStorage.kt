@@ -180,7 +180,7 @@ public class FilePasskeyStorage<
                 concurrencyLimiter.decryptionSemaphore.release()
               }
 
-            val plaintext =
+            val sensitivePlaintext =
               decryptResult.fold(
                 success = { it },
                 failure = { error ->
@@ -192,29 +192,38 @@ public class FilePasskeyStorage<
 
             val stored =
               try {
-                StoredCredential.fromCbor(plaintext)
+                sensitivePlaintext.borrow { plaintext ->
+                  StoredCredential.fromCbor(plaintext)
+                }
               } finally {
-                plaintext.fill(0)
+                sensitivePlaintext.close()
               }
 
-            PayloadBindingValidator.validate(
-                requestRpId = ref.canonicalRpId,
-                requestCredentialId = ref.credentialId,
-                fileRef = ref,
-                stored = stored,
-              )
-              .fold(
-                success = {},
-                failure = { error ->
-                  return@file Err(
-                    SecurityException("Payload binding validation failed: ${error.message}")
-                  )
-                },
-              )
+            try {
+              PayloadBindingValidator.validate(
+                  requestRpId = ref.canonicalRpId,
+                  requestCredentialId = ref.credentialId,
+                  fileRef = ref,
+                  stored = stored,
+                )
+                .fold(
+                  success = {},
+                  failure = { error ->
+                    return@file Err(
+                      SecurityException("Payload binding validation failed: ${error.message}")
+                    )
+                  },
+                )
 
-            Ok(
-              SensitivePasskeyCredential.fromStoredCredential(stored, file.version.modifiedAtMillis)
-            )
+              Ok(
+                SensitivePasskeyCredential.fromStoredCredential(
+                  stored,
+                  file.version.modifiedAtMillis,
+                )
+              )
+            } finally {
+              stored.close()
+            }
           } finally {
             file.close()
           }
@@ -236,7 +245,10 @@ public class FilePasskeyStorage<
     )
   }
 
-  override suspend fun saveCredential(credential: PasskeyCredential): Result<Unit, Throwable> =
+  override suspend fun saveCredential(
+    credential: PasskeyCredential,
+    privateKey: ByteArray,
+  ): Result<Unit, Throwable> =
     withContext(Dispatchers.IO) {
       try {
         val dir = passkeyDir
@@ -246,11 +258,12 @@ public class FilePasskeyStorage<
           }
         }
 
-        val storedCred = StoredCredential.fromPasskeyCredential(credential)
+        val storedCred = StoredCredential.fromPasskeyCredential(credential, privateKey)
         val sanitizedRpDir = sanitizeRpId(credential.rpId)
         val rpDir = File(dir, sanitizedRpDir)
         if (!rpDir.exists()) {
           if (!rpDir.mkdirs()) {
+            storedCred.close()
             return@withContext Err(IllegalStateException("Failed to create RP directory"))
           }
         }
@@ -263,7 +276,12 @@ public class FilePasskeyStorage<
             fileExtension = config.fileExtension,
           )
 
-        val plaintext = storedCred.toCbor()
+        val plaintext =
+          try {
+            storedCred.toCbor()
+          } finally {
+            storedCred.close()
+          }
 
         try {
           val recipients =
@@ -398,7 +416,7 @@ public class FilePasskeyStorage<
         success = { file ->
           try {
             concurrencyLimiter.decryptionSemaphore.acquire()
-            val plaintext =
+            val sensitivePlaintext =
               try {
                 val fileSize = file.fileSize()
                 val stream = file.inputStream()
@@ -419,13 +437,19 @@ public class FilePasskeyStorage<
 
             val credential =
               try {
-                StoredCredential.fromCbor(plaintext)
+                sensitivePlaintext.borrow { plaintext ->
+                  StoredCredential.fromCbor(plaintext)
+                }
               } finally {
-                plaintext.fill(0)
+                sensitivePlaintext.close()
               }
 
-            val updated = credential.copy(signCount = newSignCount.toUInt())
-            val updatedPlaintext = updated.toCbor()
+            val updatedPlaintext =
+              try {
+                credential.copy(signCount = newSignCount.toUInt()).toCbor()
+              } finally {
+                credential.close()
+              }
 
             try {
               val recipients =

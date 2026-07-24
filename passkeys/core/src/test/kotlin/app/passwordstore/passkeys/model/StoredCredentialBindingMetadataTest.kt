@@ -99,10 +99,10 @@ class StoredCredentialBindingMetadataTest {
 
   @Test
   fun `fromPasskeyCredential preserves binding metadata`() {
+    val privateKey = ByteArray(32)
     val passkey =
       app.passwordstore.passkeys.model.PasskeyCredential(
         credentialId = ByteArray(32),
-        privateKey = ByteArray(32),
         publicKey = ByteArray(65).also { it[0] = 0x04 },
         rpId = "example.com",
         user = FidoUser(id = ByteArray(4), name = "user", displayName = "User"),
@@ -113,7 +113,7 @@ class StoredCredentialBindingMetadataTest {
         verifiedOrigin = "https://example.com",
       )
 
-    val stored = StoredCredential.fromPasskeyCredential(passkey)
+    val stored = StoredCredential.fromPasskeyCredential(passkey, privateKey)
 
     assertEquals(CallerType.PRIVILEGED_BROWSER, stored.createdByCallerType)
     assertEquals("com.brave.browser", stored.createdByPackage)

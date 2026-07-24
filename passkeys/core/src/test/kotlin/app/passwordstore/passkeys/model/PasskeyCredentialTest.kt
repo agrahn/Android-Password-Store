@@ -21,7 +21,6 @@ class PasskeyCredentialTest {
     val credential1 =
       PasskeyCredential(
         credentialId = "cred123".toByteArray(),
-        privateKey = "private".toByteArray(),
         publicKey = "public".toByteArray(),
         rpId = "example.com",
         user = FidoUser("user123".toByteArray(), "testuser", "Test User"),
@@ -32,7 +31,6 @@ class PasskeyCredentialTest {
     val credential2 =
       PasskeyCredential(
         credentialId = "cred123".toByteArray(),
-        privateKey = "private".toByteArray(),
         publicKey = "public".toByteArray(),
         rpId = "example.com",
         user = FidoUser("user123".toByteArray(), "testuser", "Test User"),
@@ -43,7 +41,6 @@ class PasskeyCredentialTest {
     val credential3 =
       PasskeyCredential(
         credentialId = "cred456".toByteArray(),
-        privateKey = "private".toByteArray(),
         publicKey = "public".toByteArray(),
         rpId = "example.com",
         user = FidoUser("user123".toByteArray(), "testuser", "Test User"),
@@ -60,7 +57,6 @@ class PasskeyCredentialTest {
     val credential =
       PasskeyCredential(
         credentialId = "cred123".toByteArray(),
-        privateKey = "private".toByteArray(),
         publicKey = "public".toByteArray(),
         rpId = "example.com",
         user = FidoUser("user123".toByteArray(), "testuser", "Test User"),
@@ -79,7 +75,6 @@ class PasskeyCredentialTest {
     val credential =
       PasskeyCredential(
         credentialId = "cred123".toByteArray(),
-        privateKey = "private".toByteArray(),
         publicKey = "public".toByteArray(),
         rpId = "example.com",
         user = FidoUser("user123".toByteArray(), "testuser", "Test User"),

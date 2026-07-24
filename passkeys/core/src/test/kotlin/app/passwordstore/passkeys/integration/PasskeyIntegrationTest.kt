@@ -37,7 +37,7 @@ class PasskeyIntegrationTest {
 
   @Test
   fun `full credential lifecycle`() = runBlocking {
-    val credential =
+    val created =
       cryptoHandler
         .createCredential(
           rpId = "example.com",
@@ -47,8 +47,11 @@ class PasskeyIntegrationTest {
           challenge = ByteArray(32) { it.toByte() },
         )
         .getOrElse { throw AssertionError("Create failed") }
+    val credential = created.credential
 
-    val saveResult = storage.saveCredential(credential)
+    val saveResult = created.usePrivateKeySuspend { privateKey ->
+      storage.saveCredential(credential, privateKey)
+    }
     assertTrue(saveResult.isOk, "Save should succeed")
 
     val listResult = storage.listMetadata("example.com")
@@ -131,16 +134,18 @@ class PasskeyIntegrationTest {
       .loadForSigning(credential.credentialId)
       .getOrElse { throw AssertionError("Load failed") }
       .use { sensitive ->
-        val credForSigning = sensitive.toPasskeyCredential()
-        val assertion =
+        val credForSigning = sensitive.toPublicCredential()
+        val assertion = sensitive.usePrivateKey { privateKey ->
           cryptoHandler
             .getAssertion(
               credential = credForSigning,
+              privateKey = privateKey,
               rpId = "example.com",
               challenge = challenge,
               origin = "https://example.com",
             )
             .getOrElse { throw AssertionError("Assertion failed") }
+        }
 
         assertEquals(
           credential.credentialIdBase64(),
@@ -209,7 +214,7 @@ class PasskeyIntegrationTest {
   }
 
   private suspend fun createAndSaveCredential(rpId: String, userName: String): PasskeyCredential {
-    val credential =
+    val created =
       cryptoHandler
         .createCredential(
           rpId = rpId,
@@ -220,7 +225,9 @@ class PasskeyIntegrationTest {
         )
         .getOrElse { throw AssertionError("Create failed") }
 
-    storage.saveCredential(credential)
-    return credential
+    created.usePrivateKeySuspend { privateKey ->
+      storage.saveCredential(created.credential, privateKey)
+    }
+    return created.credential
   }
 }

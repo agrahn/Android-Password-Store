@@ -257,10 +257,10 @@ class PasskeyBackupStateTrackingTest {
     val storage = IndexedPasskeyStorage(innerStorage)
     storage.setHasRemote(true)
 
+    val privateKey = ByteArray(32) { it.toByte() }
     val credential =
       PasskeyCredential(
         credentialId = ByteArray(32) { it.toByte() },
-        privateKey = ByteArray(32) { it.toByte() },
         publicKey = ByteArray(65) { if (it == 0) 0x04.toByte() else it.toByte() },
         rpId = "example.com",
         user = FidoUser(id = "uid".toByteArray(), name = "user", displayName = "User"),
@@ -269,7 +269,9 @@ class PasskeyBackupStateTrackingTest {
         backupState = false,
       )
 
-    innerStorage.saveCredential(credential).getOrElse { throw AssertionError("Save failed") }
+    innerStorage.saveCredential(credential, privateKey).getOrElse {
+      throw AssertionError("Save failed")
+    }
     storage.onCredentialSaved()
     assertFalse(storage.isRepositoryBackedUp(), "After save, not backed up")
     assertFalse(

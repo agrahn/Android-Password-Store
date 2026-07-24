@@ -9,6 +9,7 @@ import app.passwordstore.passkeys.crypto.PasskeyDecryptionError
 import app.passwordstore.passkeys.crypto.PasskeyPgpDecryptor
 import app.passwordstore.passkeys.crypto.PgpUnlockContext
 import app.passwordstore.passkeys.security.PasskeyInputLimits
+import app.passwordstore.passkeys.security.SensitiveBytes
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
@@ -33,11 +34,11 @@ class PasskeyPgpDecryptorIntegrationTest {
           file: File,
           unlockContext: PgpUnlockContext,
           limits: PasskeyInputLimits,
-        ): Result<ByteArray, PasskeyDecryptionError> {
+        ): Result<SensitiveBytes, PasskeyDecryptionError> {
           keysTried.add("key1")
           keysTried.add("key2")
           keysTried.add("key3")
-          return Ok(ByteArray(0))
+          return Ok(SensitiveBytes(ByteArray(0)))
         }
 
         override suspend fun decryptFromStream(
@@ -45,7 +46,7 @@ class PasskeyPgpDecryptorIntegrationTest {
           ciphertextLength: Long,
           unlockContext: PgpUnlockContext,
           limits: PasskeyInputLimits,
-        ): Result<ByteArray, PasskeyDecryptionError> = Ok(ByteArray(0))
+        ): Result<SensitiveBytes, PasskeyDecryptionError> = Ok(SensitiveBytes(ByteArray(0)))
       }
 
     val file = File.createTempFile("test", ".gpg")
@@ -72,7 +73,7 @@ class PasskeyPgpDecryptorIntegrationTest {
           file: File,
           unlockContext: PgpUnlockContext,
           limits: PasskeyInputLimits,
-        ): Result<ByteArray, PasskeyDecryptionError> {
+        ): Result<SensitiveBytes, PasskeyDecryptionError> {
           return Err(PasskeyDecryptionError.MissingSecretKey(setOf("0x1234567890ABCDEF")))
         }
 
@@ -81,7 +82,7 @@ class PasskeyPgpDecryptorIntegrationTest {
           ciphertextLength: Long,
           unlockContext: PgpUnlockContext,
           limits: PasskeyInputLimits,
-        ): Result<ByteArray, PasskeyDecryptionError> =
+        ): Result<SensitiveBytes, PasskeyDecryptionError> =
           Err(PasskeyDecryptionError.MissingSecretKey(setOf()))
       }
 
@@ -109,7 +110,7 @@ class PasskeyPgpDecryptorIntegrationTest {
           file: File,
           unlockContext: PgpUnlockContext,
           limits: PasskeyInputLimits,
-        ): Result<ByteArray, PasskeyDecryptionError> {
+        ): Result<SensitiveBytes, PasskeyDecryptionError> {
           return Err(PasskeyDecryptionError.IncorrectPassphrase("0x1234567890ABCDEF"))
         }
 
@@ -118,7 +119,7 @@ class PasskeyPgpDecryptorIntegrationTest {
           ciphertextLength: Long,
           unlockContext: PgpUnlockContext,
           limits: PasskeyInputLimits,
-        ): Result<ByteArray, PasskeyDecryptionError> =
+        ): Result<SensitiveBytes, PasskeyDecryptionError> =
           Err(PasskeyDecryptionError.MalformedCiphertext)
       }
 
@@ -146,7 +147,7 @@ class PasskeyPgpDecryptorIntegrationTest {
           file: File,
           unlockContext: PgpUnlockContext,
           limits: PasskeyInputLimits,
-        ): Result<ByteArray, PasskeyDecryptionError> {
+        ): Result<SensitiveBytes, PasskeyDecryptionError> {
           return Err(PasskeyDecryptionError.IntegrityCheckFailed)
         }
 
@@ -155,7 +156,7 @@ class PasskeyPgpDecryptorIntegrationTest {
           ciphertextLength: Long,
           unlockContext: PgpUnlockContext,
           limits: PasskeyInputLimits,
-        ): Result<ByteArray, PasskeyDecryptionError> =
+        ): Result<SensitiveBytes, PasskeyDecryptionError> =
           Err(PasskeyDecryptionError.IntegrityCheckFailed)
       }
 
@@ -183,7 +184,7 @@ class PasskeyPgpDecryptorIntegrationTest {
           file: File,
           unlockContext: PgpUnlockContext,
           limits: PasskeyInputLimits,
-        ): Result<ByteArray, PasskeyDecryptionError> {
+        ): Result<SensitiveBytes, PasskeyDecryptionError> {
           return Err(PasskeyDecryptionError.MalformedCiphertext)
         }
 
@@ -192,7 +193,7 @@ class PasskeyPgpDecryptorIntegrationTest {
           ciphertextLength: Long,
           unlockContext: PgpUnlockContext,
           limits: PasskeyInputLimits,
-        ): Result<ByteArray, PasskeyDecryptionError> =
+        ): Result<SensitiveBytes, PasskeyDecryptionError> =
           Err(PasskeyDecryptionError.MalformedCiphertext)
       }
 
@@ -222,10 +223,10 @@ class PasskeyPgpDecryptorIntegrationTest {
           file: File,
           unlockContext: PgpUnlockContext,
           limits: PasskeyInputLimits,
-        ): Result<ByteArray, PasskeyDecryptionError> {
+        ): Result<SensitiveBytes, PasskeyDecryptionError> {
           unlockContext.unlockKey("key1")
           unlockContext.unlockKey("key2")
-          return Ok(ByteArray(0))
+          return Ok(SensitiveBytes(ByteArray(0)))
         }
 
         override suspend fun decryptFromStream(
@@ -233,7 +234,7 @@ class PasskeyPgpDecryptorIntegrationTest {
           ciphertextLength: Long,
           unlockContext: PgpUnlockContext,
           limits: PasskeyInputLimits,
-        ): Result<ByteArray, PasskeyDecryptionError> = Ok(ByteArray(0))
+        ): Result<SensitiveBytes, PasskeyDecryptionError> = Ok(SensitiveBytes(ByteArray(0)))
       }
 
     val file = File.createTempFile("test", ".gpg")

@@ -63,7 +63,7 @@ public class PasskeyStorageDiagnostics(
             result.fold(
               success = {
                 successful++
-                it.fill(0)
+                it.close()
               },
               failure = { error ->
                 when (error) {

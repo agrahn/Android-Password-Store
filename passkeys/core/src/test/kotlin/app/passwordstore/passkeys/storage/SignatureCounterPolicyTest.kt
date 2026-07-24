@@ -76,9 +76,9 @@ class SignatureCounterPolicyTest {
 
   @Test
   fun `syncable credential performs zero writes`() = runBlocking {
-    val credential = createAndSaveCredential("example.com", "user1")
+    val (credential, privateKey) = createCredentialPair("example.com", "user1")
     val countingStorage = CountingPasskeyStorage()
-    countingStorage.saveCredential(credential)
+    countingStorage.saveCredential(credential, privateKey)
 
     val policy = SignatureCounterPolicy.ZERO_FOR_SYNCABLE
 
@@ -277,10 +277,10 @@ class SignatureCounterPolicyTest {
   @Test
   fun `migration of existing git credential uses zero policy without parse failure`() =
     runBlocking {
+      val privateKey = ByteArray(32) { it.toByte() }
       val credential =
         PasskeyCredential(
           credentialId = "migrated-cred".toByteArray(),
-          privateKey = ByteArray(32) { it.toByte() },
           publicKey = ByteArray(65) { if (it == 0) 0x04.toByte() else it.toByte() },
           rpId = "example.com",
           user =
@@ -296,7 +296,7 @@ class SignatureCounterPolicyTest {
           backupEligible = true,
           backupState = false,
         )
-      storage.saveCredential(credential)
+      storage.saveCredential(credential, privateKey)
 
       val policy = SignatureCounterPolicy.ZERO_FOR_SYNCABLE
       val signCount =
@@ -321,7 +321,7 @@ class SignatureCounterPolicyTest {
   }
 
   @Test
-  fun `high water mark reset clears state`() {
+  fun `high water mark_reset clears state`() {
     val credId = "test-cred".toByteArray()
     highWaterMark.updateHighWaterMark(credId, 5u)
     assertEquals(5u, highWaterMark.getHighWaterMark(credId))
@@ -373,31 +373,20 @@ class SignatureCounterPolicyTest {
     }
 
   private suspend fun createAndSaveCredential(rpId: String, userName: String): PasskeyCredential {
-    val credential =
-      PasskeyCredential(
-        credentialId = "$userName-cred-id".toByteArray(),
-        privateKey = ByteArray(32) { it.toByte() },
-        publicKey = ByteArray(65) { if (it == 0) 0x04.toByte() else it.toByte() },
-        rpId = rpId,
-        user = FidoUser(id = "$userName-id".toByteArray(), name = userName, displayName = userName),
-        signCount = 0u,
-        createdAt = Clock.System.now(),
-        transports = listOf("internal"),
-        uvInitialized = true,
-      )
-    storage.saveCredential(credential)
+    val (credential, privateKey) = createCredentialPair(rpId, userName)
+    storage.saveCredential(credential, privateKey)
     return credential
   }
 
-  private suspend fun createAndSaveCredentialWithSignCount(
+  private fun createCredentialPair(
     rpId: String,
     userName: String,
-    signCount: ULong,
-  ): PasskeyCredential {
+    signCount: ULong = 0u,
+  ): Pair<PasskeyCredential, ByteArray> {
+    val privateKey = ByteArray(32) { it.toByte() }
     val credential =
       PasskeyCredential(
         credentialId = "$userName-cred-id".toByteArray(),
-        privateKey = ByteArray(32) { it.toByte() },
         publicKey = ByteArray(65) { if (it == 0) 0x04.toByte() else it.toByte() },
         rpId = rpId,
         user = FidoUser(id = "$userName-id".toByteArray(), name = userName, displayName = userName),
@@ -406,7 +395,16 @@ class SignatureCounterPolicyTest {
         transports = listOf("internal"),
         uvInitialized = true,
       )
-    storage.saveCredential(credential)
+    return Pair(credential, privateKey)
+  }
+
+  private suspend fun createAndSaveCredentialWithSignCount(
+    rpId: String,
+    userName: String,
+    signCount: ULong,
+  ): PasskeyCredential {
+    val (credential, privateKey) = createCredentialPair(rpId, userName, signCount)
+    storage.saveCredential(credential, privateKey)
     return credential
   }
 
@@ -488,8 +486,10 @@ private class VersionMutatingPasskeyStorage(private val delegate: InMemoryPasske
     delegate.loadForSigning(credentialId)
 
   override suspend fun saveCredential(
-    credential: app.passwordstore.passkeys.model.PasskeyCredential
-  ): com.github.michaelbull.result.Result<Unit, Throwable> = delegate.saveCredential(credential)
+    credential: app.passwordstore.passkeys.model.PasskeyCredential,
+    privateKey: ByteArray,
+  ): com.github.michaelbull.result.Result<Unit, Throwable> =
+    delegate.saveCredential(credential, privateKey)
 
   override suspend fun deleteCredential(
     credentialId: ByteArray
@@ -531,8 +531,10 @@ private class FailingUpdateSignCountStorage(private val delegate: PasskeyStorage
     delegate.loadForSigning(credentialId)
 
   override suspend fun saveCredential(
-    credential: app.passwordstore.passkeys.model.PasskeyCredential
-  ): com.github.michaelbull.result.Result<Unit, Throwable> = delegate.saveCredential(credential)
+    credential: app.passwordstore.passkeys.model.PasskeyCredential,
+    privateKey: ByteArray,
+  ): com.github.michaelbull.result.Result<Unit, Throwable> =
+    delegate.saveCredential(credential, privateKey)
 
   override suspend fun deleteCredential(
     credentialId: ByteArray

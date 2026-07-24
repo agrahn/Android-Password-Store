@@ -92,7 +92,7 @@ class WebAuthnBackupFlagsTest {
 
   @Test
   fun `new syncable credential before push has BE=1 BS=0`() {
-    val credential =
+    val created =
       cryptoHandler
         .createCredential(
           rpId = "example.com",
@@ -103,27 +103,20 @@ class WebAuthnBackupFlagsTest {
         )
         .getOrElse { throw AssertionError("Create failed") }
 
-    assertTrue(credential.backupEligible, "New credential should be backup eligible")
-    assertFalse(credential.backupState, "New credential should not be backed up yet")
+    assertTrue(created.credential.backupEligible, "New credential should be backup eligible")
+    assertFalse(created.credential.backupState, "New credential should not be backed up yet")
   }
 
   @Test
   fun `assertion flags include BE for syncable credential`() {
-    val credential =
-      cryptoHandler
-        .createCredential(
-          rpId = "example.com",
-          userId = "user".toByteArray(),
-          userName = "user",
-          userDisplayName = "User",
-          challenge = ByteArray(32),
-        )
-        .getOrElse { throw AssertionError("Create failed") }
+    val (credential, privateKey) =
+      createSyncableCredentialPair(backupEligible = true, backupState = false)
 
     val assertion =
       cryptoHandler
         .getAssertion(
           credential = credential,
+          privateKey = privateKey,
           rpId = "example.com",
           challenge = ByteArray(32),
           origin = "https://example.com",
@@ -139,12 +132,14 @@ class WebAuthnBackupFlagsTest {
 
   @Test
   fun `assertion flags include BE and BS for backed up credential`() {
-    val credential = createSyncableCredential(backupEligible = true, backupState = true)
+    val (credential, privateKey) =
+      createSyncableCredentialPair(backupEligible = true, backupState = true)
 
     val assertion =
       cryptoHandler
         .getAssertion(
           credential = credential,
+          privateKey = privateKey,
           rpId = "example.com",
           challenge = ByteArray(32),
           origin = "https://example.com",
@@ -158,12 +153,14 @@ class WebAuthnBackupFlagsTest {
 
   @Test
   fun `assertion flags exclude BE for device-bound credential`() {
-    val credential = createSyncableCredential(backupEligible = false, backupState = false)
+    val (credential, privateKey) =
+      createSyncableCredentialPair(backupEligible = false, backupState = false)
 
     val assertion =
       cryptoHandler
         .getAssertion(
           credential = credential,
+          privateKey = privateKey,
           rpId = "example.com",
           challenge = ByteArray(32),
           origin = "https://example.com",
@@ -180,7 +177,6 @@ class WebAuthnBackupFlagsTest {
     assertFailsWith<IllegalArgumentException> {
       PasskeyCredential(
         credentialId = ByteArray(32),
-        privateKey = ByteArray(32),
         publicKey = ByteArray(65),
         rpId = "example.com",
         user = FidoUser(id = ByteArray(1), name = "u", displayName = "u"),
@@ -256,9 +252,10 @@ class WebAuthnBackupFlagsTest {
 
   @Test
   fun `StoredCredential fromPasskeyCredential propagates backup fields`() {
-    val credential = createSyncableCredential(backupEligible = true, backupState = true)
+    val (credential, privateKey) =
+      createSyncableCredentialPair(backupEligible = true, backupState = true)
 
-    val stored = StoredCredential.fromPasskeyCredential(credential)
+    val stored = StoredCredential.fromPasskeyCredential(credential, privateKey)
 
     assertTrue(stored.backupEligible)
     assertTrue(stored.backupState)
@@ -300,23 +297,24 @@ class WebAuthnBackupFlagsTest {
     assertEquals(original.alg, reparsed.alg)
   }
 
-  private fun createSyncableCredential(
+  private fun createSyncableCredentialPair(
     backupEligible: Boolean = true,
     backupState: Boolean = false,
-  ): PasskeyCredential {
+  ): Pair<PasskeyCredential, ByteArray> {
     val (privateKey, publicKey) = cryptoHandler.generateKeyPair()
-    return PasskeyCredential(
-      credentialId = ByteArray(32) { it.toByte() },
-      privateKey = privateKey,
-      publicKey = publicKey,
-      rpId = "example.com",
-      user = FidoUser(id = "user-id".toByteArray(), name = "testuser", displayName = "Test User"),
-      signCount = 0u,
-      createdAt = Clock.System.now(),
-      transports = listOf("internal"),
-      uvInitialized = true,
-      backupEligible = backupEligible,
-      backupState = backupState,
-    )
+    val credential =
+      PasskeyCredential(
+        credentialId = ByteArray(32) { it.toByte() },
+        publicKey = publicKey,
+        rpId = "example.com",
+        user = FidoUser(id = "user-id".toByteArray(), name = "testuser", displayName = "Test User"),
+        signCount = 0u,
+        createdAt = Clock.System.now(),
+        transports = listOf("internal"),
+        uvInitialized = true,
+        backupEligible = backupEligible,
+        backupState = backupState,
+      )
+    return Pair(credential, privateKey)
   }
 }

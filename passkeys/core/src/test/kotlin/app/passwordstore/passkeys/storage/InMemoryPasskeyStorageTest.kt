@@ -44,9 +44,9 @@ class InMemoryPasskeyStorageTest {
 
   @Test
   fun `saveCredential and loadForSigning work correctly`() = runBlocking {
-    val credential = createTestCredential()
+    val (credential, privateKey) = createTestCredential()
 
-    val saveResult = storage.saveCredential(credential)
+    val saveResult = storage.saveCredential(credential, privateKey)
     assertTrue(saveResult.isOk)
 
     val loadResult = storage.loadForSigning(credential.credentialId)
@@ -86,9 +86,9 @@ class InMemoryPasskeyStorageTest {
         credentialId = "cred3".toByteArray(),
       )
 
-    storage.saveCredential(cred1)
-    storage.saveCredential(cred2)
-    storage.saveCredential(cred3)
+    storage.saveCredential(cred1.first, cred1.second)
+    storage.saveCredential(cred2.first, cred2.second)
+    storage.saveCredential(cred3.first, cred3.second)
 
     val result = storage.listMetadata("example.com")
     assertTrue(result.isOk)
@@ -102,8 +102,8 @@ class InMemoryPasskeyStorageTest {
     val cred1 = createTestCredential(rpId = "example.com", credentialId = "cred1".toByteArray())
     val cred2 = createTestCredential(rpId = "other.com", credentialId = "cred2".toByteArray())
 
-    storage.saveCredential(cred1)
-    storage.saveCredential(cred2)
+    storage.saveCredential(cred1.first, cred1.second)
+    storage.saveCredential(cred2.first, cred2.second)
 
     val result = storage.listMetadata(null)
     assertTrue(result.isOk)
@@ -113,8 +113,8 @@ class InMemoryPasskeyStorageTest {
 
   @Test
   fun `deleteCredential removes credential`() = runBlocking {
-    val credential = createTestCredential()
-    storage.saveCredential(credential)
+    val (credential, privateKey) = createTestCredential()
+    storage.saveCredential(credential, privateKey)
 
     val deleteResult = storage.deleteCredential(credential.credentialId)
     assertTrue(deleteResult.isOk)
@@ -133,8 +133,8 @@ class InMemoryPasskeyStorageTest {
 
   @Test
   fun `updateSignCount updates sign count`() = runBlocking {
-    val credential = createTestCredential()
-    storage.saveCredential(credential)
+    val (credential, privateKey) = createTestCredential()
+    storage.saveCredential(credential, privateKey)
 
     val updateResult = storage.updateSignCount(credential.credentialId, 5u)
     assertTrue(updateResult.isOk)
@@ -156,10 +156,12 @@ class InMemoryPasskeyStorageTest {
   fun `count tracks stored credentials`() = runBlocking {
     assertEquals(0, storage.count())
 
-    storage.saveCredential(createTestCredential(credentialId = "cred1".toByteArray()))
+    val c1 = createTestCredential(credentialId = "cred1".toByteArray())
+    storage.saveCredential(c1.first, c1.second)
     assertEquals(1, storage.count())
 
-    storage.saveCredential(createTestCredential(credentialId = "cred2".toByteArray()))
+    val c2 = createTestCredential(credentialId = "cred2".toByteArray())
+    storage.saveCredential(c2.first, c2.second)
     assertEquals(2, storage.count())
 
     storage.clear()
@@ -168,11 +170,11 @@ class InMemoryPasskeyStorageTest {
 
   @Test
   fun `saveCredential overwrites existing with same id`() = runBlocking {
-    val credential = createTestCredential()
-    storage.saveCredential(credential)
+    val (credential, privateKey) = createTestCredential()
+    storage.saveCredential(credential, privateKey)
 
     val updated = credential.copy(signCount = 10u)
-    storage.saveCredential(updated)
+    storage.saveCredential(updated, privateKey)
 
     val result = storage.listMetadata()
     assertTrue(result.isOk)
@@ -186,17 +188,19 @@ class InMemoryPasskeyStorageTest {
     rpId: String = "example.com",
     userName: String = "testuser",
     credentialId: ByteArray = "test-cred-id".toByteArray(),
-  ): PasskeyCredential {
-    return PasskeyCredential(
-      credentialId = credentialId,
-      privateKey = ByteArray(32) { it.toByte() },
-      publicKey = ByteArray(65) { if (it == 0) 0x04.toByte() else it.toByte() },
-      rpId = rpId,
-      user = FidoUser(id = "user-id".toByteArray(), name = userName, displayName = "Test User"),
-      signCount = 0u,
-      createdAt = Clock.System.now(),
-      transports = listOf("internal"),
-      uvInitialized = true,
-    )
+  ): Pair<PasskeyCredential, ByteArray> {
+    val privateKey = ByteArray(32) { it.toByte() }
+    val credential =
+      PasskeyCredential(
+        credentialId = credentialId,
+        publicKey = ByteArray(65) { if (it == 0) 0x04.toByte() else it.toByte() },
+        rpId = rpId,
+        user = FidoUser(id = "user-id".toByteArray(), name = userName, displayName = "Test User"),
+        signCount = 0u,
+        createdAt = Clock.System.now(),
+        transports = listOf("internal"),
+        uvInitialized = true,
+      )
+    return Pair(credential, privateKey)
   }
 }

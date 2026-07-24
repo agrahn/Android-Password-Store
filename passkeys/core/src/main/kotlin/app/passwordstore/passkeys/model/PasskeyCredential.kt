@@ -14,7 +14,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class PasskeyCredential(
   public val credentialId: ByteArray,
-  public val privateKey: ByteArray,
   public val publicKey: ByteArray,
   public val rpId: String,
   public val user: FidoUser,
@@ -37,13 +36,12 @@ public data class PasskeyCredential(
   }
 
   override fun toString(): String =
-    "PasskeyCredential(credentialId=${'$'}{credentialId.contentToString()}, rpId=$'$'{rpId}, privateKey=<REDACTED>, publicKey=${'$'}{publicKey.contentToString()})"
+    "PasskeyCredential(credentialId=<redacted>, rpId=$'$'{rpId}, publicKey=<redacted>)"
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other !is PasskeyCredential) return false
     if (!credentialId.contentEquals(other.credentialId)) return false
-    if (!privateKey.contentEquals(other.privateKey)) return false
     if (!publicKey.contentEquals(other.publicKey)) return false
     if (rpId != other.rpId) return false
     if (user != other.user) return false
@@ -62,7 +60,6 @@ public data class PasskeyCredential(
 
   override fun hashCode(): Int {
     var result = credentialId.contentHashCode()
-    result = 31 * result + privateKey.contentHashCode()
     result = 31 * result + publicKey.contentHashCode()
     result = 31 * result + rpId.hashCode()
     result = 31 * result + user.hashCode()

@@ -32,7 +32,7 @@ class PasskeyProviderUtilsTest {
 
   @Test
   fun `selectCredentials returns all credentials when allow list is empty`() {
-    val credentials = listOf(sampleCredential("one"), sampleCredential("two"))
+    val credentials = listOf(sampleCredential("one").first, sampleCredential("two").first)
 
     val selected = PasskeyProviderUtils.selectCredentials(credentials, emptyList())
 
@@ -66,8 +66,8 @@ class PasskeyProviderUtilsTest {
   @Test
   fun `file-only metadata loads account identity without changing credential`() = runBlocking {
     val storage = InMemoryPasskeyStorage()
-    val credential = sampleCredential("forkline")
-    assertTrue(storage.saveCredential(credential).isOk)
+    val (credential, privateKey) = sampleCredential("forkline")
+    assertTrue(storage.saveCredential(credential, privateKey).isOk)
     val fileOnlyMetadata = sampleMetadata("", "", credential.credentialId)
 
     val hydrated = PasskeyProviderUtils.loadStoredIdentity(storage, fileOnlyMetadata)
@@ -84,21 +84,21 @@ class PasskeyProviderUtilsTest {
 
     val selected =
       PasskeyProviderUtils.selectCredentials(
-        listOf(first, second),
+        listOf(first.first, second.first),
         listOf(
           PublicKeyCredentialDescriptor(
             type = "public-key",
-            id = PasskeyProviderUtils.encodeBase64Url(second.credentialId),
+            id = PasskeyProviderUtils.encodeBase64Url(second.first.credentialId),
           )
         ),
       )
 
-    assertEquals(listOf(second), selected)
+    assertEquals(listOf(second.first), selected)
   }
 
   @Test
   fun `buildAssertionResponse preserves assertion and request metadata`() {
-    val credential = sampleCredential("alice")
+    val (credential, _) = sampleCredential("alice")
     val assertion =
       AssertionResult(
         credentialId = credential.credentialId,
@@ -148,7 +148,7 @@ class PasskeyProviderUtilsTest {
 
   @Test
   fun `buildAttestationResponse encodes none attestation with auth data`() {
-    val credential = sampleCredential("alice")
+    val (credential, _) = sampleCredential("alice")
     val verifiedContext =
       VerifiedWebAuthnContext(
         callingPackage = "com.test.app",
@@ -188,16 +188,18 @@ class PasskeyProviderUtilsTest {
     assertTrue(attestationObject.indexOfSubsequence(credential.publicKey.copyOfRange(33, 65)) >= 0)
   }
 
-  private fun sampleCredential(userName: String): PasskeyCredential {
+  private fun sampleCredential(userName: String): Pair<PasskeyCredential, ByteArray> {
     val (privateKey, publicKey) = cryptoHandler.generateKeyPair()
-    return PasskeyCredential(
-      credentialId = "credential-$userName".toByteArray(),
-      privateKey = privateKey,
-      publicKey = publicKey,
-      rpId = "example.com",
-      user = FidoUser(id = "user-$userName".toByteArray(), name = userName, displayName = userName),
-      createdAt = Clock.System.now(),
-    )
+    val credential =
+      PasskeyCredential(
+        credentialId = "credential-$userName".toByteArray(),
+        publicKey = publicKey,
+        rpId = "example.com",
+        user =
+          FidoUser(id = "user-$userName".toByteArray(), name = userName, displayName = userName),
+        createdAt = Clock.System.now(),
+      )
+    return Pair(credential, privateKey)
   }
 
   private fun sampleMetadata(

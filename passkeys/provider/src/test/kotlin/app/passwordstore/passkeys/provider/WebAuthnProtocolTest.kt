@@ -25,11 +25,12 @@ class WebAuthnProtocolTest {
 
   @Test
   fun `authenticator data has correct structure for assertion`() {
-    val credential = createTestCredential()
+    val (credential, privateKey) = createTestCredential()
     val assertion =
       cryptoHandler
         .getAssertion(
           credential = credential,
+          privateKey = privateKey,
           rpId = credential.rpId,
           challenge = ByteArray(32) { it.toByte() },
           origin = "https://${credential.rpId}",
@@ -54,7 +55,7 @@ class WebAuthnProtocolTest {
 
   @Test
   fun `attestation object has correct CBOR structure`() {
-    val credential = createTestCredential()
+    val (credential, _) = createTestCredential()
     val requestJson =
       """
       {
@@ -97,7 +98,7 @@ class WebAuthnProtocolTest {
 
   @Test
   fun `attested credential data is included in attestation`() {
-    val credential = createTestCredential()
+    val (credential, _) = createTestCredential()
     val requestJson =
       """
       {
@@ -133,7 +134,7 @@ class WebAuthnProtocolTest {
 
   @Test
   fun `client data JSON has correct format`() {
-    val credential = createTestCredential()
+    val (credential, _) = createTestCredential()
     val requestJson =
       """
       {
@@ -174,7 +175,7 @@ class WebAuthnProtocolTest {
 
   @Test
   fun `assertion response has correct format`() {
-    val credential = createTestCredential()
+    val (credential, privateKey) = createTestCredential()
     val requestJson =
       """
       {
@@ -189,6 +190,7 @@ class WebAuthnProtocolTest {
       cryptoHandler
         .getAssertion(
           credential = credential,
+          privateKey = privateKey,
           rpId = credential.rpId,
           challenge = ByteArray(32) { it.toByte() },
           origin = "https://${credential.rpId}",
@@ -249,7 +251,7 @@ class WebAuthnProtocolTest {
         )
         .getOrElse { throw AssertionError("Failed") }
 
-    assertEquals(32, cred1.credentialId.size, "Credential ID should be 32 bytes")
+    assertEquals(32, cred1.credential.credentialId.size, "Credential ID should be 32 bytes")
 
     val cred2 =
       cryptoHandler
@@ -263,7 +265,7 @@ class WebAuthnProtocolTest {
         .getOrElse { throw AssertionError("Failed") }
 
     assertTrue(
-      !cred1.credentialId.contentEquals(cred2.credentialId),
+      !cred1.credential.credentialId.contentEquals(cred2.credential.credentialId),
       "Each credential should have unique ID",
     )
   }
@@ -273,11 +275,12 @@ class WebAuthnProtocolTest {
     val rpId = "example.com"
     val expectedHash = java.security.MessageDigest.getInstance("SHA-256").digest(rpId.toByteArray())
 
-    val credential = createTestCredential(rpId = rpId)
+    val (credential, privateKey) = createTestCredential(rpId = rpId)
     val assertion =
       cryptoHandler
         .getAssertion(
           credential = credential,
+          privateKey = privateKey,
           rpId = rpId,
           challenge = ByteArray(32) { it.toByte() },
           origin = "https://$rpId",
@@ -291,19 +294,20 @@ class WebAuthnProtocolTest {
   private fun createTestCredential(
     rpId: String = "example.com",
     userName: String = "testuser",
-  ): PasskeyCredential {
+  ): Pair<PasskeyCredential, ByteArray> {
     val (privateKey, publicKey) = cryptoHandler.generateKeyPair()
-    return PasskeyCredential(
-      credentialId = ByteArray(32) { it.toByte() },
-      privateKey = privateKey,
-      publicKey = publicKey,
-      rpId = rpId,
-      user = FidoUser(id = "user-id".toByteArray(), name = userName, displayName = "Test User"),
-      signCount = 0u,
-      createdAt = Clock.System.now(),
-      transports = listOf("internal"),
-      uvInitialized = true,
-    )
+    val credential =
+      PasskeyCredential(
+        credentialId = ByteArray(32) { it.toByte() },
+        publicKey = publicKey,
+        rpId = rpId,
+        user = FidoUser(id = "user-id".toByteArray(), name = userName, displayName = "Test User"),
+        signCount = 0u,
+        createdAt = Clock.System.now(),
+        transports = listOf("internal"),
+        uvInitialized = true,
+      )
+    return Pair(credential, privateKey)
   }
 
   private fun findAuthDataInCbor(data: ByteArray): Int {

@@ -6,6 +6,7 @@
 package app.passwordstore.passkeys.crypto
 
 import app.passwordstore.passkeys.security.PasskeyInputLimits
+import app.passwordstore.passkeys.security.SensitiveBytes
 import com.github.michaelbull.result.Result
 import java.io.File
 import java.io.InputStream
@@ -16,13 +17,13 @@ public interface PasskeyPgpDecryptor {
     file: File,
     unlockContext: PgpUnlockContext,
     limits: PasskeyInputLimits = PasskeyInputLimits.DEFAULT,
-  ): Result<ByteArray, PasskeyDecryptionError>
+  ): Result<SensitiveBytes, PasskeyDecryptionError>
 
   public suspend fun decryptFromBytes(
     ciphertext: ByteArray,
     unlockContext: PgpUnlockContext,
     limits: PasskeyInputLimits = PasskeyInputLimits.DEFAULT,
-  ): Result<ByteArray, PasskeyDecryptionError> {
+  ): Result<SensitiveBytes, PasskeyDecryptionError> {
     return decrypt(
       java.io.File.createTempFile("passkey-decrypt-", ".tmp").also {
         it.deleteOnExit()
@@ -38,7 +39,7 @@ public interface PasskeyPgpDecryptor {
     ciphertextLength: Long,
     unlockContext: PgpUnlockContext,
     limits: PasskeyInputLimits = PasskeyInputLimits.DEFAULT,
-  ): Result<ByteArray, PasskeyDecryptionError>
+  ): Result<SensitiveBytes, PasskeyDecryptionError>
 }
 
 public interface PgpUnlockContext {

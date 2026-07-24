@@ -7,6 +7,7 @@
 
 package app.passwordstore.passkeys.model
 
+import app.passwordstore.passkeys.security.SensitiveBytes
 import kotlin.time.Instant
 
 public class SensitivePasskeyCredential(
@@ -21,21 +22,24 @@ public class SensitivePasskeyCredential(
   public val backupEligible: Boolean,
   public val backupState: Boolean,
   public val fileLastModified: Long,
-  privateKey: ByteArray,
+  privateKey: SensitiveBytes,
 ) : AutoCloseable {
 
-  @Volatile private var privateKey: ByteArray? = privateKey
+  @Volatile private var privateKey: SensitiveBytes? = privateKey
 
   public fun <T> usePrivateKey(block: (ByteArray) -> T): T {
-    val key = privateKey ?: throw IllegalStateException("Credential has been closed")
-    return block(key)
+    val keyOwner = privateKey ?: throw IllegalStateException("Credential has been closed")
+    return keyOwner.borrow { key -> block(key) }
   }
 
-  public fun toPasskeyCredential(): PasskeyCredential {
-    val key = privateKey ?: throw IllegalStateException("Credential has been closed")
+  public suspend fun <T> usePrivateKeySuspend(block: suspend (ByteArray) -> T): T {
+    val keyOwner = privateKey ?: throw IllegalStateException("Credential has been closed")
+    return keyOwner.borrow { key -> block(key) }
+  }
+
+  public fun toPublicCredential(): PasskeyCredential {
     return PasskeyCredential(
       credentialId = credentialId.copyOf(),
-      privateKey = key,
       publicKey = publicKey.copyOf(),
       rpId = rpId,
       user = user,
@@ -49,35 +53,49 @@ public class SensitivePasskeyCredential(
   }
 
   override fun close() {
-    privateKey?.fill(0)
+    privateKey?.close()
     privateKey = null
   }
+
+  override fun toString(): String =
+    "SensitivePasskeyCredential(credentialId=<redacted>, rpId=$rpId, privateKey=<REDACTED>)"
 
   public companion object {
     public fun fromStoredCredential(
       stored: StoredCredential,
       fileLastModified: Long = 0L,
     ): SensitivePasskeyCredential {
-      return SensitivePasskeyCredential(
-        credentialId = stored.id.copyOf(),
-        publicKey =
-          stored.publicKey?.copyOf() ?: StoredCredential.deriveP256PublicKey(stored.privateKey),
-        rpId = stored.rp.id,
-        user =
-          FidoUser(
-            id = stored.user.id.copyOf(),
-            name = stored.user.name ?: "",
-            displayName = stored.user.displayName ?: "",
-          ),
-        signCount = stored.signCount.toULong(),
-        createdAt = Instant.fromEpochSeconds(stored.created),
-        transports = listOf("internal"),
-        uvInitialized = true,
-        backupEligible = stored.backupEligible,
-        backupState = stored.backupState,
-        fileLastModified = fileLastModified,
-        privateKey = stored.privateKey.copyOf(),
-      )
+      val keyCopy = stored.privateKey.copyOf()
+      val sensitiveKey = SensitiveBytes(keyCopy)
+      val publicKeyCopy =
+        stored.publicKey?.copyOf() ?: StoredCredential.deriveP256PublicKey(keyCopy)
+      try {
+        val result =
+          SensitivePasskeyCredential(
+            credentialId = stored.id.copyOf(),
+            publicKey = publicKeyCopy,
+            rpId = stored.rp.id,
+            user =
+              FidoUser(
+                id = stored.user.id.copyOf(),
+                name = stored.user.name ?: "",
+                displayName = stored.user.displayName ?: "",
+              ),
+            signCount = stored.signCount.toULong(),
+            createdAt = Instant.fromEpochSeconds(stored.created),
+            transports = listOf("internal"),
+            uvInitialized = true,
+            backupEligible = stored.backupEligible,
+            backupState = stored.backupState,
+            fileLastModified = fileLastModified,
+            privateKey = sensitiveKey,
+          )
+        stored.wipe()
+        return result
+      } catch (e: Throwable) {
+        sensitiveKey.close()
+        throw e
+      }
     }
   }
 }

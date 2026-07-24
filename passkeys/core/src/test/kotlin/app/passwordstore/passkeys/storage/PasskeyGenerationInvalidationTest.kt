@@ -50,18 +50,19 @@ class PasskeyGenerationInvalidationTest {
     userName: String = "testuser",
     credentialId: ByteArray = "test-cred-id".toByteArray(),
     privateKey: ByteArray = ByteArray(32) { it.toByte() },
-  ): PasskeyCredential {
-    return PasskeyCredential(
-      credentialId = credentialId,
-      privateKey = privateKey,
-      publicKey = ByteArray(65) { if (it == 0) 0x04.toByte() else it.toByte() },
-      rpId = rpId,
-      user = FidoUser(id = "user-id".toByteArray(), name = userName, displayName = "Test User"),
-      signCount = 0u,
-      createdAt = Clock.System.now(),
-      transports = listOf("internal"),
-      uvInitialized = true,
-    )
+  ): Pair<PasskeyCredential, ByteArray> {
+    val credential =
+      PasskeyCredential(
+        credentialId = credentialId,
+        publicKey = ByteArray(65) { if (it == 0) 0x04.toByte() else it.toByte() },
+        rpId = rpId,
+        user = FidoUser(id = "user-id".toByteArray(), name = userName, displayName = "Test User"),
+        signCount = 0u,
+        createdAt = Clock.System.now(),
+        transports = listOf("internal"),
+        uvInitialized = true,
+      )
+    return Pair(credential, privateKey)
   }
 
   @Test
@@ -70,8 +71,8 @@ class PasskeyGenerationInvalidationTest {
     val provider = TestGenerationProvider()
     val indexed = IndexedPasskeyStorage(delegate, provider)
 
-    val cred = createTestCredential(credentialId = "c1".toByteArray())
-    delegate.saveCredential(cred)
+    val (cred, privateKey) = createTestCredential(credentialId = "c1".toByteArray())
+    delegate.saveCredential(cred, privateKey)
     indexed.invalidate(InvalidationReason.EXPLICIT_REQUEST)
 
     val listBefore = indexed.listMetadata()
@@ -92,8 +93,8 @@ class PasskeyGenerationInvalidationTest {
     val provider = TestGenerationProvider()
     val indexed = IndexedPasskeyStorage(delegate, provider)
 
-    val cred = createTestCredential(credentialId = "c1".toByteArray())
-    delegate.saveCredential(cred)
+    val (cred, privateKey) = createTestCredential(credentialId = "c1".toByteArray())
+    delegate.saveCredential(cred, privateKey)
     indexed.invalidate(InvalidationReason.EXPLICIT_REQUEST)
 
     val listBefore = indexed.listMetadata()
@@ -120,23 +121,23 @@ class PasskeyGenerationInvalidationTest {
     val delegate = InMemoryPasskeyStorage()
     val indexed = IndexedPasskeyStorage(delegate)
 
-    val cred =
+    val (cred, privateKey1) =
       createTestCredential(
         credentialId = "c1".toByteArray(),
         privateKey = ByteArray(32) { it.toByte() },
       )
-    delegate.saveCredential(cred)
+    delegate.saveCredential(cred, privateKey1)
 
     val version1 = delegate.resolveSourceVersion(cred.credentialId).getOrElse { null }
     assertNotNull(version1)
 
     delegate.deleteCredential(cred.credentialId)
-    val cred2 =
+    val (cred2, privateKey2) =
       createTestCredential(
         credentialId = "c1".toByteArray(),
         privateKey = ByteArray(32) { (it + 100).toByte() },
       )
-    delegate.saveCredential(cred2)
+    delegate.saveCredential(cred2, privateKey2)
 
     val version2 = delegate.resolveSourceVersion(cred.credentialId).getOrElse { null }
     assertNotNull(version2)
@@ -150,8 +151,8 @@ class PasskeyGenerationInvalidationTest {
     val provider = TestGenerationProvider()
     val indexed = IndexedPasskeyStorage(delegate, provider)
 
-    val cred = createTestCredential(credentialId = "c1".toByteArray())
-    delegate.saveCredential(cred)
+    val (cred, privateKey) = createTestCredential(credentialId = "c1".toByteArray())
+    delegate.saveCredential(cred, privateKey)
     indexed.listMetadata()
     assertEquals(1, indexed.indexedCredentialCount())
 
@@ -171,8 +172,8 @@ class PasskeyGenerationInvalidationTest {
     val provider = TestGenerationProvider()
     val indexed = IndexedPasskeyStorage(delegate, provider)
 
-    val cred = createTestCredential(credentialId = "c1".toByteArray())
-    delegate.saveCredential(cred)
+    val (cred, privateKey) = createTestCredential(credentialId = "c1".toByteArray())
+    delegate.saveCredential(cred, privateKey)
     indexed.listMetadata()
 
     assertFalse(indexed.isInMergeConflict())
@@ -197,8 +198,8 @@ class PasskeyGenerationInvalidationTest {
     val provider = TestGenerationProvider()
     val indexed = IndexedPasskeyStorage(delegate, provider)
 
-    val cred = createTestCredential(credentialId = "c1".toByteArray())
-    delegate.saveCredential(cred)
+    val (cred, privateKey) = createTestCredential(credentialId = "c1".toByteArray())
+    delegate.saveCredential(cred, privateKey)
     indexed.listMetadata()
     assertEquals(1, indexed.indexedCredentialCount())
 
@@ -217,8 +218,8 @@ class PasskeyGenerationInvalidationTest {
     val provider = TestGenerationProvider()
     val indexed = IndexedPasskeyStorage(delegate, provider)
 
-    val cred = createTestCredential(credentialId = "c1".toByteArray())
-    delegate.saveCredential(cred)
+    val (cred, privateKey) = createTestCredential(credentialId = "c1".toByteArray())
+    delegate.saveCredential(cred, privateKey)
     indexed.listMetadata()
     assertEquals(1, indexed.indexedCredentialCount())
 
@@ -238,8 +239,8 @@ class PasskeyGenerationInvalidationTest {
     val provider = TestGenerationProvider()
     val indexed = IndexedPasskeyStorage(delegate, provider)
 
-    val cred = createTestCredential(credentialId = "c1".toByteArray())
-    delegate.saveCredential(cred)
+    val (cred, privateKey) = createTestCredential(credentialId = "c1".toByteArray())
+    delegate.saveCredential(cred, privateKey)
     indexed.invalidate(InvalidationReason.EXPLICIT_REQUEST)
 
     withContext(Dispatchers.Default) {
@@ -271,8 +272,8 @@ class PasskeyGenerationInvalidationTest {
     val provider = TestGenerationProvider()
     val indexed = IndexedPasskeyStorage(delegate, provider)
 
-    val cred = createTestCredential(credentialId = "c1".toByteArray())
-    delegate.saveCredential(cred)
+    val (cred, privateKey) = createTestCredential(credentialId = "c1".toByteArray())
+    delegate.saveCredential(cred, privateKey)
     indexed.listMetadata()
     assertEquals(1, indexed.indexedCredentialCount())
 
@@ -295,8 +296,8 @@ class PasskeyGenerationInvalidationTest {
     val provider = TestGenerationProvider()
     val indexed = IndexedPasskeyStorage(delegate, provider)
 
-    val cred = createTestCredential(credentialId = "c1".toByteArray())
-    delegate.saveCredential(cred)
+    val (cred, privateKey) = createTestCredential(credentialId = "c1".toByteArray())
+    delegate.saveCredential(cred, privateKey)
     indexed.invalidate(InvalidationReason.EXPLICIT_REQUEST)
 
     val list1 = indexed.listMetadata()
@@ -317,8 +318,8 @@ class PasskeyGenerationInvalidationTest {
     val provider = TestGenerationProvider(identity = "repo-A")
     val indexed = IndexedPasskeyStorage(delegate, provider)
 
-    val cred = createTestCredential(credentialId = "c1".toByteArray())
-    delegate.saveCredential(cred)
+    val (cred, privateKey) = createTestCredential(credentialId = "c1".toByteArray())
+    delegate.saveCredential(cred, privateKey)
     indexed.listMetadata()
     assertEquals(1, indexed.indexedCredentialCount())
 
@@ -389,8 +390,8 @@ class PasskeyGenerationInvalidationTest {
     val provider = TestGenerationProvider()
     val indexed = IndexedPasskeyStorage(delegate, provider)
 
-    val cred = createTestCredential(credentialId = "c1".toByteArray())
-    indexed.saveCredential(cred)
+    val (cred, privateKey) = createTestCredential(credentialId = "c1".toByteArray())
+    indexed.saveCredential(cred, privateKey)
 
     assertEquals(1, indexed.indexedCredentialCount())
 
@@ -405,8 +406,8 @@ class PasskeyGenerationInvalidationTest {
     val provider = TestGenerationProvider()
     val indexed = IndexedPasskeyStorage(delegate, provider)
 
-    val cred = createTestCredential(credentialId = "c1".toByteArray())
-    indexed.saveCredential(cred)
+    val (cred, privateKey) = createTestCredential(credentialId = "c1".toByteArray())
+    indexed.saveCredential(cred, privateKey)
     assertEquals(1, indexed.indexedCredentialCount())
 
     indexed.deleteCredential(cred.credentialId)
