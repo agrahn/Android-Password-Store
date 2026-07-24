@@ -23,7 +23,7 @@
     },
     {
       "matchManagers": ["github-actions"],
-      "matchPackageNames": ["pando85/Android-Password-Store"],
+      "matchPackagePatterns": ["^pando85/android-password-store"],
       "enabled": false
     },
     {
