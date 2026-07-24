@@ -10,6 +10,7 @@ package app.passwordstore.passkeys.storage
 import app.passwordstore.passkeys.model.PasskeyCredential
 import app.passwordstore.passkeys.model.PasskeyMetadata
 import app.passwordstore.passkeys.model.SensitivePasskeyCredential
+import app.passwordstore.passkeys.security.PasskeyConcurrencyLimiter
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
@@ -27,6 +28,7 @@ import logcat.logcat
 public class IndexedPasskeyStorage(
   private val delegate: PasskeyStorage,
   private val generationProvider: RepositoryGenerationProvider? = null,
+  private val concurrencyLimiter: PasskeyConcurrencyLimiter = PasskeyConcurrencyLimiter.DEFAULT,
 ) : PasskeyStorage, PasskeyRepositoryState {
 
   private data class IndexedEntry(
@@ -88,27 +90,32 @@ public class IndexedPasskeyStorage(
   }
 
   private suspend fun rebuildIndex(generation: RepositoryGeneration?) {
-    withContext(Dispatchers.IO) {
-      metadataIndex.clear()
-      rpIdIndex.clear()
-      if (generationProvider != null) {
-        inMergeConflict = generationProvider.isInMergeOrRebaseState()
+    concurrencyLimiter.indexRebuildSemaphore.acquire()
+    try {
+      withContext(Dispatchers.IO) {
+        metadataIndex.clear()
+        rpIdIndex.clear()
+        if (generationProvider != null) {
+          inMergeConflict = generationProvider.isInMergeOrRebaseState()
+        }
+        delegate
+          .listMetadataWithRefs()
+          .fold(
+            success = { entries ->
+              entries.forEach { entry ->
+                indexMetadata(entry.metadata, entry.sourceVersion, entry.fileRef)
+              }
+              indexLoaded = true
+              trackedGeneration = generation
+            },
+            failure = { error ->
+              logcat(LogPriority.ERROR) { "Failed to load passkey index: $error" }
+              indexLoaded = false
+            },
+          )
       }
-      delegate
-        .listMetadataWithRefs()
-        .fold(
-          success = { entries ->
-            entries.forEach { entry ->
-              indexMetadata(entry.metadata, entry.sourceVersion, entry.fileRef)
-            }
-            indexLoaded = true
-            trackedGeneration = generation
-          },
-          failure = { error ->
-            logcat(LogPriority.ERROR) { "Failed to load passkey index: $error" }
-            indexLoaded = false
-          },
-        )
+    } finally {
+      concurrencyLimiter.indexRebuildSemaphore.release()
     }
   }
 

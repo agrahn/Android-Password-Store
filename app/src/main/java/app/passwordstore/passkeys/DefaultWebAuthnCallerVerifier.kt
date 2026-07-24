@@ -22,6 +22,7 @@ import app.passwordstore.passkeys.crypto.VerifiedWebAuthnContext
 import app.passwordstore.passkeys.provider.caller.BrowserAllowlist
 import app.passwordstore.passkeys.provider.caller.TrustedBrowserEntry
 import app.passwordstore.passkeys.provider.caller.WebAuthnCallerVerifier
+import app.passwordstore.passkeys.security.PasskeyConcurrencyLimiter
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
@@ -39,10 +40,12 @@ internal class DefaultWebAuthnCallerVerifier(
   private val context: Context,
   private val browserAllowlist: List<TrustedBrowserEntry> = BrowserAllowlist.DEFAULT_ALLOWLIST,
   private val diagnosticSink: (CallerVerificationDiagnostic) -> Unit = {},
+  private val concurrencyLimiter: PasskeyConcurrencyLimiter = PasskeyConcurrencyLimiter.DEFAULT,
 ) : WebAuthnCallerVerifier {
 
   private val assetLinksClient = DigitalAssetLinksClient()
   private val assetLinkCache = AssetLinkCache(maxEntries = 64, ttlMs = 5 * 60 * 1_000L)
+  private val dalFetchDeduplicator = DalFetchDeduplicator()
 
   override suspend fun verifyGetRequest(
     request: ProviderGetCredentialRequest,
@@ -234,7 +237,17 @@ internal class DefaultWebAuthnCallerVerifier(
       )
     }
 
-    val assetLinksResult = withContext(Dispatchers.IO) { assetLinksClient.fetchAssetLinks(rpId) }
+    val assetLinksResult =
+      withContext(Dispatchers.IO) {
+        dalFetchDeduplicator.deduplicate(rpId) {
+          concurrencyLimiter.dalFetchSemaphore.acquire()
+          try {
+            assetLinksClient.fetchAssetLinks(rpId)
+          } finally {
+            concurrencyLimiter.dalFetchSemaphore.release()
+          }
+        }
+      }
 
     val statements =
       assetLinksResult.fold(

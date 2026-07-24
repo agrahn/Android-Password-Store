@@ -23,6 +23,7 @@ public data class PasskeyStorageDiagnosticReport(
   val filesWithIntegrityErrors: Int,
   val filesWithIncorrectPassphrase: Int,
   val filesSuccessfullyDecrypted: Int,
+  val filesOversized: Int,
   val recipientKeyIssues: Map<String, Set<String>>,
 )
 
@@ -37,7 +38,7 @@ public class PasskeyStorageDiagnostics(
     withContext(Dispatchers.IO) {
       val passkeyDir = File(repositoryRoot, config.passkeyDirectory)
       if (!passkeyDir.exists() || !passkeyDir.isDirectory) {
-        return@withContext PasskeyStorageDiagnosticReport(0, 0, 0, 0, 0, 0, 0, emptyMap())
+        return@withContext PasskeyStorageDiagnosticReport(0, 0, 0, 0, 0, 0, 0, 0, emptyMap())
       }
 
       var totalFiles = 0
@@ -47,6 +48,7 @@ public class PasskeyStorageDiagnostics(
       var integrityErrors = 0
       var incorrectPassphrase = 0
       var successful = 0
+      var oversizedFiles = 0
       val recipientKeyIssues = mutableMapOf<String, MutableSet<String>>()
 
       passkeyDir
@@ -77,6 +79,8 @@ public class PasskeyStorageDiagnostics(
                   is PasskeyDecryptionError.IntegrityCheckFailed -> integrityErrors++
                   is PasskeyDecryptionError.MalformedCiphertext -> malformedCiphertext++
                   is PasskeyDecryptionError.UnsupportedFormat -> malformedCiphertext++
+                  is PasskeyDecryptionError.CiphertextTooLarge -> oversizedFiles++
+                  is PasskeyDecryptionError.PlaintextTooLarge -> oversizedFiles++
                 }
               },
             )
@@ -94,6 +98,7 @@ public class PasskeyStorageDiagnostics(
         filesWithIntegrityErrors = integrityErrors,
         filesWithIncorrectPassphrase = incorrectPassphrase,
         filesSuccessfullyDecrypted = successful,
+        filesOversized = oversizedFiles,
         recipientKeyIssues = recipientKeyIssues,
       )
     }
