@@ -33,7 +33,7 @@ public class SignatureCounterTransaction(
   public suspend fun executeMonotonicAssertion(
     credentialId: ByteArray,
     sensitiveCredential: SensitivePasskeyCredential,
-    preSignVersion: CredentialSourceVersion?,
+    preSignVersion: SourceVersionResult,
     lockTimeoutMs: Long = 5_000L,
   ): Result<ULong, SignatureCounterError> {
     val mutex = mutexFor(credentialId)
@@ -47,7 +47,7 @@ public class SignatureCounterTransaction(
   public suspend fun executeMonotonicAssertionExact(
     ref: PasskeyFileRef,
     sensitiveCredential: SensitivePasskeyCredential,
-    preSignVersion: CredentialSourceVersion?,
+    preSignVersion: SourceVersionResult,
     lockTimeoutMs: Long = 5_000L,
   ): Result<ULong, SignatureCounterError> {
     val mutex = mutexFor(ref.credentialId)
@@ -61,22 +61,32 @@ public class SignatureCounterTransaction(
   private suspend fun executeMonotonicAssertionLocked(
     credentialId: ByteArray,
     sensitiveCredential: SensitivePasskeyCredential,
-    preSignVersion: CredentialSourceVersion?,
+    preSignVersion: SourceVersionResult,
   ): Result<ULong, SignatureCounterError> {
     if (repositoryState.isInMergeConflict()) {
       return Err(SignatureCounterError.MergeConflict)
     }
 
-    val currentVersion =
-      storage
-        .resolveSourceVersion(credentialId)
+    val preSignStable =
+      preSignVersion
+        .toStableOrError()
         .fold(
           success = { it },
           failure = {
-            return Err(SignatureCounterError.PersistenceFailed)
+            return Err(it)
           },
         )
-    if (preSignVersion != null && currentVersion != null && preSignVersion != currentVersion) {
+
+    val currentStable =
+      requireStableVersion(credentialId)
+        .fold(
+          success = { it },
+          failure = {
+            return Err(it)
+          },
+        )
+
+    if (preSignStable != currentStable) {
       return Err(SignatureCounterError.FileChangedSinceSelection)
     }
 
@@ -96,32 +106,38 @@ public class SignatureCounterTransaction(
   private suspend fun executeMonotonicAssertionLockedExact(
     ref: PasskeyFileRef,
     sensitiveCredential: SensitivePasskeyCredential,
-    preSignVersion: CredentialSourceVersion?,
+    preSignVersion: SourceVersionResult,
   ): Result<ULong, SignatureCounterError> {
     if (repositoryState.isInMergeConflict()) {
       return Err(SignatureCounterError.MergeConflict)
     }
 
-    val currentVersion =
-      storage
-        .resolveSourceVersionExact(ref)
+    val preSignStable =
+      preSignVersion
+        .toStableOrError()
         .fold(
           success = { it },
           failure = {
-            return Err(SignatureCounterError.PersistenceFailed)
+            return Err(it)
           },
         )
 
-    if (preSignVersion != null && currentVersion == null) {
-      return Err(SignatureCounterError.FileChangedSinceSelection)
-    }
-    if (preSignVersion != null && currentVersion != null && preSignVersion != currentVersion) {
+    val currentStable =
+      requireStableVersionExact(ref)
+        .fold(
+          success = { it },
+          failure = {
+            return Err(it)
+          },
+        )
+
+    if (preSignStable != currentStable) {
       return Err(SignatureCounterError.FileChangedSinceSelection)
     }
 
     val freshCredential =
       storage
-        .loadForSigningExact(ref, currentVersion)
+        .loadForSigningExact(ref, currentStable)
         .fold(
           success = { it },
           failure = {
@@ -131,6 +147,34 @@ public class SignatureCounterTransaction(
 
     return finalizeAssertion(ref.credentialId, freshCredential)
   }
+
+  private suspend fun requireStableVersion(
+    credentialId: ByteArray
+  ): Result<CredentialSourceVersion, SignatureCounterError> =
+    storage
+      .resolveSourceVersion(credentialId)
+      .fold(
+        success = { it.toStableOrError() },
+        failure = { Err(SignatureCounterError.PersistenceFailed) },
+      )
+
+  private suspend fun requireStableVersionExact(
+    ref: PasskeyFileRef
+  ): Result<CredentialSourceVersion, SignatureCounterError> =
+    storage
+      .resolveSourceVersionExact(ref)
+      .fold(
+        success = { it.toStableOrError() },
+        failure = { Err(SignatureCounterError.PersistenceFailed) },
+      )
+
+  private fun SourceVersionResult.toStableOrError():
+    Result<CredentialSourceVersion, SignatureCounterError> =
+    when (this) {
+      is SourceVersionResult.Stable -> Ok(version)
+      is SourceVersionResult.Missing -> Err(SignatureCounterError.FileChangedSinceSelection)
+      is SourceVersionResult.Unavailable -> Err(SignatureCounterError.PersistenceFailed)
+    }
 
   private suspend fun finalizeAssertion(
     credentialId: ByteArray,

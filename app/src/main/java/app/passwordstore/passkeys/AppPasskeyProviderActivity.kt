@@ -40,6 +40,7 @@ import app.passwordstore.passkeys.storage.SignatureCounterError
 import app.passwordstore.passkeys.storage.SignatureCounterHighWaterMark
 import app.passwordstore.passkeys.storage.SignatureCounterPolicy
 import app.passwordstore.passkeys.storage.SignatureCounterTransaction
+import app.passwordstore.passkeys.storage.SourceVersionResult
 import app.passwordstore.ui.git.base.BaseGitActivity
 import app.passwordstore.ui.git.base.BaseGitActivity.GitOp
 import app.passwordstore.util.extensions.sharedPrefs
@@ -182,18 +183,29 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
 
       val credentialId = PasskeyProviderUtils.decodeBase64Url(selectedCredentialId)
 
-      val metadata =
+      val metadataWithRef =
         passkeyStorage
-          .listMetadata(parsedRequest.rpId)
+          .listMetadataWithRefs(parsedRequest.rpId)
           .fold(
-            success = { list -> list.firstOrNull { it.credentialId.contentEquals(credentialId) } },
+            success = { list ->
+              list.firstOrNull { it.metadata.credentialId.contentEquals(credentialId) }
+            },
             failure = {
               logcat(LogPriority.ERROR) { "Failed reading passkey metadata: $it" }
               null
             },
           )
-      if (metadata == null) {
+      if (metadataWithRef == null) {
         finishWithGetError(GetCredentialUnknownException("Selected passkey is unavailable"))
+        return
+      }
+
+      val metadata = metadataWithRef.metadata
+      val fileRef = metadataWithRef.fileRef
+      if (fileRef == null || metadataWithRef.sourceVersion == null) {
+        finishWithGetError(
+          GetCredentialUnknownException("Selected passkey has no validated file reference")
+        )
         return
       }
 
@@ -202,7 +214,22 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
         return
       }
 
-      val pickerVersion = passkeyStorage.resolveSourceVersion(credentialId).getOrElse { null }
+      val pickerVersionResult = passkeyStorage.resolveSourceVersionExact(fileRef).getOrElse { null }
+      val pickerVersion =
+        when (pickerVersionResult) {
+          is SourceVersionResult.Stable -> pickerVersionResult.version
+          is SourceVersionResult.Missing -> {
+            finishWithGetError(GetCredentialUnknownException("Selected passkey was deleted"))
+            return
+          }
+          is SourceVersionResult.Unavailable,
+          null -> {
+            finishWithGetError(
+              GetCredentialUnknownException("Selected passkey version is unavailable")
+            )
+            return
+          }
+        }
 
       if (authenticator.canAuthenticate(this)) {
         when (val authResult = authenticator.authenticateForPasskey(this, metadata.rpId)) {
@@ -238,9 +265,25 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
         return
       }
 
-      val preSignVersion = passkeyStorage.resolveSourceVersion(credentialId).getOrElse { null }
+      val preSignVersionResult =
+        passkeyStorage.resolveSourceVersionExact(fileRef).getOrElse { null }
+      val preSignVersion =
+        when (preSignVersionResult) {
+          is SourceVersionResult.Stable -> preSignVersionResult
+          is SourceVersionResult.Missing -> {
+            finishWithGetError(
+              GetCredentialUnknownException("Selected passkey was deleted during authentication")
+            )
+            return
+          }
+          is SourceVersionResult.Unavailable,
+          null -> {
+            finishWithGetError(GetCredentialUnknownException("Credential version unavailable"))
+            return
+          }
+        }
 
-      if (pickerVersion != null && preSignVersion != null && pickerVersion != preSignVersion) {
+      if (pickerVersionResult != preSignVersion) {
         finishWithGetError(GetCredentialUnknownException("Credential file changed since selection"))
         return
       }
@@ -249,7 +292,7 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
       try {
         sensitiveCredential =
           passkeyStorage
-            .loadForSigning(credentialId)
+            .loadForSigningExact(fileRef, pickerVersion)
             .fold(
               success = { it },
               failure = {
@@ -262,25 +305,14 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
           return
         }
 
-        if (
-          metadata.fileLastModified > 0 &&
-            sensitiveCredential.fileLastModified != metadata.fileLastModified
-        ) {
-          sensitiveCredential.close()
-          finishWithGetError(
-            GetCredentialUnknownException("Credential file changed since selection")
-          )
-          return
-        }
-
         val policy = resolveCounterPolicy()
         val newSignCount: ULong =
           when (policy) {
             SignatureCounterPolicy.ZERO_FOR_SYNCABLE -> 0u
             SignatureCounterPolicy.MONOTONIC_LOCAL -> {
               signatureCounterTransaction
-                .executeMonotonicAssertion(
-                  credentialId = sensitiveCredential.credentialId,
+                .executeMonotonicAssertionExact(
+                  ref = fileRef,
                   sensitiveCredential = sensitiveCredential,
                   preSignVersion = preSignVersion,
                 )

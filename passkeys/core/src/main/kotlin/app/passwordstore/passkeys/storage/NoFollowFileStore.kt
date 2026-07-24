@@ -313,7 +313,7 @@ public class NoFollowFileStore(
 
   override suspend fun resolveVersion(
     ref: PasskeyFileRef
-  ): Result<CredentialSourceVersion?, FileStoreError> {
+  ): Result<SourceVersionResult, FileStoreError> {
     return readMutex.withLock {
       try {
         if (!validateRoot()) {
@@ -324,13 +324,16 @@ public class NoFollowFileStore(
           resolveAndValidate(ref)
             .fold(
               success = { it },
-              failure = {
-                return@withLock Err(it)
+              failure = { error ->
+                return@withLock when (error) {
+                  is FileStoreError.FileNotFound -> Ok(SourceVersionResult.Missing)
+                  else -> Err(error)
+                }
               },
             )
 
         if (!Files.exists(filePath, LinkOption.NOFOLLOW_LINKS)) {
-          return@withLock Ok(null)
+          return@withLock Ok(SourceVersionResult.Missing)
         }
 
         if (Files.isSymbolicLink(filePath)) {
@@ -376,7 +379,7 @@ public class NoFollowFileStore(
               Files.getLastModifiedTime(filePath, LinkOption.NOFOLLOW_LINKS).toMillis(),
             ciphertextDigest = digest.digest(),
           )
-        Ok(version)
+        Ok(SourceVersionResult.Stable(version))
       } catch (e: Exception) {
         logcat(LogPriority.ERROR) { "resolveVersion failed: ${e.message}" }
         Err(FileStoreError.IoError(e.message ?: "Unknown error"))

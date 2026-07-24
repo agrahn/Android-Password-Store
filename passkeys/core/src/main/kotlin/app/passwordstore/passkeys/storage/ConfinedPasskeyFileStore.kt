@@ -29,7 +29,7 @@ public interface ConfinedPasskeyFileStore {
 
   public suspend fun resolveVersion(
     ref: PasskeyFileRef
-  ): Result<CredentialSourceVersion?, FileStoreError>
+  ): Result<SourceVersionResult, FileStoreError>
 }
 
 public data class ScannedCredentialFile(

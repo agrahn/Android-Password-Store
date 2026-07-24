@@ -24,6 +24,7 @@ public class InMemoryPasskeyStorage : PasskeyStorage {
 
   private val publicCredentials = mutableMapOf<String, PasskeyCredential>()
   private val privateKeys = mutableMapOf<String, ByteArray>()
+  private val modificationTimestamps = mutableMapOf<String, Long>()
 
   private fun credentialIdKey(id: ByteArray): String {
     return java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(id)
@@ -77,6 +78,7 @@ public class InMemoryPasskeyStorage : PasskeyStorage {
       val key = credentialIdKey(credential.credentialId)
       publicCredentials[key] = credential
       privateKeys[key] = privateKey.copyOf()
+      modificationTimestamps[key] = Clock.System.now().toEpochMilliseconds()
       Ok(Unit)
     }
 
@@ -87,6 +89,7 @@ public class InMemoryPasskeyStorage : PasskeyStorage {
       publicCredentials.remove(key)
       privateKeys[key]?.fill(0)
       privateKeys.remove(key)
+      modificationTimestamps.remove(key)
       Ok(existed)
     }
 
@@ -107,36 +110,91 @@ public class InMemoryPasskeyStorage : PasskeyStorage {
 
   override suspend fun resolveSourceVersion(
     credentialId: ByteArray
-  ): Result<CredentialSourceVersion?, Throwable> =
+  ): Result<SourceVersionResult, Throwable> =
     withContext(Dispatchers.Default) {
       val key = credentialIdKey(credentialId)
       val credential = publicCredentials[key]
       val privateKey = privateKeys[key]
       if (credential != null && privateKey != null) {
         val digest = MessageDigest.getInstance("SHA-256").digest(privateKey)
+        val modTime = modificationTimestamps[key] ?: 0L
         Ok(
-          CredentialSourceVersion(
-            repositoryGeneration =
-              RepositoryGeneration(
-                repositoryIdentity = "in-memory",
-                gitHead = null,
-                worktreeGeneration = publicCredentials.size.toLong(),
-              ),
-            canonicalPath = "in-memory://$key",
-            fileSize = privateKey.size.toLong(),
-            modifiedAtMillis = Clock.System.now().toEpochMilliseconds(),
-            ciphertextDigest = digest,
+          SourceVersionResult.Stable(
+            CredentialSourceVersion(
+              repositoryGeneration =
+                RepositoryGeneration(
+                  repositoryIdentity = "in-memory",
+                  gitHead = null,
+                  worktreeGeneration = publicCredentials.size.toLong(),
+                ),
+              canonicalPath = "in-memory://$key",
+              fileSize = privateKey.size.toLong(),
+              modifiedAtMillis = modTime,
+              ciphertextDigest = digest,
+            )
           )
         )
       } else {
-        Ok(null)
+        Ok(SourceVersionResult.Missing)
       }
     }
+
+  override suspend fun listMetadataWithRefs(
+    rpId: String?
+  ): Result<List<PasskeyMetadataWithRef>, Throwable> =
+    withContext(Dispatchers.Default) {
+      val filtered =
+        if (rpId != null) {
+          publicCredentials.values.filter { it.rpId == rpId }
+        } else {
+          publicCredentials.values.toList()
+        }
+      val results = filtered.map { cred ->
+        val metadata = PasskeyMetadata.fromPasskeyCredential(cred)
+        val key = credentialIdKey(cred.credentialId)
+        val privateKey = privateKeys[key]
+        val ref =
+          PasskeyFileRef(
+            canonicalRpId = cred.rpId,
+            credentialId = cred.credentialId.copyOf(),
+            relativePath =
+              "${sanitizeRpId(cred.rpId)}/${cred.credentialId.joinToString("") { "%02x".format(it) }}.gpg",
+          )
+        val version =
+          if (privateKey != null) {
+            val digest = MessageDigest.getInstance("SHA-256").digest(privateKey)
+            val modTime = modificationTimestamps[key] ?: 0L
+            CredentialSourceVersion(
+              repositoryGeneration =
+                RepositoryGeneration("in-memory", null, publicCredentials.size.toLong()),
+              canonicalPath = "in-memory://$key",
+              fileSize = privateKey.size.toLong(),
+              modifiedAtMillis = modTime,
+              ciphertextDigest = digest,
+            )
+          } else null
+        PasskeyMetadataWithRef(metadata = metadata, fileRef = ref, sourceVersion = version)
+      }
+      Ok(results)
+    }
+
+  override suspend fun loadForSigningExact(
+    ref: PasskeyFileRef,
+    expectedVersion: CredentialSourceVersion?,
+  ): Result<SensitivePasskeyCredential, Throwable> = loadForSigning(ref.credentialId)
+
+  override suspend fun resolveSourceVersionExact(
+    ref: PasskeyFileRef
+  ): Result<SourceVersionResult, Throwable> = resolveSourceVersion(ref.credentialId)
+
+  override suspend fun deleteCredentialExact(ref: PasskeyFileRef): Result<Boolean, Throwable> =
+    deleteCredential(ref.credentialId)
 
   public fun clear() {
     publicCredentials.clear()
     privateKeys.values.forEach { it.fill(0) }
     privateKeys.clear()
+    modificationTimestamps.clear()
   }
 
   public fun count(): Int = publicCredentials.size
@@ -150,6 +208,7 @@ public class InMemoryPasskeyStorage : PasskeyStorage {
         val k = storage.credentialIdKey(cred.credentialId)
         storage.publicCredentials[k] = cred
         storage.privateKeys[k] = key.copyOf()
+        storage.modificationTimestamps[k] = Clock.System.now().toEpochMilliseconds()
       }
       return storage
     }

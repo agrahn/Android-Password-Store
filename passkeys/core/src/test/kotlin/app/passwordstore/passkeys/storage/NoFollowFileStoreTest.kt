@@ -411,7 +411,7 @@ class NoFollowFileStoreTest {
   }
 
   @Test
-  fun `resolveVersion returns error for non-existent file`() = runBlocking {
+  fun `resolveVersion returns Missing for non-existent file`() = runBlocking {
     setupRepo()
     try {
       val passkeyDir = File(repoRoot, "fido2")
@@ -426,13 +426,13 @@ class NoFollowFileStoreTest {
 
       val result = store.resolveVersion(ref)
       result.fold(
-        success = {
-          throw AssertionError("Non-existent file should return an error")
+        success = { versionResult ->
+          assertEquals(SourceVersionResult.Missing, versionResult)
         },
         failure = { error ->
           assertTrue(
-            error is FileStoreError.FileNotFound || error is FileStoreError.NotDirectory,
-            "Expected FileNotFound or NotDirectory error, got: $error",
+            error is FileStoreError.NotDirectory,
+            "Expected Missing or NotDirectory error, got: $error",
           )
         },
       )

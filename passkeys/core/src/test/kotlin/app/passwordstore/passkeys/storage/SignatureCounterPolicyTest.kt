@@ -108,7 +108,7 @@ class SignatureCounterPolicyTest {
         transaction.executeMonotonicAssertion(
           credentialId = credential.credentialId,
           sensitiveCredential = sensitive,
-          preSignVersion = null,
+          preSignVersion = resolveStableVersion(credential),
         )
       assertTrue(result.isOk, "Monotonic assertion $it should succeed")
       counters.add(result.getOrElse { _: SignatureCounterError -> fail("should not fail") })
@@ -130,7 +130,7 @@ class SignatureCounterPolicyTest {
         transaction.executeMonotonicAssertion(
           credentialId = credential.credentialId,
           sensitiveCredential = sensitive,
-          preSignVersion = null,
+          preSignVersion = resolveStableVersion(credential),
         )
       sensitive.close()
 
@@ -154,7 +154,7 @@ class SignatureCounterPolicyTest {
                 transaction.executeMonotonicAssertion(
                   credentialId = credential.credentialId,
                   sensitiveCredential = sensitive,
-                  preSignVersion = null,
+                  preSignVersion = resolveStableVersion(credential),
                 )
               sensitive.close()
               result
@@ -181,7 +181,7 @@ class SignatureCounterPolicyTest {
         transaction.executeMonotonicAssertion(
           credentialId = credential.credentialId,
           sensitiveCredential = sensitive,
-          preSignVersion = null,
+          preSignVersion = resolveStableVersion(credential),
         )
       sensitive.close()
 
@@ -202,7 +202,7 @@ class SignatureCounterPolicyTest {
       transaction.executeMonotonicAssertion(
         credentialId = credential.credentialId,
         sensitiveCredential = sensitive,
-        preSignVersion = null,
+        preSignVersion = resolveStableVersion(credential),
       )
     sensitive.close()
 
@@ -234,7 +234,7 @@ class SignatureCounterPolicyTest {
         transaction.executeMonotonicAssertion(
           credentialId = credential.credentialId,
           sensitiveCredential = sensitive,
-          preSignVersion = null,
+          preSignVersion = resolveStableVersion(credential),
         )
       sensitive.close()
 
@@ -253,7 +253,7 @@ class SignatureCounterPolicyTest {
       transaction1.executeMonotonicAssertion(
         credentialId = credential.credentialId,
         sensitiveCredential = sensitive1,
-        preSignVersion = null,
+        preSignVersion = resolveStableVersion(credential),
       )
     sensitive1.close()
     assertTrue(result1.isOk)
@@ -267,7 +267,7 @@ class SignatureCounterPolicyTest {
       transaction2.executeMonotonicAssertion(
         credentialId = credential.credentialId,
         sensitiveCredential = sensitive2,
-        preSignVersion = null,
+        preSignVersion = resolveStableVersion(credential),
       )
     sensitive2.close()
     assertTrue(result2.isOk)
@@ -341,7 +341,7 @@ class SignatureCounterPolicyTest {
       transaction.executeMonotonicAssertion(
         credentialId = credential.credentialId,
         sensitiveCredential = sensitive,
-        preSignVersion = null,
+        preSignVersion = resolveStableVersion(credential),
       )
     sensitive.close()
 
@@ -363,7 +363,7 @@ class SignatureCounterPolicyTest {
         transaction.executeMonotonicAssertion(
           credentialId = credential.credentialId,
           sensitiveCredential = sensitive,
-          preSignVersion = null,
+          preSignVersion = resolveStableVersion(credential),
         )
       sensitive.close()
 
@@ -417,7 +417,7 @@ class SignatureCounterPolicyTest {
 
       val preSignVersion =
         mutatingStorage.resolveSourceVersion(credential.credentialId).getOrElse { null }
-      assertTrue(preSignVersion != null)
+      assertIs<SourceVersionResult.Stable>(preSignVersion)
 
       val sensitive = loadSensitive(credential)
       val result =
@@ -467,6 +467,11 @@ class SignatureCounterPolicyTest {
     assertTrue(result.isOk)
     return result.getOrElse { _: Throwable -> fail("should be ok") as SensitivePasskeyCredential }
   }
+
+  private suspend fun resolveStableVersion(credential: PasskeyCredential): SourceVersionResult {
+    val result = storage.resolveSourceVersion(credential.credentialId).getOrElse { null }
+    return result ?: SourceVersionResult.Missing
+  }
 }
 
 private class VersionMutatingPasskeyStorage(private val delegate: InMemoryPasskeyStorage) :
@@ -504,14 +509,18 @@ private class VersionMutatingPasskeyStorage(private val delegate: InMemoryPasske
 
   override suspend fun resolveSourceVersion(
     credentialId: ByteArray
-  ): com.github.michaelbull.result.Result<CredentialSourceVersion?, Throwable> {
+  ): com.github.michaelbull.result.Result<SourceVersionResult, Throwable> {
     versionCounter++
     val base =
-      delegate.resolveSourceVersion(credentialId).getOrElse { null }
-        ?: return com.github.michaelbull.result.Ok(null)
+      when (val result = delegate.resolveSourceVersion(credentialId).getOrElse { null }) {
+        is SourceVersionResult.Stable -> result.version
+        else -> return com.github.michaelbull.result.Ok(SourceVersionResult.Missing)
+      }
     return com.github.michaelbull.result.Ok(
-      base.copy(
-        repositoryGeneration = base.repositoryGeneration.copy(worktreeGeneration = versionCounter)
+      SourceVersionResult.Stable(
+        base.copy(
+          repositoryGeneration = base.repositoryGeneration.copy(worktreeGeneration = versionCounter)
+        )
       )
     )
   }
@@ -546,4 +555,9 @@ private class FailingUpdateSignCountStorage(private val delegate: PasskeyStorage
     newSignCount: ULong,
   ): com.github.michaelbull.result.Result<Unit, Throwable> =
     Err(IllegalStateException("Injected write failure"))
+
+  override suspend fun resolveSourceVersion(
+    credentialId: ByteArray
+  ): com.github.michaelbull.result.Result<SourceVersionResult, Throwable> =
+    delegate.resolveSourceVersion(credentialId)
 }

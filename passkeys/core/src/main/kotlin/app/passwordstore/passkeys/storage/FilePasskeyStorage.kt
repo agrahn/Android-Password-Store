@@ -98,13 +98,18 @@ public class FilePasskeyStorage<
           success = { scanned ->
             val results = mutableListOf<PasskeyMetadataWithRef>()
             for (file in scanned) {
-              val version =
+              val versionResult =
                 confinedStore
                   .resolveVersion(file.ref)
                   .fold(
                     success = { it },
                     failure = { null },
                   )
+              val version =
+                when (versionResult) {
+                  is SourceVersionResult.Stable -> versionResult.version
+                  else -> null
+                }
               results.add(
                 PasskeyMetadataWithRef(
                   metadata =
@@ -504,42 +509,43 @@ public class FilePasskeyStorage<
 
   override suspend fun resolveSourceVersion(
     credentialId: ByteArray
-  ): Result<CredentialSourceVersion?, Throwable> =
+  ): Result<SourceVersionResult, Throwable> =
     withContext(Dispatchers.IO) {
       val scanResult = confinedStore.scanMetadata(null)
       scanResult.fold(
         success = { scanned ->
           val matches = scanned.filter { it.ref.credentialId.contentEquals(credentialId) }
           if (matches.isEmpty()) {
-            return@withContext Ok(null) as Result<CredentialSourceVersion?, Throwable>
+            return@withContext Ok(SourceVersionResult.Missing)
+              as Result<SourceVersionResult, Throwable>
           }
           if (matches.size > 1) {
             return@withContext Err(SecurityException("Duplicate credential ID detected"))
-              as Result<CredentialSourceVersion?, Throwable>
+              as Result<SourceVersionResult, Throwable>
           }
           confinedStore
             .resolveVersion(matches.first().ref)
             .fold(
-              success = { Ok(it) as Result<CredentialSourceVersion?, Throwable> },
+              success = { Ok(it) as Result<SourceVersionResult, Throwable> },
               failure = {
-                Err(RuntimeException(it.message)) as Result<CredentialSourceVersion?, Throwable>
+                Err(RuntimeException(it.message)) as Result<SourceVersionResult, Throwable>
               },
             )
         },
-        failure = { error -> mapScanError(error) as Result<CredentialSourceVersion?, Throwable> },
+        failure = { error -> mapScanError(error) as Result<SourceVersionResult, Throwable> },
       )
     }
 
   override suspend fun resolveSourceVersionExact(
     ref: PasskeyFileRef
-  ): Result<CredentialSourceVersion?, Throwable> =
+  ): Result<SourceVersionResult, Throwable> =
     withContext(Dispatchers.IO) {
       confinedStore
         .resolveVersion(ref)
         .fold(
-          success = { Ok(it) as Result<CredentialSourceVersion?, Throwable> },
+          success = { Ok(it) as Result<SourceVersionResult, Throwable> },
           failure = {
-            Err(RuntimeException(it.message)) as Result<CredentialSourceVersion?, Throwable>
+            Err(RuntimeException(it.message)) as Result<SourceVersionResult, Throwable>
           },
         )
     }

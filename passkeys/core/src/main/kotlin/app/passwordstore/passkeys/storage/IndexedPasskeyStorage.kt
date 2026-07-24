@@ -33,8 +33,8 @@ public class IndexedPasskeyStorage(
 
   private data class IndexedEntry(
     val metadata: PasskeyMetadata,
-    val sourceVersion: CredentialSourceVersion?,
-    val fileRef: PasskeyFileRef?,
+    val sourceVersion: CredentialSourceVersion,
+    val fileRef: PasskeyFileRef,
   )
 
   private val metadataIndex = ConcurrentHashMap<String, IndexedEntry>()
@@ -103,7 +103,9 @@ public class IndexedPasskeyStorage(
           .fold(
             success = { entries ->
               entries.forEach { entry ->
-                indexMetadata(entry.metadata, entry.sourceVersion, entry.fileRef)
+                if (entry.fileRef != null && entry.sourceVersion != null) {
+                  indexMetadata(entry.metadata, entry.sourceVersion, entry.fileRef)
+                }
               }
               indexLoaded = true
               trackedGeneration = generation
@@ -121,8 +123,8 @@ public class IndexedPasskeyStorage(
 
   private fun indexMetadata(
     metadata: PasskeyMetadata,
-    version: CredentialSourceVersion? = null,
-    fileRef: PasskeyFileRef? = null,
+    version: CredentialSourceVersion,
+    fileRef: PasskeyFileRef,
   ) {
     val key = credentialKey(metadata.credentialId)
     metadataIndex[key] = IndexedEntry(metadata, version, fileRef)
@@ -191,7 +193,7 @@ public class IndexedPasskeyStorage(
     val key = credentialKey(credentialId)
     val entry = metadataIndex[key]
 
-    return if (entry?.fileRef != null) {
+    return if (entry != null) {
       delegate.loadForSigningExact(entry.fileRef, entry.sourceVersion)
     } else {
       delegate.loadForSigning(credentialId)
@@ -213,11 +215,7 @@ public class IndexedPasskeyStorage(
     val entry =
       metadataIndex[key] ?: return Err(IllegalArgumentException("Credential not found in index"))
 
-    return if (entry.fileRef != null) {
-      delegate.loadForSigningExact(entry.fileRef, entry.sourceVersion)
-    } else {
-      delegate.loadForSigning(credentialId)
-    }
+    return delegate.loadForSigningExact(entry.fileRef, entry.sourceVersion)
   }
 
   override suspend fun saveCredential(
@@ -228,8 +226,19 @@ public class IndexedPasskeyStorage(
       result.fold(
         success = {
           val metadata = PasskeyMetadata.fromPasskeyCredential(credential)
-          val version = delegate.resolveSourceVersion(credential.credentialId).getOrElse { null }
-          indexMetadata(metadata, version)
+          val versionResult =
+            delegate.resolveSourceVersion(credential.credentialId).getOrElse { null }
+          if (versionResult is SourceVersionResult.Stable) {
+            val ref =
+              delegate
+                .listMetadataWithRefs(credential.rpId)
+                .getOrElse { emptyList() }
+                .firstOrNull { it.metadata.credentialId.contentEquals(credential.credentialId) }
+                ?.fileRef
+            if (ref != null) {
+              indexMetadata(metadata, versionResult.version, ref)
+            }
+          }
           if (generationProvider != null) {
             trackedGeneration = resolveCurrentGeneration()
           }
@@ -246,7 +255,7 @@ public class IndexedPasskeyStorage(
     val entry = metadataIndex[key]
 
     val deleteResult =
-      if (entry?.fileRef != null) {
+      if (entry != null) {
         delegate.deleteCredentialExact(entry.fileRef)
       } else {
         delegate.deleteCredential(credentialId)
@@ -327,11 +336,11 @@ public class IndexedPasskeyStorage(
 
   override suspend fun resolveSourceVersion(
     credentialId: ByteArray
-  ): Result<CredentialSourceVersion?, Throwable> {
+  ): Result<SourceVersionResult, Throwable> {
     val key = credentialKey(credentialId)
     val entry = metadataIndex[key]
 
-    return if (entry?.fileRef != null) {
+    return if (entry != null) {
       delegate.resolveSourceVersionExact(entry.fileRef)
     } else {
       delegate.resolveSourceVersion(credentialId)
@@ -340,13 +349,18 @@ public class IndexedPasskeyStorage(
 
   override suspend fun resolveSourceVersionExact(
     ref: PasskeyFileRef
-  ): Result<CredentialSourceVersion?, Throwable> {
+  ): Result<SourceVersionResult, Throwable> {
     return delegate.resolveSourceVersionExact(ref)
   }
 
-  public suspend fun getSourceVersion(credentialId: ByteArray): CredentialSourceVersion? {
+  public suspend fun getSourceVersion(credentialId: ByteArray): SourceVersionResult {
     val key = credentialKey(credentialId)
-    return metadataIndex[key]?.sourceVersion
+    val entry = metadataIndex[key]
+    return if (entry != null) {
+      SourceVersionResult.Stable(entry.sourceVersion)
+    } else {
+      SourceVersionResult.Missing
+    }
   }
 
   public fun getFileRef(credentialId: ByteArray): PasskeyFileRef? {

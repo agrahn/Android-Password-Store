@@ -46,13 +46,13 @@ public interface PasskeyStorage {
 
   public suspend fun resolveSourceVersion(
     credentialId: ByteArray
-  ): Result<CredentialSourceVersion?, Throwable> {
-    return Ok(null)
+  ): Result<SourceVersionResult, Throwable> {
+    return Ok(SourceVersionResult.Missing)
   }
 
   public suspend fun resolveSourceVersionExact(
     ref: PasskeyFileRef
-  ): Result<CredentialSourceVersion?, Throwable> {
+  ): Result<SourceVersionResult, Throwable> {
     return resolveSourceVersion(ref.credentialId)
   }
 

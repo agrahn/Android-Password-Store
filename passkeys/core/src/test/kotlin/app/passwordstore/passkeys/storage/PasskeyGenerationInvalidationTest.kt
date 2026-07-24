@@ -14,6 +14,7 @@ import com.github.michaelbull.result.getOrElse
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -129,7 +130,7 @@ class PasskeyGenerationInvalidationTest {
     delegate.saveCredential(cred, privateKey1)
 
     val version1 = delegate.resolveSourceVersion(cred.credentialId).getOrElse { null }
-    assertNotNull(version1)
+    assertIs<SourceVersionResult.Stable>(version1)
 
     delegate.deleteCredential(cred.credentialId)
     val (cred2, privateKey2) =
@@ -140,9 +141,9 @@ class PasskeyGenerationInvalidationTest {
     delegate.saveCredential(cred2, privateKey2)
 
     val version2 = delegate.resolveSourceVersion(cred.credentialId).getOrElse { null }
-    assertNotNull(version2)
+    assertIs<SourceVersionResult.Stable>(version2)
 
-    assertFalse(version1.ciphertextDigest.contentEquals(version2.ciphertextDigest))
+    assertFalse(version1.version.ciphertextDigest.contentEquals(version2.version.ciphertextDigest))
   }
 
   @Test
