@@ -33,9 +33,37 @@ Passkey `.gpg` files are binary OpenPGP by default. ASCII armor is optional and 
 
 Native Android applications and privileged browsers use different trust paths.
 
-- Digital Asset Links uses the exact standard relation names
-  `delegate_permission/common.handle_all_urls` and
-  `delegate_permission/common.get_login_creds`.
+### Digital Asset Links Relation Policy
+
+Each `AssetLinkCapability` maps to exactly one DAL relation. Passkey ceremonies require the
+`PASSKEY_CEREMONY` capability, which maps to `delegate_permission/common.handle_all_urls`. The
+`get_login_creds` relation alone **cannot** authorize a passkey create or get request.
+
+| Capability               | Required relation                                      |
+|--------------------------|--------------------------------------------------------|
+| `PASSKEY_CEREMONY`       | `delegate_permission/common.handle_all_urls`           |
+| `LOGIN_CREDENTIAL_ACCESS`| `delegate_permission/common.get_login_creds`           |
+
+The `authorizesAndroidApp()` function requires an explicit `AssetLinkCapability` parameter. Do not
+reintroduce a generic matcher that silently treats both relations as interchangeable.
+
+Example `assetlinks.json` for passkey authorization:
+
+```json
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.example.app",
+    "sha256_cert_fingerprints": [
+      "AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99"
+    ]
+  }
+}]
+```
+
+### General Rules
+
 - Android app targets contain the plural array `sha256_cert_fingerprints`.
 - Browser origins must be obtained through `CallingAppInfo.getOrigin()` with valid AndroidX
   privileged-allowlist JSON. Passing an empty string is invalid.

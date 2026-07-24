@@ -13,6 +13,7 @@ import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.provider.CallingAppInfo
 import androidx.credentials.provider.ProviderCreateCredentialRequest
 import androidx.credentials.provider.ProviderGetCredentialRequest
+import app.passwordstore.passkeys.crypto.AssetLinkCapability
 import app.passwordstore.passkeys.crypto.CallerType
 import app.passwordstore.passkeys.crypto.CallerVerificationDiagnostic
 import app.passwordstore.passkeys.crypto.CallerVerificationError
@@ -222,7 +223,8 @@ internal class DefaultWebAuthnCallerVerifier(
       return Err(CallerVerificationError.MissingSigningCertificate(stage))
     }
 
-    val cacheKey = AssetLinkCacheKey(rpId, packageName, certDigests)
+    val capability = AssetLinkCapability.PASSKEY_CEREMONY
+    val cacheKey = AssetLinkCacheKey(rpId, packageName, certDigests, capability)
     if (assetLinkCache.get(cacheKey)) {
       val androidOrigin = "android:apk-key-hash:${certDigests.first()}"
       logcat { "Native caller verified (cached): pkg=$packageName, rpId=$rpId" }
@@ -258,9 +260,30 @@ internal class DefaultWebAuthnCallerVerifier(
         },
       )
 
-    val matched = statements.any { it.matchesAndroidApp(packageName, certDigests) }
+    val matched = statements.any { it.authorizesAndroidApp(capability, packageName, certDigests) }
 
     if (!matched) {
+      val hasPackageMatch = statements.any { statement ->
+        val target = statement.target ?: return@any false
+        target.namespace == "android_app" && target.packageName == packageName
+      }
+      if (hasPackageMatch) {
+        emitDiagnostic(
+          packageName,
+          null,
+          rpId,
+          stage,
+          "ASSET_LINK_RELATION_MISSING",
+          "Required relation ${capability.requiredRelation} not found",
+        )
+        return Err(
+          CallerVerificationError.RequiredAssetLinkRelationMissing(
+            rpId,
+            packageName,
+            capability.requiredRelation,
+          )
+        )
+      }
       emitDiagnostic(packageName, null, rpId, stage, "ASSET_LINK_FAILED", "No matching statement")
       return Err(
         CallerVerificationError.AssetLinkVerificationFailed(
@@ -351,20 +374,16 @@ internal class DefaultWebAuthnCallerVerifier(
   }
 }
 
-internal fun AssetLinkStatement.matchesAndroidApp(
+internal fun AssetLinkStatement.authorizesAndroidApp(
+  capability: AssetLinkCapability,
   packageName: String,
   certificateDigests: Set<String>,
 ): Boolean {
   val target = target ?: return false
-  val hasSupportedRelation =
-    relation?.any {
-      it == "delegate_permission/common.handle_all_urls" ||
-        it == "delegate_permission/common.get_login_creds"
-    } == true
-  if (
-    !hasSupportedRelation || target.namespace != "android_app" || target.packageName != packageName
-  )
-    return false
+  if (target.namespace != "android_app" || target.packageName != packageName) return false
+  val requiredRelation = capability.requiredRelation
+  val hasRequiredRelation = relation?.contains(requiredRelation) == true
+  if (!hasRequiredRelation) return false
   return target.sha256CertFingerprints?.any { fingerprint ->
     val normalizedFingerprint = fingerprint.replace(":", "").lowercase()
     certificateDigests.any { digest ->

@@ -71,6 +71,11 @@ public data class VerifiedWebAuthnContext(
       "signingCertificateDigests=$signingCertificateDigests)"
 }
 
+public enum class AssetLinkCapability(public val requiredRelation: String) {
+  PASSKEY_CEREMONY("delegate_permission/common.handle_all_urls"),
+  LOGIN_CREDENTIAL_ACCESS("delegate_permission/common.get_login_creds"),
+}
+
 public sealed class CallerVerificationError {
   public data class MissingCallingAppInfo(val stage: String) : CallerVerificationError()
 
@@ -85,6 +90,12 @@ public sealed class CallerVerificationError {
 
   public data class AssetLinkVerificationFailed(val rpId: String, val reason: String) :
     CallerVerificationError()
+
+  public data class RequiredAssetLinkRelationMissing(
+    val rpId: String,
+    val packageName: String,
+    val requiredRelation: String,
+  ) : CallerVerificationError()
 
   public data class UntrustedBrowser(val packageName: String, val reason: String) :
     CallerVerificationError()
@@ -113,6 +124,7 @@ public sealed class CallerVerificationError {
       is InvalidRpId -> "INVALID_RP_ID"
       is OriginRpIdMismatch -> "ORIGIN_RP_MISMATCH"
       is AssetLinkVerificationFailed -> "ASSET_LINK_FAILED"
+      is RequiredAssetLinkRelationMissing -> "ASSET_LINK_RELATION_MISSING"
       is UntrustedBrowser -> "UNTRUSTED_BROWSER"
       is BrowserCertificateMismatch -> "BROWSER_CERT_MISMATCH"
       is UnsupportedAlgorithm -> "UNSUPPORTED_ALGORITHM"

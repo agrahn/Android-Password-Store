@@ -5,12 +5,14 @@
 
 package app.passwordstore.passkeys
 
+import app.passwordstore.passkeys.crypto.AssetLinkCapability
 import java.util.concurrent.ConcurrentHashMap
 
 internal data class AssetLinkCacheKey(
   val rpId: String,
   val packageName: String,
   val certDigests: Set<String>,
+  val capability: AssetLinkCapability,
 )
 
 internal class AssetLinkCache(

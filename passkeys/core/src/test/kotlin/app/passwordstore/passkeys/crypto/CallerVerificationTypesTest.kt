@@ -70,6 +70,10 @@ class CallerVerificationTypesTest {
       CallerVerificationError.AssetLinkVerificationFailed("rp", "reason").errorCode(),
     )
     assertEquals(
+      "ASSET_LINK_RELATION_MISSING",
+      CallerVerificationError.RequiredAssetLinkRelationMissing("rp", "pkg", "rel").errorCode(),
+    )
+    assertEquals(
       "UNTRUSTED_BROWSER",
       CallerVerificationError.UntrustedBrowser("pkg", "reason").errorCode(),
     )

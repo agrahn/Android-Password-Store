@@ -21,11 +21,14 @@ package app.passwordstore.passkeys
  *    framework-provided `CallingAppInfo`.
  * 2. The provider fetches `https://<rpId>/.well-known/assetlinks.json` over HTTPS.
  * 3. The response is parsed and checked for a statement with:
- *     - `relation`: `delegate_permission/common.handle_all_urls` or
- *       `delegate_permission/common.get_login_creds`
+ *     - `relation`: `delegate_permission/common.handle_all_urls` (required for passkey ceremonies)
  *     - `target.namespace`: `android_app`
  *     - `target.package_name`: matching the calling package
  *     - `target.sha256_cert_fingerprints`: containing the calling app's signing certificate digest
+ *
+ * The `get_login_creds` relation alone cannot authorize passkey ceremonies. Each
+ * `AssetLinkCapability` maps to exactly one DAL relation, and the cache key includes the capability
+ * to prevent cross-capability authorization.
  * 4. The Android app origin is derived as `android:apk-key-hash:<base64url_sha256>`.
  *
  * **No fabricated `https://` origin is ever used for native callers.**
@@ -41,8 +44,10 @@ package app.passwordstore.passkeys
  * ### Asset Link Caching
  *
  * Successful asset link verifications are cached for 5 minutes, keyed by (RP ID, package name,
- * certificate digests). The cache is in-memory only and does not survive process death. This limits
- * the window where a revoked asset link statement might still be accepted.
+ * certificate digests, capability). The cache is capability-specific: a `LOGIN_CREDENTIAL_ACCESS`
+ * result cannot authorize a `PASSKEY_CEREMONY` request. The cache is in-memory only and does not
+ * survive process death. This limits the window where a revoked asset link statement might still be
+ * accepted.
  *
  * ### Offline / Fail-Closed Behavior
  *
