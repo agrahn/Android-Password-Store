@@ -172,11 +172,14 @@ object CredmanUtils {
      * expired passkeys (deleted on the RP's side but still existing in APS) will not be listed */
     allowCredentialsHex.forEach { id ->
       passkeyCandidates.addAll(
-        PasswordRepository.findFilesByName(
-          rootPath = repoPath,
-          fileName = "${id}.gpg",
-          ignoreCase = true,
-        )
+        PasswordRepository.findFilesByParentName(
+            rootPath = repoPath,
+            parentName = requestOptions.rpId,
+            ignoreCase = true,
+          )
+          .filter { file ->
+            Paths.get(file).nameWithoutExtension.equals(id, ignoreCase = true)
+          }
       )
     }
 
