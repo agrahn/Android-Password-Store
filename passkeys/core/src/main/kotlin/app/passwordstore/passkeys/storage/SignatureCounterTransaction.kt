@@ -44,6 +44,20 @@ public class SignatureCounterTransaction(
     } ?: Err(SignatureCounterError.LockAcquisitionFailed)
   }
 
+  public suspend fun executeMonotonicAssertionExact(
+    ref: PasskeyFileRef,
+    sensitiveCredential: SensitivePasskeyCredential,
+    preSignVersion: CredentialSourceVersion?,
+    lockTimeoutMs: Long = 5_000L,
+  ): Result<ULong, SignatureCounterError> {
+    val mutex = mutexFor(ref.credentialId)
+    return withTimeoutOrNull(lockTimeoutMs) {
+      mutex.withLock {
+        executeMonotonicAssertionLockedExact(ref, sensitiveCredential, preSignVersion)
+      }
+    } ?: Err(SignatureCounterError.LockAcquisitionFailed)
+  }
+
   private suspend fun executeMonotonicAssertionLocked(
     credentialId: ByteArray,
     sensitiveCredential: SensitivePasskeyCredential,
@@ -76,6 +90,52 @@ public class SignatureCounterTransaction(
           },
         )
 
+    return finalizeAssertion(credentialId, freshCredential)
+  }
+
+  private suspend fun executeMonotonicAssertionLockedExact(
+    ref: PasskeyFileRef,
+    sensitiveCredential: SensitivePasskeyCredential,
+    preSignVersion: CredentialSourceVersion?,
+  ): Result<ULong, SignatureCounterError> {
+    if (repositoryState.isInMergeConflict()) {
+      return Err(SignatureCounterError.MergeConflict)
+    }
+
+    val currentVersion =
+      storage
+        .resolveSourceVersionExact(ref)
+        .fold(
+          success = { it },
+          failure = {
+            return Err(SignatureCounterError.PersistenceFailed)
+          },
+        )
+
+    if (preSignVersion != null && currentVersion == null) {
+      return Err(SignatureCounterError.FileChangedSinceSelection)
+    }
+    if (preSignVersion != null && currentVersion != null && preSignVersion != currentVersion) {
+      return Err(SignatureCounterError.FileChangedSinceSelection)
+    }
+
+    val freshCredential =
+      storage
+        .loadForSigningExact(ref, currentVersion)
+        .fold(
+          success = { it },
+          failure = {
+            return Err(SignatureCounterError.PersistenceFailed)
+          },
+        )
+
+    return finalizeAssertion(ref.credentialId, freshCredential)
+  }
+
+  private suspend fun finalizeAssertion(
+    credentialId: ByteArray,
+    freshCredential: SensitivePasskeyCredential,
+  ): Result<ULong, SignatureCounterError> {
     val currentCounter = freshCredential.signCount
 
     if (highWaterMark.detectRollback(credentialId, currentCounter)) {

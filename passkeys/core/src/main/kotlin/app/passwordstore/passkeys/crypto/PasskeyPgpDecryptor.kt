@@ -14,6 +14,19 @@ public interface PasskeyPgpDecryptor {
     file: File,
     unlockContext: PgpUnlockContext,
   ): Result<ByteArray, PasskeyDecryptionError>
+
+  public suspend fun decryptFromBytes(
+    ciphertext: ByteArray,
+    unlockContext: PgpUnlockContext,
+  ): Result<ByteArray, PasskeyDecryptionError> {
+    return decrypt(
+      java.io.File.createTempFile("passkey-decrypt-", ".tmp").also {
+        it.deleteOnExit()
+        it.writeBytes(ciphertext)
+      },
+      unlockContext,
+    )
+  }
 }
 
 public interface PgpUnlockContext {
