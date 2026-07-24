@@ -43,6 +43,8 @@ import app.passwordstore.injection.prefs.PasswordHistory
 import app.passwordstore.ui.dialogs.OtpImportDialogFragment
 import app.passwordstore.ui.folderselect.SelectFolderActivity
 import app.passwordstore.ui.passwords.PasswordStore
+import app.passwordstore.util.auth.BiometricAuthenticator
+import app.passwordstore.util.auth.BiometricAuthenticator.Result
 import app.passwordstore.util.credman.CredmanUtils
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
@@ -363,9 +365,28 @@ class PasskeyCreationActivity : BasePGPActivity() {
               finish()
             }
             .show()
+        } else if (!BiometricAuthenticator.canAuthenticate(this, allowPin = true)) {
+          MaterialAlertDialogBuilder(this)
+            .setCancelable(false)
+            .setTitle(R.string.error)
+            .setIcon(R.drawable.ic_crossmark_red_24dp)
+            .setMessage(R.string.passkey_biometric_auth_missing_error)
+            .setPositiveButton(R.string.git_server_hostkey_dialog_abort) { _, _ ->
+              setResult(RESULT_CANCELED)
+              finish()
+            }
+            .show()
         } else {
           requireKeysExist {
-            requireEncryptionKeysExist(binding.directory.text.toString()) { ids -> encrypt(ids) }
+            requireEncryptionKeysExist(binding.directory.text.toString()) { ids ->
+              BiometricAuthenticator.authenticate(this, allowPin = true) { result ->
+                when (result) {
+                  is Result.Success -> encrypt(ids)
+                  is Result.Retry -> {}
+                  else -> finish()
+                }
+              }
+            }
           }
         }
       }
