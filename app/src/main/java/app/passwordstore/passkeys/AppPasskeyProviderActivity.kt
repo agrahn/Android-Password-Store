@@ -24,6 +24,7 @@ import androidx.credentials.provider.PendingIntentHandler
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.passkeys.crypto.CallerType
+import app.passwordstore.passkeys.crypto.ClientDataBinding
 import app.passwordstore.passkeys.crypto.PasskeyCryptoHandler
 import app.passwordstore.passkeys.crypto.RpIdValidator
 import app.passwordstore.passkeys.model.SensitivePasskeyCredential
@@ -324,20 +325,40 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
             .copy(signCount = newSignCount, backupState = effectiveBackupState)
         val requestJson = option.requestJson
         val assertion =
-          cryptoHandler
-            .getAssertion(
-              credential = credentialForSigning,
-              rpId = sensitiveCredential.rpId,
-              challenge = PasskeyProviderUtils.decodeBase64Url(parsedRequest.challenge),
-              origin = verifiedContext.origin,
-            )
-            .fold(
-              success = { it },
-              failure = {
-                logcat(LogPriority.ERROR) { "Failed building assertion: $it" }
-                null
-              },
-            )
+          when (val binding = verifiedContext.clientDataBinding) {
+            is ClientDataBinding.FrameworkHash ->
+              cryptoHandler
+                .getAssertionWithFrameworkHash(
+                  credential = credentialForSigning,
+                  rpId = sensitiveCredential.rpId,
+                  clientDataHash = binding.hash,
+                  responseClientDataJson = binding.responseClientDataJson,
+                )
+                .fold(
+                  success = { it },
+                  failure = {
+                    logcat(LogPriority.ERROR) {
+                      "Failed building assertion with framework hash: $it"
+                    }
+                    null
+                  },
+                )
+            is ClientDataBinding.ProviderConstructed ->
+              cryptoHandler
+                .getAssertion(
+                  credential = credentialForSigning,
+                  rpId = sensitiveCredential.rpId,
+                  challenge = PasskeyProviderUtils.decodeBase64Url(parsedRequest.challenge),
+                  origin = verifiedContext.origin,
+                )
+                .fold(
+                  success = { it },
+                  failure = {
+                    logcat(LogPriority.ERROR) { "Failed building assertion: $it" }
+                    null
+                  },
+                )
+          }
         if (assertion == null) {
           finishWithGetError(GetCredentialUnknownException("Failed generating passkey assertion"))
           return

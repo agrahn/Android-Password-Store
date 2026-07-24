@@ -9,6 +9,7 @@ package app.passwordstore.passkeys.provider
 
 import app.passwordstore.passkeys.crypto.AssertionResult
 import app.passwordstore.passkeys.crypto.CallerType
+import app.passwordstore.passkeys.crypto.ClientDataBinding
 import app.passwordstore.passkeys.crypto.ES256CryptoHandler
 import app.passwordstore.passkeys.crypto.VerifiedWebAuthnContext
 import app.passwordstore.passkeys.model.FidoUser
@@ -105,7 +106,8 @@ class PasskeyProviderUtilsTest {
         signature = ByteArray(64) { (it + 1).toByte() },
         userHandle = credential.user.id,
         clientDataJSON =
-          """{"type":"webauthn.get","challenge":"Y2hhbGxlbmdl","origin":"https://example.com","crossOrigin":false}""",
+          """{"type":"webauthn.get","challenge":"Y2hhbGxlbmdl","origin":"https://example.com","crossOrigin":false}"""
+            .toByteArray(),
       )
 
     val responseJson =
@@ -151,9 +153,9 @@ class PasskeyProviderUtilsTest {
       VerifiedWebAuthnContext(
         callingPackage = "com.test.app",
         origin = "https://example.com",
-        clientDataHash = null,
         callerType = CallerType.NATIVE_APP,
         signingCertificateDigests = setOf("testdigest"),
+        clientDataBinding = ClientDataBinding.ProviderConstructed,
       )
 
     val responseJson =

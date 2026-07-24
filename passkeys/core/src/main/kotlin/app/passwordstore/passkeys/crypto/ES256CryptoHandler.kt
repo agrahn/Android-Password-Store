@@ -200,7 +200,7 @@ public class ES256CryptoHandler : PasskeyCryptoHandler {
                 authenticatorData = authenticatorData,
                 signature = signature,
                 userHandle = credential.user.id,
-                clientDataJSON = clientDataJson,
+                clientDataJSON = clientDataJson.toByteArray(),
               )
             )
           },
@@ -209,6 +209,61 @@ public class ES256CryptoHandler : PasskeyCryptoHandler {
     } catch (e: Exception) {
       Err(e)
     }
+  }
+
+  override fun getAssertionWithFrameworkHash(
+    credential: PasskeyCredential,
+    rpId: String,
+    clientDataHash: ByteArray,
+    responseClientDataJson: ByteArray,
+  ): Result<AssertionResult, Throwable> {
+    if (rpId.isBlank()) return Err(IllegalArgumentException("RP ID cannot be blank"))
+    if (clientDataHash.size != 32)
+      return Err(
+        IllegalArgumentException(
+          "Framework clientDataHash must be exactly 32 bytes, got ${clientDataHash.size}"
+        )
+      )
+    if (responseClientDataJson.isEmpty())
+      return Err(IllegalArgumentException("Response client data JSON cannot be empty"))
+    if (credential.privateKey.isEmpty())
+      return Err(IllegalArgumentException("Credential has no private key"))
+
+    return try {
+      val authenticatorData =
+        buildAuthenticatorData(
+          rpId,
+          credential.signCount,
+          credential.backupEligible,
+          credential.backupState,
+        )
+
+      sign(credential.privateKey, authenticatorData, clientDataHash)
+        .fold(
+          success = { signature ->
+            Ok(
+              AssertionResult(
+                credentialId = credential.credentialId,
+                authenticatorData = authenticatorData,
+                signature = signature,
+                userHandle = credential.user.id,
+                clientDataJSON = responseClientDataJson,
+              )
+            )
+          },
+          failure = { Err(it) },
+        )
+    } catch (e: Exception) {
+      Err(e)
+    }
+  }
+
+  override fun signAssertion(
+    privateKey: ByteArray,
+    authenticatorData: ByteArray,
+    clientDataHash: ByteArray,
+  ): Result<ByteArray, Throwable> {
+    return sign(privateKey, authenticatorData, clientDataHash)
   }
 
   override fun derivePublicKey(privateKey: ByteArray): Result<ByteArray, Throwable> {

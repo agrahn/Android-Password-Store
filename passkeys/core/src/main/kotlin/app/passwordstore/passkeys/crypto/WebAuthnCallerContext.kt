@@ -10,12 +10,39 @@ public enum class CallerType {
   PRIVILEGED_BROWSER,
 }
 
+public sealed interface ClientDataBinding {
+
+  public data class FrameworkHash(
+    val hash: ByteArray,
+    val responseClientDataJson: ByteArray,
+  ) : ClientDataBinding {
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (other !is FrameworkHash) return false
+      if (!hash.contentEquals(other.hash)) return false
+      if (!responseClientDataJson.contentEquals(other.responseClientDataJson)) return false
+      return true
+    }
+
+    override fun hashCode(): Int {
+      var result = hash.contentHashCode()
+      result = 31 * result + responseClientDataJson.contentHashCode()
+      return result
+    }
+
+    override fun toString(): String =
+      "FrameworkHash(hash=<${hash.size} bytes>, responseClientDataJson=<${responseClientDataJson.size} bytes>)"
+  }
+
+  public data object ProviderConstructed : ClientDataBinding
+}
+
 public data class VerifiedWebAuthnContext(
   val callingPackage: String,
   val origin: String,
-  val clientDataHash: ByteArray?,
   val callerType: CallerType,
   val signingCertificateDigests: Set<String>,
+  val clientDataBinding: ClientDataBinding,
 ) {
 
   override fun equals(other: Any?): Boolean {
@@ -23,27 +50,24 @@ public data class VerifiedWebAuthnContext(
     if (other !is VerifiedWebAuthnContext) return false
     if (callingPackage != other.callingPackage) return false
     if (origin != other.origin) return false
-    if (clientDataHash != null) {
-      if (other.clientDataHash == null) return false
-      if (!clientDataHash.contentEquals(other.clientDataHash)) return false
-    } else if (other.clientDataHash != null) return false
     if (callerType != other.callerType) return false
     if (signingCertificateDigests != other.signingCertificateDigests) return false
+    if (clientDataBinding != other.clientDataBinding) return false
     return true
   }
 
   override fun hashCode(): Int {
     var result = callingPackage.hashCode()
     result = 31 * result + origin.hashCode()
-    result = 31 * result + (clientDataHash?.contentHashCode() ?: 0)
     result = 31 * result + callerType.hashCode()
     result = 31 * result + signingCertificateDigests.hashCode()
+    result = 31 * result + clientDataBinding.hashCode()
     return result
   }
 
   override fun toString(): String =
     "VerifiedWebAuthnContext(callingPackage=$callingPackage, origin=$origin, " +
-      "callerType=$callerType, clientDataHash=${if (clientDataHash != null) "<present>" else "<null>"}, " +
+      "callerType=$callerType, clientDataBinding=$clientDataBinding, " +
       "signingCertificateDigests=$signingCertificateDigests)"
 }
 
@@ -73,6 +97,14 @@ public sealed class CallerVerificationError {
   public data class MalformedRequest(val field: String, val reason: String) :
     CallerVerificationError()
 
+  public data class MissingClientDataHash(val stage: String) : CallerVerificationError()
+
+  public data class InvalidClientDataHashLength(val expected: Int, val actual: Int) :
+    CallerVerificationError()
+
+  public data class BindingModeMismatch(val expected: String, val actual: String) :
+    CallerVerificationError()
+
   public fun errorCode(): String =
     when (this) {
       is MissingCallingAppInfo -> "CALLER_INFO_MISSING"
@@ -85,6 +117,9 @@ public sealed class CallerVerificationError {
       is BrowserCertificateMismatch -> "BROWSER_CERT_MISMATCH"
       is UnsupportedAlgorithm -> "UNSUPPORTED_ALGORITHM"
       is MalformedRequest -> "MALFORMED_REQUEST"
+      is MissingClientDataHash -> "MISSING_CLIENT_DATA_HASH"
+      is InvalidClientDataHashLength -> "INVALID_CLIENT_DATA_HASH_LENGTH"
+      is BindingModeMismatch -> "BINDING_MODE_MISMATCH"
     }
 }
 

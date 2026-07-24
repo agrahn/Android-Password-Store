@@ -130,12 +130,13 @@ class ES256CryptoHandlerTest {
     assertNotNull(assertion.authenticatorData)
     assertNotNull(assertion.signature)
     assertNotNull(assertion.clientDataJSON)
+    val clientDataStr = assertion.clientDataJSON.decodeToString()
     assertTrue(
-      assertion.clientDataJSON.contains("\"type\":\"webauthn.get\""),
+      clientDataStr.contains("\"type\":\"webauthn.get\""),
       "Client data should have correct type",
     )
     assertTrue(
-      assertion.clientDataJSON.contains("\"crossOrigin\":false"),
+      clientDataStr.contains("\"crossOrigin\":false"),
       "Client data should have crossOrigin",
     )
     assertEquals(37, assertion.authenticatorData.size, "Authenticator data should be 37 bytes")
@@ -223,10 +224,7 @@ class ES256CryptoHandlerTest {
       assertion.signature.size in 70..72,
       "Signature should be 70-72 bytes, got ${assertion.signature.size}",
     )
-    // Compute clientDataHash = SHA256(assertionResult.clientDataJSON.toByteArray())
-    val clientDataHash =
-      MessageDigest.getInstance("SHA-256").digest(assertion.clientDataJSON.toByteArray())
-    // Call `verify(credential.publicKey, signature, authData, clientDataHash)` → should return true
+    val clientDataHash = MessageDigest.getInstance("SHA-256").digest(assertion.clientDataJSON)
     val verifyResult =
       handler.verify(
         credential.publicKey,
@@ -288,9 +286,7 @@ class ES256CryptoHandlerTest {
     assertTrue(assertionResult.isOk, "Get assertion should succeed")
     val assertion = assertionResult.getOrElse { throw AssertionError("Get assertion failed") }
 
-    // Compute clientDataHash
-    val clientDataHash =
-      MessageDigest.getInstance("SHA-256").digest(assertion.clientDataJSON.toByteArray())
+    val clientDataHash = MessageDigest.getInstance("SHA-256").digest(assertion.clientDataJSON)
 
     // Verify signature with passless public key
     val verifyResult =
@@ -376,23 +372,18 @@ class ES256CryptoHandlerTest {
     assertTrue(assertionResult.isOk, "Get assertion should succeed")
     val assertion = assertionResult.getOrElse { throw AssertionError("Get assertion failed") }
 
-    // Parse assertionResult.clientDataJSON as JSON
-    val clientDataJSON = assertion.clientDataJSON
+    val clientDataJSON = assertion.clientDataJSON.decodeToString()
 
-    // Assert type == "webauthn.get"
     assertTrue(clientDataJSON.contains("\"type\":\"webauthn.get\""), "Type should be webauthn.get")
 
-    // Assert origin == "https://example.com"
     assertTrue(
       clientDataJSON.contains("\"origin\":\"https://example.com\""),
       "Origin should be https://example.com",
     )
 
-    // Assert challenge is present and non-empty
     assertTrue(clientDataJSON.contains("\"challenge\":\""), "Challenge should be present")
     assertTrue(!clientDataJSON.contains("\"challenge\":\"\""), "Challenge should not be empty")
 
-    // Assert crossOrigin == false
     assertTrue(clientDataJSON.contains("\"crossOrigin\":false"), "Cross-origin should be false")
   }
 

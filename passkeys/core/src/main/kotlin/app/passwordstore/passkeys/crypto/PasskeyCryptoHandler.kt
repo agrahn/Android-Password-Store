@@ -73,12 +73,15 @@ public interface PasskeyCryptoHandler {
   ): Result<PasskeyCredential, Throwable>
 
   /**
-   * Generates a WebAuthn assertion for authentication.
+   * Generates a WebAuthn assertion for authentication using provider-constructed client data.
+   *
+   * For native app callers only. The handler constructs canonical client data JSON from the
+   * challenge and verified origin, hashes it, and signs authenticatorData || hash.
    *
    * @param credential The stored passkey credential
    * @param rpId Relying Party identifier
    * @param challenge Challenge from the WebAuthn ceremony
-   * @param origin Origin of the WebAuthn request (e.g., "https://example.com")
+   * @param origin Verified origin of the WebAuthn request
    * @return An AssertionResult containing the signature or an error
    */
   public fun getAssertion(
@@ -87,6 +90,43 @@ public interface PasskeyCryptoHandler {
     challenge: ByteArray,
     origin: String,
   ): Result<AssertionResult, Throwable>
+
+  /**
+   * Generates a WebAuthn assertion by signing the framework-provided clientDataHash directly.
+   *
+   * For privileged browser callers only. The handler signs authenticatorData || clientDataHash
+   * without reconstructing client data. The responseClientDataJson is returned as-is in the
+   * assertion response for Android Credential Manager compatibility.
+   *
+   * @param credential The stored passkey credential
+   * @param rpId Relying Party identifier
+   * @param clientDataHash 32-byte SHA-256 hash provided by the framework
+   * @param responseClientDataJson Client data JSON bytes from the framework for the response
+   * @return An AssertionResult containing the signature or an error
+   */
+  public fun getAssertionWithFrameworkHash(
+    credential: PasskeyCredential,
+    rpId: String,
+    clientDataHash: ByteArray,
+    responseClientDataJson: ByteArray,
+  ): Result<AssertionResult, Throwable>
+
+  /**
+   * Signs authenticatorData || clientDataHash using the credential's private key.
+   *
+   * Narrow crypto primitive for protocol orchestration. The caller is responsible for providing the
+   * correct clientDataHash.
+   *
+   * @param privateKey Raw 32-byte scalar or PKCS#8 DER private key
+   * @param authenticatorData Authenticator data bytes
+   * @param clientDataHash 32-byte SHA-256 hash of client data
+   * @return DER-encoded ECDSA signature or an error
+   */
+  public fun signAssertion(
+    privateKey: ByteArray,
+    authenticatorData: ByteArray,
+    clientDataHash: ByteArray,
+  ): Result<ByteArray, Throwable>
 
   /**
    * Derives the uncompressed P-256 public key from a private key.
@@ -106,14 +146,14 @@ public interface PasskeyCryptoHandler {
  * @property authenticatorData 37-byte authenticator data structure
  * @property signature DER-encoded ECDSA signature (typically 70-72 bytes)
  * @property userHandle Optional user handle returned to the relying party
- * @property clientDataJSON The client data JSON string used for signing
+ * @property clientDataJSON The client data JSON bytes used in the response
  */
 public data class AssertionResult(
   public val credentialId: ByteArray,
   public val authenticatorData: ByteArray,
   public val signature: ByteArray,
   public val userHandle: ByteArray?,
-  public val clientDataJSON: String,
+  public val clientDataJSON: ByteArray,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -125,7 +165,7 @@ public data class AssertionResult(
       if (other.userHandle == null) return false
       if (!userHandle.contentEquals(other.userHandle)) return false
     } else if (other.userHandle != null) return false
-    if (clientDataJSON != other.clientDataJSON) return false
+    if (!clientDataJSON.contentEquals(other.clientDataJSON)) return false
     return true
   }
 
@@ -134,7 +174,7 @@ public data class AssertionResult(
     result = 31 * result + authenticatorData.contentHashCode()
     result = 31 * result + signature.contentHashCode()
     result = 31 * result + (userHandle?.contentHashCode() ?: 0)
-    result = 31 * result + clientDataJSON.hashCode()
+    result = 31 * result + clientDataJSON.contentHashCode()
     return result
   }
 }

@@ -9,6 +9,7 @@ package app.passwordstore.passkeys.provider
 
 import app.passwordstore.passkeys.crypto.AssertionResult
 import app.passwordstore.passkeys.crypto.AuthenticatorFlags
+import app.passwordstore.passkeys.crypto.ClientDataBinding
 import app.passwordstore.passkeys.crypto.VerifiedWebAuthnContext
 import app.passwordstore.passkeys.model.PasskeyCredential
 import app.passwordstore.passkeys.model.PasskeyMetadata
@@ -127,7 +128,7 @@ public object PasskeyProviderUtils {
         type = "public-key",
         response =
           AssertionResponseData(
-            clientDataJSON = encodeBase64Url(assertion.clientDataJSON.toByteArray()),
+            clientDataJSON = encodeBase64Url(assertion.clientDataJSON),
             authenticatorData = encodeBase64Url(assertion.authenticatorData),
             signature = encodeBase64Url(assertion.signature),
             userHandle = assertion.userHandle?.let(::encodeBase64Url),
@@ -158,8 +159,13 @@ public object PasskeyProviderUtils {
     request: WebAuthnCreateRequest,
     verifiedContext: VerifiedWebAuthnContext,
   ): String {
-    val clientDataJson =
-      buildClientDataJson("webauthn.create", request.challenge, verifiedContext.origin)
+    val clientDataBytes =
+      when (val binding = verifiedContext.clientDataBinding) {
+        is ClientDataBinding.FrameworkHash -> binding.responseClientDataJson
+        is ClientDataBinding.ProviderConstructed ->
+          buildClientDataJson("webauthn.create", request.challenge, verifiedContext.origin)
+            .toByteArray()
+      }
     val coseKey = encodeCoseEcPublicKey(credential.publicKey)
     val authData = buildAttestedAuthenticatorData(credential, coseKey)
     val spkiPublicKey = buildSpkiPublicKey(credential.publicKey)
@@ -170,7 +176,7 @@ public object PasskeyProviderUtils {
         type = "public-key",
         response =
           AttestationResponseData(
-            clientDataJSON = encodeBase64Url(clientDataJson.toByteArray()),
+            clientDataJSON = encodeBase64Url(clientDataBytes),
             attestationObject = encodeBase64Url(buildAttestationObjectFromAuthData(authData)),
             transports = listOf("internal"),
             publicKeyAlgorithm = -7L,

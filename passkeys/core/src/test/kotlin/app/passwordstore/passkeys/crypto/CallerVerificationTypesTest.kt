@@ -13,22 +13,27 @@ import kotlin.test.assertNotEquals
 class CallerVerificationTypesTest {
 
   @Test
-  fun `VerifiedWebAuthnContext equality works with byte arrays`() {
+  fun `VerifiedWebAuthnContext equality works with ClientDataBinding`() {
+    val binding =
+      ClientDataBinding.FrameworkHash(
+        hash = byteArrayOf(1, 2, 3),
+        responseClientDataJson = """{"type":"webauthn.get"}""".toByteArray(),
+      )
     val ctx1 =
       VerifiedWebAuthnContext(
         callingPackage = "com.example",
         origin = "https://example.com",
-        clientDataHash = byteArrayOf(1, 2, 3),
         callerType = CallerType.PRIVILEGED_BROWSER,
         signingCertificateDigests = setOf("abc"),
+        clientDataBinding = binding,
       )
     val ctx2 =
       VerifiedWebAuthnContext(
         callingPackage = "com.example",
         origin = "https://example.com",
-        clientDataHash = byteArrayOf(1, 2, 3),
         callerType = CallerType.PRIVILEGED_BROWSER,
         signingCertificateDigests = setOf("abc"),
+        clientDataBinding = binding,
       )
     assertEquals(ctx1, ctx2)
     assertEquals(ctx1.hashCode(), ctx2.hashCode())
@@ -36,13 +41,14 @@ class CallerVerificationTypesTest {
 
   @Test
   fun `VerifiedWebAuthnContext inequality on different origin`() {
+    val binding = ClientDataBinding.ProviderConstructed
     val ctx1 =
       VerifiedWebAuthnContext(
         callingPackage = "com.example",
         origin = "https://example.com",
-        clientDataHash = null,
         callerType = CallerType.NATIVE_APP,
         signingCertificateDigests = setOf("abc"),
+        clientDataBinding = binding,
       )
     val ctx2 = ctx1.copy(origin = "https://other.com")
     assertNotEquals(ctx1, ctx2)
@@ -78,6 +84,19 @@ class CallerVerificationTypesTest {
     assertEquals(
       "MALFORMED_REQUEST",
       CallerVerificationError.MalformedRequest("field", "reason").errorCode(),
+    )
+    assertEquals(
+      "MISSING_CLIENT_DATA_HASH",
+      CallerVerificationError.MissingClientDataHash("get").errorCode(),
+    )
+    assertEquals(
+      "INVALID_CLIENT_DATA_HASH_LENGTH",
+      CallerVerificationError.InvalidClientDataHashLength(32, 31).errorCode(),
+    )
+    assertEquals(
+      "BINDING_MODE_MISMATCH",
+      CallerVerificationError.BindingModeMismatch("FrameworkHash", "ProviderConstructed")
+        .errorCode(),
     )
   }
 

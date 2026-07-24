@@ -88,6 +88,30 @@ package app.passwordstore.passkeys
  * retained only for deserialization compatibility but is marked `@Deprecated`. The actual origin
  * used in assertions and attestations always comes from the `VerifiedWebAuthnContext`.
  *
+ * ## Client Data Binding — Two Signing Modes
+ *
+ * The `ClientDataBinding` sealed interface makes it impossible to accidentally reconstruct client
+ * data for a privileged browser. Two modes exist:
+ *
+ * ### FrameworkHash (Privileged Browser)
+ *
+ * For privileged browser callers, the Android Credential Manager framework provides a
+ * `clientDataHash` that represents the exact client data approved by the browser. The provider
+ * signs `authenticatorData || clientDataHash` without reconstructing client data. This ensures that
+ * security-relevant browser context such as `crossOrigin`, `topOrigin`, token binding, or future
+ * WebAuthn fields are preserved exactly as the browser intended.
+ *
+ * The framework `clientDataHash` must be exactly 32 bytes (SHA-256). If missing or the wrong
+ * length, the request fails closed before any private-key operation.
+ *
+ * ### ProviderConstructed (Native App)
+ *
+ * For native Android callers, the provider constructs canonical client data JSON using the verified
+ * Android origin (`android:apk-key-hash:<base64url-cert-sha256>`), hashes it, and signs the result.
+ * The same bytes are returned in the response.
+ *
+ * The request JSON `origin` is never used for either mode.
+ *
  * ## RP ID Validation
  *
  * Before any caller verification, the RP ID is validated:
