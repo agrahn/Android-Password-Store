@@ -48,6 +48,12 @@ public sealed interface FileStoreError {
     override val message: String = "Repository root has changed since validation"
   }
 
+  public data class DurabilityIndeterminate(
+    val observedVersion: DurableFileVersion? = null,
+    override val message: String =
+      "Durability could not be verified; observed version: ${observedVersion?.canonicalPath ?: "unknown"}",
+  ) : FileStoreError
+
   public data class IoError(override val message: String) : FileStoreError
 
   public data class PayloadBindingMismatch(override val message: String) : FileStoreError

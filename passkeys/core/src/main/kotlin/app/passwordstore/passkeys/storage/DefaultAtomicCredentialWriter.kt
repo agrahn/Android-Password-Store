@@ -24,6 +24,7 @@ import logcat.logcat
 public class DefaultAtomicCredentialWriter(
   private val repositoryRoot: File,
   private val faultInjector: FaultInjector? = null,
+  private val directorySyncer: DirectorySyncer = DirectorySyncer.PLATFORM,
 ) : AtomicCredentialWriter {
 
   private val credentialMutexes = HashMap<String, Mutex>()
@@ -160,15 +161,10 @@ public class DefaultAtomicCredentialWriter(
             StandardCopyOption.REPLACE_EXISTING,
           )
         } catch (e: java.nio.file.AtomicMoveNotSupportedException) {
-          logcat(LogPriority.WARN) {
-            "Atomic move not supported, falling back to same-filesystem rename: ${e.message}"
+          logcat(LogPriority.ERROR) {
+            "Atomic move not supported on this filesystem, failing closed: ${e.message}"
           }
-          try {
-            Files.move(tempPath, targetPath, StandardCopyOption.REPLACE_EXISTING)
-          } catch (e2: Exception) {
-            tempFile.delete()
-            return Err(AtomicWriteError.RenameFailed("Fallback rename failed: ${e2.message}"))
-          }
+          return Err(AtomicWriteError.AtomicMoveUnsupported)
         }
       } catch (e: Exception) {
         tempFile.delete()
@@ -177,25 +173,30 @@ public class DefaultAtomicCredentialWriter(
 
       faultInjector?.afterRename()
 
-      try {
-        syncDirectory(parentDir)
-      } catch (e: Exception) {
-        logcat(LogPriority.ERROR) { "Directory fsync failed: ${e.message}" }
-        return Err(
-          AtomicWriteError.DirectorySyncFailed("Directory fsync failed after rename: ${e.message}")
-        )
-      }
-
       val modifiedAtMillis = target.lastModified()
-
-      return Ok(
+      val observedVersion =
         DurableFileVersion(
           canonicalPath = target.canonicalPath,
           fileSize = fileSize,
           modifiedAtMillis = modifiedAtMillis,
           ciphertextDigest = ciphertextDigest,
         )
-      )
+
+      try {
+        faultInjector?.beforeDirectorySync()
+        directorySyncer.sync(parentDir)
+        faultInjector?.afterDirectorySync()
+      } catch (e: Exception) {
+        logcat(LogPriority.ERROR) { "Directory fsync failed after rename: ${e.message}" }
+        return Err(
+          AtomicWriteError.DurabilityIndeterminate(
+            observedVersion = observedVersion,
+            message = "Directory fsync failed after rename: ${e.message}",
+          )
+        )
+      }
+
+      return Ok(observedVersion)
     } catch (e: Exception) {
       if (tempFile.exists()) {
         tempFile.delete()
@@ -250,41 +251,6 @@ public class DefaultAtomicCredentialWriter(
     return false
   }
 
-  private fun syncDirectory(dir: File) {
-    try {
-      val nativeDispatcherClass = Class.forName("sun.nio.fs.UnixNativeDispatcher")
-      val openMethod =
-        nativeDispatcherClass.getDeclaredMethod(
-          "open",
-          ByteArray::class.java,
-          Int::class.javaPrimitiveType,
-          Int::class.javaPrimitiveType,
-        )
-      openMethod.isAccessible = true
-      val pathBytes = dir.toPath().toAbsolutePath().toString().toByteArray()
-      val fd = openMethod.invoke(null, pathBytes, 0, 0) as Int
-      if (fd >= 0) {
-        try {
-          val fsyncMethod =
-            nativeDispatcherClass.getDeclaredMethod("fsync", Int::class.javaPrimitiveType)
-          fsyncMethod.isAccessible = true
-          fsyncMethod.invoke(null, fd)
-        } finally {
-          try {
-            val closeMethod =
-              nativeDispatcherClass.getDeclaredMethod("close", Int::class.javaPrimitiveType)
-            closeMethod.isAccessible = true
-            closeMethod.invoke(null, fd)
-          } catch (_: Exception) {}
-        }
-      }
-    } catch (_: Exception) {
-      logcat(LogPriority.WARN) {
-        "Directory fsync not available on this platform, skipping for ${dir.path}"
-      }
-    }
-  }
-
   public suspend fun deleteAtomic(target: File): Result<Boolean, AtomicWriteError> {
     val validated =
       validateTarget(target)
@@ -312,11 +278,13 @@ public class DefaultAtomicCredentialWriter(
         }
 
         try {
-          syncDirectory(parentDir)
+          directorySyncer.sync(parentDir)
         } catch (e: Exception) {
+          logcat(LogPriority.ERROR) { "Directory fsync failed after delete: ${e.message}" }
           return@withLock Err(
-            AtomicWriteError.DirectorySyncFailed(
-              "Directory fsync failed after delete: ${e.message}"
+            AtomicWriteError.DurabilityIndeterminate(
+              observedVersion = null,
+              message = "Directory fsync failed after delete: ${e.message}",
             )
           )
         }
@@ -375,6 +343,10 @@ public interface FaultInjector {
   public suspend fun beforeRename() {}
 
   public suspend fun afterRename() {}
+
+  public suspend fun beforeDirectorySync() {}
+
+  public suspend fun afterDirectorySync() {}
 
   public suspend fun beforeDelete() {}
 }

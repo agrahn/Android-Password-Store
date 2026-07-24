@@ -28,13 +28,17 @@ public sealed interface AtomicWriteError {
 
   public data class RenameFailed(override val message: String) : AtomicWriteError
 
-  public data class DirectorySyncFailed(override val message: String) : AtomicWriteError
-
   public data object ConcurrentModification : AtomicWriteError {
     override val message: String = "Concurrent modification detected for this credential"
   }
 
   public data class VerificationFailed(override val message: String) : AtomicWriteError
+
+  public data class DurabilityIndeterminate(
+    val observedVersion: DurableFileVersion? = null,
+    override val message: String =
+      "Durability could not be verified; observed version: ${observedVersion?.canonicalPath ?: "unknown"}",
+  ) : AtomicWriteError
 
   public data class IoError(override val message: String) : AtomicWriteError
 }

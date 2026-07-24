@@ -256,7 +256,13 @@ public class NoFollowFileStore(
           }
           .fold(
             success = { Ok(it) },
-            failure = { Err(FileStoreError.IoError(it.message)) },
+            failure = { error ->
+              when (error) {
+                is AtomicWriteError.DurabilityIndeterminate ->
+                  Err(FileStoreError.DurabilityIndeterminate(error.observedVersion, error.message))
+                else -> Err(FileStoreError.IoError(error.message))
+              }
+            },
           )
       } catch (e: Exception) {
         logcat(LogPriority.ERROR) { "createOrReplace failed: ${e.message}" }
@@ -290,7 +296,13 @@ public class NoFollowFileStore(
           .deleteAtomic(targetFile)
           .fold(
             success = { Ok(it) },
-            failure = { Err(FileStoreError.IoError(it.message)) },
+            failure = { error ->
+              when (error) {
+                is AtomicWriteError.DurabilityIndeterminate ->
+                  Err(FileStoreError.DurabilityIndeterminate(error.observedVersion, error.message))
+                else -> Err(FileStoreError.IoError(error.message))
+              }
+            },
           )
       } catch (e: Exception) {
         logcat(LogPriority.ERROR) { "deleteExact failed: ${e.message}" }

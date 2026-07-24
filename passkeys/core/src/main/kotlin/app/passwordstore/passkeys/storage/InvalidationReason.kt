@@ -17,4 +17,5 @@ public enum class InvalidationReason {
   FILESYSTEM_NOTIFICATION,
   MERGE_CONFLICT,
   EXPLICIT_REQUEST,
+  DURABILITY_FAILURE,
 }

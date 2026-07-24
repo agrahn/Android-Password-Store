@@ -225,14 +225,19 @@ public class IndexedPasskeyStorage(
     privateKey: ByteArray,
   ): Result<Unit, Throwable> {
     return delegate.saveCredential(credential, privateKey).also { result ->
-      if (result.isOk) {
-        val metadata = PasskeyMetadata.fromPasskeyCredential(credential)
-        val version = delegate.resolveSourceVersion(credential.credentialId).getOrElse { null }
-        indexMetadata(metadata, version)
-        if (generationProvider != null) {
-          trackedGeneration = resolveCurrentGeneration()
-        }
-      }
+      result.fold(
+        success = {
+          val metadata = PasskeyMetadata.fromPasskeyCredential(credential)
+          val version = delegate.resolveSourceVersion(credential.credentialId).getOrElse { null }
+          indexMetadata(metadata, version)
+          if (generationProvider != null) {
+            trackedGeneration = resolveCurrentGeneration()
+          }
+        },
+        failure = { error ->
+          invalidateOnDurabilityFailure(error, "save")
+        },
+      )
     }
   }
 
@@ -257,7 +262,10 @@ public class IndexedPasskeyStorage(
         }
         Ok(deleted)
       },
-      failure = { Err(it) },
+      failure = { error ->
+        invalidateOnDurabilityFailure(error, "delete")
+        Err(error)
+      },
     )
   }
 
@@ -278,7 +286,10 @@ public class IndexedPasskeyStorage(
           }
           Ok(deleted)
         },
-        failure = { Err(it) },
+        failure = { error ->
+          invalidateOnDurabilityFailure(error, "delete")
+          Err(error)
+        },
       )
   }
 
@@ -291,14 +302,26 @@ public class IndexedPasskeyStorage(
 
     return if (existing != null) {
       delegate.updateSignCount(credentialId, newSignCount).also { result ->
-        if (result.isOk) {
-          val updatedMetadata = existing.metadata.copy(signCount = newSignCount)
-          metadataIndex[key] =
-            IndexedEntry(updatedMetadata, existing.sourceVersion, existing.fileRef)
-        }
+        result.fold(
+          success = {
+            val updatedMetadata = existing.metadata.copy(signCount = newSignCount)
+            metadataIndex[key] =
+              IndexedEntry(updatedMetadata, existing.sourceVersion, existing.fileRef)
+          },
+          failure = { error ->
+            invalidateOnDurabilityFailure(error, "counter update")
+          },
+        )
       }
     } else {
-      delegate.updateSignCount(credentialId, newSignCount)
+      delegate.updateSignCount(credentialId, newSignCount).also { result ->
+        result.fold(
+          success = {},
+          failure = { error ->
+            invalidateOnDurabilityFailure(error, "counter update")
+          },
+        )
+      }
     }
   }
 
@@ -406,6 +429,15 @@ public class IndexedPasskeyStorage(
     if (!credentialBackupEligible) return false
     if (inMergeConflict) return false
     return repositoryBackedUp
+  }
+
+  private suspend fun invalidateOnDurabilityFailure(error: Throwable, context: String) {
+    if (error is DurabilityIndeterminateException) {
+      logcat(LogPriority.ERROR) {
+        "Durability indeterminate after $context, invalidating index: ${error.message}"
+      }
+      invalidate(InvalidationReason.DURABILITY_FAILURE)
+    }
   }
 
   public fun clearIndex() {
