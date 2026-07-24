@@ -508,6 +508,7 @@
   <string name="fullname_hint">Vollständiger Benutzername</string>
   <string name="reveal_passkey_username">Benutzernamen in der Passkey-Auswahl anzeigen</string>
   <string name="passkey_authentication_error_title">Fehler bei der Passkey-Authentifizierung</string>
+  <string name="passkey_biometric_auth_missing_error">Für die Passkey-Erstellung muss eine Bildschirmsperre eingerichtet sein. Überprüfen Sie die Geräteeinstellungen.</string>
   <string name="passkey_parse_error_message">Fehler beim Lesen von\n\n%1$s\n\nDie Datei scheint keine gültigen Passkey-Daten zu enthalten.</string>
   <string name="passkey_mismatch_error_message">Die Passkey-Daten in der Datei\n\n%1$s\n\npassen nicht zum Datei- und zum Verzeichnisnamen.</string>
   <string name="passkey_sign_error_message">Die Signatur konnte nicht erzeugt werden:\n\n%1$s</string>
