@@ -798,6 +798,8 @@ open class BasePGPActivity : AppCompatActivity() {
     onSuccess: suspend (String) -> Unit = {},
   ) {}
 
+  /* parses passkey from data in PasswordEntry's `password' field, returns either
+   * a passkey or null if it's not passkey data but a password */
   protected fun retrievePasskey(
     entry: PasswordEntry,
     stripped: Boolean = false, // whether to wipe private key material

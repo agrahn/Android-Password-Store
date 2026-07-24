@@ -57,6 +57,7 @@ import logcat.logcat
 class PasskeyAuthenticationActivity : BasePGPActivity() {
 
   private val INVALID_PASSKEY_DATA = "invalid_passkey_data"
+  private val PASSKEY_DATA_MISMATCH = "passkey_data_mismatch"
   private val PROVIDER_REQUEST_NULL = "provider_request_null"
   @CredentialUsernames @Inject lateinit var credentialUsernames: SharedPreferences
   @PasswordHistory @Inject lateinit var passwordHistory: SharedPreferences
@@ -108,6 +109,12 @@ class PasskeyAuthenticationActivity : BasePGPActivity() {
         val passkey = retrievePasskey(entry)
         entry.clearPassword() // wipe passkey data from memory
         if (passkey == null) throw GetCredentialUnknownException(INVALID_PASSKEY_DATA)
+
+        // sanity checks before we proceed (or abort)
+        val credentialHexIdFromFileName = Paths.get(passkeyPath).nameWithoutExtension
+        val rpIdFromParentName = encryptedFile?.getParentFile()?.getName()
+        if (rpIdFromParentName != passkey.rp.id || credentialHexIdFromFileName != passkey.idHex())
+          throw GetCredentialUnknownException(PASSKEY_DATA_MISMATCH)
 
         val providerRequest =
           PendingIntentHandler.retrieveProviderGetCredentialRequest(intent)
@@ -163,6 +170,13 @@ class PasskeyAuthenticationActivity : BasePGPActivity() {
                 val displayPath =
                   PasswordRepository.getParentPath(passkeyPath, repoPath) + shortenedHexId + "…"
                 resources.getString(R.string.passkey_parse_error_message, displayPath)
+              }
+              PASSKEY_DATA_MISMATCH -> {
+                val credentialHexId = Paths.get(passkeyPath).nameWithoutExtension
+                val shortenedHexId = credentialHexId.take(7)
+                val displayPath =
+                  PasswordRepository.getParentPath(passkeyPath, repoPath) + shortenedHexId + "…"
+                resources.getString(R.string.passkey_mismatch_error_message, displayPath)
               }
               PROVIDER_REQUEST_NULL -> resources.getString(R.string.passkey_request_error_message)
               else -> resources.getString(R.string.passkey_sign_error_message, e.message)
