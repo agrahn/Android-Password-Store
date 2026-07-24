@@ -510,6 +510,7 @@
   <string name="fullname_hint">Real username</string>
   <string name="reveal_passkey_username">Reveal username on passkey selector</string>
   <string name="passkey_authentication_error_title">Passkey authentication failure</string>
+  <string name="passkey_biometric_auth_missing_error">A screen lock must be set up to create a passkey. Check your device settings.</string>
   <string name="passkey_parse_error_message">Failed to parse\n\n%1$s\n\nThe file does not appear to contain valid passkey data.</string>
   <string name="passkey_mismatch_error_message">The passkey data in file\n\n%1$s\n\ndoes not match the file and directory names.</string>
   <string name="passkey_sign_error_message">The signature could not be generated:\n\n%1$s</string>
