@@ -22,6 +22,7 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialUnknownException
 import androidx.credentials.provider.PendingIntentHandler
 import androidx.lifecycle.lifecycleScope
+import app.passwordstore.R as AppR
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.passkeys.crypto.CallerType
 import app.passwordstore.passkeys.crypto.ClientDataBinding
@@ -49,7 +50,9 @@ import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.getOrElse
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlin.coroutines.resume
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import logcat.LogPriority
 import logcat.logcat
 
@@ -64,6 +67,11 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
   @Inject lateinit var generationProvider: RepositoryGenerationProvider
   @Inject lateinit var highWaterMark: SignatureCounterHighWaterMark
   @Inject lateinit var signatureCounterTransaction: SignatureCounterTransaction
+  @Inject lateinit var passphraseCache: PasskeyPassphraseCache
+  @Inject lateinit var metadataIndex: PasskeyMetadataIndex
+  @Inject
+  @app.passwordstore.injection.prefs.PGPPassphrases
+  lateinit var persistentPassphrases: android.content.SharedPreferences
 
   private fun maybeSyncToGit() {
     if (!sharedPrefs.getBoolean(PreferenceKeys.PASSKEY_AUTO_GIT_SYNC, true)) return
@@ -233,25 +241,60 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
 
       var userVerified = false
       if (authenticator.canAuthenticate(this)) {
-        when (val authResult = authenticator.authenticateForPasskey(this, metadata.rpId)) {
-          is PasskeyAuthenticator.Result.Success -> {
-            userVerified = true
-          }
-          is PasskeyAuthenticator.Result.Canceled -> {
-            finishWithGetError(GetCredentialCancellationException("Authentication canceled"))
-            return
-          }
-          is PasskeyAuthenticator.Result.NotAvailable -> {
-            finishWithGetError(
-              GetCredentialUnknownException("Biometric authentication required but not available")
+        val persistentEntry = findFirstPersistentPassphrase()
+        if (persistentEntry != null) {
+          val (keyId, encrypted) = persistentEntry
+          val cipher =
+            app.passwordstore.util.crypto.AESEncryption.getCipher(
+              app.passwordstore.util.crypto.AESEncryption.KeyType.PERSISTENT_WITH_AUTHENTICATION,
+              encrypted,
             )
-            return
+          val authResult = authenticateWithCipher(cipher)
+          when (authResult) {
+            is AuthOutcome.Success -> {
+              userVerified = true
+              val decrypted =
+                app.passwordstore.util.crypto.AESEncryption.decrypt(
+                  encrypted,
+                  keyType =
+                    app.passwordstore.util.crypto.AESEncryption.KeyType
+                      .PERSISTENT_WITH_AUTHENTICATION,
+                  cipher = authResult.cipher,
+                )
+              if (decrypted != null) {
+                passphraseCache.put(keyId, decrypted)
+              }
+            }
+            is AuthOutcome.Canceled -> {
+              finishWithGetError(GetCredentialCancellationException("Authentication canceled"))
+              return
+            }
+            is AuthOutcome.Failed -> {
+              finishWithGetError(GetCredentialUnknownException(authResult.message))
+              return
+            }
           }
-          is PasskeyAuthenticator.Result.Failure -> {
-            finishWithGetError(
-              GetCredentialUnknownException("Authentication failed: ${authResult.message}")
-            )
-            return
+        } else {
+          when (val authResult = authenticator.authenticateForPasskey(this, metadata.rpId)) {
+            is PasskeyAuthenticator.Result.Success -> {
+              userVerified = true
+            }
+            is PasskeyAuthenticator.Result.Canceled -> {
+              finishWithGetError(GetCredentialCancellationException("Authentication canceled"))
+              return
+            }
+            is PasskeyAuthenticator.Result.NotAvailable -> {
+              finishWithGetError(
+                GetCredentialUnknownException("Biometric authentication required but not available")
+              )
+              return
+            }
+            is PasskeyAuthenticator.Result.Failure -> {
+              finishWithGetError(
+                GetCredentialUnknownException("Authentication failed: ${authResult.message}")
+              )
+              return
+            }
           }
         }
       } else {
@@ -574,6 +617,15 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
 
         passkeyRepositoryState.onCredentialSaved()
         generationProvider.bumpWorktreeGeneration()
+        metadataIndex.put(
+          credentialWithBinding.credentialId,
+          MetadataEntry(
+            userName = credentialWithBinding.user.name,
+            userDisplayName = credentialWithBinding.user.displayName,
+            rpId = credentialWithBinding.rpId,
+            createdAt = credentialWithBinding.createdAt.toEpochMilliseconds(),
+          ),
+        )
 
         val responseJson =
           PasskeyProviderUtils.buildAttestationResponse(
@@ -595,6 +647,53 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
     } catch (e: Exception) {
       logcat(LogPriority.ERROR) { "handleCreateCredential unexpected error: $e" }
       finishWithCreateError(CreateCredentialUnknownException("Unexpected error"))
+    }
+  }
+
+  private sealed class AuthOutcome {
+    data class Success(val cipher: javax.crypto.Cipher?) : AuthOutcome()
+
+    data object Canceled : AuthOutcome()
+
+    data class Failed(val message: String) : AuthOutcome()
+  }
+
+  private fun findFirstPersistentPassphrase(): Pair<String, CharArray>? {
+    val allKeys = persistentPassphrases.all
+    for ((keyId, value) in allKeys) {
+      if (keyId == "unlock_pin" || keyId == PreferenceKeys.BIOMETRICS_AND_PIN_LAST_USE) continue
+      if (passphraseCache.contains(keyId)) continue
+      val encrypted = (value as? String)?.toCharArray() ?: continue
+      return keyId to encrypted
+    }
+    return null
+  }
+
+  private suspend fun authenticateWithCipher(cipher: javax.crypto.Cipher?): AuthOutcome {
+    return suspendCancellableCoroutine { continuation ->
+      app.passwordstore.util.auth.BiometricAuthenticator.authenticate(
+        activity = this,
+        dialogTitleRes = AppR.string.passkey_auth_title,
+        dialogDescriptionRes = AppR.string.passkey_auth_description,
+        allowPin = true,
+        cipher = cipher,
+      ) { result ->
+        if (continuation.isActive) {
+          when (result) {
+            is app.passwordstore.util.auth.BiometricAuthenticator.Result.Success ->
+              continuation.resume(AuthOutcome.Success(result.cryptoObject?.cipher))
+            is app.passwordstore.util.auth.BiometricAuthenticator.Result.CanceledByUser,
+            is app.passwordstore.util.auth.BiometricAuthenticator.Result.CanceledBySystem ->
+              continuation.resume(AuthOutcome.Canceled)
+            is app.passwordstore.util.auth.BiometricAuthenticator.Result.Failure ->
+              continuation.resume(AuthOutcome.Failed(result.message.toString()))
+            is app.passwordstore.util.auth.BiometricAuthenticator.Result.HardwareUnavailableOrDisabled ->
+              continuation.resume(AuthOutcome.Failed("Biometric authentication not available"))
+            is app.passwordstore.util.auth.BiometricAuthenticator.Result.Retry ->
+              continuation.resume(AuthOutcome.Failed("Authentication retry required"))
+          }
+        }
+      }
     }
   }
 

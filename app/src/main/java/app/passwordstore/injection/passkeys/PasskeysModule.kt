@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package app.passwordstore.injection.passkeys
 
 import android.content.Context
@@ -12,9 +14,11 @@ import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.crypto.PGPainlessCryptoHandler
 import app.passwordstore.crypto.PgpainlessPasskeyDecryptor
 import app.passwordstore.passkeys.BiometricPasskeyAuthenticator
-import app.passwordstore.passkeys.DefaultPgpUnlockContext
 import app.passwordstore.passkeys.DefaultRepositoryGenerationProvider
 import app.passwordstore.passkeys.DefaultWebAuthnCallerVerifier
+import app.passwordstore.passkeys.KeystorePgpUnlockContext
+import app.passwordstore.passkeys.PasskeyMetadataIndex
+import app.passwordstore.passkeys.PasskeyPassphraseCache
 import app.passwordstore.passkeys.crypto.ES256CryptoHandler
 import app.passwordstore.passkeys.crypto.PasskeyCryptoHandler
 import app.passwordstore.passkeys.crypto.PasskeyPgpDecryptor
@@ -24,6 +28,7 @@ import app.passwordstore.passkeys.provider.caller.WebAuthnCallerVerifier
 import app.passwordstore.passkeys.storage.FilePasskeyStorage
 import app.passwordstore.passkeys.storage.IndexedPasskeyStorage
 import app.passwordstore.passkeys.storage.PassRecipientResolver
+import app.passwordstore.passkeys.storage.PasskeyMetadataEnricher
 import app.passwordstore.passkeys.storage.PasskeyRepositoryState
 import app.passwordstore.passkeys.storage.PasskeyStorage
 import app.passwordstore.passkeys.storage.PasskeyStorageConfig
@@ -55,7 +60,10 @@ object PasskeysModule {
   fun provideCallerVerifier(@ApplicationContext context: Context): WebAuthnCallerVerifier =
     DefaultWebAuthnCallerVerifier(context)
 
-  @Provides @Singleton fun providePgpUnlockContext(): PgpUnlockContext = DefaultPgpUnlockContext()
+  @Provides
+  @Singleton
+  fun providePgpUnlockContext(passphraseCache: PasskeyPassphraseCache): PgpUnlockContext =
+    KeystorePgpUnlockContext(passphraseCache)
 
   @Provides
   @Singleton
@@ -90,6 +98,7 @@ object PasskeysModule {
     pgpUnlockContext: PgpUnlockContext,
     recipientResolver: PassRecipientResolver<PGPKey>,
     generationProvider: RepositoryGenerationProvider,
+    metadataIndex: PasskeyMetadataIndex,
   ): PasskeyStorage {
     val repositoryRoot = File(context.filesDir, "store")
     val passkeyConfig = PasskeyStorageConfig(passkeyDirectory = "fido2", fileExtension = ".gpg")
@@ -104,7 +113,15 @@ object PasskeysModule {
         config = passkeyConfig,
         generationProvider = generationProvider,
       )
-    return IndexedPasskeyStorage(fileStorage, generationProvider)
+    val enricher = PasskeyMetadataEnricher { metadata ->
+      val entry = metadataIndex.get(metadata.credentialId)
+      if (entry != null) {
+        metadata.copy(userName = entry.userName, userDisplayName = entry.userDisplayName)
+      } else {
+        metadata
+      }
+    }
+    return IndexedPasskeyStorage(fileStorage, generationProvider, metadataEnricher = enricher)
   }
 
   @Provides

@@ -29,6 +29,7 @@ public class IndexedPasskeyStorage(
   private val delegate: PasskeyStorage,
   private val generationProvider: RepositoryGenerationProvider? = null,
   private val concurrencyLimiter: PasskeyConcurrencyLimiter = PasskeyConcurrencyLimiter.DEFAULT,
+  private val metadataEnricher: PasskeyMetadataEnricher? = null,
 ) : PasskeyStorage, PasskeyRepositoryState {
 
   private data class IndexedEntry(
@@ -116,7 +117,7 @@ public class IndexedPasskeyStorage(
                             logcat(LogPriority.WARN) {
                               "Failed to load credential metadata for index: ${it.message}"
                             }
-                            entry.metadata
+                            metadataEnricher?.enrich(entry.metadata) ?: entry.metadata
                           },
                         )
                     } else {
