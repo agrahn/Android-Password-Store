@@ -53,6 +53,8 @@ jobs:
           path: |
             app/build/reports
             passkeys/core/build/reports
+            crypto/pgpainless/build/reports
+            crypto/common/build/reports
 
       - name: Upload Kotlin build report
         if: "${{ always() }}"

@@ -182,6 +182,7 @@ public class ES256CryptoHandler : PasskeyCryptoHandler {
     rpId: String,
     challenge: ByteArray,
     origin: String,
+    userVerified: Boolean,
   ): Result<AssertionResult, Throwable> {
     if (rpId.isBlank()) return Err(IllegalArgumentException("RP ID cannot be blank"))
     if (challenge.isEmpty()) return Err(IllegalArgumentException("Challenge cannot be empty"))
@@ -195,6 +196,7 @@ public class ES256CryptoHandler : PasskeyCryptoHandler {
           credential.signCount,
           credential.backupEligible,
           credential.backupState,
+          userVerified,
         )
       val (clientDataJson, clientDataHash) = buildClientData(challenge, origin, "webauthn.get")
 
@@ -224,6 +226,7 @@ public class ES256CryptoHandler : PasskeyCryptoHandler {
     rpId: String,
     clientDataHash: ByteArray,
     responseClientDataJson: ByteArray,
+    userVerified: Boolean,
   ): Result<AssertionResult, Throwable> {
     if (rpId.isBlank()) return Err(IllegalArgumentException("RP ID cannot be blank"))
     if (clientDataHash.size != 32)
@@ -243,6 +246,7 @@ public class ES256CryptoHandler : PasskeyCryptoHandler {
           credential.signCount,
           credential.backupEligible,
           credential.backupState,
+          userVerified,
         )
 
       sign(privateKey, authenticatorData, clientDataHash)
@@ -296,12 +300,13 @@ public class ES256CryptoHandler : PasskeyCryptoHandler {
     signCount: ULong,
     backupEligible: Boolean,
     backupState: Boolean,
+    userVerified: Boolean = true,
   ): ByteArray {
     val rpIdHash = MessageDigest.getInstance("SHA-256").digest(rpId.toByteArray())
     val flags =
       AuthenticatorFlags.build(
         userPresent = true,
-        userVerified = true,
+        userVerified = userVerified,
         backupEligible = backupEligible,
         backupState = backupState,
       )

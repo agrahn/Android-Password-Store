@@ -388,6 +388,7 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
                   rpId = sensitiveCredential.rpId,
                   clientDataHash = binding.hash,
                   responseClientDataJson = binding.responseClientDataJson,
+                  userVerified = userVerified,
                 )
                 .fold(
                   success = { it },
@@ -406,6 +407,7 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
                   rpId = sensitiveCredential.rpId,
                   challenge = PasskeyProviderUtils.decodeBase64Url(parsedRequest.challenge),
                   origin = verifiedContext.origin,
+                  userVerified = userVerified,
                 )
                 .fold(
                   success = { it },

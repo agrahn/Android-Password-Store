@@ -40,6 +40,7 @@ public interface PasskeyCryptoHandler {
     rpId: String,
     challenge: ByteArray,
     origin: String,
+    userVerified: Boolean = true,
   ): Result<AssertionResult, Throwable>
 
   public fun getAssertionWithFrameworkHash(
@@ -48,6 +49,7 @@ public interface PasskeyCryptoHandler {
     rpId: String,
     clientDataHash: ByteArray,
     responseClientDataJson: ByteArray,
+    userVerified: Boolean = true,
   ): Result<AssertionResult, Throwable>
 
   public fun signAssertion(
