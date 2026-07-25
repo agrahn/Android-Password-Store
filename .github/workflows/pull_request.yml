@@ -15,8 +15,9 @@ jobs:
   check-codestyle:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup build environment
-        uses: pando85/Android-Password-Store/.github/reusable-workflows/setup-gradle@main
+        uses: ./.github/reusable-workflows/setup-gradle
         with:
           java-version: 21
 
@@ -34,8 +35,9 @@ jobs:
   unit-tests:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup build environment
-        uses: pando85/Android-Password-Store/.github/reusable-workflows/setup-gradle@main
+        uses: ./.github/reusable-workflows/setup-gradle
         with:
           java-version: 21
 
@@ -62,8 +64,9 @@ jobs:
   passkey-tests:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup build environment
-        uses: pando85/Android-Password-Store/.github/reusable-workflows/setup-gradle@main
+        uses: ./.github/reusable-workflows/setup-gradle
         with:
           java-version: 21
 
@@ -97,8 +100,9 @@ jobs:
   build-apks:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup build environment
-        uses: pando85/Android-Password-Store/.github/reusable-workflows/setup-gradle@main
+        uses: ./.github/reusable-workflows/setup-gradle
         with:
           java-version: 21
 
@@ -116,8 +120,9 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup build environment
-        uses: pando85/Android-Password-Store/.github/reusable-workflows/setup-gradle@main
+        uses: ./.github/reusable-workflows/setup-gradle
         with:
           java-version: 21
 
