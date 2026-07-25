@@ -12,12 +12,25 @@ The passkey implementation is fully compatible with [pando85/passless](https://g
 - [GitHub Releases](https://github.com/pando85/Android-Password-Store/releases)
 - [F-Droid](https://f-droid.org/packages/app.passwordstore.pando85/) — listed as "Password Store (Passkey Edition)"
 
+## Passkeys
+
+Password Store acts as an Android [Credential Manager](https://developer.android.com/identity/sign-in/credential-manager) provider for WebAuthn passkeys. This means your existing `pass` store can hold passkey credentials alongside passwords, and Android apps/browsers can offer them during sign-in flows.
+
+Key points:
+
+- **Create & use passkeys** directly from the Credential Manager prompt — no separate app needed.
+- **Discoverable (usernameless) credentials** are supported: when a site requests a passkey without specifying a username, all matching credentials are presented for selection.
+- **Fully compatible with [passless](https://github.com/pando85/passless)**: credentials created by passless on the command line can be imported and used on Android, and passkeys created in Password Store interoperate with passless-based tooling.
+- **Encrypted at rest** with the same OpenPGP key you already use for passwords — no additional key management.
+- **Browser support** includes Chrome, Firefox (and F-Droid variants like Fennec/Mull), DuckDuckGo, and any browser that delegates to Android Credential Manager.
+
+For implementation details, security invariants, and maintainer guidelines see [PASSKEYS.md](PASSKEYS.md).
+
 ## Documentation
 
 The original documentation can be found [here](https://docs.passwordstore.app) and [there](https://github.com/android-password-store/Android-Password-Store/wiki/).
 
-Passkey maintainers should read [Passkey implementation notes](PASSKEYS.md) before changing the
-credential format, caller verification, browser allowlist, or Credential Manager entries.
+This fork periodically incorporates upstream fixes and features from the [original project](https://github.com/android-password-store/Android-Password-Store) and its active forks. Development here is focused on the passkey/WebAuthn credential provider feature; general password-store improvements are pulled in as they land upstream.
 
 ## How-To: Transfer a PGP key to Password Store securely
 
@@ -36,7 +49,7 @@ File `myKeyForPass.sec.asc` can be directly imported into Password Store via Set
 
 ## Contributing
 
-Issues and pull requests are welcome at [the GitHub repository](https://github.com/pando85/Android-Password-Store). This fork focuses on enhancing passkey support and maintaining compatibility with the upstream project. See [CHANGELOG](CHANGELOG.md) and [Release process](RELEASE.md).
+Issues and pull requests are welcome at [the GitHub repository](https://github.com/pando85/Android-Password-Store). Development is focused on the passkey/WebAuthn feature; upstream password-store fixes are merged periodically. See [CHANGELOG](CHANGELOG.md) and [Release process](RELEASE.md).
 
 ---
 
