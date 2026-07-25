@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: GPL-3.0-only
  */
 
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package app.passwordstore.passkeys.storage
 
 import app.passwordstore.passkeys.model.PasskeyCredential
@@ -54,6 +56,32 @@ public interface PasskeyStorage {
     ref: PasskeyFileRef
   ): Result<SourceVersionResult, Throwable> {
     return resolveSourceVersion(ref.credentialId)
+  }
+
+  public suspend fun loadCredentialMetadata(
+    ref: PasskeyFileRef,
+    expectedVersion: CredentialSourceVersion? = null,
+  ): Result<PasskeyMetadata, Throwable> {
+    return loadForSigningExact(ref, expectedVersion)
+      .fold(
+        success = { credential ->
+          credential.use {
+            Ok(
+              PasskeyMetadata(
+                credentialId = credential.credentialId,
+                rpId = credential.rpId,
+                userName = credential.user.name,
+                userDisplayName = credential.user.displayName,
+                createdAt = credential.createdAt,
+                signCount = credential.signCount,
+                backupEligible = credential.backupEligible,
+                backupState = credential.backupState,
+              )
+            )
+          }
+        },
+        failure = { Err(it) },
+      )
   }
 
   public suspend fun listMetadataWithRefs(

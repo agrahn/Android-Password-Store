@@ -32,7 +32,10 @@ import java.security.MessageDigest
 import java.util.Base64
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import logcat.LogPriority
 import logcat.logcat
@@ -55,7 +58,8 @@ internal class DefaultWebAuthnCallerVerifier(
     val option =
       request.credentialOptions.filterIsInstance<GetPublicKeyCredentialOption>().firstOrNull()
     val clientDataHash = option?.clientDataHash
-    return verifyCaller(request.callingAppInfo, rpId, "get", clientDataHash)
+    val challenge = option?.requestJson?.let { extractChallengeFromRequestJson(it) }
+    return verifyCaller(request.callingAppInfo, rpId, "get", clientDataHash, challenge)
   }
 
   override suspend fun verifyCreateRequest(
@@ -64,7 +68,8 @@ internal class DefaultWebAuthnCallerVerifier(
   ): Result<VerifiedWebAuthnContext, CallerVerificationError> {
     val createRequest = request.callingRequest as? CreatePublicKeyCredentialRequest
     val clientDataHash = createRequest?.clientDataHash
-    return verifyCaller(request.callingAppInfo, rpId, "create", clientDataHash)
+    val challenge = createRequest?.requestJson?.let { extractChallengeFromRequestJson(it) }
+    return verifyCaller(request.callingAppInfo, rpId, "create", clientDataHash, challenge)
   }
 
   private suspend fun verifyCaller(
@@ -72,6 +77,7 @@ internal class DefaultWebAuthnCallerVerifier(
     rpId: String,
     stage: String,
     frameworkClientDataHash: ByteArray?,
+    challenge: String?,
   ): Result<VerifiedWebAuthnContext, CallerVerificationError> {
     val normalizedRpId = rpId.trim().lowercase()
     if (!RpIdValidator.validateRpIdSyntax(normalizedRpId)) {
@@ -111,6 +117,7 @@ internal class DefaultWebAuthnCallerVerifier(
         normalizedRpId,
         stage,
         frameworkClientDataHash,
+        challenge,
       )
     }
 
@@ -123,6 +130,7 @@ internal class DefaultWebAuthnCallerVerifier(
     rpId: String,
     stage: String,
     frameworkClientDataHash: ByteArray?,
+    challenge: String?,
   ): Result<VerifiedWebAuthnContext, CallerVerificationError> {
     val packageName = callingAppInfo.packageName
     val certDigests = getSigningCertificateDigests(packageName)
@@ -192,7 +200,7 @@ internal class DefaultWebAuthnCallerVerifier(
       )
     }
 
-    val responseClientDataJson = buildResponseClientDataJson(canonicalOrigin)
+    val responseClientDataJson = buildResponseClientDataJson(stage, challenge, canonicalOrigin)
 
     logcat { "Browser caller verified: pkg=$packageName, rpId=$rpId, origin=$canonicalOrigin" }
     return Ok(
@@ -362,15 +370,30 @@ internal class DefaultWebAuthnCallerVerifier(
       )
     )
   }
+}
 
-  private fun buildResponseClientDataJson(origin: String): ByteArray {
-    return buildJsonObject {
-      put("type", "webauthn.get")
-      put("origin", origin)
-      put("crossOrigin", false)
+internal fun buildResponseClientDataJson(
+  stage: String,
+  challenge: String?,
+  origin: String,
+): ByteArray {
+  return buildJsonObject {
+    put("type", "webauthn.$stage")
+    if (challenge != null) {
+      put("challenge", challenge)
     }
-      .toString()
-      .toByteArray()
+    put("origin", origin)
+    put("crossOrigin", false)
+  }
+    .toString()
+    .toByteArray()
+}
+
+internal fun extractChallengeFromRequestJson(requestJson: String): String? {
+  return try {
+    Json.parseToJsonElement(requestJson).jsonObject["challenge"]?.jsonPrimitive?.content
+  } catch (_: Exception) {
+    null
   }
 }
 

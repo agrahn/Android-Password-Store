@@ -104,7 +104,25 @@ public class IndexedPasskeyStorage(
             success = { entries ->
               entries.forEach { entry ->
                 if (entry.fileRef != null && entry.sourceVersion != null) {
-                  indexMetadata(entry.metadata, entry.sourceVersion, entry.fileRef)
+                  val enrichedMetadata =
+                    if (
+                      entry.metadata.userName.isBlank() && entry.metadata.userDisplayName.isBlank()
+                    ) {
+                      delegate
+                        .loadCredentialMetadata(entry.fileRef, entry.sourceVersion)
+                        .fold(
+                          success = { it },
+                          failure = {
+                            logcat(LogPriority.WARN) {
+                              "Failed to load credential metadata for index: ${it.message}"
+                            }
+                            entry.metadata
+                          },
+                        )
+                    } else {
+                      entry.metadata
+                    }
+                  indexMetadata(enrichedMetadata, entry.sourceVersion, entry.fileRef)
                 }
               }
               indexLoaded = true

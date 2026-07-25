@@ -164,6 +164,70 @@ public class FilePasskeyStorage<
       loadFromExactRef(ref, expectedVersion)
     }
 
+  override suspend fun loadCredentialMetadata(
+    ref: PasskeyFileRef,
+    expectedVersion: CredentialSourceVersion?,
+  ): Result<PasskeyMetadata, Throwable> =
+    withContext(Dispatchers.IO) {
+      val opened = confinedStore.openExact(ref, expectedVersion)
+      opened.fold(
+        success = file@{ file ->
+            try {
+              concurrencyLimiter.decryptionSemaphore.acquire()
+              val decryptResult =
+                try {
+                  val fileSize = file.fileSize()
+                  val stream = file.inputStream()
+                  passkeyPgpDecryptor.decryptFromStream(
+                    stream,
+                    fileSize,
+                    pgpUnlockContext,
+                    inputLimits,
+                  )
+                } finally {
+                  concurrencyLimiter.decryptionSemaphore.release()
+                }
+
+              val sensitivePlaintext =
+                decryptResult.fold(
+                  success = { it },
+                  failure = { error ->
+                    return@file Err(
+                      IllegalStateException("Decryption failed: ${formatDecryptionError(error)}")
+                    )
+                      as Result<PasskeyMetadata, Throwable>
+                  },
+                )
+
+              try {
+                sensitivePlaintext.borrow { plaintext ->
+                  Ok(StoredCredential.metadataFromCbor(plaintext))
+                    as Result<PasskeyMetadata, Throwable>
+                }
+              } finally {
+                sensitivePlaintext.close()
+              }
+            } finally {
+              file.close()
+            }
+          },
+        failure = { error ->
+          when (error) {
+            is FileStoreError.VersionMismatch ->
+              Err(SecurityException("File version changed between validation and open"))
+            is FileStoreError.SymlinkInPath -> Err(SecurityException("Symlink rejected"))
+            is FileStoreError.FileNotFound -> Err(IllegalArgumentException("Credential not found"))
+            is FileStoreError.RepositoryRootSymlinked ->
+              Err(SecurityException("Repository root is symlinked"))
+            is FileStoreError.PathOutsideRepository ->
+              Err(SecurityException("Path outside repository"))
+            is FileStoreError.NotRegularFile -> Err(SecurityException("Not a regular file"))
+            else -> Err(RuntimeException(error.message))
+          }
+        },
+      )
+    }
+
   private suspend fun loadFromExactRef(
     ref: PasskeyFileRef,
     expectedVersion: CredentialSourceVersion?,

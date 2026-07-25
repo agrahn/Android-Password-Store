@@ -248,6 +248,37 @@ public data class StoredCredential(
       )
     }
 
+    public fun metadataFromCbor(bytes: ByteArray): PasskeyMetadata {
+      val map = Cbor.parse(bytes).asMap()
+
+      val id = map.getBytes("id") ?: throw IllegalArgumentException("Missing 'id' field")
+      val rpMap = map.getMap("rp") ?: throw IllegalArgumentException("Missing 'rp' field")
+      val userMap = map.getMap("user")
+      val signCount = map.getLong("sign_count")?.toULong() ?: 0uL
+      val created = map.getLong("created") ?: 0L
+      val backupEligible = map.getBoolean("backup_eligible") ?: true
+      val backupState = map.getBoolean("backup_state") ?: false
+
+      val rpId = rpMap.getString("id") ?: throw IllegalArgumentException("Missing 'rp.id' field")
+      val userName =
+        if (userMap != null && !userMap.isNull("name")) userMap.getString("name") ?: "" else ""
+      val userDisplayName =
+        if (userMap != null && !userMap.isNull("display_name"))
+          userMap.getString("display_name") ?: ""
+        else ""
+
+      return PasskeyMetadata(
+        credentialId = id,
+        rpId = rpId,
+        userName = userName,
+        userDisplayName = userDisplayName,
+        createdAt = kotlin.time.Instant.fromEpochSeconds(created),
+        signCount = signCount,
+        backupEligible = backupEligible,
+        backupState = backupState,
+      )
+    }
+
     public fun fromPasskeyCredential(
       credential: PasskeyCredential,
       privateKey: ByteArray,
