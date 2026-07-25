@@ -48,6 +48,7 @@ public class FilePasskeyStorage<
   private val concurrencyLimiter: PasskeyConcurrencyLimiter = PasskeyConcurrencyLimiter.DEFAULT,
   private val atomicWriter: DefaultAtomicCredentialWriter =
     DefaultAtomicCredentialWriter(repositoryRoot),
+  private val generationProvider: RepositoryGenerationProvider? = null,
   private val confinedStore: NoFollowFileStore =
     NoFollowFileStore(
       repositoryRoot,
@@ -55,6 +56,7 @@ public class FilePasskeyStorage<
       config.fileExtension,
       atomicWriter,
       inputLimits,
+      generationProvider,
     ),
 ) : PasskeyStorage {
 

@@ -22,6 +22,7 @@ public class SensitivePasskeyCredential(
   public val backupEligible: Boolean,
   public val backupState: Boolean,
   public val fileLastModified: Long,
+  public val credProtect: Int? = null,
   privateKey: SensitiveBytes,
 ) : AutoCloseable {
 
@@ -88,6 +89,7 @@ public class SensitivePasskeyCredential(
             backupEligible = stored.backupEligible,
             backupState = stored.backupState,
             fileLastModified = fileLastModified,
+            credProtect = stored.extensions.credProtect,
             privateKey = sensitiveKey,
           )
         stored.wipe()

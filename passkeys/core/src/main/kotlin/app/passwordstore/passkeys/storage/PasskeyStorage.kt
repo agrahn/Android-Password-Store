@@ -92,5 +92,6 @@ internal fun hexToBytes(hex: String): ByteArray? {
 }
 
 internal fun sanitizeRpId(rpId: String): String {
-  return rpId.replace("/", "_").replace("\\", "_").replace("..", "_")
+  val sanitized = rpId.filter { it.isLetterOrDigit() || it == '.' || it == '-' }
+  return sanitized.ifEmpty { "_" }
 }

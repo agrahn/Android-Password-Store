@@ -134,8 +134,8 @@
   <string name="pref_autofill_enable_title">Enable Autofill</string>
   <string name="pref_category_misc_title">Misc</string>
   <string name="pref_category_passkey_title">Passkeys</string>
-  <string name="pref_passkey_signature_counter_policy_title">Synced counter (recommended): always 0</string>
-  <string name="pref_passkey_signature_counter_policy_summary">Compatible with multi-device passkeys. Counter-based clone detection is unavailable. Disable for local monotonic counter (non-synced storage only).</string>
+  <string name="pref_passkey_signature_counter_policy_title">Zero signature counter (recommended for synced repos)</string>
+  <string name="pref_passkey_signature_counter_policy_summary">Always reports counter = 0 to websites, preventing Git merge conflicts across devices. Trade-off: websites cannot detect if your passkey was cloned to another device. Disable only for local-only (non-synced) repositories to enable monotonic counter with clone detection.</string>
   <string name="pref_passkey_auto_git_sync_title">Auto Git sync</string>
   <string name="pref_passkey_auto_git_sync_summary">Automatically sync passkeys with Git remote when repository is configured.</string>
   <string name="pref_clear_clipboard_title">Scramble clipboard history</string>

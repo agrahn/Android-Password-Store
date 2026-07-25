@@ -102,6 +102,7 @@ object PasskeysModule {
         recipientResolver = recipientResolver,
         encryptionOptions = app.passwordstore.crypto.PGPEncryptOptions.Builder().build(),
         config = passkeyConfig,
+        generationProvider = generationProvider,
       )
     return IndexedPasskeyStorage(fileStorage, generationProvider)
   }

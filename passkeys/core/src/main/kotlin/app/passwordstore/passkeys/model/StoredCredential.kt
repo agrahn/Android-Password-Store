@@ -14,6 +14,8 @@ import app.passwordstore.passkeys.cbor.toCborIntegerArray
 import app.passwordstore.passkeys.crypto.CallerType
 import java.math.BigInteger
 import kotlin.time.Instant
+import logcat.LogPriority
+import logcat.logcat
 import org.bouncycastle.crypto.ec.CustomNamedCurves
 
 public data class StoredCredential(
@@ -173,9 +175,36 @@ public data class StoredCredential(
         map.getLong("sign_count")?.toUInt()
           ?: throw IllegalArgumentException("Missing 'sign_count' field")
       val alg = map.getInt("alg") ?: throw IllegalArgumentException("Missing 'alg' field")
-      val privateKey =
+      val rawPrivateKey =
         map.getBytes("private_key") ?: throw IllegalArgumentException("Missing 'private_key' field")
-      val publicKey = if (map.isNull("public_key")) null else map.getBytes("public_key")
+      val privateKey =
+        if (rawPrivateKey.size < 32) {
+          ByteArray(32 - rawPrivateKey.size) + rawPrivateKey
+        } else {
+          rawPrivateKey
+        }
+      val rawPublicKey = if (map.isNull("public_key")) null else map.getBytes("public_key")
+      val publicKey =
+        if (rawPublicKey != null) {
+          try {
+            val derived = deriveP256PublicKey(privateKey)
+            if (!derived.contentEquals(rawPublicKey)) {
+              logcat(LogPriority.WARN) {
+                "Stored public key does not match derived key, re-deriving from private scalar"
+              }
+              null
+            } else {
+              rawPublicKey
+            }
+          } catch (_: Exception) {
+            logcat(LogPriority.WARN) {
+              "Failed to derive public key for validation, will re-derive"
+            }
+            null
+          }
+        } else {
+          null
+        }
       val created =
         map.getLong("created") ?: throw IllegalArgumentException("Missing 'created' field")
       val discoverable = map.getBoolean("discoverable") ?: true

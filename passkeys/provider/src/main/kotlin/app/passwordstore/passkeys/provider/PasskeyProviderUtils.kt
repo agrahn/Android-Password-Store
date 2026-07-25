@@ -19,6 +19,8 @@ import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import java.util.Base64
 import kotlinx.serialization.json.Json
+import logcat.LogPriority
+import logcat.logcat
 
 /** Utility functions for WebAuthn/FIDO2 passkey operations. */
 public object PasskeyProviderUtils {
@@ -95,7 +97,12 @@ public object PasskeyProviderUtils {
             )
           }
         },
-        failure = { metadata },
+        failure = { error ->
+          logcat(LogPriority.ERROR) {
+            "loadStoredIdentity failed for rpId=${metadata.rpId}, credentialId=${encodeBase64Url(metadata.credentialId)}: ${error.message}"
+          }
+          metadata
+        },
       )
   }
 

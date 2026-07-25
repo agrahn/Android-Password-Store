@@ -46,9 +46,12 @@ public class BoundedSensitiveOutputStream(private val maxBytes: Int) :
   public fun transferOwnership(): SensitiveBytes {
     check(!closed) { "Stream is closed" }
     val buf = buffer ?: throw IllegalStateException("Buffer has been released")
+    val result = ByteArray(position)
+    System.arraycopy(buf, 0, result, 0, position)
+    buf.fill(0)
     buffer = null
     closed = true
-    return SensitiveBytes(buf, position)
+    return SensitiveBytes(result)
   }
 
   override fun close() {
@@ -71,7 +74,10 @@ public class SensitiveBytes(
 
   @Volatile private var released = false
 
-  public fun bytes(): ByteArray = data ?: throw IllegalStateException("Bytes have been released")
+  public fun bytes(): ByteArray {
+    val buf = data ?: throw IllegalStateException("Bytes have been released")
+    return if (buf.size == dataSize) buf else buf.copyOfRange(0, dataSize)
+  }
 
   public fun size(): Int = if (data != null) dataSize else 0
 
@@ -79,7 +85,8 @@ public class SensitiveBytes(
 
   public inline fun <T> borrow(block: (ByteArray) -> T): T {
     val buf = data ?: throw IllegalStateException("Bytes have been released")
-    return block(buf)
+    val view = if (buf.size == dataSize) buf else buf.copyOfRange(0, dataSize)
+    return block(view)
   }
 
   public fun move(): SensitiveBytes {
@@ -87,7 +94,14 @@ public class SensitiveBytes(
     val size = dataSize
     data = null
     released = true
-    return SensitiveBytes(buf, size)
+    return if (buf.size == size) {
+      SensitiveBytes(buf, size)
+    } else {
+      val result = ByteArray(size)
+      System.arraycopy(buf, 0, result, 0, size)
+      buf.fill(0)
+      SensitiveBytes(result, size)
+    }
   }
 
   public fun release() {

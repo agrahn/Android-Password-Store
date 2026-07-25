@@ -29,6 +29,7 @@ public class NoFollowFileStore(
   private val atomicWriter: DefaultAtomicCredentialWriter =
     DefaultAtomicCredentialWriter(repositoryRoot),
   private val inputLimits: PasskeyInputLimits = PasskeyInputLimits.DEFAULT,
+  private val generationProvider: RepositoryGenerationProvider? = null,
 ) : ConfinedPasskeyFileStore {
 
   private val readMutex = Mutex()
@@ -491,11 +492,20 @@ public class NoFollowFileStore(
   }
 
   private fun currentRepositoryGeneration(): RepositoryGeneration {
-    return RepositoryGeneration(
-      repositoryIdentity = repositoryRoot.canonicalPath,
-      gitHead = null,
-      worktreeGeneration = System.currentTimeMillis(),
-    )
+    val provider = generationProvider
+    return if (provider != null) {
+      RepositoryGeneration(
+        repositoryIdentity = provider.repositoryIdentity(),
+        gitHead = null,
+        worktreeGeneration = provider.currentWorktreeGeneration(),
+      )
+    } else {
+      RepositoryGeneration(
+        repositoryIdentity = repositoryRoot.canonicalPath,
+        gitHead = null,
+        worktreeGeneration = 0L,
+      )
+    }
   }
 
   private fun unsanitizeRpId(sanitized: String): String {

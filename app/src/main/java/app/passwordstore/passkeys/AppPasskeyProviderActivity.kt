@@ -231,9 +231,12 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
           }
         }
 
+      var userVerified = false
       if (authenticator.canAuthenticate(this)) {
         when (val authResult = authenticator.authenticateForPasskey(this, metadata.rpId)) {
-          is PasskeyAuthenticator.Result.Success -> {}
+          is PasskeyAuthenticator.Result.Success -> {
+            userVerified = true
+          }
           is PasskeyAuthenticator.Result.Canceled -> {
             finishWithGetError(GetCredentialCancellationException("Authentication canceled"))
             return
@@ -303,6 +306,25 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
         if (sensitiveCredential == null) {
           finishWithGetError(GetCredentialUnknownException("Selected passkey is unavailable"))
           return
+        }
+
+        val credProtectLevel = sensitiveCredential.credProtect
+        if (credProtectLevel != null && credProtectLevel >= 2) {
+          val credentialInAllowList =
+            parsedRequest.allowCredentials.any { descriptor ->
+              PasskeyProviderUtils.decodeBase64Url(descriptor.id)
+                .contentEquals(sensitiveCredential.credentialId)
+            }
+          val uvRequired = credProtectLevel >= 3 || !credentialInAllowList
+          if (uvRequired && !userVerified) {
+            sensitiveCredential.close()
+            finishWithGetError(
+              GetCredentialUnknownException(
+                "Credential requires user verification (credProtect=$credProtectLevel)"
+              )
+            )
+            return
+          }
         }
 
         val policy = resolveCounterPolicy()
