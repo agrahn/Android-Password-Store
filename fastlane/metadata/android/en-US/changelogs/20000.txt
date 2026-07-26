@@ -1,0 +1,3 @@
+Added:
+
+- Passkey support, available on devices with Android 14 and above
