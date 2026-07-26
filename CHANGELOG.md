@@ -4,11 +4,13 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-07-26
+
 ### Added
 
 - **Passkey support**, available on devices with **Android 14** and above;<br/>
-Supported passkey types: **ES256**, **Ed25519** and **RS256**; selection upon passkey creation, based on the relying party's preference order;<br/>
-Android Credential Manager integration: handling passkey creation and authentication requests from browsers and native apps
+  Supported passkey types: **ES256**, **Ed25519** and **RS256**; selection upon passkey creation, based on the relying party's preference order;<br/>
+  Android Credential Manager integration: handling passkey creation and authentication requests from browsers and native apps
 
 ## [1.16.4] - 2026-07-10
 
@@ -673,7 +675,8 @@ Android Credential Manager integration: handling passkey creation and authentica
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.4...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.4...v2.0.0
 [1.16.4]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.3...v1.16.4
 [1.16.3]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.2...v1.16.3
 [1.16.2]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.1...v1.16.2
