@@ -365,7 +365,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
               finish()
             }
             .show()
-        } else if (!BiometricAuthenticator.canAuthenticate(this, allowPin = true)) {
+        } else if (!editing && !BiometricAuthenticator.canAuthenticate(this, allowPin = true)) {
           MaterialAlertDialogBuilder(this)
             .setCancelable(false)
             .setTitle(R.string.error)
@@ -379,13 +379,16 @@ class PasskeyCreationActivity : BasePGPActivity() {
         } else {
           requireKeysExist {
             requireEncryptionKeysExist(binding.directory.text.toString()) { ids ->
-              BiometricAuthenticator.authenticate(this, allowPin = true) { result ->
-                when (result) {
-                  is Result.Success -> encrypt(ids)
-                  is Result.Retry -> {}
-                  else -> finish()
+              // biometric auth needed for passkey creation
+              if (!editing)
+                BiometricAuthenticator.authenticate(this, allowPin = true) { result ->
+                  when (result) {
+                    is Result.Success -> encrypt(ids)
+                    is Result.Retry -> {}
+                    else -> finish()
+                  }
                 }
-              }
+              else encrypt(ids)
             }
           }
         }
