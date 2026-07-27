@@ -1,4 +1,4 @@
-141874
+141753
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -108,7 +108,6 @@
 *.compute.amazonaws.com
 *.compute.amazonaws.com.cn
 *.compute.estate
-*.cryptonomic.net
 *.customer-oci.com
 *.d.crm.dev
 *.database.run
@@ -189,7 +188,6 @@
 *.oci.customer-oci.com
 *.ocp.customer-oci.com
 *.ocs.customer-oci.com
-*.on-acorn.io
 *.on-k3s.io
 *.on-rancher.cloud
 *.on-rio.io
@@ -688,7 +686,6 @@ apartments
 api.br
 api.gov.uk
 api.lp.dev
-api.stdlib.com
 apigee.io
 app
 app-ionos.space
@@ -713,7 +710,6 @@ appwrite.network
 aq
 aq.it
 aquarelle
-aquila.it
 ar
 ar.it
 ar.us
@@ -2128,8 +2124,6 @@ desi
 design
 design.aero
 det.br
-deta.app
-deta.dev
 deus-canvas.com
 deuxfleurs.eu
 deuxfleurs.page
@@ -2145,7 +2139,6 @@ df.leg.br
 dfirma.pl
 dgca.aero
 dgn.ec
-dh.bytemark.co.uk
 dhl
 diadem.cloud
 diamonds
@@ -3912,7 +3905,6 @@ hyogo.jp
 hypernode.io
 hyuga.miyazaki.jp
 hyundai
-hzc.io
 hábmer.no
 hámmárfeasta.no
 hápmir.no
@@ -6635,7 +6627,6 @@ onagawa.miyagi.jp
 oncilla.mythic-beasts.com
 ondigitalocean.app
 one
-onfabrica.com
 ong
 ong.br
 onga.fukuoka.jp
@@ -7082,6 +7073,7 @@ pl.ua
 place
 platter-app.dev
 play
+playcode.site
 playit.plus
 playstation
 playstation-cloud.com
@@ -7217,7 +7209,6 @@ promo
 properties
 property
 protection
-protonet.io
 pru
 prudential
 pruszkow.pl
@@ -8513,7 +8504,6 @@ store.st
 store.ve
 storebase.store
 storfjord.no
-storj.farm
 strand.no
 stranda.no
 strapiapp.com
@@ -8565,10 +8555,13 @@ stuff-4-sale.us
 stufftoread.com
 style
 su
+su.it
 sub.jp
 subsc-pay.com
 subsc-pay.net
 sucks
+sud-sardegna.it
+sudsardegna.it
 sue.fukuoka.jp
 suedtirol.it
 suginami.tokyo.jp
@@ -9080,7 +9073,6 @@ trentinoaltoadige.it
 trentinos-tirol.it
 trentinostirol.it
 trentinosud-tirol.it
-trentinosudtirol.it
 trentinosued-tirol.it
 trentinosuedtirol.it
 trentinosüd-tirol.it
@@ -9236,7 +9228,6 @@ uk.net
 uk.oxa.cloud
 uk.primetel.cloud
 uk.reclaim.cloud
-uk0.bigv.io
 uki.kumamoto.jp
 ukiha.fukuoka.jp
 ullensaker.no
@@ -9369,7 +9360,6 @@ val-d-aosta.it
 val-daosta.it
 val.run
 vald-aosta.it
-valdaosta.it
 valer.hedmark.no
 valer.ostfold.no
 valle-aosta.it
@@ -9418,6 +9408,7 @@ venice.it
 vennesla.no
 ventures
 verbania.it
+verbano-cusio-ossola.it
 vercel.app
 vercel.dev
 vercel.run
@@ -9517,7 +9508,6 @@ vladikavkaz.su
 vladimir.ru
 vladimir.su
 vlog.br
-vm.bytemark.co.uk
 vn
 vn.ua
 voagat.no
@@ -9598,6 +9588,7 @@ wazuka.kyoto.jp
 we.bs
 weather
 weatherchannel
+web
 web.app
 web.bo
 web.core.usgovcloudapi.net
