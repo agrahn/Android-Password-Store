@@ -53,6 +53,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -472,6 +473,7 @@ open class BasePGPActivity : AppCompatActivity() {
         var cacheEnabled = bundle.getBoolean(PasswordDialog.PASSWORD_CACHE_KEY)
         lifecycleScope.launch(dispatcherProvider.main()) {
           decryptWithPassphrase(mapOf("" to passphrase), identifiers) { id -> // onSuccess
+            var biometricSetupCompletion: CompletableDeferred<Unit>? = null
             runCatching {
               // update temporary passphrase cache
               val isHardwareBacked = AESEncryption.isHardwareBacked()
@@ -508,6 +510,8 @@ open class BasePGPActivity : AppCompatActivity() {
                 settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") ==
                   "fingerprint" && cipher != null
               ) {
+                val completion = CompletableDeferred<Unit>()
+                biometricSetupCompletion = completion
                 BiometricAuthenticator.authenticate(
                   this@BasePGPActivity,
                   dialogDescriptionRes =
@@ -531,7 +535,10 @@ open class BasePGPActivity : AppCompatActivity() {
                       )
                     }
                   }
-                  passphrase.wipe()
+                  if (result !is BiometricResult.Retry) {
+                    passphrase.wipe()
+                    completion.complete(Unit)
+                  }
                 }
               } else if (
                 settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") == "PIN" &&
@@ -594,7 +601,9 @@ open class BasePGPActivity : AppCompatActivity() {
               .onErr { e ->
                 logcat { e.asLog() }
                 passphrase.wipe()
+                biometricSetupCompletion?.complete(Unit)
               }
+            biometricSetupCompletion?.await()
           }
         }
       }
