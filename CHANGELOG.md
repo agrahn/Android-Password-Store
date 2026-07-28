@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+## [1.19.1] - 2026-07-28
+
+### Fixed
+
+- Autofill biometric fast unlock setup now works correctly
+
 ## [1.19.0] - 2026-07-26
 
 ### Added
