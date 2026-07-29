@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+## [1.19.2] - 2026-07-29
+
+### Fixed
+
+- Restored privileged browser Credential Manager responses for passkey authentication
+
 ## [1.19.1] - 2026-07-28
 
 ### Fixed
@@ -827,7 +833,10 @@ All notable changes to this project will be documented in this file
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/pando85/Android-Password-Store/compare/v1.18.0...HEAD
+[unreleased]: https://github.com/pando85/Android-Password-Store/compare/v1.19.2...HEAD
+[1.19.2]: https://github.com/pando85/Android-Password-Store/compare/v1.19.1...v1.19.2
+[1.19.1]: https://github.com/pando85/Android-Password-Store/compare/v1.19.0...v1.19.1
+[1.19.0]: https://github.com/pando85/Android-Password-Store/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/pando85/Android-Password-Store/compare/v1.17.3...v1.18.0
 [1.17.3]: https://github.com/pando85/Android-Password-Store/compare/v1.17.2...v1.17.3
 [1.17.2]: https://github.com/pando85/Android-Password-Store/compare/v1.17.1...v1.17.2
