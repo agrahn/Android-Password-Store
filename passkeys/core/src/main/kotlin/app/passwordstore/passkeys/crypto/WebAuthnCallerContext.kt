@@ -5,6 +5,8 @@
 
 package app.passwordstore.passkeys.crypto
 
+private val PRIVILEGED_BROWSER_CLIENT_DATA_JSON_PLACEHOLDER: ByteArray = "{}".toByteArray()
+
 public enum class CallerType {
   NATIVE_APP,
   PRIVILEGED_BROWSER,
@@ -12,26 +14,32 @@ public enum class CallerType {
 
 public sealed interface ClientDataBinding {
 
-  public data class FrameworkHash(
-    val hash: ByteArray,
-    val responseClientDataJson: ByteArray,
+  /**
+   * Binding for privileged browser ceremonies.
+   *
+   * Android Credential Manager supplies the authoritative clientDataHash for privileged callers.
+   * Providers must sign that hash directly and return a placeholder clientDataJSON rather than a
+   * locally reconstructed browser payload. The constructor keeps the legacy response JSON argument
+   * for source compatibility with the app-layer verifier, but that value is intentionally ignored.
+   */
+  public class FrameworkHash(
+    public val hash: ByteArray,
+    @Suppress("UNUSED_PARAMETER") responseClientDataJson: ByteArray,
   ) : ClientDataBinding {
+
+    public val responseClientDataJson: ByteArray
+      get() = PRIVILEGED_BROWSER_CLIENT_DATA_JSON_PLACEHOLDER.copyOf()
+
     override fun equals(other: Any?): Boolean {
       if (this === other) return true
       if (other !is FrameworkHash) return false
-      if (!hash.contentEquals(other.hash)) return false
-      if (!responseClientDataJson.contentEquals(other.responseClientDataJson)) return false
-      return true
+      return hash.contentEquals(other.hash)
     }
 
-    override fun hashCode(): Int {
-      var result = hash.contentHashCode()
-      result = 31 * result + responseClientDataJson.contentHashCode()
-      return result
-    }
+    override fun hashCode(): Int = hash.contentHashCode()
 
     override fun toString(): String =
-      "FrameworkHash(hash=<${hash.size} bytes>, responseClientDataJson=<${responseClientDataJson.size} bytes>)"
+      "FrameworkHash(hash=<${hash.size} bytes>, responseClientDataJson=<placeholder>)"
   }
 
   public data object ProviderConstructed : ClientDataBinding

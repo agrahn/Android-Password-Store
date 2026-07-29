@@ -34,6 +34,7 @@ import app.passwordstore.passkeys.provider.PasskeyCredentialProviderService
 import app.passwordstore.passkeys.provider.PasskeyProviderUtils
 import app.passwordstore.passkeys.provider.caller.WebAuthnCallerVerifier
 import app.passwordstore.passkeys.storage.GitSyncResult
+import app.passwordstore.passkeys.storage.MissingRecipientKeyException
 import app.passwordstore.passkeys.storage.PasskeyRepositoryState
 import app.passwordstore.passkeys.storage.PasskeyStorage
 import app.passwordstore.passkeys.storage.RepositoryGenerationProvider
@@ -44,10 +45,12 @@ import app.passwordstore.passkeys.storage.SignatureCounterTransaction
 import app.passwordstore.passkeys.storage.SourceVersionResult
 import app.passwordstore.ui.git.base.BaseGitActivity
 import app.passwordstore.ui.git.base.BaseGitActivity.GitOp
+import app.passwordstore.ui.pgp.PGPKeyListActivity
 import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.getOrElse
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -603,15 +606,30 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
             verifiedOrigin = verifiedContext.origin,
           )
 
+        val responseJson =
+          PasskeyProviderUtils.buildAttestationResponse(
+            credentialWithBinding,
+            createRequest.requestJson,
+            verifiedContext,
+          )
+
         val saveResult = createdCredential.usePrivateKeySuspend { privateKey ->
           passkeyStorage.saveCredential(credentialWithBinding, privateKey)
         }
         if (saveResult.isErr) {
-          saveResult.fold(
-            success = {},
-            failure = { logcat(LogPriority.ERROR) { "Failed storing passkey: $it" } },
-          )
-          finishWithCreateError(CreateCredentialUnknownException("Failed storing passkey"))
+          val error: Throwable? =
+            saveResult.fold(
+              success = { null },
+              failure = {
+                logcat(LogPriority.ERROR) { "Failed storing passkey: $it" }
+                it
+              },
+            )
+          if (error is MissingRecipientKeyException) {
+            showMissingRecipientKeyDialog(error.identifier)
+          } else {
+            finishWithCreateError(CreateCredentialUnknownException("Failed storing passkey"))
+          }
           return
         }
 
@@ -627,12 +645,6 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
           ),
         )
 
-        val responseJson =
-          PasskeyProviderUtils.buildAttestationResponse(
-            credentialWithBinding,
-            createRequest.requestJson,
-            verifiedContext,
-          )
         val resultIntent = Intent()
         PendingIntentHandler.setCreateCredentialResponse(
           resultIntent,
@@ -656,6 +668,23 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
     data object Canceled : AuthOutcome()
 
     data class Failed(val message: String) : AuthOutcome()
+  }
+
+  private fun showMissingRecipientKeyDialog(identifier: String) {
+    val exception = CreateCredentialUnknownException("Missing PGP recipient key: $identifier")
+    MaterialAlertDialogBuilder(this)
+      .setIcon(AppR.drawable.ic_warning_red_24dp)
+      .setTitle(AppR.string.passkey_missing_recipient_key_title)
+      .setMessage(getString(AppR.string.passkey_missing_recipient_key_message, identifier))
+      .setCancelable(false)
+      .setPositiveButton(AppR.string.no_keys_imported_dialog_open_key_manager) { _, _ ->
+        startActivity(PGPKeyListActivity.newIntent(this))
+        finishWithCreateError(exception)
+      }
+      .setNegativeButton(AppR.string.dialog_cancel) { _, _ ->
+        finishWithCreateError(exception)
+      }
+      .show()
   }
 
   private fun findFirstPersistentPassphrase(): Pair<String, CharArray>? {

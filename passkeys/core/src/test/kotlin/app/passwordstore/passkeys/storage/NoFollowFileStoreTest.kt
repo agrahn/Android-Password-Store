@@ -166,6 +166,55 @@ class NoFollowFileStoreTest {
   }
 
   @Test
+  fun `createOrReplace creates a missing credential file`() = runBlocking {
+    setupRepo()
+    try {
+      val rpDir = File(repoRoot, "fido2/example.com")
+      rpDir.mkdirs()
+      val ref =
+        PasskeyFileRef(
+          canonicalRpId = "example.com",
+          credentialId = byteArrayOf(0xaa.toByte(), 0xbb.toByte()),
+          relativePath = "example.com/aabb.gpg",
+        )
+
+      val result = store.createOrReplace(ref) { output -> output.write(byteArrayOf(1, 2, 3)) }
+
+      result.fold(
+        success = {
+          assertTrue(File(rpDir, "aabb.gpg").readBytes().contentEquals(byteArrayOf(1, 2, 3)))
+        },
+        failure = { throw AssertionError("Create should succeed: $it") },
+      )
+    } finally {
+      teardownRepo()
+    }
+  }
+
+  @Test
+  fun `createOrReplace rejects a missing parent directory`() = runBlocking {
+    setupRepo()
+    try {
+      File(repoRoot, "fido2").mkdirs()
+      val ref =
+        PasskeyFileRef(
+          canonicalRpId = "example.com",
+          credentialId = byteArrayOf(0xaa.toByte(), 0xbb.toByte()),
+          relativePath = "example.com/aabb.gpg",
+        )
+
+      val result = store.createOrReplace(ref) { output -> output.write(byteArrayOf(1, 2, 3)) }
+
+      result.fold(
+        success = { throw AssertionError("Create must reject a missing parent directory") },
+        failure = { error -> assertEquals(FileStoreError.FileNotFound, error) },
+      )
+    } finally {
+      teardownRepo()
+    }
+  }
+
+  @Test
   fun `duplicate credential IDs in different RP directories fail closed`() = runBlocking {
     setupRepo()
     try {

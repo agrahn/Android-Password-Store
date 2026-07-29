@@ -476,6 +476,8 @@
   <string name="pgp_unknown_key_identifier">unknown key ID</string>
   <string name="no_pgp_keys_dialog_title">No PGP keys found</string>
   <string name="no_pgp_keys_dialog_message">Open the PGP key manager and import matching PGP keys from backups for key ID(s): </string>
+  <string name="passkey_missing_recipient_key_title">Missing PGP recipient key</string>
+  <string name="passkey_missing_recipient_key_message">This passkey cannot be saved because a public PGP key required by .gpg-id is not imported:\n\n%1$s\n\nImport the matching PGP key, then try again.</string>
   <string name="no_decryption_keys_dialog_title">No decryption keys found</string>
   <string name="no_decryption_keys_dialog_message">Open the PGP key manager and import matching secret PGP keys from backups for key ID(s): </string>
   <string name="pgp_unknown">unknown</string>

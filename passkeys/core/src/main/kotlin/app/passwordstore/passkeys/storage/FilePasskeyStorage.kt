@@ -384,7 +384,7 @@ public class FilePasskeyStorage<
             }
             .fold(
               success = {
-                logcat { "Saved passkey for ${credential.rpId}/${storedCred.credentialIdHex()}" }
+                logcat { "Saved passkey for ${credential.rpId}/${ref.credentialIdHex()}" }
                 Ok(Unit)
               },
               failure = { error ->
@@ -669,23 +669,22 @@ public class FilePasskeyStorage<
       else -> Err(RuntimeException(error.message))
     }
   }
+}
 
-  private fun recipientPolicyErrorToException(error: RecipientPolicyError): Exception {
-    return when (error) {
-      is RecipientPolicyError.TargetOutsideRepository ->
-        SecurityException("Target outside repository")
-      is RecipientPolicyError.SymlinkRejected -> SecurityException("Symlink rejected")
-      is RecipientPolicyError.GpgIdNotFound -> IllegalStateException("No .gpg-id found")
-      is RecipientPolicyError.MalformedGpgId ->
-        IllegalStateException("Malformed .gpg-id at line ${error.line}: ${error.reason}")
-      is RecipientPolicyError.RecipientNotFound ->
-        IllegalStateException("Recipient not found: ${error.identifier}")
-      is RecipientPolicyError.AmbiguousRecipient ->
-        IllegalStateException("Ambiguous recipient: ${error.identifier}")
-      is RecipientPolicyError.RecipientUnusable ->
-        IllegalStateException("Recipient unusable: ${error.identifier}")
-      is RecipientPolicyError.EmptyRecipientSet ->
-        IllegalStateException("Empty recipient set in .gpg-id")
-    }
+internal fun recipientPolicyErrorToException(error: RecipientPolicyError): Exception {
+  return when (error) {
+    is RecipientPolicyError.TargetOutsideRepository ->
+      SecurityException("Target outside repository")
+    is RecipientPolicyError.SymlinkRejected -> SecurityException("Symlink rejected")
+    is RecipientPolicyError.GpgIdNotFound -> IllegalStateException("No .gpg-id found")
+    is RecipientPolicyError.MalformedGpgId ->
+      IllegalStateException("Malformed .gpg-id at line ${error.line}: ${error.reason}")
+    is RecipientPolicyError.RecipientNotFound -> MissingRecipientKeyException(error.identifier)
+    is RecipientPolicyError.AmbiguousRecipient ->
+      IllegalStateException("Ambiguous recipient: ${error.identifier}")
+    is RecipientPolicyError.RecipientUnusable ->
+      IllegalStateException("Recipient unusable: ${error.identifier}")
+    is RecipientPolicyError.EmptyRecipientSet ->
+      IllegalStateException("Empty recipient set in .gpg-id")
   }
 }

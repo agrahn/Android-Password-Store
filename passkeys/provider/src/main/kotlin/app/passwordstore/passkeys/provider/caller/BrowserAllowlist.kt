@@ -32,7 +32,7 @@ public object BrowserAllowlist {
       TrustedBrowserEntry(
         packageName = "org.mozilla.firefox",
         signingCertificateDigestSha256 =
-          setOf("5004779088E7F988D5BC5CC5F8798FEBF4F8CD084A1B2A46EFD4C8EE4AEAF211"),
+          setOf("A78B62A5165B4494B2FEAD9E76A280D22D937FEE6251AECE599446B2EA319B04"),
       ),
     )
 

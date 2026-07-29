@@ -284,18 +284,18 @@ public data class StoredCredential(
       privateKey: ByteArray,
     ): StoredCredential {
       return StoredCredential(
-        id = credential.credentialId,
+        id = credential.credentialId.copyOf(),
         rp = RelyingParty(id = credential.rpId, name = null),
         user =
           User(
-            id = credential.user.id,
+            id = credential.user.id.copyOf(),
             name = credential.user.name,
             displayName = credential.user.displayName,
           ),
         signCount = credential.signCount.toUInt(),
         alg = ALG_ES256,
-        privateKey = privateKey,
-        publicKey = credential.publicKey,
+        privateKey = privateKey.copyOf(),
+        publicKey = credential.publicKey.copyOf(),
         created = credential.createdAt.epochSeconds,
         discoverable = true,
         extensions = Extensions(),

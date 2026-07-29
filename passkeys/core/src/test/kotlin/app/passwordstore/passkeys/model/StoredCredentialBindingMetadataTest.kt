@@ -122,6 +122,33 @@ class StoredCredentialBindingMetadataTest {
   }
 
   @Test
+  fun `fromPasskeyCredential owns arrays it wipes`() {
+    val credentialId = ByteArray(32) { (it + 1).toByte() }
+    val publicKey = ByteArray(65) { if (it == 0) 0x04.toByte() else it.toByte() }
+    val userId = ByteArray(16) { (it + 2).toByte() }
+    val privateKey = ByteArray(32) { (it + 3).toByte() }
+    val passkey =
+      PasskeyCredential(
+        credentialId = credentialId,
+        publicKey = publicKey,
+        rpId = "example.com",
+        user = FidoUser(id = userId, name = "user", displayName = "User"),
+        createdAt = kotlin.time.Instant.fromEpochSeconds(1700000000L),
+      )
+    val expectedCredentialId = credentialId.copyOf()
+    val expectedPublicKey = publicKey.copyOf()
+    val expectedUserId = userId.copyOf()
+    val expectedPrivateKey = privateKey.copyOf()
+
+    StoredCredential.fromPasskeyCredential(passkey, privateKey).close()
+
+    assertArrayEquals(expectedCredentialId, credentialId)
+    assertArrayEquals(expectedPublicKey, publicKey)
+    assertArrayEquals(expectedUserId, userId)
+    assertArrayEquals(expectedPrivateKey, privateKey)
+  }
+
+  @Test
   fun `old credential without binding fields can be parsed`() {
     val original = baseCredential()
     val cbor = original.toCbor()

@@ -231,7 +231,7 @@ public class NoFollowFileStore(
         }
 
         val filePath =
-          resolveAndValidate(ref)
+          resolveAndValidate(ref, allowMissingTarget = true)
             .fold(
               success = { it },
               failure = {
@@ -394,7 +394,10 @@ public class NoFollowFileStore(
     return true
   }
 
-  private fun resolveAndValidate(ref: PasskeyFileRef): Result<Path, FileStoreError> {
+  private fun resolveAndValidate(
+    ref: PasskeyFileRef,
+    allowMissingTarget: Boolean = false,
+  ): Result<Path, FileStoreError> {
     val passkeyRoot = passkeyRootPath
 
     if (!safeIsDirectory(passkeyRoot)) {
@@ -404,7 +407,7 @@ public class NoFollowFileStore(
     val segments = ref.relativePath.split("/")
     var current = passkeyRoot
 
-    for (segment in segments) {
+    for ((index, segment) in segments.withIndex()) {
       if (segment.isBlank() || segment == "." || segment == "..") {
         return Err(FileStoreError.MalformedPath)
       }
@@ -416,13 +419,24 @@ public class NoFollowFileStore(
       }
 
       if (!Files.exists(next, LinkOption.NOFOLLOW_LINKS)) {
+        if (allowMissingTarget && index == segments.lastIndex) {
+          current = next
+          continue
+        }
         return Err(FileStoreError.FileNotFound)
+      }
+
+      if (index < segments.lastIndex && !Files.isDirectory(next, LinkOption.NOFOLLOW_LINKS)) {
+        return Err(FileStoreError.NotDirectory)
       }
 
       current = next
     }
 
-    if (!Files.isRegularFile(current, LinkOption.NOFOLLOW_LINKS)) {
+    if (
+      Files.exists(current, LinkOption.NOFOLLOW_LINKS) &&
+        !Files.isRegularFile(current, LinkOption.NOFOLLOW_LINKS)
+    ) {
       return Err(FileStoreError.NotRegularFile)
     }
 
