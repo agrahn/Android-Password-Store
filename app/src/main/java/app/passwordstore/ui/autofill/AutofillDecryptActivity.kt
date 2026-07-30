@@ -141,6 +141,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
           System.currentTimeMillis().toString(),
         )
       }
+
       onSuccess(lastResult.first) // pass ID
 
       withContext(dispatcherProvider.main()) { finish() }

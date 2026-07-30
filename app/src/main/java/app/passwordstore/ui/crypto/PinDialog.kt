@@ -15,9 +15,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.setFragmentResult
 import app.passwordstore.R
 import app.passwordstore.databinding.DialogPinEntryBinding
-import app.passwordstore.util.extensions.finish
 import app.passwordstore.util.extensions.unsafeLazy
-import app.passwordstore.util.extensions.wipe
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /** [DialogFragment] to request a PIN from the user and forward it along. */
@@ -39,6 +37,7 @@ class PinDialog : DialogFragment() {
     builder.setPositiveButton(android.R.string.ok) { _, _ -> setPinAndDismiss() }
     val dialog = builder.create()
     dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+    dialog.setCancelable(false)
     dialog.setOnShowListener {
       var pinLength = 0
       if (isError) {
@@ -74,14 +73,13 @@ class PinDialog : DialogFragment() {
   }
 
   override fun onDismiss(dialog: DialogInterface) {
-    requireArguments().getCharArray(CLEAR_ON_DISMISS_TEXT_EXTRA)?.wipe()
     binding.pinEditText.text?.clear()
     super.onDismiss(dialog)
   }
 
   override fun onCancel(dialog: DialogInterface) {
     super.onCancel(dialog)
-    finish()
+    setFragmentResult(PIN_RESULT_KEY, Bundle())
   }
 
   private fun setPinAndDismiss() {
@@ -94,7 +92,6 @@ class PinDialog : DialogFragment() {
 
     private const val TITLE_TEXT_EXTRA = "title_text"
     private const val DESCRIPTION_TEXT_EXTRA = "description_text"
-    private const val CLEAR_ON_DISMISS_TEXT_EXTRA = "clear_chars_text"
 
     const val PIN_RESULT_KEY = "pin_result"
     const val PIN_KEY = "pin"
@@ -102,14 +99,12 @@ class PinDialog : DialogFragment() {
     fun newInstance(
       title: String,
       description: String,
-      clearOnDismiss: CharArray? = null,
     ): PinDialog {
       val extras =
         Bundle().also {
           it.apply {
             putString(TITLE_TEXT_EXTRA, title)
             putString(DESCRIPTION_TEXT_EXTRA, description)
-            putCharArray(CLEAR_ON_DISMISS_TEXT_EXTRA, clearOnDismiss)
           }
         }
       val fragment = PinDialog()
