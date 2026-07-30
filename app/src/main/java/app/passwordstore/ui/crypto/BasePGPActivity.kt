@@ -619,7 +619,7 @@ open class BasePGPActivity : AppCompatActivity() {
 
   /* Find persistent PGP passphrases with matching key ID, unlock the first one
    * with biometrics or after PIN verification */
-  protected fun getPersistentAndDecrypt(identifiers: List<PGPIdentifier>) {
+  protected fun getPersistentAndDecrypt(identifiers: List<PGPIdentifier>, action: String? = null) {
     // Detect AES key invalidation due to enrollment of a new fingerprint and emit warning
     if (
       BiometricAuthenticator.canAuthenticate(this@BasePGPActivity) &&
@@ -690,7 +690,7 @@ open class BasePGPActivity : AppCompatActivity() {
         settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") == "PIN" &&
         pinEncrypted != null
     ) {
-      verifyPin(pinEncrypted, persistentIds, identifiers)
+      verifyPin(pinEncrypted, persistentIds, identifiers, action)
     } else {
       decrypt(identifiers)
     }
@@ -701,12 +701,18 @@ open class BasePGPActivity : AppCompatActivity() {
     pinEncrypted: CharArray,
     ids: List<String>,
     identifiers: List<PGPIdentifier>,
+    action: String?,
     isError: Boolean = false,
   ) {
     val pinDialog =
       PinDialog.newInstance(
         title = getString(R.string.pin_entry_title),
-        description = getString(R.string.pin_entry_description),
+        description =
+          when (action) {
+            "autofill" -> getString(R.string.pin_entry_autofill_description)
+            "passkey" -> getString(R.string.pin_entry_passkey_description)
+            else -> getString(R.string.pin_entry_description)
+          },
       )
     if (isError) pinDialog.setError()
     pinDialog.show(supportFragmentManager, "PIN_DIALOG")
@@ -764,7 +770,7 @@ open class BasePGPActivity : AppCompatActivity() {
             persistentPassphrases.edit {
               putString("unlock_pin", pinEncryptedUpdate.concatToString())
             }
-            verifyPin(pinEncryptedUpdate, ids, identifiers, isError = true)
+            verifyPin(pinEncryptedUpdate, ids, identifiers, action, isError = true)
           } ?: throw NullPointerException()
         } else { // PIN verification failed, do not try again
           persistentPassphrases.edit { clear() } // reset PIN to prevent bruteforcing

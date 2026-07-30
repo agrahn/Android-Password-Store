@@ -495,9 +495,11 @@
   <!-- PIN input -->
 
   <string name="pin_new_entry_title">PIN festlegen</string>
-  <string name="pin_new_entry_description">Ihr PIN-Code zum schnellen Entsperren muss mindestens vier Ziffern lang sein.</string>
+  <string name="pin_new_entry_description">Ihre PIN zum schnellen Entsperren muss mindestens vier Ziffern lang sein.</string>
   <string name="pin_entry_title">PIN-Verifizierung</string>
-  <string name="pin_entry_description">Geben Sie Ihren PIN-Code ein, um den Eintrag anzuzeigen.</string>
+  <string name="pin_entry_description">Geben Sie Ihre PIN ein, um den Eintrag anzuzeigen.</string>
+  <string name="pin_entry_passkey_description">Geben Sie Ihre PIN ein, um den Passkey freizuschalten.</string>
+  <string name="pin_entry_autofill_description">Geben Sie Ihre PIN ein, um die Zugangsdaten freizuschalten.</string>
   <string name="pin_entry_wrong_input">Falsche Eingabe</string>
 
   <!-- Passkeys -->
