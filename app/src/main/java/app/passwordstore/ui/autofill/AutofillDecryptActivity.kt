@@ -78,7 +78,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
     requireKeysExist {
       requireDecryptionKeysExist(PasswordRepository.getParentPath(filePath, repositoryPath)) { ids
         ->
-        getPersistentAndDecrypt(ids)
+        getPersistentAndDecrypt(ids, action = "autofill")
       }
     }
   }

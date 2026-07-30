@@ -497,9 +497,11 @@
   <!-- PIN input -->
   <string name="pin_entry_hint" translatable="false">PIN</string>
   <string name="pin_new_entry_title">Set PIN</string>
-  <string name="pin_new_entry_description">Your PIN code for fast unlocking must be at least 4 digits long</string>
+  <string name="pin_new_entry_description">Your PIN for fast unlocking must be at least 4 digits long.</string>
   <string name="pin_entry_title">PIN verification</string>
-  <string name="pin_entry_description">Enter your PIN code to show this entry</string>
+  <string name="pin_entry_description">Enter your PIN to show this entry.</string>
+  <string name="pin_entry_passkey_description">Enter your PIN to unlock the passkey.</string>
+  <string name="pin_entry_autofill_description">Enter your PIN to unlock the credentials.</string>
   <string name="pin_entry_wrong_input">Wrong input</string>
 
   <!-- Passkeys -->
