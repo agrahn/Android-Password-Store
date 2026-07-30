@@ -57,6 +57,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -483,6 +484,7 @@ open class BasePGPActivity : AppCompatActivity() {
         var cacheEnabled = bundle.getBoolean(PasswordDialog.PASSWORD_CACHE_KEY)
         lifecycleScope.launch(dispatcherProvider.main()) {
           decryptWithPassphrase(mapOf("" to passphrase), identifiers) { id -> // onSuccess
+            var fastUnlockingSetupCompletion: CompletableDeferred<Unit>? = null
             runCatching {
               // update temporary passphrase cache
               val isHardwareBacked = AESEncryption.isHardwareBacked()
@@ -519,6 +521,7 @@ open class BasePGPActivity : AppCompatActivity() {
                 settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") ==
                   "fingerprint" && cipher != null
               ) {
+                fastUnlockingSetupCompletion = CompletableDeferred<Unit>()
                 BiometricAuthenticator.authenticate(
                   this@BasePGPActivity,
                   dialogDescriptionRes =
@@ -543,6 +546,7 @@ open class BasePGPActivity : AppCompatActivity() {
                     }
                   }
                   passphrase.wipe()
+                  if (result !is BiometricResult.Retry) fastUnlockingSetupCompletion?.complete(Unit)
                 }
               } else if (
                 settings.getString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "disabled") == "PIN" &&
@@ -551,20 +555,17 @@ open class BasePGPActivity : AppCompatActivity() {
                 /* Ask user for setting a PIN if not yet existing, encrypt and store it on the
                  * device, then update passphrase in cache */
                 if (persistentPassphrases.getString("unlock_pin", null) == null) {
+                  fastUnlockingSetupCompletion = CompletableDeferred<Unit>()
                   val pinDialog =
                     PinDialog.newInstance(
                       title = getString(R.string.pin_new_entry_title),
                       description = getString(R.string.pin_new_entry_description),
-                      clearOnDismiss = passphrase,
                     )
                   pinDialog.show(supportFragmentManager, "PIN_DIALOG")
                   pinDialog.setFragmentResultListener(PinDialog.PIN_RESULT_KEY) { key, bundle ->
                     if (key == PinDialog.PIN_RESULT_KEY) {
-                      val pin =
-                        requireNotNull(bundle.getCharArray(PinDialog.PIN_KEY)) {
-                          "returned PIN is null"
-                        }
-                      if (pin.size >= 4) {
+                      val pin = bundle.getCharArray(PinDialog.PIN_KEY)
+                      if (pin != null && pin.size >= 4) {
                         persistentPassphrases.edit {
                           putString(
                             "unlock_pin", // reset and prepend PIN attempt counter
@@ -584,9 +585,11 @@ open class BasePGPActivity : AppCompatActivity() {
                             Instant.now().toEpochMilli(),
                           )
                         }
+                        pin.wipe()
                       }
-                      pin.wipe()
                     }
+                    passphrase.wipe()
+                    fastUnlockingSetupCompletion.complete(Unit)
                   }
                 } else {
                   persistentPassphrases.edit {
@@ -605,7 +608,9 @@ open class BasePGPActivity : AppCompatActivity() {
               .onErr { e ->
                 logcat { e.asLog() }
                 passphrase.wipe()
+                fastUnlockingSetupCompletion?.complete(Unit)
               }
+            fastUnlockingSetupCompletion?.await()
           }
         }
       }

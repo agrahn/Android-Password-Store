@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+### Fixed
+
+- Autofill fast unlocking setup: PIN setting dialog/biometric prompt were not shown after passphrase verification
+
 ## [2.0.0] - 2026-07-26
 
 ### Added
