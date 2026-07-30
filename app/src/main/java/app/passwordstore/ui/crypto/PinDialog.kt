@@ -24,6 +24,11 @@ class PinDialog : DialogFragment() {
   private val binding by unsafeLazy { DialogPinEntryBinding.inflate(layoutInflater) }
   private var isError: Boolean = false
 
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    isCancelable = false // disable tapping BACK / fragment cancel
+  }
+
   override fun onCreateDialog(savedInstanceState: Bundle?): AlertDialog {
     val builder = MaterialAlertDialogBuilder(requireContext())
     builder.setView(binding.root)
@@ -35,9 +40,13 @@ class PinDialog : DialogFragment() {
     binding.descriptionText.setText(descriptionText)
 
     builder.setPositiveButton(android.R.string.ok) { _, _ -> setPinAndDismiss() }
+    builder.setNegativeButton(android.R.string.cancel) { d, _ -> d.cancel() }
+
     val dialog = builder.create()
+
+    dialog.setCanceledOnTouchOutside(false)
+
     dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-    dialog.setCancelable(false)
     dialog.setOnShowListener {
       var pinLength = 0
       if (isError) {
@@ -55,9 +64,9 @@ class PinDialog : DialogFragment() {
         setOnKeyListener { _, keyCode, _ ->
           if (keyCode == KeyEvent.KEYCODE_ENTER && pinLength >= 4) {
             setPinAndDismiss()
-            return@setOnKeyListener true
+            return@setOnKeyListener true // return true to consume Enter
           }
-          false
+          keyCode == KeyEvent.KEYCODE_BACK // return true to consume Back
         }
       }
     }
@@ -79,12 +88,18 @@ class PinDialog : DialogFragment() {
 
   override fun onCancel(dialog: DialogInterface) {
     super.onCancel(dialog)
-    setFragmentResult(PIN_RESULT_KEY, Bundle())
+    setFragmentResult(PIN_RESULT_KEY, Bundle().also { it.putBoolean(PIN_CANCEL, true) })
   }
 
   private fun setPinAndDismiss() {
     val pin = binding.pinEditText.text?.let { CharArray(it.length) { i -> it[i] } }
-    setFragmentResult(PIN_RESULT_KEY, Bundle().also { it.putCharArray(PIN_KEY, pin) })
+    setFragmentResult(
+      PIN_RESULT_KEY,
+      Bundle().also {
+        it.putCharArray(PIN_KEY, pin)
+        it.putBoolean(PIN_CANCEL, false)
+      },
+    )
     dismissAllowingStateLoss()
   }
 
@@ -95,6 +110,7 @@ class PinDialog : DialogFragment() {
 
     const val PIN_RESULT_KEY = "pin_result"
     const val PIN_KEY = "pin"
+    const val PIN_CANCEL = "cancel"
 
     fun newInstance(
       title: String,

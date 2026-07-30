@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file
 ### Fixed
 
 - Autofill fast unlocking setup: PIN setting dialog/biometric prompt were not shown after passphrase verification
+- Shortcuts on the home screen (pinned passwords) were pointing to the containing folder, not the actual password
+- There is now one fast unlocking PIN per PGP ID to prevent password leakage in case of folders that were initialised with different PGP IDs
 
 ## [2.0.0] - 2026-07-26
 

@@ -31,6 +31,7 @@ fun runMigrations(
   filesDirPath: String,
   sharedPrefs: SharedPreferences,
   gitSettings: GitSettings,
+  persistentPassphrases: SharedPreferences,
   context: Context = Application.instance.applicationContext,
   runTest: Boolean = false,
 ) {
@@ -43,7 +44,7 @@ fun runMigrations(
   removePersistentCredentialCache(sharedPrefs, gitSettings, context, runTest)
   if (!runTest) moveToPasswordGeneratorPrefs(sharedPrefs, context)
   deleteKeystoreWrappedEd25519Key(sharedPrefs, context)
-  migrateToFastUnlockOptions(sharedPrefs)
+  migrateToFastUnlockOptions(sharedPrefs, persistentPassphrases)
 }
 
 private fun deleteKeystoreWrappedEd25519Key(sharedPrefs: SharedPreferences, context: Context) {
@@ -295,7 +296,11 @@ private fun createEncryptedPreferences(context: Context, fileName: String): Shar
   )
 }
 
-private fun migrateToFastUnlockOptions(sharedPrefs: SharedPreferences) {
+private fun migrateToFastUnlockOptions(
+  sharedPrefs: SharedPreferences,
+  persistentPassphrases: SharedPreferences,
+) {
+  persistentPassphrases.edit { remove("unlock_pin") }
   sharedPrefs.edit {
     if (sharedPrefs.getBoolean(PreferenceKeys.UNLOCK_PASSWORDS_WITH_PIN, false))
       putString(PreferenceKeys.PREF_FAST_UNLOCK_OPTION, "fingerprint")

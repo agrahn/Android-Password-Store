@@ -5,15 +5,14 @@
 
 package app.passwordstore.ui.settings
 
-import android.content.SharedPreferences
 import android.text.InputType
 import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
-import app.passwordstore.injection.prefs.PGPPassphrases
 import app.passwordstore.util.auth.BiometricAuthenticator
 import app.passwordstore.util.extensions.persistentPassphrases
 import app.passwordstore.util.extensions.sharedPrefs
+import app.passwordstore.util.extensions.unlockPins
 import app.passwordstore.util.settings.PreferenceKeys
 import de.Maxr1998.modernpreferences.PreferenceScreen
 import de.Maxr1998.modernpreferences.helpers.editText
@@ -21,11 +20,8 @@ import de.Maxr1998.modernpreferences.helpers.onClick
 import de.Maxr1998.modernpreferences.helpers.singleChoice
 import de.Maxr1998.modernpreferences.helpers.switch
 import de.Maxr1998.modernpreferences.preferences.choice.SelectionItem
-import javax.inject.Inject
 
 class PasswordSettings(private val activity: FragmentActivity) : SettingsProvider {
-
-  @PGPPassphrases @Inject lateinit var persistentPassphrases: SharedPreferences
 
   override fun provideSettings(builder: PreferenceScreen.Builder) {
     builder.apply {
@@ -57,6 +53,7 @@ class PasswordSettings(private val activity: FragmentActivity) : SettingsProvide
         initialSelection = "disabled"
         onClick {
           activity.persistentPassphrases.edit { clear() }
+          activity.unlockPins.edit { clear() }
           true
         }
       }
@@ -68,6 +65,7 @@ class PasswordSettings(private val activity: FragmentActivity) : SettingsProvide
         textInputType = InputType.TYPE_CLASS_NUMBER
         onClick {
           activity.persistentPassphrases.edit { clear() }
+          activity.unlockPins.edit { clear() }
           true
         }
       }

@@ -44,6 +44,7 @@ class MigrationsTest {
       assertNull(getString(PreferenceKeys.GIT_REMOTE_SERVER))
       assertNull(getString(PreferenceKeys.GIT_REMOTE_LOCATION))
       assertNull(getString(PreferenceKeys.GIT_REMOTE_PROTOCOL))
+      assertNull(getString("unlock_pin"))
     }
 
   @Test
@@ -60,6 +61,7 @@ class MigrationsTest {
       filesDir,
       sharedPrefs,
       GitSettings(sharedPrefs, gitSecrets, filesDir),
+      sharedPrefs,
       context,
       runTest = true,
     )
@@ -83,6 +85,7 @@ class MigrationsTest {
       filesDir,
       sharedPrefs,
       GitSettings(sharedPrefs, gitSecrets, filesDir),
+      sharedPrefs,
       context,
       runTest = true,
     )
@@ -106,6 +109,7 @@ class MigrationsTest {
       filesDir,
       sharedPrefs,
       GitSettings(sharedPrefs, gitSecrets, filesDir),
+      sharedPrefs,
       context,
       runTest = true,
     )
@@ -122,6 +126,7 @@ class MigrationsTest {
       filesDir,
       sharedPrefs,
       GitSettings(sharedPrefs, gitSecrets, filesDir),
+      sharedPrefs,
       context,
       runTest = true,
     )
@@ -136,6 +141,7 @@ class MigrationsTest {
       filesDir,
       sharedPrefs,
       GitSettings(sharedPrefs, gitSecrets, filesDir),
+      sharedPrefs,
       context,
       runTest = true,
     )
@@ -150,6 +156,7 @@ class MigrationsTest {
       filesDir,
       sharedPrefs,
       GitSettings(sharedPrefs, gitSecrets, filesDir),
+      sharedPrefs,
       context,
       runTest = true,
     )
@@ -164,6 +171,7 @@ class MigrationsTest {
       filesDir,
       sharedPrefs,
       GitSettings(sharedPrefs, gitSecrets, filesDir),
+      sharedPrefs,
       context,
       runTest = true,
     )
@@ -177,6 +185,7 @@ class MigrationsTest {
       filesDir,
       sharedPrefs,
       GitSettings(sharedPrefs, gitSecrets, filesDir),
+      sharedPrefs,
       context,
       runTest = true,
     )
@@ -193,6 +202,7 @@ class MigrationsTest {
       filesDir,
       sharedPrefs,
       GitSettings(sharedPrefs, gitSecrets, filesDir),
+      sharedPrefs,
       context,
       runTest = true,
     )
@@ -211,10 +221,27 @@ class MigrationsTest {
       filesDir,
       sharedPrefs,
       GitSettings(sharedPrefs, gitSecrets, filesDir),
+      sharedPrefs,
       context,
       runTest = true,
     )
     assertFalse { sharedPrefs.contains(PreferenceKeys.CLEAR_PASSPHRASE_CACHE) }
     assertFalse { sharedPrefs.contains(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE) }
+  }
+
+  @Test
+  fun verifyPersistentUnlockPin() {
+    sharedPrefs.edit {
+      putString("unlock_pin", "abcdefg")
+    }
+    runMigrations(
+      filesDir,
+      sharedPrefs,
+      GitSettings(sharedPrefs, gitSecrets, filesDir),
+      sharedPrefs,
+      context,
+      runTest = true,
+    )
+    checkOldKeysAreRemoved()
   }
 }

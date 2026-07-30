@@ -42,6 +42,11 @@ class PreferenceModule {
     return context.getSharedPreferences("${BuildConfig.APPLICATION_ID}_passphrases", MODE_PRIVATE)
   }
 
+  @[Provides UnlockPins Reusable]
+  fun provideUnlockPins(@ApplicationContext context: Context): SharedPreferences {
+    return context.getSharedPreferences("${BuildConfig.APPLICATION_ID}_unlock_pins", MODE_PRIVATE)
+  }
+
   @[Provides GitSecrets Reusable]
   fun provideGitSecrets(@ApplicationContext context: Context): SharedPreferences {
     return context.getSharedPreferences("${BuildConfig.APPLICATION_ID}_git_secrets", MODE_PRIVATE)
