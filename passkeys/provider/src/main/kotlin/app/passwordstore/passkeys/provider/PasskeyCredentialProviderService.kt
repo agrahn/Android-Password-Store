@@ -34,12 +34,20 @@ import androidx.credentials.provider.PublicKeyCredentialEntry
 import app.passwordstore.passkeys.crypto.PasskeyCryptoHandler
 import app.passwordstore.passkeys.model.PasskeyMetadata
 import app.passwordstore.passkeys.storage.InvalidationReason
+import app.passwordstore.passkeys.storage.PasskeyRemoteRefresher
 import app.passwordstore.passkeys.storage.PasskeyRepositoryState
 import app.passwordstore.passkeys.storage.PasskeyStorage
 import com.github.michaelbull.result.fold
 import java.time.Instant
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import logcat.LogPriority
 import logcat.logcat
 
@@ -49,10 +57,22 @@ public abstract class PasskeyCredentialProviderService : CredentialProviderServi
   protected abstract val passkeyStorage: PasskeyStorage
   protected abstract val cryptoHandler: PasskeyCryptoHandler
   protected abstract val providerActivity: Class<out Activity>
+  protected open val remoteRefresher: PasskeyRemoteRefresher?
+    get() = null
+
+  @Suppress("RawDispatchersUse")
+  private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+  private val refreshMutex = Mutex()
+  @Volatile private var refreshGeneration = 0L
 
   override fun onCreate() {
     super.onCreate()
     logcat { "PasskeyCredentialProviderService created" }
+  }
+
+  override fun onDestroy() {
+    serviceScope.coroutineContext[Job]?.cancel()
+    super.onDestroy()
   }
 
   final override fun onBeginGetCredentialRequest(
@@ -60,73 +80,132 @@ public abstract class PasskeyCredentialProviderService : CredentialProviderServi
     cancellationSignal: CancellationSignal,
     callback: OutcomeReceiver<BeginGetCredentialResponse, GetCredentialException>,
   ) {
-    try {
-      val options =
-        request.beginGetCredentialOptions.filterIsInstance<BeginGetPublicKeyCredentialOption>()
-      if (options.isEmpty()) {
-        callback.onError(GetCredentialUnknownException("No passkey options available"))
-        return
-      }
+    val job = serviceScope.launch {
+      try {
+        val options =
+          request.beginGetCredentialOptions.filterIsInstance<BeginGetPublicKeyCredentialOption>()
+        if (options.isEmpty()) {
+          if (!cancellationSignal.isCanceled) {
+            callback.onError(GetCredentialUnknownException("No passkey options available"))
+          }
+          return@launch
+        }
 
-      val entries =
-        mutableListOf<PublicKeyCredentialEntry>().apply {
-          for (option in options) {
-            val parsedRequest =
-              PasskeyProviderUtils.json.decodeFromString<WebAuthnGetRequest>(option.requestJson)
-            val rpId =
-              parsedRequest.rpId ?: parsedRequest.allowCredentials.firstNotNullOfOrNull { it.rpId }
-            if (rpId == null) {
-              logcat(LogPriority.WARN) { "Skipping passkey option without RP ID" }
-              continue
-            }
+        val queries = parseGetQueries(options)
+        val observedRefreshGeneration = refreshGeneration
+        var entries = loadCredentialEntries(queries)
 
-            @Suppress("RawDispatchersUse")
-            val metadata =
-              runBlocking(Dispatchers.IO) {
-                passkeyStorage
-                  .listMetadata(rpId)
-                  .fold(
-                    success = {
-                      PasskeyProviderUtils.selectCredentialsByMetadata(
-                          it,
-                          parsedRequest.allowCredentials,
-                        )
-                        .map { metadata ->
-                          PasskeyProviderUtils.loadStoredIdentity(passkeyStorage, metadata)
-                        }
-                    },
-                    failure = {
-                      logcat(LogPriority.ERROR) { "Failed loading passkeys for $rpId: $it" }
-                      emptyList()
-                    },
-                  )
-              }
-
-            logcat {
-              "Passkey candidates: rpId=$rpId, allowCredentials=${parsedRequest.allowCredentials.size}, matches=${metadata.size}"
-            }
-
-            val isAutoSelectAllowed = PasskeyProviderUtils.isAutoSelectAllowed(metadata.size)
-            addAll(metadata.map { meta -> buildCredentialEntry(option, meta, isAutoSelectAllowed) })
+        if (entries.isEmpty() && queries.isNotEmpty() && remoteRefresher != null) {
+          logcat { "No local passkey candidates; attempting one remote Git refresh" }
+          if (refreshRemote(observedRefreshGeneration)) {
+            entries = loadCredentialEntries(queries)
           }
         }
 
-      if (entries.isEmpty()) {
-        callback.onError(GetCredentialUnknownException("No matching passkeys found"))
-        return
+        if (cancellationSignal.isCanceled) return@launch
+        if (entries.isEmpty()) {
+          callback.onError(GetCredentialUnknownException("No matching passkeys found"))
+          return@launch
+        }
+
+        callback.onResult(
+          BeginGetCredentialResponse(
+            credentialEntries = entries,
+            actions = emptyList(),
+            authenticationActions = emptyList(),
+            remoteEntry = null,
+          )
+        )
+      } catch (_: CancellationException) {
+        // Credential Manager no longer needs this response.
+      } catch (e: Exception) {
+        logcat(LogPriority.ERROR) { "Unable to build get-credential response: $e" }
+        if (!cancellationSignal.isCanceled) {
+          callback.onError(GetCredentialUnknownException(e.message ?: "Unknown passkey error"))
+        }
+      }
+    }
+
+    cancellationSignal.setOnCancelListener { job.cancel() }
+  }
+
+  private data class GetQuery(
+    val option: BeginGetPublicKeyCredentialOption,
+    val request: WebAuthnGetRequest,
+    val rpId: String,
+  )
+
+  private fun parseGetQueries(options: List<BeginGetPublicKeyCredentialOption>): List<GetQuery> {
+    return options.mapNotNull { option ->
+      val parsedRequest =
+        try {
+          PasskeyProviderUtils.json.decodeFromString<WebAuthnGetRequest>(option.requestJson)
+        } catch (e: Exception) {
+          logcat(LogPriority.WARN) { "Skipping malformed passkey request: ${e.message}" }
+          return@mapNotNull null
+        }
+      val rpId =
+        parsedRequest.rpId ?: parsedRequest.allowCredentials.firstNotNullOfOrNull { it.rpId }
+      if (rpId == null) {
+        logcat(LogPriority.WARN) { "Skipping passkey option without RP ID" }
+        null
+      } else {
+        GetQuery(option, parsedRequest, rpId)
+      }
+    }
+  }
+
+  private suspend fun loadCredentialEntries(
+    queries: List<GetQuery>
+  ): List<PublicKeyCredentialEntry> {
+    val entries = mutableListOf<PublicKeyCredentialEntry>()
+    for (query in queries) {
+      val metadata =
+        passkeyStorage
+          .listMetadata(query.rpId)
+          .fold(
+            success = {
+              PasskeyProviderUtils.selectCredentialsByMetadata(it, query.request.allowCredentials)
+                .map { metadata ->
+                  PasskeyProviderUtils.loadStoredIdentity(passkeyStorage, metadata)
+                }
+            },
+            failure = {
+              logcat(LogPriority.ERROR) { "Failed loading passkeys for ${query.rpId}: $it" }
+              emptyList()
+            },
+          )
+
+      logcat {
+        "Passkey candidates: rpId=${query.rpId}, allowCredentials=${query.request.allowCredentials.size}, matches=${metadata.size}"
       }
 
-      callback.onResult(
-        BeginGetCredentialResponse(
-          credentialEntries = entries,
-          actions = emptyList(),
-          authenticationActions = emptyList(),
-          remoteEntry = null,
-        )
+      val isAutoSelectAllowed = PasskeyProviderUtils.isAutoSelectAllowed(metadata.size)
+      entries.addAll(
+        metadata.map { meta -> buildCredentialEntry(query.option, meta, isAutoSelectAllowed) }
       )
-    } catch (e: Exception) {
-      logcat(LogPriority.ERROR) { "Unable to build get-credential response: $e" }
-      callback.onError(GetCredentialUnknownException(e.message ?: "Unknown passkey error"))
+    }
+    return entries
+  }
+
+  private suspend fun refreshRemote(observedGeneration: Long): Boolean {
+    val refresher = remoteRefresher ?: return false
+    return refreshMutex.withLock {
+      if (refreshGeneration != observedGeneration) {
+        return@withLock true
+      }
+      refresher
+        .refresh()
+        .fold(
+          success = {
+            refreshGeneration++
+            true
+          },
+          failure = {
+            logcat(LogPriority.WARN) { "Remote passkey refresh failed: $it" }
+            false
+          },
+        )
     }
   }
 

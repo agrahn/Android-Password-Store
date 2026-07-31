@@ -10,6 +10,7 @@ public data class GitSyncResult(
   val newHead: String?,
   val worktreeChanged: Boolean,
   val conflicts: List<String>,
+  val changedPaths: Set<String> = emptySet(),
 ) {
 
   public val headChanged: Boolean
@@ -19,8 +20,13 @@ public data class GitSyncResult(
     get() = conflicts.isNotEmpty()
 
   public fun affectsPasskeys(passkeyDirectory: String = "fido2"): Boolean {
+    val passkeyPrefix = "$passkeyDirectory/"
+    if (changedPaths.isNotEmpty()) {
+      return changedPaths.any { it.startsWith(passkeyPrefix) || it == ".gpg-id" } ||
+        conflicts.any { it.startsWith(passkeyPrefix) || it == ".gpg-id" }
+    }
     return headChanged ||
       worktreeChanged ||
-      conflicts.any { it.startsWith(passkeyDirectory) || it == ".gpg-id" }
+      conflicts.any { it.startsWith(passkeyPrefix) || it == ".gpg-id" }
   }
 }

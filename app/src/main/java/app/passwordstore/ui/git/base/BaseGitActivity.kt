@@ -12,6 +12,7 @@ import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.injection.prefs.GitSecrets
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.git.ErrorMessages
+import app.passwordstore.util.git.GitOperationCoordinator
 import app.passwordstore.util.git.operation.BreakOutOfDetached
 import app.passwordstore.util.git.operation.CloneOperation
 import app.passwordstore.util.git.operation.GcOperation
@@ -66,18 +67,27 @@ abstract class BaseGitActivity : AppCompatActivity() {
   protected var remoteBranch = ""
 
   /**
-   * Attempt to launch the requested Git operation.
+   * Attempt to launch the requested Git operation. All repository-mutating operations are
+   * serialized with background passkey sync so JGit never operates on the shared worktree from two
+   * callers at once.
    *
    * @param operation The type of git operation to launch
    */
-  suspend fun launchGitOperation(operation: GitOp): Result<Unit, Throwable> {
+  suspend fun launchGitOperation(operation: GitOp): Result<Unit, Throwable> =
+    GitOperationCoordinator.withLock {
+      launchGitOperationUnlocked(operation)
+    }
+
+  private suspend fun launchGitOperationUnlocked(operation: GitOp): Result<Unit, Throwable> {
     if (gitSettings.url == null) {
       return Err(IllegalStateException("Git url is not set!"))
     }
     if (operation == GitOp.SYNC && !gitSettings.useMultiplexing) {
-      // If the server does not support multiple SSH channels per connection, we cannot run
-      // a sync operation without reconnecting and thus break sync into its two parts.
-      return launchGitOperation(GitOp.PULL).andThen { launchGitOperation(GitOp.PUSH) }
+      // Keep the lock across both operations so a background worker cannot interleave between
+      // pull and push when the server requires the reconnecting fallback.
+      return launchGitOperationUnlocked(GitOp.PULL).andThen {
+        launchGitOperationUnlocked(GitOp.PUSH)
+      }
     }
     val op =
       when (operation) {

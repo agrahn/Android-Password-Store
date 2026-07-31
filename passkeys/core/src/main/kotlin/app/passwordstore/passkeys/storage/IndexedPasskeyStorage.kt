@@ -160,6 +160,110 @@ public class IndexedPasskeyStorage(
     }
   }
 
+  private suspend fun reconcileGitChanges(changedPaths: Set<String>): Boolean {
+    if (generationProvider == null || !indexLoaded) return false
+    if (changedPaths.any { it == ".gpg-id" }) return false
+
+    val changedPasskeyPaths =
+      changedPaths
+        .asSequence()
+        .filter { it.startsWith("fido2/") && it.endsWith(".gpg") }
+        .map { it.removePrefix("fido2/") }
+        .toSet()
+
+    return indexLoadMutex.withLock {
+      if (!indexLoaded) return@withLock false
+
+      if (changedPasskeyPaths.isEmpty()) {
+        trackedGeneration = resolveCurrentGeneration()
+        return@withLock true
+      }
+
+      for (relativePath in changedPasskeyPaths) {
+        if (!reconcileChangedPasskey(relativePath)) {
+          return@withLock false
+        }
+      }
+
+      trackedGeneration = resolveCurrentGeneration()
+      logcat {
+        "Incrementally reconciled passkey index: changedPaths=${changedPasskeyPaths.size}"
+      }
+      true
+    }
+  }
+
+  private suspend fun reconcileChangedPasskey(relativePath: String): Boolean {
+    val pathSegments = relativePath.split('/')
+    if (pathSegments.size != 2) return false
+
+    val rpDirectory = pathSegments[0]
+    val fileName = pathSegments[1]
+    if (!fileName.endsWith(".gpg")) return false
+    val credentialId = hexToBytes(fileName.removeSuffix(".gpg")) ?: return false
+
+    val provisionalRef =
+      try {
+        PasskeyFileRef(
+          canonicalRpId = rpDirectory,
+          credentialId = credentialId,
+          relativePath = relativePath,
+        )
+      } catch (e: IllegalArgumentException) {
+        logcat(LogPriority.WARN) { "Rejected changed passkey path $relativePath: ${e.message}" }
+        return false
+      }
+
+    val existingAtPath = metadataIndex.values.filter { it.fileRef.relativePath == relativePath }
+    existingAtPath.map { it.metadata }.forEach(::removeFromIndex)
+
+    val versionResult =
+      delegate.resolveSourceVersionExact(provisionalRef).getOrElse { error ->
+        logcat(LogPriority.WARN) {
+          "Failed resolving changed passkey $relativePath: ${error.message}"
+        }
+        return false
+      }
+    val version =
+      when (versionResult) {
+        SourceVersionResult.Missing -> return true
+        is SourceVersionResult.Stable -> versionResult.version
+        is SourceVersionResult.Unavailable -> return false
+      }
+
+    val duplicate = metadataIndex[credentialKey(credentialId)]
+    if (duplicate != null && duplicate.fileRef.relativePath != relativePath) {
+      logcat(LogPriority.WARN) { "Duplicate credential ID introduced by $relativePath" }
+      return false
+    }
+
+    val metadata =
+      delegate.loadCredentialMetadata(provisionalRef, version).getOrElse { error ->
+        logcat(LogPriority.WARN) {
+          "Failed loading changed passkey metadata for $relativePath: ${error.message}"
+        }
+        return false
+      }
+
+    if (!metadata.credentialId.contentEquals(credentialId)) {
+      logcat(LogPriority.WARN) { "Credential ID does not match changed path $relativePath" }
+      return false
+    }
+    if (sanitizeRpId(metadata.rpId) != rpDirectory) {
+      logcat(LogPriority.WARN) { "RP ID does not match changed path $relativePath" }
+      return false
+    }
+
+    val canonicalRef =
+      PasskeyFileRef(
+        canonicalRpId = metadata.rpId,
+        credentialId = credentialId.copyOf(),
+        relativePath = relativePath,
+      )
+    indexMetadata(metadata, version, canonicalRef)
+    return true
+  }
+
   override suspend fun listMetadata(rpId: String?): Result<List<PasskeyMetadata>, Throwable> {
     ensureIndexLoaded()
 
@@ -418,8 +522,15 @@ public class IndexedPasskeyStorage(
     if (syncResult.headChanged && syncResult.newHead != null && hasRemoteConfigured) {
       repositoryBackedUp = true
     }
+
+    if (syncResult.changedPaths.isNotEmpty() && reconcileGitChanges(syncResult.changedPaths)) {
+      return
+    }
+
     if (syncResult.affectsPasskeys()) {
       invalidate(InvalidationReason.GIT_SYNC_COMPLETED)
+    } else if (indexLoaded) {
+      indexLoadMutex.withLock { trackedGeneration = resolveCurrentGeneration() }
     }
   }
 

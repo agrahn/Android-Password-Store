@@ -33,7 +33,6 @@ import app.passwordstore.passkeys.provider.PasskeyAuthenticator
 import app.passwordstore.passkeys.provider.PasskeyCredentialProviderService
 import app.passwordstore.passkeys.provider.PasskeyProviderUtils
 import app.passwordstore.passkeys.provider.caller.WebAuthnCallerVerifier
-import app.passwordstore.passkeys.storage.GitSyncResult
 import app.passwordstore.passkeys.storage.MissingRecipientKeyException
 import app.passwordstore.passkeys.storage.PasskeyRepositoryState
 import app.passwordstore.passkeys.storage.PasskeyStorage
@@ -44,7 +43,6 @@ import app.passwordstore.passkeys.storage.SignatureCounterPolicy
 import app.passwordstore.passkeys.storage.SignatureCounterTransaction
 import app.passwordstore.passkeys.storage.SourceVersionResult
 import app.passwordstore.ui.git.base.BaseGitActivity
-import app.passwordstore.ui.git.base.BaseGitActivity.GitOp
 import app.passwordstore.ui.pgp.PGPKeyListActivity
 import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.settings.PreferenceKeys
@@ -80,30 +78,7 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
     if (!sharedPrefs.getBoolean(PreferenceKeys.PASSKEY_AUTO_GIT_SYNC, true)) return
     if (gitSettings.url == null) return
     if (PasswordRepository.repository == null) return
-    lifecycleScope.launch(dispatcherProvider.io()) {
-      try {
-        val oldHead = generationProvider.currentGitHead()
-        launchGitOperation(GitOp.SYNC)
-          .fold(
-            success = {
-              val newHead = generationProvider.currentGitHead()
-              val syncResult =
-                GitSyncResult(
-                  oldHead = oldHead,
-                  newHead = newHead,
-                  worktreeChanged = oldHead != newHead,
-                  conflicts = emptyList(),
-                )
-              passkeyRepositoryState.onGitSyncCompleted(syncResult)
-              generationProvider.bumpWorktreeGeneration()
-              logcat { "Passkey auto-sync completed" }
-            },
-            failure = { logcat(LogPriority.WARN) { "Passkey auto-sync failed: $it" } },
-          )
-      } catch (e: Exception) {
-        logcat(LogPriority.WARN) { "Passkey auto-sync crashed: $e" }
-      }
-    }
+    PasskeySyncWorker.enqueue(this)
   }
 
   @RequiresApi(34)
