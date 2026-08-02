@@ -573,23 +573,16 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
 
       try {
         val publicCredential = createdCredential.credential
-        val credentialWithBinding =
-          publicCredential.copy(
-            createdByCallerType = verifiedContext.callerType,
-            createdByPackage = verifiedContext.callingPackage,
-            createdByCertificateDigest = verifiedContext.signingCertificateDigests.firstOrNull(),
-            verifiedOrigin = verifiedContext.origin,
-          )
 
         val responseJson =
           PasskeyProviderUtils.buildAttestationResponse(
-            credentialWithBinding,
+            publicCredential,
             createRequest.requestJson,
             verifiedContext,
           )
 
         val saveResult = createdCredential.usePrivateKeySuspend { privateKey ->
-          passkeyStorage.saveCredential(credentialWithBinding, privateKey)
+          passkeyStorage.saveCredential(publicCredential, privateKey)
         }
         if (saveResult.isErr) {
           val error: Throwable? =
@@ -611,12 +604,12 @@ class AppPasskeyProviderActivity : BaseGitActivity() {
         passkeyRepositoryState.onCredentialSaved()
         generationProvider.bumpWorktreeGeneration()
         metadataIndex.put(
-          credentialWithBinding.credentialId,
+          publicCredential.credentialId,
           MetadataEntry(
-            userName = credentialWithBinding.user.name,
-            userDisplayName = credentialWithBinding.user.displayName,
-            rpId = credentialWithBinding.rpId,
-            createdAt = credentialWithBinding.createdAt.toEpochMilliseconds(),
+            userName = publicCredential.user.name,
+            userDisplayName = publicCredential.user.displayName,
+            rpId = publicCredential.rpId,
+            createdAt = publicCredential.createdAt.toEpochMilliseconds(),
           ),
         )
 

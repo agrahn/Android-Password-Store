@@ -7,7 +7,6 @@
 
 package app.passwordstore.passkeys.model
 
-import app.passwordstore.passkeys.crypto.CallerType
 import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 
@@ -23,10 +22,6 @@ public data class PasskeyCredential(
   public val uvInitialized: Boolean = true,
   public val backupEligible: Boolean = true,
   public val backupState: Boolean = false,
-  public val createdByCallerType: CallerType? = null,
-  public val createdByPackage: String? = null,
-  public val createdByCertificateDigest: String? = null,
-  public val verifiedOrigin: String? = null,
 ) {
 
   init {
@@ -51,10 +46,6 @@ public data class PasskeyCredential(
     if (uvInitialized != other.uvInitialized) return false
     if (backupEligible != other.backupEligible) return false
     if (backupState != other.backupState) return false
-    if (createdByCallerType != other.createdByCallerType) return false
-    if (createdByPackage != other.createdByPackage) return false
-    if (createdByCertificateDigest != other.createdByCertificateDigest) return false
-    if (verifiedOrigin != other.verifiedOrigin) return false
     return true
   }
 
@@ -69,10 +60,6 @@ public data class PasskeyCredential(
     result = 31 * result + uvInitialized.hashCode()
     result = 31 * result + backupEligible.hashCode()
     result = 31 * result + backupState.hashCode()
-    result = 31 * result + (createdByCallerType?.hashCode() ?: 0)
-    result = 31 * result + (createdByPackage?.hashCode() ?: 0)
-    result = 31 * result + (createdByCertificateDigest?.hashCode() ?: 0)
-    result = 31 * result + (verifiedOrigin?.hashCode() ?: 0)
     return result
   }
 

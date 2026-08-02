@@ -11,7 +11,6 @@ import app.passwordstore.passkeys.cbor.Cbor
 import app.passwordstore.passkeys.cbor.CborMap
 import app.passwordstore.passkeys.cbor.CborValue
 import app.passwordstore.passkeys.cbor.toCborIntegerArray
-import app.passwordstore.passkeys.crypto.CallerType
 import java.math.BigInteger
 import kotlin.time.Instant
 import logcat.LogPriority
@@ -31,10 +30,6 @@ public data class StoredCredential(
   val extensions: Extensions = Extensions(),
   val backupEligible: Boolean = true,
   val backupState: Boolean = false,
-  val createdByCallerType: CallerType? = null,
-  val createdByPackage: String? = null,
-  val createdByCertificateDigest: String? = null,
-  val verifiedOrigin: String? = null,
 ) : AutoCloseable {
 
   @Volatile private var wiped = false
@@ -70,18 +65,6 @@ public data class StoredCredential(
     map["extensions"] = CborValue.Map(extensions.toCborMap())
     map["backup_eligible"] = if (backupEligible) CborValue.True else CborValue.False
     map["backup_state"] = if (backupState) CborValue.True else CborValue.False
-    createdByCallerType?.let {
-      map["created_by_caller_type"] = CborValue.TextString(it.name)
-    } ?: run { map["created_by_caller_type"] = CborValue.Null }
-    createdByPackage?.let {
-      map["created_by_package"] = CborValue.TextString(it)
-    } ?: run { map["created_by_package"] = CborValue.Null }
-    createdByCertificateDigest?.let {
-      map["created_by_cert_digest"] = CborValue.TextString(it)
-    } ?: run { map["created_by_cert_digest"] = CborValue.Null }
-    verifiedOrigin?.let {
-      map["verified_origin"] = CborValue.TextString(it)
-    } ?: run { map["verified_origin"] = CborValue.Null }
     return Cbor.fromMap(CborMap.from(map)).toBytes()
   }
 
@@ -97,10 +80,6 @@ public data class StoredCredential(
       uvInitialized = true,
       backupEligible = backupEligible,
       backupState = backupState,
-      createdByCallerType = createdByCallerType,
-      createdByPackage = createdByPackage,
-      createdByCertificateDigest = createdByCertificateDigest,
-      verifiedOrigin = verifiedOrigin,
     )
   }
 
@@ -126,10 +105,6 @@ public data class StoredCredential(
     if (extensions != other.extensions) return false
     if (backupEligible != other.backupEligible) return false
     if (backupState != other.backupState) return false
-    if (createdByCallerType != other.createdByCallerType) return false
-    if (createdByPackage != other.createdByPackage) return false
-    if (createdByCertificateDigest != other.createdByCertificateDigest) return false
-    if (verifiedOrigin != other.verifiedOrigin) return false
     return true
   }
 
@@ -146,10 +121,6 @@ public data class StoredCredential(
     result = 31 * result + extensions.hashCode()
     result = 31 * result + backupEligible.hashCode()
     result = 31 * result + backupState.hashCode()
-    result = 31 * result + (createdByCallerType?.hashCode() ?: 0)
-    result = 31 * result + (createdByPackage?.hashCode() ?: 0)
-    result = 31 * result + (createdByCertificateDigest?.hashCode() ?: 0)
-    result = 31 * result + (verifiedOrigin?.hashCode() ?: 0)
     return result
   }
 
@@ -211,22 +182,6 @@ public data class StoredCredential(
       val extensionsMap = map.getMap("extensions")
       val backupEligible = map.getBoolean("backup_eligible") ?: true
       val backupState = map.getBoolean("backup_state") ?: false
-      val createdByCallerType =
-        if (map.isNull("created_by_caller_type")) null
-        else
-          map.getString("created_by_caller_type")?.let {
-            try {
-              CallerType.valueOf(it)
-            } catch (_: Exception) {
-              null
-            }
-          }
-      val createdByPackage =
-        if (map.isNull("created_by_package")) null else map.getString("created_by_package")
-      val createdByCertificateDigest =
-        if (map.isNull("created_by_cert_digest")) null else map.getString("created_by_cert_digest")
-      val verifiedOrigin =
-        if (map.isNull("verified_origin")) null else map.getString("verified_origin")
 
       return StoredCredential(
         id = id,
@@ -241,10 +196,6 @@ public data class StoredCredential(
         extensions = extensionsMap?.let { Extensions.fromCborMap(it) } ?: Extensions(),
         backupEligible = backupEligible,
         backupState = backupState,
-        createdByCallerType = createdByCallerType,
-        createdByPackage = createdByPackage,
-        createdByCertificateDigest = createdByCertificateDigest,
-        verifiedOrigin = verifiedOrigin,
       )
     }
 
@@ -301,10 +252,6 @@ public data class StoredCredential(
         extensions = Extensions(),
         backupEligible = credential.backupEligible,
         backupState = credential.backupState,
-        createdByCallerType = credential.createdByCallerType,
-        createdByPackage = credential.createdByPackage,
-        createdByCertificateDigest = credential.createdByCertificateDigest,
-        verifiedOrigin = credential.verifiedOrigin,
       )
     }
   }
