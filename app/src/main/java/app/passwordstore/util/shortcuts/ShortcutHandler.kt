@@ -39,18 +39,16 @@ class ShortcutHandler @Inject constructor(@ApplicationContext val context: Conte
     val shortcutManager: ShortcutManager = context.getSystemService() ?: return
     val shortcut = buildShortcut(item, intent)
     val shortcuts = shortcutManager.dynamicShortcuts
-    // If we're above or equal to the maximum shortcuts allowed, drop the last item.
-    if (shortcuts.size >= MAX_SHORTCUT_COUNT) {
+    // Drop any stale entry for this exact password, it is about to be re-added at the front.
+    shortcuts.removeAll { it.id == shortcut.id }
+    // Make room for the new shortcut by evicting the least recently used ones.
+    while (shortcuts.size >= MAX_SHORTCUT_COUNT) {
       // We'd just do List.removeLast but the Kotlin stdlib extension gets shadowed by the API 35
       // JDK implementation
       shortcuts.removeAt(shortcuts.lastIndex)
     }
-    // Reverse the list so we can append our new shortcut at the 'end'.
-    shortcuts.reverse()
-    shortcuts.add(shortcut)
-    // Reverse it again, so the previous items are now in the correct order and our new item
-    // is at the front like it's supposed to.
-    shortcuts.reverse()
+    // The new shortcut goes at the front
+    shortcuts.add(0, shortcut)
     // Write back the new shortcuts.
     shortcutManager.dynamicShortcuts = shortcuts.map(::rebuildShortcut)
   }
@@ -73,9 +71,9 @@ class ShortcutHandler @Inject constructor(@ApplicationContext val context: Conte
 
   /** Creates a [ShortcutInfo] from [item] and assigns [intent] to it. */
   private fun buildShortcut(item: PasswordItem, intent: Intent): ShortcutInfo {
-    return ShortcutInfo.Builder(context, item.fullPathToParent)
+    return ShortcutInfo.Builder(context, item.longName)
       .setShortLabel(item.toString())
-      .setLongLabel(item.fullPathToParent + item.toString())
+      .setLongLabel("/${item.longName}")
       .setIcon(Icon.createWithResource(context, R.drawable.ic_lock_open_24px))
       .setIntent(intent)
       .build()
