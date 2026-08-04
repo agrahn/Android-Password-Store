@@ -73,6 +73,7 @@ object PreferenceKeys {
   const val SHOW_HIDDEN_CONTENTS = "show_hidden_contents"
   const val SORT_ORDER = "sort_order"
   const val SHOW_PASSWORD = "show_password"
+  const val SHOW_EXTRA_CONTENT = "show_extra_content"
   @Deprecated(
     message = "Use PREF_FAST_UNLOCK_OPTION instead",
     replaceWith = ReplaceWith("PreferenceKeys.PREF_FAST_UNLOCK_OPTION"),

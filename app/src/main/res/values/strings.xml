@@ -225,6 +225,8 @@
   <string name="git_log">Show commit log</string>
   <string name="show_password_pref_title">Show the password</string>
   <string name="show_password_pref_summary">Control the visibility of the passwords once decrypted. This does not disable copying to clipboard.</string>
+  <string name="show_extra_content_pref_title">Show extra content</string>
+  <string name="show_extra_content_pref_summary">Control the visibility of the extra content once decrypted.</string>
   <string name="fast_unlock_pref_title">Fast unlocking of entries</string>
   <string name="pwd_generate_button">Generate</string>
   <string name="refresh_list">Refresh list</string>
