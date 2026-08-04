@@ -223,6 +223,8 @@
   <string name="git_log">Commit-Log anzeigen</string>
   <string name="show_password_pref_title">Zeige das Passwort</string>
   <string name="show_password_pref_summary">Soll das entschlüsselte Passwort sichtbar sein? Dies deaktiviert nicht das Kopieren.</string>
+  <string name="show_extra_content_pref_title">Zusatzangaben anzeigen</string>
+  <string name="show_extra_content_pref_summary">Soll der Inhalt des Felds mit den Zusatzangaben nach dem Entschlüsseln angezeigt werden?</string>
   <string name="fast_unlock_pref_title">Schnelles Entsperren von Einträgen</string>
   <string name="pwd_generate_button">Erstellen</string>
   <string name="refresh_list">Liste aktualisieren</string>

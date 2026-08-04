@@ -353,7 +353,10 @@ class DecryptActivity : BasePGPActivity() {
 
       entry.extraContent.forEach { (key, value) ->
         if (key.contentEquals(PasswordEntry.EXTRA_CONTENT))
-          items.add(FieldItem.createFreeformField(getString(R.string.crypto_extra_label), value))
+          if (settings.getBoolean(PreferenceKeys.SHOW_EXTRA_CONTENT, true))
+            items.add(FieldItem.createFreeformField(getString(R.string.crypto_extra_label), value))
+          else
+            items.add(FieldItem.createPasswordField(getString(R.string.crypto_extra_label), value))
       }
 
       val showPassword = settings.getBoolean(PreferenceKeys.SHOW_PASSWORD, false)

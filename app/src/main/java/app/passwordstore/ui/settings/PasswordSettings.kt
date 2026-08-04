@@ -91,6 +91,11 @@ class PasswordSettings(private val activity: FragmentActivity) : SettingsProvide
         titleRes = R.string.pref_clear_clipboard_title
         summaryRes = R.string.pref_clear_clipboard_summary
       }
+      switch(PreferenceKeys.SHOW_EXTRA_CONTENT) {
+        defaultValue = true
+        titleRes = R.string.show_extra_content_pref_title
+        summaryRes = R.string.show_extra_content_pref_summary
+      }
     }
   }
 }
