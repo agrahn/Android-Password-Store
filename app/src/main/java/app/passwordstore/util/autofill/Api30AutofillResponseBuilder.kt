@@ -184,19 +184,27 @@ class Api30AutofillResponseBuilder private constructor(form: FillableForm) :
     matchedFiles: List<File>,
   ): FillResponse? {
     var datasetCount = 0
+    val maxSuggestions =
+      inlineSuggestionsRequest?.maxSuggestionCount
+        ?: InlineSuggestionsRequest.SUGGESTION_COUNT_UNLIMITED
     val imeSpecs = inlineSuggestionsRequest?.inlinePresentationSpecs ?: emptyList()
+    fun nextImeSpec(): InlinePresentationSpec? =
+      when {
+        datasetCount < maxSuggestions -> imeSpecs.getOrNull(datasetCount) ?: imeSpecs.lastOrNull()
+        else -> null
+      }
     return FillResponse.Builder().run {
       for (file in matchedFiles) {
-        makeMatchDataset(context, file, imeSpecs.getOrNull(datasetCount))?.let {
+        makeMatchDataset(context, file, nextImeSpec())?.let {
           datasetCount++
           addDataset(it)
         }
       }
-      makeGenerateDataset(context, imeSpecs.getOrNull(datasetCount))?.let {
+      makeGenerateDataset(context, nextImeSpec())?.let {
         datasetCount++
         addDataset(it)
       }
-      makeSearchDataset(context, imeSpecs.getOrNull(datasetCount))?.let {
+      makeSearchDataset(context, nextImeSpec())?.let {
         datasetCount++
         addDataset(it)
       }
