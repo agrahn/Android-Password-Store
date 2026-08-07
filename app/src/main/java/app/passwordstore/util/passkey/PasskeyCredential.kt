@@ -38,14 +38,14 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 )
 @Serializable
 data class PasskeyCredential(
-  @SerialName("id") val id: UShortArray,
-  @SerialName("rp") val rp: RelyingPartyInfo,
-  @SerialName("user") val user: UserInfo,
+  val id: UShortArray,
+  val rp: RelyingPartyInfo,
+  val user: UserInfo,
   @SerialName("sign_count") val signCount: UInt = 0u,
-  @SerialName("alg") val alg: Int,
+  val alg: Int,
   @SerialName("private_key") val privateKey: UShortArray,
-  @SerialName("created") val created: Long,
-  @SerialName("zone") val zone: String = "UTC",
+  val created: Long,
+  val zone: String = "UTC",
 ) {
 
   fun getAlgorithmName(): String? = Algorithm.fromId(alg)?.algorithmName
@@ -302,8 +302,8 @@ data class PasskeyCredential(
 
   @Serializable
   data class UserInfo(
-    @SerialName("id") val id: UShortArray,
-    @SerialName("name") val name: String,
+    val id: UShortArray,
+    val name: String,
     @SerialName("display_name") val displayName: String? = null,
     @SerialName("reveal_name") var revealName: Boolean = false,
   ) {
@@ -334,8 +334,8 @@ data class PasskeyCredential(
 
   @Serializable
   data class RelyingPartyInfo(
-    @SerialName("id") val id: String,
-    @SerialName("name") val name: String? = null,
+    val id: String,
+    val name: String? = null,
   ) {
     override fun equals(other: Any?): Boolean {
       if (this === other) return true

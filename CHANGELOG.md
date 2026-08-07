@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+### Added
+
+- Verify authenticity of passkey requesting apps against Google's and Bitwarden's allow lists and via asset links
+
 ### Fixed
 
 - Alert dialogs no longer get clipped by the keyboard on short screens

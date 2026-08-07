@@ -59,7 +59,7 @@ class UDCakeCredentialProviderService : CredentialProviderService() {
       callback.onResult(response)
     }
       .onErr { e ->
-        callback.onError(GetCredentialUnknownException())
+        callback.onError(GetCredentialUnknownException(e.message))
       }
   }
 
