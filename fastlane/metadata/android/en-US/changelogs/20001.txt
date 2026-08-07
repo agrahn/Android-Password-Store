@@ -1,0 +1,6 @@
+Fixed:
+
+- added access-local-network permission for Android 17 devices
+- home screen shortcuts (pinned passwords) now pointing to the correct item
+- one unlocking PIN per PGP ID for improved security
+- setup of fast unlocking by PIN/biometrics during autofill
