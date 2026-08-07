@@ -77,6 +77,7 @@ private val TRUSTED_BROWSER_CERTIFICATE_HASH =
         "nA0iN59Ie3Ck+fi+wBc8+RoWRPCPkzhbW3gs43ZguoE=", // Original (GitHub release)
         "eRN80/UC/Z35sLtql9UY+ig0XwP/8M76QJ9omrs54hQ=", // GoodyOG's OLED fork (GitHub release)
       ),
+    "io.github.jqssun.helium" to arrayOf("CVVASU1T9IygUbyGw5LEbtspcl2lWSvYrzw9AnsxZrs="),
     "net.waterfox.android.release" to
       arrayOf(
         "8JHKOZi0nhWdI+6VWGmZx10LcCP8+cVBkqgTAKwWbhc=", // GitHub release
@@ -144,6 +145,7 @@ private val BROWSER_MULTI_ORIGIN_METHOD =
     "com.vivaldi.browser" to BrowserMultiOriginMethod.Field,
     "eu.weblibre.gecko" to BrowserMultiOriginMethod.Field,
     "io.github.forkmaintainers.iceraven" to BrowserMultiOriginMethod.WebView,
+    "io.github.jqssun.helium" to BrowserMultiOriginMethod.Field,
     "net.waterfox.android.release" to BrowserMultiOriginMethod.Field,
     "org.bromite.bromite" to BrowserMultiOriginMethod.Field,
     "org.cromite.cromite" to BrowserMultiOriginMethod.Field,
@@ -206,6 +208,7 @@ private val BROWSER_SAVE_FLAG_IF_NO_ACCESSIBILITY =
     "com.chrome.dev" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "com.microsoft.emmx" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "com.vivaldi.browser" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
+    "io.github.jqssun.helium" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "org.bromite.bromite" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "org.cromite.cromite" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "org.ungoogled.chromium.extensions.stable" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
