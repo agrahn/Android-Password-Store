@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-08-07
+
 ### Fixed
 
 - Autofill fast unlocking setup: PIN setting dialog/biometric prompt were not shown after passphrase verification
@@ -682,7 +684,8 @@ All notable changes to this project will be documented in this file
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v2.0.0...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/agrahn/Android-Password-Store/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.4...v2.0.0
 [1.16.4]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.3...v1.16.4
 [1.16.3]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.2...v1.16.3
