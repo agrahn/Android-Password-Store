@@ -2,6 +2,7 @@
 agp = "9.3.1"
 androidxActivity = "1.13.0"
 bouncycastle = "1.85"
+bouncycastle-bcprov = "1.85"
 coroutines = "1.11.0"
 serialization = "1.11.0"
 flowbinding = "1.2.0"
@@ -71,7 +72,7 @@ testing-sharedPrefsMock = "com.github.android-password-store:shared-preferences-
 testing-testparameterinjector = "com.google.testparameterinjector:test-parameter-injector:1.22"
 testing-turbine = "app.cash.turbine:turbine:1.2.1"
 thirdparty-bouncycastle-bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
-thirdparty-bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+thirdparty-bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle-bcprov" }
 thirdparty-bouncycastle-bcutil = { module = "org.bouncycastle:bcutil-jdk18on", version.ref = "bouncycastle" }
 thirdparty-bouncycastle-bcpg = { module = "org.bouncycastle:bcpg-jdk18on", version.ref = "bouncycastle" }
 thirdparty-commons_codec = "commons-codec:commons-codec:1.22.1"
