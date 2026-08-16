@@ -7,6 +7,7 @@ package app.passwordstore.util.autofill
 import android.content.Context
 import androidx.core.content.edit
 import app.passwordstore.data.passfile.PasswordEntry
+import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.util.extensions.getString
 import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.services.getDefaultUsername
@@ -20,6 +21,25 @@ object AutofillPreferences {
   fun directoryStructure(context: Context): DirectoryStructure {
     val value = context.sharedPrefs.getString(PreferenceKeys.DIRECTORY_STRUCTURE)
     return DirectoryStructure.fromValue(value)
+  }
+
+  /**
+   * The directory Autofill-saved credentials should be placed under, relative to the repository
+   * root. Backed by [PreferenceKeys.AUTOFILL_SAVE_DIRECTORY]; falls back to the repository root
+   * itself when unset. This only affects saves made through the Autofill framework (the system
+   * "Save to Password Store?" prompt) — it has no effect on entries created from within the app.
+   */
+  fun saveDirectory(context: Context): File {
+    val root = PasswordRepository.getRepositoryDirectory()
+    // Drop empty and ".." segments to prevent escaping the repository root.
+    val configured =
+      context.sharedPrefs
+        .getString(PreferenceKeys.AUTOFILL_SAVE_DIRECTORY)
+        ?.split('/')
+        ?.filter { it.isNotBlank() && it != ".." }
+        ?.joinToString("/")
+        ?.takeUnless { it.isBlank() }
+    return if (configured == null) root else root.resolve(configured)
   }
 
   fun strictDomainSearch(context: Context): Boolean {
