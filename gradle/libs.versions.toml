@@ -44,7 +44,7 @@ aps-sublimeFuzzy = "com.github.android-password-store:sublime-fuzzy:2.3.4"
 aps-zxingAndroidEmbedded = "com.github.android-password-store:zxing-android-embedded:4.2.1"
 build-agp = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 build-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-build-okhttp = "com.squareup.okhttp3:okhttp:5.4.0"
+build-okhttp = "com.squareup.okhttp3:okhttp:5.5.0"
 build-r8 = "com.android.tools:r8:9.4.14"
 build-semver = "com.github.zafarkhaja:java-semver:0.10.2"
 build-spotless = "com.diffplug.spotless:spotless-plugin-gradle:8.9.0"
