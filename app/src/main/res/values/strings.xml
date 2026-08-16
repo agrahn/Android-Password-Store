@@ -330,6 +330,10 @@
   <string name="preference_custom_public_suffixes_title">Custom domains</string>
   <string name="preference_custom_public_suffixes_summary">Autofill will distinguish subdomains of these domains.</string>
   <string name="preference_custom_public_suffixes_hint">company.com\npersonal.com</string>
+  <string name="preference_autofill_save_directory_title">Save directory</string>
+  <string name="preference_autofill_save_directory_summary">Credentials saved via Autofill are placed under this folder instead of the store root. Currently: %1$s</string>
+  <string name="preference_autofill_save_directory_hint">e.g. www</string>
+  <string name="preference_autofill_save_directory_root_placeholder">store root</string>
 
   <!-- Password creation/edit -->
   <string name="password_creation_edit_file_encryption_success_title">Password item edited</string>

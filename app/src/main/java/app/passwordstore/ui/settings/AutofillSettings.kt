@@ -109,6 +109,18 @@ class AutofillSettings(private val activity: FragmentActivity) : SettingsProvide
         summaryProvider = { activity.getString(R.string.preference_custom_public_suffixes_summary) }
         textInputHintRes = R.string.preference_custom_public_suffixes_hint
       }
+      editText(PreferenceKeys.AUTOFILL_SAVE_DIRECTORY) {
+        dependency = PreferenceKeys.AUTOFILL_ENABLE
+        titleRes = R.string.preference_autofill_save_directory_title
+        summaryProvider = { value ->
+          activity.getString(
+            R.string.preference_autofill_save_directory_summary,
+            value?.takeUnless { it.isBlank() }
+              ?: activity.getString(R.string.preference_autofill_save_directory_root_placeholder),
+          )
+        }
+        textInputHintRes = R.string.preference_autofill_save_directory_hint
+      }
     }
   }
 }

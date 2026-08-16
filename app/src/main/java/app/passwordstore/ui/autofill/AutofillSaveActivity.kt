@@ -128,6 +128,7 @@ class AutofillSaveActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     val repo = PasswordRepository.getRepositoryDirectory()
+    val saveRoot = AutofillPreferences.saveDirectory(this)
     val saveIntent =
       Intent(this, PasswordCreationActivity::class.java).apply {
         putExtras(
@@ -136,7 +137,7 @@ class AutofillSaveActivity : AppCompatActivity() {
               putString(BasePGPActivity.EXTRA_REPO_PATH, repo.absolutePath)
               putString(
                 BasePGPActivity.EXTRA_FILE_PATH,
-                repo
+                saveRoot
                   .resolve(intent.getStringExtra(EXTRA_FOLDER_NAME) ?: throw NullPointerException())
                   .absolutePath,
               )
