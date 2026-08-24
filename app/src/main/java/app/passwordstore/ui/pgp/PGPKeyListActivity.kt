@@ -12,6 +12,7 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.widget.CheckBox
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
@@ -128,6 +129,58 @@ class PGPKeyListActivity : AppCompatActivity() {
       }
     }
 
+    fun onNavigateBack(
+      isSelectingKeys: Boolean,
+      singleSelection: Boolean,
+      selectedKeyIds: Set<String>,
+    ) {
+      val result = Intent()
+      if (isSelectingKeys) {
+        if (selectedKeyIds.isNotEmpty()) {
+          result.putExtra(
+            EXTRA_SELECTED_KEY,
+            selectedKeyIds.joinToString(separator = "\n"),
+          )
+          val gpgIdDest = intent.getStringExtra("SUB_PATH")
+          gpgIdDest?.let { result.putExtra("SUB_PATH", it) }
+          setResult(RESULT_OK, result)
+          finish()
+        } else {
+          val okButtonText =
+            if (singleSelection) resources.getString(R.string.gpg_key_single_select)
+            else resources.getString(R.string.gpg_key_select)
+          MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.no_keys_selected_dialog_title)
+            .setPositiveButton(okButtonText, null)
+            .setNegativeButton(
+              R.string.pgp_key_insecure_passphrase_warning_confirm // continue anyway
+            ) { _, _ ->
+              if (singleSelection && SshKey.pgpLongKeyId != 0L) SshKey.delete()
+              setResult(RESULT_CANCELED)
+              finish()
+            }
+            .setCancelable(false)
+            .show()
+        }
+      } else if (isAddingKeys && keysAdded) {
+        setResult(RESULT_OK, result)
+        finish()
+      } else {
+        setResult(RESULT_CANCELED, result)
+        finish()
+      }
+    }
+
+    onBackPressedDispatcher.addCallback(
+      this,
+      object :
+        OnBackPressedCallback(enabled = isSelectingKeys) { // only enable if in key selection mode
+        override fun handleOnBackPressed() {
+          onNavigateBack(isSelectingKeys, singleSelection, selectedKeyIds)
+        }
+      },
+    )
+
     setContent {
       APSTheme {
         Scaffold(
@@ -140,41 +193,7 @@ class PGPKeyListActivity : AppCompatActivity() {
                 } else stringResource(R.string.activity_label_pgp_key_manager),
               navigationIcon = painterResource(R.drawable.ic_arrow_back_24dp),
               onNavigationIconClick = {
-                val result = Intent()
-                if (isSelectingKeys) {
-                  if (selectedKeyIds.isNotEmpty()) {
-                    result.putExtra(
-                      EXTRA_SELECTED_KEY,
-                      selectedKeyIds.joinToString(separator = "\n"),
-                    )
-                    val gpgIdDest = intent.getStringExtra("SUB_PATH")
-                    gpgIdDest?.let { result.putExtra("SUB_PATH", it) }
-                    setResult(RESULT_OK, result)
-                    finish()
-                  } else {
-                    val okButtonText =
-                      if (singleSelection) resources.getString(R.string.gpg_key_single_select)
-                      else resources.getString(R.string.gpg_key_select)
-                    MaterialAlertDialogBuilder(this)
-                      .setTitle(R.string.no_keys_selected_dialog_title)
-                      .setPositiveButton(okButtonText, null)
-                      .setNegativeButton(
-                        R.string.pgp_key_insecure_passphrase_warning_confirm // continue anyway
-                      ) { _, _ ->
-                        if (singleSelection && SshKey.pgpLongKeyId != 0L) SshKey.delete()
-                        setResult(RESULT_CANCELED)
-                        finish()
-                      }
-                      .setCancelable(false)
-                      .show()
-                  }
-                } else if (isAddingKeys && keysAdded) {
-                  setResult(RESULT_OK, result)
-                  finish()
-                } else {
-                  setResult(RESULT_CANCELED, result)
-                  finish()
-                }
+                onNavigateBack(isSelectingKeys, singleSelection, selectedKeyIds)
               },
               backgroundColor = MaterialTheme.colorScheme.surface,
             )
