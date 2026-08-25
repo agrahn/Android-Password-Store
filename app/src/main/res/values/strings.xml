@@ -84,7 +84,7 @@
   <string name="crypto_username_hint">Username</string>
   <string name="crypto_pass_label">Password</string>
   <string name="crypto_extra_label">Extra content</string>
-  <string name="crypto_encrypt_username_label">Encrypt username</string>
+  <string name="crypto_encrypt_username_label">Insert username</string>
   <string name="crypto_select">Select</string>
   <string name="crypto_save">Save</string>
   <string name="crypto_save_and_copy">Save and Copy</string>

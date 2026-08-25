@@ -252,11 +252,7 @@ class PasswordCreationActivity : BasePGPActivity() {
         filename.requestFocus()
       }
 
-      if (
-        AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
-          DirectoryStructure.EncryptedUsername || suggestedEntry?.username != null
-      ) {
-        usernameInputLayout.visibility = View.VISIBLE
+      if (suggestedEntry?.username != null) {
         if (suggestedEntry?.username != null) {
           val charBuf = CharBuffer.wrap(suggestedEntry?.username)
           username.setText(charBuf)
@@ -264,35 +260,10 @@ class PasswordCreationActivity : BasePGPActivity() {
         } else if (suggestedName != null) username.requestFocus()
       }
 
-      // Allow the user to quickly switch between storing the username as the filename or
-      // in the encrypted extras. This only makes sense if the directory structure is
-      // FileBased.
-      if (
-        suggestedName == null &&
-          AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
-            DirectoryStructure.FileBased
-      ) {
-        encryptUsername.apply {
-          visibility = View.VISIBLE
-          setOnClickListener {
-            if (isChecked) {
-              // User wants to enable username encryption, so we use the filename
-              // as username and insert it into the username input field.
-              val login = filename.text.toString()
-              filename.text?.clear()
-              username.setText(login)
-              usernameInputLayout.apply { visibility = View.VISIBLE }
-            } else {
-              // User wants to disable username encryption, so we take the username
-              // from the username text field and insert it into the filename input field.
-              val login = username.text.toString()
-              username.text?.clear()
-              filename.setText(login)
-              usernameInputLayout.apply { visibility = View.GONE }
-            }
-          }
-        }
+      if(editing && username.text.isNullOrEmpty()) {
+        usernameInputLayout.visibility = View.GONE
       }
+
       suggestedEntry?.password?.let {
         val charBuf = CharBuffer.wrap(it)
         password.setText(charBuf)
@@ -382,13 +353,6 @@ class PasswordCreationActivity : BasePGPActivity() {
 
   private fun updateViewState() =
     with(binding) {
-      encryptUsername.apply {
-        if (visibility != View.VISIBLE) return@apply
-        val hasUsernameInFileName = filename.text.toString().isNotBlank()
-        val usernameIsEncrypted = username.text.toString().isNotEmpty()
-        isEnabled = hasUsernameInFileName xor usernameIsEncrypted
-        isChecked = usernameIsEncrypted
-      }
       // Use PasswordEntry to parse extras for OTP
       val entry = passwordEntryFactory.create("PLACEHOLDER\n${extraContent.text}".toCharArray())
       val hasTotp = entry.hasTotp()
@@ -411,14 +375,6 @@ class PasswordCreationActivity : BasePGPActivity() {
       } else if (editName.contains('/')) {
         snackbar(message = resources.getString(R.string.invalid_filename_text))
         return@with
-      }
-
-      if (!editUsername.isEmpty()) {
-        editUsername = editUsername.let {
-          val withPrefix = "\nusername: ".toCharArray() + it
-          it.wipe()
-          withPrefix
-        }
       }
 
       if (editPass.isEmpty() && editExtra.isEmpty()) {
@@ -449,19 +405,52 @@ class PasswordCreationActivity : BasePGPActivity() {
 
       val path = run { // password item's full file path string
         val editRelativePath = directory.text.toString().trim()
-        val passwordDirectory = Paths.get(repoPath, editRelativePath.trim('/'))
+        var passwordDirectory = Paths.get(repoPath, editRelativePath.trim('/'))
+        if (!editing) {
+          when (AutofillPreferences.directoryStructure(this@PasswordCreationActivity)) {
+            DirectoryStructure.FileBased -> {
+              passwordDirectory = Paths.get(passwordDirectory.pathString, editName)
+            }
+            DirectoryStructure.DirectoryBased -> {
+              passwordDirectory =
+                Paths.get(
+                  passwordDirectory.pathString,
+                  editName,
+                  editUsername.concatToString().trim(),
+                )
+            }
+            else -> {}
+          }
+        }
         passwordDirectory.createDirectories() // ensure destination dir exists
         if (!passwordDirectory.exists()) { // should not happen
           snackbar(message = "Failed to create directory ${editRelativePath.trimEnd('/')}")
           return
         }
 
-        "${passwordDirectory.pathString}/$editName.gpg"
+        if (editing) "${passwordDirectory.pathString}/$editName.gpg"
+        else
+          when (AutofillPreferences.directoryStructure(this@PasswordCreationActivity)) {
+            DirectoryStructure.EncryptedUsername -> "${passwordDirectory.pathString}/$editName.gpg"
+            DirectoryStructure.FileBased ->
+              "${passwordDirectory.pathString}/${editUsername.concatToString().trim()}.gpg"
+            DirectoryStructure.DirectoryBased -> "${passwordDirectory.pathString}/password.gpg"
+          }
       }
 
       lifecycleScope.launch(dispatcherProvider.main()) {
         runCatching {
-          val contentChars = (editPass + editUsername + '\n' + editExtra)
+          val contentChars =
+            if (
+              AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
+                DirectoryStructure.EncryptedUsername && !editUsername.isEmpty()
+            )
+              editPass +
+                "\nusername: ".toCharArray() +
+                editUsername.also { it.wipe() } +
+                '\n' +
+                editExtra
+            else editPass + '\n' + editExtra
           val contentBytes = contentChars.toByteArray()
           contentChars.wipe()
 

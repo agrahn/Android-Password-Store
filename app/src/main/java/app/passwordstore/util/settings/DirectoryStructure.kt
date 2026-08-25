@@ -8,9 +8,9 @@ import java.io.File
 import java.nio.file.Paths
 
 enum class DirectoryStructure(val value: String) {
-  EncryptedUsername("encrypted_username"),
-  FileBased("file"),
-  DirectoryBased("directory");
+  EncryptedUsername("encrypted_username"), // work/example.org.gpg
+  FileBased("file"), // work/example.org/jon@doe.org.gpg
+  DirectoryBased("directory"); // work/example.org/jon@doe.org/password.gpg
 
   /**
    * Returns the username associated to [file], following the convention of the current
