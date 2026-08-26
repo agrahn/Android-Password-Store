@@ -92,12 +92,11 @@ enum class DirectoryStructure(val value: String) {
           ?: file.nameWithoutExtension
     }
 
-  fun getSaveFolderName(sanitizedIdentifier: String, username: CharArray?) =
+  fun getSaveFolderName(identifier: String, username: CharArray?) =
     when (this) {
       EncryptedUsername -> "/"
-      FileBased -> sanitizedIdentifier
-      DirectoryBased ->
-        Paths.get(sanitizedIdentifier, username?.let { String(it) } ?: "username").toString()
+      FileBased -> identifier
+      DirectoryBased -> Paths.get(identifier, username?.let { String(it) } ?: "username").toString()
     }
 
   fun getSaveFileName(username: CharArray?, identifier: String) =

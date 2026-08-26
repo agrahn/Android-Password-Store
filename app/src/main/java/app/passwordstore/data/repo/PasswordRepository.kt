@@ -19,6 +19,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.isDirectory
 import kotlin.io.path.name
 import kotlin.streams.asSequence
 import org.eclipse.jgit.api.Git
@@ -31,6 +32,9 @@ import org.eclipse.jgit.transport.RemoteConfig
 import org.eclipse.jgit.transport.URIish
 
 object PasswordRepository {
+
+  val TYPE_FILE: Int = 1
+  val TYPE_DIR: Int = 2
 
   var repository: Repository? = null
   private val settings by unsafeLazy { Application.instance.sharedPrefs }
@@ -262,15 +266,22 @@ object PasswordRepository {
     return passwordList
   }
 
-  fun findFilesByName(
+  fun findByName(
     rootPath: String,
     fileName: String,
+    type: Int = TYPE_DIR or TYPE_FILE,
     ignoreCase: Boolean = false,
   ): List<String> {
     return Files.walk(Paths.get(rootPath)).use { stream ->
       stream
         .asSequence()
-        .filter { Files.isRegularFile(it) }
+        .filter {
+          when (type) {
+            TYPE_FILE -> Files.isRegularFile(it)
+            TYPE_DIR -> Files.isDirectory(it)
+            else -> true
+          }
+        }
         .filter { it.name.equals(fileName, ignoreCase = ignoreCase) }
         .map { it.absolutePathString() }
         .toList()
@@ -293,5 +304,14 @@ object PasswordRepository {
         .map { it.absolutePathString() }
         .toList()
     }
+  }
+
+  fun findSubdirectoryRecursively(rootPath: String, targetName: String): String? {
+    val match =
+      Files.walk(Paths.get(rootPath))
+        .filter { it.isDirectory() && it.fileName.toString() == targetName }
+        .findFirst()
+        .orElse(null)
+    return match?.let { match.absolutePathString() }
   }
 }

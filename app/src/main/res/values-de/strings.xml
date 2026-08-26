@@ -50,6 +50,7 @@
 
   <!-- PGPHandler -->
   <string name="clipboard_copied_text">In die Zwischenablage kopiert.</string>
+  <string name="empty_name_toast_text">Bitte setzen Sie einen Namen.</string>
   <string name="file_toast_text">Bitte setzen Sie einen Dateinamen.</string>
   <string name="empty_toast_text">Sie müssen mindestens ein Passwort oder Zusatzangaben eintragen.</string>
   <string name="empty_username_toast_text">Bitte setzen Sie einen Benutzernamen.</string>
@@ -82,6 +83,7 @@
   <!-- PGP Handler -->
   <string name="crypto_name_hint">Name</string>
   <string name="crypto_username_hint">Benutzername</string>
+  <string name="crypto_filename_hint">Dateiname</string>
   <string name="crypto_pass_label">Passwort</string>
   <string name="crypto_extra_label">Zusätzliche Angaben</string>
   <string name="crypto_insert_username_label">Benutzernamen einfügen</string>
@@ -349,7 +351,8 @@
   <string name="empty_gpg_id">.gpg-id wurde gefunden, ist jedoch leer.</string>
   <string name="missing_gpg_id">.gpg-id wurde nicht gefunden.</string>
   <string name="short_gpg_id">.gpg-id wurde gefunden, enthält jedoch eine kurze Hex-ID, die nicht unterstützt wird.</string>
-  <string name="invalid_filename_text">Dateiname darf kein \'/\' enthalten; Verzeichnis oben setzen.</string>
+  <string name="invalid_filename_text">Der Dateiname darf kein \'/\' enthalten; Verzeichnis oben setzen.</string>
+  <string name="invalid_name_text">Der Name darf kein \'/\' enthalten; Verzeichnis oben setzen.</string>
   <string name="directory_hint">Ordner</string>
   <string name="new_folder_set_gpg_key">PGP-Schlüssel für Ordner festlegen</string>
 

@@ -51,6 +51,7 @@
 
   <!-- PGPHandler -->
   <string name="clipboard_copied_text">Copied to clipboard.</string>
+  <string name="empty_name_toast_text">Please provide a name.</string>
   <string name="file_toast_text">Please provide a file name.</string>
   <string name="empty_toast_text">You need to fill in at least a password or some extra content.</string>
   <string name="empty_username_toast_text">Please provide a username.</string>
@@ -83,6 +84,8 @@
   <!-- PGP Handler -->
   <string name="crypto_name_hint">Name</string>
   <string name="crypto_username_hint">Username</string>
+  <string name="crypto_filename_hint">File name</string>
+  <string name="crypto_filename_default" translatable="false">password</string>
   <string name="crypto_pass_label">Password</string>
   <string name="crypto_extra_label">Extra content</string>
   <string name="crypto_insert_username_label">Insert username</string>
@@ -351,7 +354,8 @@
   <string name="empty_gpg_id">Found .gpg-id, but it is empty.</string>
   <string name="missing_gpg_id">No .gpg-id could be found.</string>
   <string name="short_gpg_id">Found .gpg-id, but it contains a short hex ID, which is not supported.</string>
-  <string name="invalid_filename_text">File name must not contain \'/\', set directory above.</string>
+  <string name="invalid_filename_text">The file name must not contain \'/\', set directory above.</string>
+  <string name="invalid_name_text">The name must not contain \'/\', set directory above.</string>
   <string name="directory_hint">Directory</string>
   <string name="new_folder_set_gpg_key">Set PGP key for directory</string>
 
