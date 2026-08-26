@@ -28,6 +28,8 @@ import com.github.androidpasswordstore.autofillparser.Credentials
 import com.github.androidpasswordstore.autofillparser.FormOrigin
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
+import java.nio.file.Paths
+import kotlin.io.path.absolutePathString
 import logcat.LogPriority.ERROR
 import logcat.logcat
 
@@ -48,28 +50,37 @@ class AutofillSaveActivity : AppCompatActivity() {
 
     private var saveRequestCode = 1
 
+    val repo = PasswordRepository.getRepositoryDirectory()
+
     fun makeSaveIntentSender(
       context: Context,
       credentials: Credentials?,
       formOrigin: FormOrigin,
       clientState: Bundle,
     ): IntentSender {
-      val identifier = formOrigin.getPrettyIdentifier(context, untrusted = false)
-      // Prevent directory traversals
-      val sanitizedIdentifier =
-        identifier.replace('\\', '_').replace('/', '_').trimStart('.').takeUnless { it.isBlank() }
-          ?: formOrigin.identifier
+      val origin =
+        formOrigin.getPrettyIdentifier(context, untrusted = false) // web origin or app name
+
+      /**
+       * search for existing records related to this web origin/app name in the password store and
+       * set the suggested parent folder accordingly; this way, new related logins can/will be saved
+       * close to existing ones
+       */
+      val repoPath = repo.absolutePath // io.File -> String
+      val parentFolderPath =
+        PasswordRepository.findByName(repoPath, origin, PasswordRepository.TYPE_DIR)
+          .firstOrNull()
+          ?.let {
+            Paths.get(it).parent.absolutePathString() // nio.Path -> String
+          }
+          ?: PasswordRepository.findByName(repoPath, "$origin.gpg", PasswordRepository.TYPE_FILE)
+            .firstOrNull()
+            ?.let {
+              Paths.get(it).parent.absolutePathString()
+            }
+          ?: repoPath
+
       val directoryStructure = AutofillPreferences.directoryStructure(context)
-      val folderName =
-        directoryStructure.getSaveFolderName(
-          sanitizedIdentifier = sanitizedIdentifier,
-          username = credentials?.username,
-        )
-      val fileName =
-        directoryStructure.getSaveFileName(
-          username = credentials?.username,
-          identifier = identifier,
-        )
       val clearCredentials = credentials?.let {
         if (directoryStructure == DirectoryStructure.EncryptedUsername)
           listOf(
@@ -83,14 +94,15 @@ class AutofillSaveActivity : AppCompatActivity() {
       val encryptedCredentials = AESEncryption.encrypt(clearCredentials)
       credentials?.password?.wipe()
       clearCredentials?.wipe()
+
       val intent =
         Intent(context, AutofillSaveActivity::class.java).apply {
           putExtras(
             Bundle().also {
               it.apply {
                 putBundle(AutofillManager.EXTRA_CLIENT_STATE, clientState)
-                putString(EXTRA_FOLDER_NAME, folderName)
-                putString(EXTRA_NAME, fileName)
+                putString(EXTRA_FOLDER_NAME, parentFolderPath)
+                putString(EXTRA_NAME, origin)
                 putCharArray(EXTRA_ENTRY, encryptedCredentials)
                 putString(
                   EXTRA_SHOULD_MATCH_APP,
@@ -129,7 +141,6 @@ class AutofillSaveActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    val repo = PasswordRepository.getRepositoryDirectory()
     val saveIntent =
       Intent(this, PasswordCreationActivity::class.java).apply {
         putExtras(
@@ -138,9 +149,7 @@ class AutofillSaveActivity : AppCompatActivity() {
               putString(BasePGPActivity.EXTRA_REPO_PATH, repo.absolutePath)
               putString(
                 BasePGPActivity.EXTRA_FILE_PATH,
-                repo
-                  .resolve(intent.getStringExtra(EXTRA_FOLDER_NAME) ?: throw NullPointerException())
-                  .absolutePath,
+                intent.getStringExtra(EXTRA_FOLDER_NAME) ?: throw NullPointerException(),
               )
               putString(PasswordCreationActivity.EXTRA_FILE_NAME, intent.getStringExtra(EXTRA_NAME))
               putCharArray(

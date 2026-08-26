@@ -79,14 +79,12 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.nio.CharBuffer
-import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.SecureRandom
 import javax.inject.Inject
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
 import kotlin.io.path.pathString
 import kotlin.io.path.writeBytes
 import kotlinx.coroutines.launch
@@ -284,7 +282,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
           val requestOptions = PublicKeyCredentialCreationOptions(request.requestJson)
 
           val suggestedFullPath =
-            findSubdirectoryRecursively(repoPath, requestOptions.rp.id)
+            PasswordRepository.findSubdirectoryRecursively(repoPath, requestOptions.rp.id)
               ?: Paths.get(repoPath, requestOptions.rp.id).absolutePathString()
           val relPath = PasswordRepository.getRelativePath(suggestedFullPath, repoPath)
 
@@ -645,14 +643,5 @@ class PasskeyCreationActivity : BasePGPActivity() {
           }
       }
     }
-  }
-
-  private fun findSubdirectoryRecursively(rootPath: String, targetName: String): String? {
-    val match =
-      Files.walk(Paths.get(rootPath))
-        .filter { it.isDirectory() && it.fileName.toString() == targetName }
-        .findFirst()
-        .orElse(null)
-    return match?.let { match.absolutePathString() }
   }
 }

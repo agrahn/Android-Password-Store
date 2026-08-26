@@ -67,7 +67,7 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
 
     model.navigateTo(
       PasswordRepository.getRepositoryDirectory(),
-      listMode = ListMode.DirectoriesOnly,
+      listMode = ListMode.AllEntries,
       pushPreviousLocation = false,
     )
     getArguments()?.getString(PasswordStore.REQUEST_ARG_PATH)?.let { relPath ->
@@ -75,7 +75,7 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
         model.navigateTo(
           File(currentDir, dir),
           pushPreviousLocation = true,
-          listMode = ListMode.DirectoriesOnly,
+          listMode = ListMode.AllEntries,
         )
       }
     }
@@ -93,7 +93,7 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
   fun navigateTo(file: File) {
     model.navigateTo(
       file,
-      listMode = ListMode.DirectoriesOnly,
+      listMode = ListMode.AllEntries,
       recyclerViewState =
         binding.passRecycler.layoutManager?.onSaveInstanceState() ?: throw NullPointerException(),
     )
@@ -106,7 +106,7 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
         object : OnFragmentInteractionListener {
           override fun onFragmentInteraction(item: PasswordItem) {
             if (item.type == PasswordItem.TYPE_CATEGORY) {
-              model.navigateTo(item.file, listMode = ListMode.DirectoriesOnly)
+              model.navigateTo(item.file, listMode = ListMode.AllEntries)
               (requireActivity() as AppCompatActivity)
                 .supportActionBar
                 ?.setDisplayHomeAsUpEnabled(true)
@@ -120,7 +120,7 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
   /** Returns true if the back press was handled by the [Fragment]. */
   fun onBackPressedInActivity(): Boolean {
     if (!model.canNavigateBack) return false
-    model.navigateBack(listMode = ListMode.DirectoriesOnly)
+    model.navigateBack(listMode = ListMode.AllEntries)
     if (!model.canNavigateBack)
       (requireActivity() as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(false)
     return true

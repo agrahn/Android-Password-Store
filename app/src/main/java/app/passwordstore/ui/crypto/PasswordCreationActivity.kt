@@ -166,7 +166,8 @@ class PasswordCreationActivity : BasePGPActivity() {
       if (result.resultCode == RESULT_OK) {
         result.data?.getStringExtra(SelectFolderActivity.SELECTED_FOLDER_PATH)?.let { fullPath ->
           val relPath = PasswordRepository.getRelativePath(fullPath, repoPath)
-          binding.directory.setText(if (!relPath.isEmpty()) relPath else "/")
+          val path = if (relPath.isEmpty()) "/" else relPath
+          binding.directory.setText(path)
         }
       }
     }
@@ -246,10 +247,12 @@ class PasswordCreationActivity : BasePGPActivity() {
         selectFolderAction.launch(intent)
       }
 
+      if (editing) nameInputLayout.setHint(R.string.crypto_filename_hint)
+
       if (suggestedName != null) {
-        filename.setText(suggestedName)
+        name.setText(suggestedName)
       } else {
-        filename.requestFocus()
+        name.requestFocus()
       }
 
       if (suggestedEntry?.username != null) {
@@ -276,6 +279,14 @@ class PasswordCreationActivity : BasePGPActivity() {
         }
       }
 
+      if (
+        !editing &&
+          AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
+            DirectoryStructure.DirectoryBased
+      ) {
+        filenameInputLayout.visibility = View.VISIBLE
+      }
+
       suggestedEntry?.password?.let {
         val charBuf = CharBuffer.wrap(it)
         password.setText(charBuf)
@@ -295,7 +306,7 @@ class PasswordCreationActivity : BasePGPActivity() {
         password.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
       }
     }
-    listOf(binding.filename, binding.username, binding.extraContent).forEach {
+    listOf(binding.name, binding.username, binding.filename, binding.extraContent).forEach {
       it.doAfterTextChanged { updateViewState() }
     }
     updateViewState()
@@ -375,18 +386,39 @@ class PasswordCreationActivity : BasePGPActivity() {
   /** Encrypts the password and the extra content */
   private fun encrypt(identifiers: List<PGPIdentifier>) {
     with(binding) {
-      val editName = filename.text.toString().trim()
+      val editName = name.text?.toString()?.trim() ?: ""
       var editUsername = username.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
       val editPass = password.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
+      val editFilename = filename.text?.toString()?.trim() ?: ""
       var editExtra =
         extraContent.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
 
-      if (editName.isEmpty()) {
-        snackbar(message = resources.getString(R.string.file_toast_text))
+      if (editName.isBlank()) {
+        name.requestFocus()
+        if (editing) snackbar(message = resources.getString(R.string.file_toast_text))
+        else snackbar(message = resources.getString(R.string.empty_name_toast_text))
         return@with
       } else if (editName.contains('/')) {
-        snackbar(message = resources.getString(R.string.invalid_filename_text))
+        name.requestFocus()
+        if (editing) snackbar(message = resources.getString(R.string.invalid_filename_text))
+        else snackbar(message = resources.getString(R.string.invalid_name_text))
         return@with
+      }
+
+      if (
+        !editing &&
+          AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
+            DirectoryStructure.DirectoryBased
+      ) {
+        if (editFilename.isBlank()) {
+          filename.requestFocus()
+          snackbar(message = resources.getString(R.string.file_toast_text))
+          return@with
+        } else if (editFilename.contains('/')) {
+          filename.requestFocus()
+          snackbar(message = resources.getString(R.string.invalid_filename_text))
+          return@with
+        }
       }
 
       if (
@@ -401,6 +433,7 @@ class PasswordCreationActivity : BasePGPActivity() {
       }
 
       if (editPass.isEmpty() && editExtra.isEmpty()) {
+        password.requestFocus()
         snackbar(message = resources.getString(R.string.empty_toast_text))
         return@with
       }
@@ -428,8 +461,21 @@ class PasswordCreationActivity : BasePGPActivity() {
 
       val path = run { // password item's full file path string
         val editRelativePath = directory.text.toString().trim()
+
         var passwordDirectory = Paths.get(repoPath, editRelativePath.trim('/'))
+
         if (!editing) {
+          // fix destination path due to erroneous user input
+          if (passwordDirectory.endsWith(editName)) {
+            passwordDirectory = passwordDirectory.parent
+          } else if (
+            passwordDirectory.parent.endsWith(editName) &&
+              AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
+                DirectoryStructure.DirectoryBased
+          ) {
+            passwordDirectory = passwordDirectory.parent.parent
+          }
+
           when (AutofillPreferences.directoryStructure(this@PasswordCreationActivity)) {
             DirectoryStructure.FileBased -> {
               passwordDirectory = Paths.get(passwordDirectory.pathString, editName)
@@ -445,7 +491,9 @@ class PasswordCreationActivity : BasePGPActivity() {
             else -> {}
           }
         }
-        passwordDirectory.createDirectories() // ensure destination dir exists
+
+        // ensure destination dir exists
+        passwordDirectory.createDirectories()
         if (!passwordDirectory.exists()) { // should not happen
           snackbar(message = "Failed to create directory ${editRelativePath.trimEnd('/')}")
           return
@@ -457,7 +505,7 @@ class PasswordCreationActivity : BasePGPActivity() {
             DirectoryStructure.EncryptedUsername -> "${passwordDirectory.pathString}/$editName.gpg"
             DirectoryStructure.FileBased ->
               "${passwordDirectory.pathString}/${editUsername.concatToString().trim()}.gpg"
-            DirectoryStructure.DirectoryBased -> "${passwordDirectory.pathString}/password.gpg"
+            DirectoryStructure.DirectoryBased -> "${passwordDirectory.pathString}/$editFilename.gpg"
           }
       }
 
