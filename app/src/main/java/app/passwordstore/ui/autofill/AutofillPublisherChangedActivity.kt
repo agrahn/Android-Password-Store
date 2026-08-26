@@ -40,7 +40,7 @@ class AutofillPublisherChangedActivity : AppCompatActivity() {
     private const val EXTRA_APP_PACKAGE = "app.passwordstore.autofill.oreo.ui.EXTRA_APP_PACKAGE"
     private const val EXTRA_FILL_RESPONSE_AFTER_RESET =
       "app.passwordstore.autofill.oreo.ui.EXTRA_FILL_RESPONSE_AFTER_RESET"
-    private var publisherChangedRequestCode = 1
+    private var publisherChangedRequestCode = 600000
 
     fun makePublisherChangedIntentSender(
       context: Context,

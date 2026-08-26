@@ -260,8 +260,20 @@ class PasswordCreationActivity : BasePGPActivity() {
         } else if (suggestedName != null) username.requestFocus()
       }
 
-      if(editing && username.text.isNullOrEmpty()) {
+      if (editing && username.text.isNullOrEmpty()) {
         usernameInputLayout.visibility = View.GONE
+        insertUsername.apply {
+          visibility = View.VISIBLE
+          setOnClickListener {
+            if (isChecked) {
+              usernameInputLayout.visibility = View.VISIBLE
+              username.requestFocus()
+            } else {
+              username.text?.clear()
+              usernameInputLayout.visibility = View.GONE
+            }
+          }
+        }
       }
 
       suggestedEntry?.password?.let {
@@ -377,6 +389,17 @@ class PasswordCreationActivity : BasePGPActivity() {
         return@with
       }
 
+      if (
+        !editing &&
+          AutofillPreferences.directoryStructure(this@PasswordCreationActivity) !=
+            DirectoryStructure.EncryptedUsername &&
+          username.text?.isBlank() ?: true
+      ) {
+        username.requestFocus()
+        snackbar(message = resources.getString(R.string.empty_username_toast_text))
+        return@with
+      }
+
       if (editPass.isEmpty() && editExtra.isEmpty()) {
         snackbar(message = resources.getString(R.string.empty_toast_text))
         return@with
@@ -442,14 +465,11 @@ class PasswordCreationActivity : BasePGPActivity() {
         runCatching {
           val contentChars =
             if (
-              AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
-                DirectoryStructure.EncryptedUsername && !editUsername.isEmpty()
+              (AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
+                DirectoryStructure.EncryptedUsername || insertUsername.isChecked) &&
+                !editUsername.isEmpty()
             )
-              editPass +
-                "\nusername: ".toCharArray() +
-                editUsername.also { it.wipe() } +
-                '\n' +
-                editExtra
+              editPass + "\nusername: ".toCharArray() + editUsername + '\n' + editExtra
             else editPass + '\n' + editExtra
           val contentBytes = contentChars.toByteArray()
           contentChars.wipe()
@@ -482,7 +502,7 @@ class PasswordCreationActivity : BasePGPActivity() {
               .filter { it !in succeededUserEmails ?: emptyList() }
 
           val passwordFile = Paths.get(path)
-          // If we're not editing, this file should not already exist!
+          // If we're not editing, this file should not yet exist!
           // Additionally, if we were editing and the incoming and outgoing
           // file paths differ, it means we renamed. Ensure that the target
           // doesn't already exist to prevent an accidental overwrite.
@@ -526,24 +546,13 @@ class PasswordCreationActivity : BasePGPActivity() {
           )
 
           if (shouldGeneratePassword) {
-            val directoryStructure = AutofillPreferences.directoryStructure(applicationContext)
-            val entry = passwordEntryFactory.create(editPass + editUsername + '\n' + editExtra)
-
-            entry.password?.let {
-              val password = it.copyOf(it.size)
-              returnIntent.putExtra(RETURN_EXTRA_PASSWORD, password)
-            }
-
-            val username =
-              entry.username?.let { it.copyOf(it.size) }
-                ?: directoryStructure.getUsernameFor(passwordFile.toFile())
-            returnIntent.putExtra(RETURN_EXTRA_USERNAME, username)
-
-            entry.clear()
+            if (!editPass.isEmpty()) returnIntent.putExtra(RETURN_EXTRA_PASSWORD, editPass)
+            if (!editUsername.isEmpty()) returnIntent.putExtra(RETURN_EXTRA_USERNAME, editUsername)
+          } else {
+            editPass?.wipe()
+            editUsername?.wipe()
           }
 
-          editPass?.wipe()
-          editUsername?.wipe()
           editExtra?.wipe()
 
           val commitMessageRes =

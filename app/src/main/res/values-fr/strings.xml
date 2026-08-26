@@ -62,7 +62,6 @@
   <string name="crypto_name_hint">Nom</string>
   <string name="crypto_pass_label">Mot de passe</string>
   <string name="crypto_extra_label">Extra</string>
-  <string name="crypto_encrypt_username_label">Chiffrer le nom d\'utilisateur</string>
   <string name="crypto_select">Sélectionner</string>
   <string name="crypto_save">Sauvegarder</string>
   <string name="crypto_save_and_copy">Enregistrer et copier</string>

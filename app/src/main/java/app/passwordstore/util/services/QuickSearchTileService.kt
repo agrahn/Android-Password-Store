@@ -8,6 +8,10 @@ import android.service.quicksettings.TileService
 import app.passwordstore.ui.main.LaunchActivity
 
 class QuickSearchTileService : TileService() {
+  companion object {
+    private var requestCode = 1000000
+  }
+
   override fun onClick() {
     super.onClick()
     val intent =
@@ -20,7 +24,7 @@ class QuickSearchTileService : TileService() {
       val pendingIntent =
         PendingIntent.getActivity(
           this,
-          0,
+          ++requestCode,
           intent,
           PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )

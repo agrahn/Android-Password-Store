@@ -52,6 +52,7 @@ class AutofillSaveActivity : AppCompatActivity() {
       context: Context,
       credentials: Credentials?,
       formOrigin: FormOrigin,
+      clientState: Bundle,
     ): IntentSender {
       val identifier = formOrigin.getPrettyIdentifier(context, untrusted = false)
       // Prevent directory traversals
@@ -87,6 +88,7 @@ class AutofillSaveActivity : AppCompatActivity() {
           putExtras(
             Bundle().also {
               it.apply {
+                putBundle(AutofillManager.EXTRA_CLIENT_STATE, clientState)
                 putString(EXTRA_FOLDER_NAME, folderName)
                 putString(EXTRA_NAME, fileName)
                 putCharArray(EXTRA_ENTRY, encryptedCredentials)
@@ -166,7 +168,7 @@ class AutofillSaveActivity : AppCompatActivity() {
               val clientState =
                 intent?.getBundleExtra(AutofillManager.EXTRA_CLIENT_STATE)
                   ?: run {
-                    logcat(ERROR) { "AutofillDecryptActivity started without EXTRA_CLIENT_STATE" }
+                    logcat(ERROR) { "AutofillSaveActivity started without EXTRA_CLIENT_STATE" }
                     finish()
                     return@registerForActivityResult
                   }

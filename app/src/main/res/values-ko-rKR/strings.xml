@@ -61,7 +61,6 @@
   <string name="crypto_name_hint">이름</string>
   <string name="crypto_pass_label">비밀번호</string>
   <string name="crypto_extra_label">추가 내용</string>
-  <string name="crypto_encrypt_username_label">암호화 계정 이름</string>
   <string name="crypto_select">선택</string>
   <string name="crypto_save">저장</string>
   <string name="crypto_save_and_copy">저장 및 복사</string>

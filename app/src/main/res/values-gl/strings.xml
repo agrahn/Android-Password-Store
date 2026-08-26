@@ -63,7 +63,6 @@
   <string name="crypto_name_hint">Nome</string>
   <string name="crypto_pass_label">Contrasinal</string>
   <string name="crypto_extra_label">Contido extra</string>
-  <string name="crypto_encrypt_username_label">Cifrar identificador</string>
   <string name="crypto_select">Seleccionar</string>
   <string name="crypto_save">Gardar</string>
   <string name="crypto_save_and_copy">Gardar e copiar</string>

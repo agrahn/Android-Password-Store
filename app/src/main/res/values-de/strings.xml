@@ -52,6 +52,7 @@
   <string name="clipboard_copied_text">In die Zwischenablage kopiert.</string>
   <string name="file_toast_text">Bitte setzen Sie einen Dateinamen.</string>
   <string name="empty_toast_text">Sie müssen mindestens ein Passwort oder Zusatzangaben eintragen.</string>
+  <string name="empty_username_toast_text">Bitte setzen Sie einen Benutzernamen.</string>
 
   <!-- Git Async Task -->
   <string name="jgit_error_dialog_title">Es ist ein Fehler während der Git-Operation aufgetreten</string>
@@ -83,7 +84,7 @@
   <string name="crypto_username_hint">Benutzername</string>
   <string name="crypto_pass_label">Passwort</string>
   <string name="crypto_extra_label">Zusätzliche Angaben</string>
-  <string name="crypto_encrypt_username_label">Benutzername verschlüsseln</string>
+  <string name="crypto_insert_username_label">Benutzernamen einfügen</string>
   <string name="crypto_select">Auswählen</string>
   <string name="crypto_save">Speichern</string>
   <string name="crypto_save_and_copy">Speichern und kopieren</string>
