@@ -41,6 +41,8 @@ fun makeRemoteView(context: Context, metadata: DatasetMetadata): RemoteViews {
   }
 }
 
+private var requestCode = 500000
+
 @SuppressLint("RestrictedApi")
 fun makeInlinePresentation(
   context: Context,
@@ -54,7 +56,7 @@ fun makeInlinePresentation(
   val launchIntent =
     PendingIntent.getActivity(
       context,
-      0,
+      requestCode++,
       Intent(context, PasswordStore::class.java),
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         PendingIntent.FLAG_MUTABLE

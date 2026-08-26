@@ -141,7 +141,8 @@ class Api30AutofillResponseBuilder private constructor(form: FillableForm) :
   private fun makeGenerateDataset(context: Context, imeSpec: InlinePresentationSpec?): Dataset? {
     if (!scenario.hasFieldsToFillOn(AutofillAction.Generate)) return null
     val metadata = makeGenerateAndFillMetadata(context)
-    val intentSender = AutofillSaveActivity.makeSaveIntentSender(context, null, formOrigin)
+    val intentSender =
+      AutofillSaveActivity.makeSaveIntentSender(context, null, formOrigin, clientState)
     return makeIntentDataset(context, AutofillAction.Generate, intentSender, metadata, imeSpec)
   }
 

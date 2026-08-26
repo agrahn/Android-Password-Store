@@ -58,7 +58,6 @@
     <string name="crypto_username_hint">Nom d\'usuari</string>
     <string name="crypto_pass_label">Contrasenya</string>
     <string name="crypto_extra_label">Contingut extra</string>
-    <string name="crypto_encrypt_username_label">Xifra el nom d\'usuari</string>
     <string name="crypto_select">Selecciona</string>
     <string name="crypto_save">Desa</string>
     <string name="crypto_save_and_copy">Desa i copia</string>

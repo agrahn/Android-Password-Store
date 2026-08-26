@@ -188,7 +188,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
     private const val EXTRA_FILE_PATH = "app.passwordstore.autofill.oreo.EXTRA_FILE_PATH"
     private const val EXTRA_SEARCH_ACTION = "app.passwordstore.autofill.oreo.EXTRA_SEARCH_ACTION"
 
-    private var decryptFileRequestCode = 1
+    private var decryptFileRequestCode = 100000
     private var otpTimer: ScheduledExecutorService? = null
 
     fun makeDecryptFileIntent(file: File, forwardedExtras: Bundle, context: Context): Intent {

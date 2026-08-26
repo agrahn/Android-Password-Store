@@ -79,7 +79,6 @@
   <string name="crypto_username_hint">Kullanıcı adı</string>
   <string name="crypto_pass_label">Şifre</string>
   <string name="crypto_extra_label">Ekstra içerik</string>
-  <string name="crypto_encrypt_username_label">Kullanıcı adını şifrele</string>
   <string name="crypto_select">Seç</string>
   <string name="crypto_save">Kaydet</string>
   <string name="crypto_save_and_copy">Kaydet ve Kopyala</string>

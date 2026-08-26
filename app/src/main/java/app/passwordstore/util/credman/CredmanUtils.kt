@@ -91,6 +91,8 @@ object CredmanUtils {
   private val context: Context
     get() = Application.instance.applicationContext
 
+  private var requestCode = 1000000
+
   /* Creates a new pending intent of type [action]
    *
    * @param [extra]: Additional input parameters put as extra with name
@@ -104,11 +106,9 @@ object CredmanUtils {
       intent.putExtra(UDCakeCredentialProviderService.CREDENTIAL_DATA_EXTRA, extra)
     }
 
-    val requestCode = (100000..999999).random()
-
     return PendingIntent.getActivity(
       context,
-      requestCode,
+      requestCode--,
       intent,
       (PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT),
     )

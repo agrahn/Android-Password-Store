@@ -58,7 +58,7 @@ class AutofillFilterView : AppCompatActivity() {
       "app.passwordstore.autofill.oreo.ui.EXTRA_FORM_ORIGIN_WEB"
     private const val EXTRA_FORM_ORIGIN_APP =
       "app.passwordstore.autofill.oreo.ui.EXTRA_FORM_ORIGIN_APP"
-    private var matchAndDecryptFileRequestCode = 1
+    private var matchAndDecryptFileRequestCode = 900000
 
     fun makeMatchAndDecryptFileIntentSender(
       context: Context,

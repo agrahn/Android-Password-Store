@@ -67,7 +67,6 @@
   <string name="crypto_name_hint">название</string>
   <string name="crypto_pass_label">Пароль</string>
   <string name="crypto_extra_label">Дополнительно</string>
-  <string name="crypto_encrypt_username_label">Зашифровать имя пользователя</string>
   <string name="crypto_select">Выбрать</string>
   <string name="crypto_save">Сохранить</string>
   <string name="crypto_save_and_copy">Сохранить и скопировать</string>

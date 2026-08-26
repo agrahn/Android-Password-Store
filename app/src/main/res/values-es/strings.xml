@@ -80,7 +80,6 @@
   <string name="crypto_username_hint">Usuario</string>
   <string name="crypto_pass_label">Contraseña</string>
   <string name="crypto_extra_label">Contenido extra</string>
-  <string name="crypto_encrypt_username_label">Cifrar Username</string>
   <string name="crypto_select">Seleccionar</string>
   <string name="crypto_save">Guardar</string>
   <string name="crypto_save_and_copy">Guardar y copiar</string>

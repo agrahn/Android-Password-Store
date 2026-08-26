@@ -53,6 +53,7 @@
   <string name="clipboard_copied_text">Copied to clipboard.</string>
   <string name="file_toast_text">Please provide a file name.</string>
   <string name="empty_toast_text">You need to fill in at least a password or some extra content.</string>
+  <string name="empty_username_toast_text">Please provide a username.</string>
 
   <!-- Git Async Task -->
   <string name="jgit_error_dialog_title">An error occurred during a Git operation</string>
@@ -84,7 +85,7 @@
   <string name="crypto_username_hint">Username</string>
   <string name="crypto_pass_label">Password</string>
   <string name="crypto_extra_label">Extra content</string>
-  <string name="crypto_encrypt_username_label">Insert username</string>
+  <string name="crypto_insert_username_label">Insert username</string>
   <string name="crypto_select">Select</string>
   <string name="crypto_save">Save</string>
   <string name="crypto_save_and_copy">Save and Copy</string>

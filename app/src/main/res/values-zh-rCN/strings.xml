@@ -62,7 +62,6 @@
   <string name="crypto_name_hint">名称</string>
   <string name="crypto_pass_label">密码</string>
   <string name="crypto_extra_label">附加内容</string>
-  <string name="crypto_encrypt_username_label">加密用户名</string>
   <string name="crypto_select">选择</string>
   <string name="crypto_save">保存</string>
   <string name="crypto_save_and_copy">保存并复制</string>
