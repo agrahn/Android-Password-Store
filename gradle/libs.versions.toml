@@ -45,7 +45,7 @@ aps-zxingAndroidEmbedded = "com.github.android-password-store:zxing-android-embe
 build-agp = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 build-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 build-okhttp = "com.squareup.okhttp3:okhttp:5.5.0"
-build-r8 = "com.android.tools:r8:9.4.14"
+build-r8 = "com.android.tools:r8:9.4.17"
 build-semver = "com.github.zafarkhaja:java-semver:0.10.2"
 build-spotless = "com.diffplug.spotless:spotless-plugin-gradle:8.10.0"
 build-vcu = "nl.littlerobots.version-catalog-update:nl.littlerobots.version-catalog-update.gradle.plugin:1.1.1"
