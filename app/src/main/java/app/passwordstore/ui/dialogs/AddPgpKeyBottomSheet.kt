@@ -17,6 +17,7 @@ import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.setFragmentResult
 import app.passwordstore.R
 import app.passwordstore.ui.pgp.PGPKeyListActivity.Companion.ACTION_IMPORT_FILE
+import app.passwordstore.ui.pgp.PGPKeyListActivity.Companion.ACTION_IMPORT_NFC
 import app.passwordstore.ui.pgp.PGPKeyListActivity.Companion.ACTION_KEY
 import app.passwordstore.ui.pgp.PGPKeyListActivity.Companion.ACTION_NEW_PGP_KEY
 import app.passwordstore.ui.pgp.PGPKeyListActivity.Companion.PGP_KEY_ADD_REQUEST_KEY
@@ -78,6 +79,13 @@ class AddPgpKeyBottomSheet : BottomSheetDialogFragment() {
             setFragmentResult(
               PGP_KEY_ADD_REQUEST_KEY,
               Bundle().also { it.putString(ACTION_KEY, ACTION_NEW_PGP_KEY) },
+            )
+            dismiss()
+          }
+          dialog.findViewById<View>(R.id.import_key_nfc)?.setOnClickListener {
+            setFragmentResult(
+              PGP_KEY_ADD_REQUEST_KEY,
+              Bundle().also { it.putString(ACTION_KEY, ACTION_IMPORT_NFC) },
             )
             dismiss()
           }

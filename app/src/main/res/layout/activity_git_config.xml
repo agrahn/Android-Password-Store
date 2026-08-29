@@ -61,6 +61,16 @@
     android:layout_marginTop="8dp"
     android:text="@string/crypto_save"
     app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintTop_toBottomOf="@id/sign_commits" />
+
+  <com.google.android.material.switchmaterial.SwitchMaterial
+    android:id="@+id/sign_commits"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:text="@string/git_sign_commits"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toBottomOf="@id/email_input_layout" />
 
   <androidx.appcompat.widget.AppCompatTextView
@@ -115,6 +125,14 @@
     app:layout_constraintTop_toBottomOf="@id/git_reset_to_remote"
     android:layout_width="match_parent"
     android:layout_height="wrap_content" />
+
+  <com.google.android.material.button.MaterialButton
+    android:id="@+id/git_remove_lock"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:text="@string/git_remove_lock_file"
+    app:layout_constraintTop_toBottomOf="@id/git_gc" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -41,4 +41,20 @@
     app:layout_constraintTop_toBottomOf="@id/import_key"
     app:rippleColor="?attr/colorSecondary" />
 
+  <com.google.android.material.button.MaterialButton
+    android:id="@+id/import_key_nfc"
+    style="@style/Widget.MaterialComponents.Button.TextButton"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/bottom_sheet_item_height"
+    android:layout_margin="@dimen/normal_margin"
+    android:text="@string/bottom_sheet_import_pgp_key_nfc"
+    android:textAlignment="viewStart"
+    android:textColor="?attr/colorOnSurface"
+    android:textAllCaps="false"
+    app:icon="@drawable/ic_miscellaneous_services_24px"
+    app:iconPadding="@dimen/normal_margin"
+    app:iconTint="?attr/colorSecondary"
+    app:layout_constraintTop_toBottomOf="@id/create_key"
+    app:rippleColor="?attr/colorSecondary" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

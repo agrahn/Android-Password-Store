@@ -7,7 +7,9 @@ package app.passwordstore.ui.git.log
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import app.passwordstore.R
 import app.passwordstore.databinding.GitLogRowLayoutBinding
 import app.passwordstore.util.git.GitCommit
 import app.passwordstore.util.git.GitLogModel
@@ -60,6 +62,21 @@ class GitLogAdapter : RecyclerView.Adapter<GitLogAdapter.ViewHolder>() {
         gitLogRowMessage.text = commit.shortMessage
         gitLogRowHash.text = shortHash(commit.hash)
         gitLogRowTime.text = stringFrom(commit.time)
+        gitLogRowSignature.setImageResource(
+          if (commit.isSigned) R.drawable.ic_lock_closed_24px else R.drawable.ic_lock_open_24px
+        )
+        gitLogRowSignature.setColorFilter(
+          ContextCompat.getColor(
+            root.context,
+            if (commit.isSigned) R.color.git_commit_signature_signed
+            else R.color.git_commit_signature_unsigned,
+          )
+        )
+        gitLogRowSignature.contentDescription =
+          root.context.getString(
+            if (commit.isSigned) R.string.git_commit_signature_signed
+            else R.string.git_commit_signature_unsigned
+          )
       }
   }
 }

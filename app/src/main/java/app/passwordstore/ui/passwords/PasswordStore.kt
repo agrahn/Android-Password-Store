@@ -40,6 +40,7 @@ import app.passwordstore.ui.onboarding.activity.OnboardingActivity
 import app.passwordstore.ui.pgp.PGPKeyListActivity
 import app.passwordstore.ui.settings.SettingsActivity
 import app.passwordstore.util.autofill.AutofillMatcher
+import app.passwordstore.util.crypto.OpenPgpCardPrompt
 import app.passwordstore.util.extensions.base64
 import app.passwordstore.util.extensions.commitChange
 import app.passwordstore.util.extensions.contains
@@ -49,7 +50,9 @@ import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.extensions.launchActivity
 import app.passwordstore.util.extensions.listFilesRecursively
 import app.passwordstore.util.extensions.sharedPrefs
+import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.viewBinding
+import app.passwordstore.util.git.ErrorMessages
 import app.passwordstore.util.settings.AuthMode
 import app.passwordstore.util.settings.PreferenceKeys
 import app.passwordstore.util.shortcuts.ShortcutHandler
@@ -57,8 +60,10 @@ import app.passwordstore.util.viewmodel.FilterMode
 import app.passwordstore.util.viewmodel.SearchableRepositoryViewModel
 import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.onErr
+import com.github.michaelbull.result.onOk
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import dagger.hilt.android.AndroidEntryPoint
@@ -72,7 +77,12 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
 import logcat.LogPriority.INFO
+import logcat.asLog
 import logcat.logcat
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.ResetCommand.ResetType
+import org.eclipse.jgit.api.errors.CanceledException
+import org.eclipse.jgit.errors.LockFailedException
 
 const val PASSWORD_FRAGMENT_TAG = "PasswordsList"
 
@@ -492,34 +502,96 @@ class PasswordStore : BaseGitActivity() {
           if (item.file.isDirectory) filesToDelete.addAll(item.file.listFilesRecursively())
           else filesToDelete.add(item.file)
         }
-        // remove to-be-deleted files from history
-        passwordHistory.edit {
-          filesToDelete.forEach { file ->
-            remove(file.absolutePath.base64())
-          }
-        }
-        // remove cached passkey hex ID (filename without extension) <--> webauthn username
-        // associations
-        credentialUsernames.edit {
-          filesToDelete.forEach { file ->
-            val fileBasename = Paths.get(file.absolutePath).nameWithoutExtension
-            if (fileBasename.matches("[a-fA-F0-9]{64}".toRegex())) remove(fileBasename)
-          }
-        }
-        selectedItems.map { item -> item.file.deleteRecursively() }
-        refreshPasswordList()
-        AutofillMatcher.updateMatches(applicationContext, delete = filesToDelete)
         val fmt =
           selectedItems.joinToString(separator = ", ") { item ->
             item.file.toRelativeString(PasswordRepository.getRepositoryDirectory())
           }
         lifecycleScope.launch {
-          commitChange(getString(R.string.git_commit_remove_text, fmt))
+          withContext(dispatcherProvider.io()) {
+            selectedItems.forEach { item -> item.file.deleteRecursively() }
+          }
+          refreshPasswordList()
+          commitChange(resources.getString(R.string.git_commit_remove_text, fmt))
+            .onOk {
+              // The deletion is committed (and signed, if requested): finalise the bookkeeping.
+              // remove to-be-deleted files from history
+              passwordHistory.edit {
+                filesToDelete.forEach { file -> remove(file.absolutePath.base64()) }
+              }
+              // remove cached passkey hex ID (filename without extension) <--> webauthn username
+              // associations
+              credentialUsernames.edit {
+                filesToDelete.forEach { file ->
+                  val fileBasename = Paths.get(file.absolutePath).nameWithoutExtension
+                  if (fileBasename.matches("[a-fA-F0-9]{64}".toRegex())) remove(fileBasename)
+                }
+              }
+              AutofillMatcher.updateMatches(applicationContext, delete = filesToDelete)
+              shortcutHandler.pruneDynamicShortcuts()
+              snackbar(
+                message = resources.getQuantityString(R.plurals.password_delete_success, size)
+              )
+            }
+            .onErr { e ->
+              // The commit (or its signature) did not go through, e.g. the user cancelled the
+              // signing prompt. Undo the on-disk deletion by restoring the working tree from HEAD
+              // so the entry is only ever removed once it has actually been committed. Guard the
+              // restore so a failure (e.g. a stale index.lock) reports an error instead of
+              // crashing.
+              logcat(ERROR) { "Aborting deletion; restoring working tree from HEAD\n${e.asLog()}" }
+              val restored =
+                withContext(dispatcherProvider.io()) {
+                  try {
+                    PasswordRepository.repository?.let { repo ->
+                      Git(repo).reset().setMode(ResetType.HARD).call()
+                    }
+                    true
+                  } catch (t: Throwable) {
+                    logcat(ERROR) { t.asLog() }
+                    false
+                  }
+                }
+              refreshPasswordList()
+              // Don't nag with a bar when the user cancelled, or when the failure was already shown
+              // in a dialog (e.g. a blocked smartcard PIN).
+              if (!isCancellation(e) && !OpenPgpCardPrompt.isHandled(e)) {
+                val message =
+                  if (isGitLockError(e) || !restored) getString(R.string.git_index_locked_error)
+                  else ErrorMessages[e]
+                snackbar(message = message, length = Snackbar.LENGTH_LONG)
+              }
+            }
           updateFabSync()
         }
       }
       .setNegativeButton(R.string.dialog_no, null)
       .show()
+  }
+
+  /** Whether [error] (or a cause) is a user cancellation, e.g. dismissing the signing prompt. */
+  private fun isCancellation(error: Throwable?): Boolean {
+    var cause = error
+    while (cause != null) {
+      if (cause is CanceledException) return true
+      cause = cause.cause
+    }
+    return false
+  }
+
+  /**
+   * Whether [error] is a Git index-lock failure, usually a stale `index.lock` from an interrupted
+   * operation. The lock is never removed automatically; it can be cleared from Git configuration.
+   */
+  private fun isGitLockError(error: Throwable?): Boolean {
+    var cause = error
+    while (cause != null) {
+      if (cause is LockFailedException) return true
+      val message = cause.message.orEmpty()
+      if (message.contains("index.lock", ignoreCase = true)) return true
+      if (message.contains("Cannot lock", ignoreCase = true)) return true
+      cause = cause.cause
+    }
+    return false
   }
 
   fun movePasswords(values: List<PasswordItem>) {

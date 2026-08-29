@@ -51,8 +51,8 @@ object ErrorMessages {
     if (throwable == null) return resources.getString(R.string.git_unknown_error)
     return when (val rootCause = rootCause(throwable)) {
       is GitException -> rootCause.message
-      is UnknownHostException -> resources.getString(R.string.git_unknown_host, throwable.message)
-      else -> throwable.message ?: resources.getString(R.string.git_unknown_error)
+      is UnknownHostException -> resources.getString(R.string.git_unknown_host, rootCause.message)
+      else -> rootCause.message ?: resources.getString(R.string.git_unknown_error)
     }
   }
 

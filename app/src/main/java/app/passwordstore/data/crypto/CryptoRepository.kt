@@ -16,6 +16,9 @@ import app.passwordstore.crypto.PGPKeyManager
 import app.passwordstore.crypto.PGPainlessCryptoHandler
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.coroutines.DispatcherProvider
+import app.passwordstore.util.crypto.OpenPgpNfcCard
+import app.passwordstore.util.crypto.OpenPgpSmartcardDecryptor
+import app.passwordstore.util.crypto.OpenPgpSmartcardStore
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.filterOk
 import com.github.michaelbull.result.get
@@ -23,6 +26,7 @@ import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.map
 import com.github.michaelbull.result.mapBoth
+import com.github.michaelbull.result.mapError
 import com.github.michaelbull.result.runCatching
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -45,6 +49,8 @@ class CryptoRepository
 constructor(
   private val pgpKeyManager: PGPKeyManager,
   private val pgpCryptoHandler: PGPainlessCryptoHandler,
+  private val smartcardDecryptor: OpenPgpSmartcardDecryptor,
+  private val smartcardStore: OpenPgpSmartcardStore,
   private val dispatcherProvider: DispatcherProvider,
   @SettingsPreferences private val settings: SharedPreferences,
 ) {
@@ -61,13 +67,40 @@ constructor(
 
   fun hasDecKey(id: PGPIdentifier): Boolean {
     val key = pgpKeyManager.getKeyById(id).get()
-    return key != null && KeyUtils.hasDecKey(key)
+    return key != null && (KeyUtils.hasDecKey(key) || isSmartcardBacked(key))
+  }
+
+  fun hasOnlyStubDecKey(id: PGPIdentifier): Boolean {
+    val key = pgpKeyManager.getKeyById(id).get()
+    return key != null && KeyUtils.hasOnlyStubDecKeys(key)
+  }
+
+  fun isSmartcardBacked(id: PGPIdentifier): Boolean {
+    val key = pgpKeyManager.getKeyById(id).get()
+    return key != null && isSmartcardBacked(key)
+  }
+
+  private fun isSmartcardBacked(key: PGPKey): Boolean {
+    val primaryKeyId = KeyUtils.tryGetKeyId(key) ?: return false
+    return smartcardStore.hasAssociation(primaryKeyId)
   }
 
   fun hasAuthKey(id: PGPIdentifier): Boolean {
     val key = pgpKeyManager.getKeyById(id).get()
     return key != null && KeyUtils.hasAuthKey(key)
   }
+
+  fun hasPrivateAuthKey(id: PGPIdentifier): Boolean {
+    val key = pgpKeyManager.getKeyById(id).get()
+    return key != null && KeyUtils.hasPrivateAuthKey(key)
+  }
+
+  /**
+   * Whether [id] can be used as an SSH authentication key: either it can sign locally (has a
+   * private authentication subkey) or its authentication is delegated to an associated smartcard.
+   */
+  fun canUseForSshAuth(id: PGPIdentifier): Boolean =
+    hasPrivateAuthKey(id) || (isSmartcardBacked(id) && hasAuthKey(id))
 
   fun isPasswordProtected(identifiers: List<PGPIdentifier>, anySubkey: Boolean = false): Boolean {
     val keys = identifiers.map { pgpKeyManager.getKeyById(it) }.filterOk()
@@ -166,6 +199,28 @@ constructor(
       message
     }
   }
+
+  fun decryptWithSmartcard(
+    pin: CharArray,
+    identities: List<PGPIdentifier>,
+    encryptedMessage: ByteArrayInputStream,
+    message: ByteArrayOutputStream,
+    card: OpenPgpNfcCard,
+  ) =
+    identities.mapUntil({ it.second.isOk }) { id ->
+      encryptedMessage.reset()
+      message.reset()
+      val result = runCatching {
+        val key = pgpKeyManager.getKeyById(id).getOrThrow()
+        val primaryKeyId = KeyUtils.tryGetKeyId(key)
+        val cardFingerprints = primaryKeyId?.let { smartcardStore.getFingerprints(it) }.orEmpty()
+        smartcardDecryptor.decrypt(key, pin, encryptedMessage, message, card, cardFingerprints)
+        message
+      }
+        .mapError { app.passwordstore.crypto.errors.UnknownError(it.message, it) }
+      result.getError()?.let { logcat { it.asLog() } }
+      Pair(id.toString(), result)
+    }
 
   fun encrypt(
     identities: List<PGPIdentifier>,

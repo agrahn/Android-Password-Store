@@ -25,19 +25,34 @@
 
   <androidx.appcompat.widget.AppCompatTextView
     android:id="@+id/git_log_row_hash"
-    android:layout_width="wrap_content"
+    android:layout_width="0dp"
     android:layout_height="wrap_content"
+    android:layout_marginStart="4dp"
+    android:ellipsize="end"
+    android:maxLines="1"
     android:textColor="?attr/colorSecondary"
     android:textStyle="bold"
-    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toStartOf="@id/git_log_row_time"
+    app:layout_constraintStart_toEndOf="@id/git_log_row_signature"
     app:layout_constraintTop_toTopOf="parent"
     tools:text="Hash" />
+
+  <androidx.appcompat.widget.AppCompatImageView
+    android:id="@+id/git_log_row_signature"
+    android:layout_width="20dp"
+    android:layout_height="20dp"
+    android:importantForAccessibility="yes"
+    app:layout_constraintBottom_toBottomOf="@id/git_log_row_hash"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="@id/git_log_row_hash"
+    tools:src="@drawable/ic_lock_closed_24px" />
 
   <androidx.appcompat.widget.AppCompatTextView
     android:id="@+id/git_log_row_time"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:alpha="0.5"
+    android:layout_marginStart="@dimen/normal_margin"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintTop_toTopOf="parent"
     tools:text="Time" />
