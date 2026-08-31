@@ -10,9 +10,19 @@ Forked from the archived [Password Store](https://github.com/android-password-st
 
 ## Download
 
-- Latest [snapshot build (APK)](https://github.com/agrahn/Android-Password-Store/releases/tag/latest) of this fork
-- [GitHub Releases](https://github.com/agrahn/Android-Password-Store/releases)
-- [<img src="https://f-droid.org/assets/fdroid-logo-text_S0MUfk_FsnAYL7n2MQye-34IoSNm6QM6xYjDnMqkufo=.svg" height="32px"/>](https://f-droid.org/en/packages/app.passwordstore.agrahn)
+[<img src="https://github.com/machiav3lli/oandbackupx/blob/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png"
+    alt="Get it on GitHub"
+    height="60">](https://github.com/agrahn/Android-Password-Store/releases)
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.svg"
+    alt="Get it on F-Droid"
+    height="60">](https://f-droid.org/en/packages/app.passwordstore.agrahn)
+
+Latest [snapshot build (APK)](https://github.com/agrahn/Android-Password-Store/releases/tag/latest) of this fork
+
+Verification info:
+
+- Package ID: `app.passwordstore.agrahn`
+- SHA-256 hash of signing certificate (GitHub relases): `CA:3A:D7:C5:F9:90:BF:82:57:7C:EC:3B:9F:F9:E5:DB:C1:7E:05:2F:AB:C3:C7:58:8A:48:92:C4:15:67:12:90`
 
 ## Documentation
 
