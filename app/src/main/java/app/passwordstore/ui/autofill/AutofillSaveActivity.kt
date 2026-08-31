@@ -22,7 +22,6 @@ import app.passwordstore.util.autofill.AutofillResponseBuilder
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.wipe
-import app.passwordstore.util.settings.DirectoryStructure
 import com.github.androidpasswordstore.autofillparser.AutofillAction
 import com.github.androidpasswordstore.autofillparser.Credentials
 import com.github.androidpasswordstore.autofillparser.FormOrigin
@@ -82,14 +81,12 @@ class AutofillSaveActivity : AppCompatActivity() {
 
       val directoryStructure = AutofillPreferences.directoryStructure(context)
       val clearCredentials = credentials?.let {
-        if (directoryStructure == DirectoryStructure.EncryptedUsername)
-          listOf(
-              it.password ?: charArrayOf(),
-              "\nusername: ".toCharArray(),
-              it.username ?: charArrayOf(),
-            )
-            .joinToCharArray()
-        else it.password
+        listOf(
+            it.password ?: charArrayOf(),
+            "\nusername: ".toCharArray(),
+            it.username ?: charArrayOf(),
+          )
+          .joinToCharArray()
       }
       val encryptedCredentials = AESEncryption.encrypt(clearCredentials)
       credentials?.password?.wipe()

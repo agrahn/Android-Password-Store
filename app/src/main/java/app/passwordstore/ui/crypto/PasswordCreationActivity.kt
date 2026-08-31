@@ -231,12 +231,6 @@ class PasswordCreationActivity : BasePGPActivity() {
         }
       }
 
-      val suggestedEntry: PasswordEntry? = suggestedEntryChars?.let { encrypted ->
-        AESEncryption.decrypt(encrypted)?.let { decrypted ->
-          passwordEntryFactory.create(decrypted).also { decrypted.wipe() }
-        }
-      }
-
       directory.inputType = InputType.TYPE_NULL
       val relPath = PasswordRepository.getRelativePath(fullPath, repoPath)
       directory.setText(if (relPath.isEmpty()) "/" else relPath)
@@ -255,12 +249,16 @@ class PasswordCreationActivity : BasePGPActivity() {
         name.requestFocus()
       }
 
+      val suggestedEntry: PasswordEntry? = suggestedEntryChars?.let { encrypted ->
+        AESEncryption.decrypt(encrypted)?.let { decrypted ->
+          passwordEntryFactory.create(decrypted).also { decrypted.wipe() }
+        }
+      }
+
       if (suggestedEntry?.username != null) {
-        if (suggestedEntry?.username != null) {
-          val charBuf = CharBuffer.wrap(suggestedEntry?.username)
-          username.setText(charBuf)
-          charBuf.array().wipe()
-        } else if (suggestedName != null) username.requestFocus()
+        val charBuf = CharBuffer.wrap(suggestedEntry?.username)
+        username.setText(charBuf)
+        charBuf.array().wipe()
       }
 
       if (editing && username.text.isNullOrEmpty()) {
