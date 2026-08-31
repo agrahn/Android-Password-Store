@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+### Fixed
+
+- During PGP key selection, pressing the system navigation bar's back-button instead of the action bar's back arrow did not select the checkmarked keys(s)
+- The selected password file organisation (in General settings) is now honoured when new entries are manually created
+- During autofill, login form fields are now pre-filled with the newly created credentials
+- In case of file (work/example.org/john@doe.org) and dir-based (work/example.org/john@dow.org/password.gpg) password file organisation, the subfolder structure is now preserved when modifying the suggested destination folder on the "New password" form
+
 ## [2.0.1] - 2026-08-07
 
 ### Fixed
