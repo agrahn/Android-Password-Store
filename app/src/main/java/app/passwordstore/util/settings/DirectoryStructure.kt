@@ -13,6 +13,24 @@ enum class DirectoryStructure(val value: String) {
   DirectoryBased("directory"); // work/example.org/jon@doe.org/password.gpg
 
   /**
+   * Returns path string with at most two parent dir levels for [file] [DirectoryStructure].
+   *
+   * Examples:
+   * - example.org.gpg --> example.org
+   * - work/example.org.gpg --> work/example.org
+   * - work/example.org/john@doe.org.gpg --> work/example.org/john@doe.org
+   * - work/example.org/john@doe.org/password.gpg --> example.org/john@doe.org/password
+   */
+  fun getPathStringWithAtMostTwoParentsFor(file: File): String =
+    listOf<String?>(
+        file.parentFile?.parentFile?.name?.let { it + "/" },
+        file.parentFile?.name?.let { it + "/" },
+        file.nameWithoutExtension,
+      )
+      .filterNotNull()
+      .joinToString(separator = "")
+
+  /**
    * Returns the username associated to [file], following the convention of the current
    * [DirectoryStructure].
    *
