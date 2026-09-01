@@ -82,12 +82,9 @@ fun makeInlinePresentation(
 fun makeFillMatchMetadata(context: Context, file: File): DatasetMetadata {
   val directoryStructure = AutofillPreferences.directoryStructure(context)
   val relativeFile = file.relativeTo(PasswordRepository.getRepositoryDirectory())
-  val title =
-    directoryStructure.getIdentifierFor(relativeFile)
-      ?: directoryStructure.getAccountPartFor(relativeFile)
-      ?: throw NullPointerException()
-  val subtitle = directoryStructure.getAccountPartFor(relativeFile)
-  return DatasetMetadata(title, subtitle, R.drawable.ic_person_black_24dp)
+  val title = directoryStructure.getPathStringWithAtMostTwoParentsFor(relativeFile)
+
+  return DatasetMetadata(title, null, R.drawable.ic_person_black_24dp)
 }
 
 fun makeSearchAndFillMetadata(context: Context) =
