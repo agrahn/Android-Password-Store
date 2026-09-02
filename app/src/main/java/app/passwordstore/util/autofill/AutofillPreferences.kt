@@ -34,12 +34,13 @@ object AutofillPreferences {
     context: Context,
     file: File,
     entry: PasswordEntry,
+    origin: String?,
     directoryStructure: DirectoryStructure,
   ): Credentials {
     // Always give priority to a username stored in the encrypted extras
     val username =
       entry.username
-        ?: directoryStructure.getUsernameFor(file)?.toCharArray()
+        ?: directoryStructure.getUsernameFor(file, origin)?.toCharArray()
         ?: context.getDefaultUsername()?.toCharArray()
     val totp = if (entry.hasTotp()) entry.currentOtp.value else null
     return Credentials(username, entry.password, totp)

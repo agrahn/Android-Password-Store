@@ -4,6 +4,7 @@
  */
 package app.passwordstore.util.settings
 
+import app.passwordstore.data.repo.PasswordRepository
 import java.io.File
 import java.nio.file.Paths
 
@@ -31,8 +32,7 @@ enum class DirectoryStructure(val value: String) {
       .joinToString(separator = "")
 
   /**
-   * Returns the username associated to [file], following the convention of the current
-   * [DirectoryStructure].
+   * Returns the username associated with [file]
    *
    * Examples:
    * - * --> null (EncryptedUsername)
@@ -40,12 +40,24 @@ enum class DirectoryStructure(val value: String) {
    * - work/example.org/john@doe.org/password.gpg --> john@doe.org (DirectoryBased)
    * - Temporary PIN.gpg --> Temporary PIN (DirectoryBased, fallback)
    */
-  fun getUsernameFor(file: File): String? =
-    when (this) {
-      EncryptedUsername -> null
-      FileBased -> file.nameWithoutExtension
-      DirectoryBased -> file.parentFile?.name ?: file.nameWithoutExtension
+  fun getUsernameFor(file: File, origin: String? = null): String? {
+    val passFile =
+      if (file.isAbsolute()) file.relativeTo(PasswordRepository.getRepositoryDirectory()) else file
+
+    return if (origin != null) {
+      when (origin) {
+        passFile.parentFile?.parentFile?.name -> passFile.parentFile?.name // DirectoryBased
+        passFile.parentFile?.name -> passFile.nameWithoutExtension // FileBased
+        else -> null // EncryptedUsername or no-match
+      }
+    } else {
+      when (this) { // current directory structure setting as fallback for missing origin
+        EncryptedUsername -> null
+        FileBased -> passFile.nameWithoutExtension
+        DirectoryBased -> passFile.parentFile?.name ?: passFile.nameWithoutExtension
+      }
     }
+  }
 
   /**
    * Returns the origin identifier associated to [file], following the convention of the current
