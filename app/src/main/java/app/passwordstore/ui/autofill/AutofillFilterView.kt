@@ -51,8 +51,8 @@ class AutofillFilterView : AppCompatActivity() {
 
   companion object {
 
-    private const val HEIGHT_PERCENTAGE = 0.9
-    private const val WIDTH_PERCENTAGE = 0.75
+    private const val HEIGHT_PERCENTAGE = .95
+    private const val WIDTH_PERCENTAGE = .95
 
     private const val EXTRA_FORM_ORIGIN_WEB =
       "app.passwordstore.autofill.oreo.ui.EXTRA_FORM_ORIGIN_WEB"
@@ -147,42 +147,6 @@ class AutofillFilterView : AppCompatActivity() {
     val strictDomainSearchPref =
       formOrigin is FormOrigin.Web && AutofillPreferences.strictDomainSearch(this)
     with(binding) {
-      rvPassword.apply {
-        adapter =
-          SearchableRepositoryAdapter(
-              R.layout.oreo_autofill_filter_row,
-              ::PasswordViewHolder,
-              lifecycleScope,
-              dispatcherProvider,
-            ) { item, _ ->
-              val file = item.file.relativeTo(item.rootDir)
-              val pathToIdentifier = directoryStructure.getPathToIdentifierFor(file)
-              val identifier = directoryStructure.getIdentifierFor(file)
-              val accountPart = directoryStructure.getAccountPartFor(file)
-              check(identifier != null || accountPart != null) {
-                "At least one of identifier and accountPart should always be non-null"
-              }
-              title.text =
-                if (identifier != null) {
-                  buildSpannedString {
-                    if (pathToIdentifier != null) append("$pathToIdentifier/")
-                    bold { underline { append(identifier) } }
-                  }
-                } else {
-                  accountPart
-                }
-              subtitle.apply {
-                if (identifier != null && accountPart != null) {
-                  text = accountPart
-                  visibility = View.VISIBLE
-                } else {
-                  visibility = View.GONE
-                }
-              }
-            }
-            .onItemClicked { _, item -> decryptAndFill(item) }
-        layoutManager = LinearLayoutManager(context)
-      }
       search.apply {
         val initialSearch = formOrigin.getPrettyIdentifier(applicationContext, untrusted = false)
         setText(initialSearch, TextView.BufferType.EDITABLE)
@@ -224,6 +188,42 @@ class AutofillFilterView : AppCompatActivity() {
     }
   }
 
+  private fun buildResultList() {
+    binding.rvPassword.apply {
+      adapter =
+        SearchableRepositoryAdapter(
+            R.layout.oreo_autofill_filter_row,
+            ::PasswordViewHolder,
+            lifecycleScope,
+            dispatcherProvider,
+          ) { item, _ ->
+            val file = item.file.relativeTo(item.rootDir)
+            val pathString =
+              file.parentFile?.let { parentFile -> "${parentFile}/${file.nameWithoutExtension}" }
+                ?: file.nameWithoutExtension
+
+            val searchString = binding.search.text.toString().trim()
+            val parts = pathString.split(searchString, ignoreCase = true)
+            val matches =
+              Regex(Regex.escape(searchString), RegexOption.IGNORE_CASE)
+                .findAll(pathString)
+                .map { it.value }
+                .toList()
+
+            title.text = buildSpannedString {
+              parts.getOrNull(0)?.let { append(it) }
+              matches.forEachIndexed { i, m ->
+                bold { underline { append(m) } }
+                parts.getOrNull(i + 1)?.let { append(it) }
+              }
+            }
+            subtitle.text = directoryStructure.getPathStringWithAtMostTwoParentsFor(file)
+          }
+          .onItemClicked { _, item -> decryptAndFill(item) }
+      layoutManager = LinearLayoutManager(context)
+    }
+  }
+
   private fun updateSearch() {
     if (formOrigin is FormOrigin.Web)
       AutofillPreferences.setStrictDomainSearch(this, binding.strictDomainSearch.isChecked)
@@ -234,6 +234,7 @@ class AutofillFilterView : AppCompatActivity() {
       searchMode = SearchMode.RecursivelyInSubdirectories,
       listMode = ListMode.FilesOnly,
     )
+    buildResultList()
   }
 
   private fun decryptAndFill(item: PasswordItem) {
