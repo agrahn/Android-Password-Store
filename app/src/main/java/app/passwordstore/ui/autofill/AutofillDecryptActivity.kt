@@ -29,6 +29,7 @@ import app.passwordstore.util.extensions.toCharArray
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.androidpasswordstore.autofillparser.AutofillAction
+import com.github.androidpasswordstore.autofillparser.FormOrigin
 import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.getOrThrow
 import dagger.hilt.android.AndroidEntryPoint
@@ -106,6 +107,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
           this,
           encryptedFile,
           entry,
+          origin,
           directoryStructure,
         )
       val fillInDataset =
@@ -185,6 +187,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
 
   companion object {
 
+    var origin: String? = null
     private const val EXTRA_FILE_PATH = "app.passwordstore.autofill.oreo.EXTRA_FILE_PATH"
     private const val EXTRA_SEARCH_ACTION = "app.passwordstore.autofill.oreo.EXTRA_SEARCH_ACTION"
 
@@ -199,7 +202,13 @@ class AutofillDecryptActivity : BasePGPActivity() {
       }
     }
 
-    fun makeDecryptFileIntentSender(file: File, context: Context): IntentSender {
+    fun makeDecryptFileIntentSender(
+      file: File,
+      context: Context,
+      formOrigin: FormOrigin,
+    ): IntentSender {
+      origin = formOrigin.getPrettyIdentifier(context, untrusted = false) // web origin or app name
+
       val intent =
         Intent(context, AutofillDecryptActivity::class.java).apply {
           putExtra(EXTRA_SEARCH_ACTION, false)
