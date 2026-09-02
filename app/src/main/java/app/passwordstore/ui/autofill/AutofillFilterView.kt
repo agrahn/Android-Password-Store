@@ -202,7 +202,7 @@ class AutofillFilterView : AppCompatActivity() {
               file.parentFile?.let { parentFile -> "${parentFile}/${file.nameWithoutExtension}" }
                 ?: file.nameWithoutExtension
 
-            val searchString = binding.search.text.toString().trim()
+            val searchString = binding.search.text.toString()
             val parts = pathString.split(searchString, ignoreCase = true)
             val matches =
               Regex(Regex.escape(searchString), RegexOption.IGNORE_CASE)
@@ -213,7 +213,9 @@ class AutofillFilterView : AppCompatActivity() {
             title.text = buildSpannedString {
               parts.getOrNull(0)?.let { append(it) }
               matches.forEachIndexed { i, m ->
-                bold { underline { append(m) } }
+                if (i == 0 || parts.getOrNull(i)?.isNotEmpty() ?: false)
+                  bold { underline { append(m) } }
+                else append(m)
                 parts.getOrNull(i + 1)?.let { append(it) }
               }
             }
@@ -228,7 +230,7 @@ class AutofillFilterView : AppCompatActivity() {
     if (formOrigin is FormOrigin.Web)
       AutofillPreferences.setStrictDomainSearch(this, binding.strictDomainSearch.isChecked)
     model.search(
-      binding.search.text.toString().trim(),
+      binding.search.text.toString(),
       filterMode =
         if (binding.strictDomainSearch.isChecked) FilterMode.StrictDomain else FilterMode.Fuzzy,
       searchMode = SearchMode.RecursivelyInSubdirectories,
