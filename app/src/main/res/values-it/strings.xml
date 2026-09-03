@@ -160,7 +160,6 @@
   <!-- Oreo Autofill -->
   <string name="oreo_autofill_select_and_fill_into">Seleziona la voce da compilare</string>
   <string name="oreo_autofill_strict_domain_search">Ricerca resistente al phishing</string>
-  <string name="oreo_autofill_match_with">Abbina con %1$s</string>
   <string name="oreo_autofill_matches_clear_existing">Cancella abbinamenti esistenti</string>
   <string name="oreo_autofill_filter_no_results">Nessun risultato.</string>
   <string name="oreo_autofill_search_in_store">Cerca la voce</string>

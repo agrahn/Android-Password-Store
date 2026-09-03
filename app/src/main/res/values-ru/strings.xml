@@ -169,7 +169,6 @@
   <!-- Oreo Autofill -->
   <string name="oreo_autofill_select_and_fill_into">Выберите запись для заполнения</string>
   <string name="oreo_autofill_strict_domain_search">Устойчивый к фишингу поиск</string>
-  <string name="oreo_autofill_match_with">Совпадает с %1$s</string>
   <string name="oreo_autofill_matches_clear_existing">Очистить существующие совпадения</string>
   <string name="oreo_autofill_filter_no_results">Не найдено.</string>
   <string name="oreo_autofill_search_in_store">Искать в хранилище</string>

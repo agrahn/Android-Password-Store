@@ -162,11 +162,17 @@ class AutofillFilterView : AppCompatActivity() {
         isChecked = strictDomainSearchPref
         setOnCheckedChangeListener { _, _ -> updateSearch() }
       }
-      shouldMatch.text =
-        getString(
-          R.string.oreo_autofill_match_with,
-          formOrigin.getPrettyIdentifier(applicationContext),
-        )
+      shouldMatch.apply {
+        text =
+          getString(
+            R.string.oreo_autofill_match_with,
+            formOrigin.getPrettyIdentifier(applicationContext),
+          )
+        isChecked = AutofillPreferences.addQuickSelectButton(applicationContext)
+      }
+      shouldClear.apply {
+        isChecked = AutofillPreferences.removeQuickSelectButtons(applicationContext)
+      }
       lifecycleScope.launch { handleSearchResults() }
     }
   }
@@ -228,7 +234,7 @@ class AutofillFilterView : AppCompatActivity() {
 
   private fun updateSearch() {
     if (formOrigin is FormOrigin.Web)
-      AutofillPreferences.setStrictDomainSearch(this, binding.strictDomainSearch.isChecked)
+      AutofillPreferences.strictDomainSearch(this, binding.strictDomainSearch.isChecked)
     model.search(
       binding.search.text.toString(),
       filterMode =
@@ -240,8 +246,10 @@ class AutofillFilterView : AppCompatActivity() {
   }
 
   private fun decryptAndFill(item: PasswordItem) {
+    AutofillPreferences.removeQuickSelectButtons(this, binding.shouldClear.isChecked)
     if (binding.shouldClear.isChecked)
       AutofillMatcher.clearMatchesFor(applicationContext, formOrigin)
+    AutofillPreferences.addQuickSelectButton(this, binding.shouldMatch.isChecked)
     if (binding.shouldMatch.isChecked)
       AutofillMatcher.addMatchFor(applicationContext, formOrigin, item.file)
     // intent?.extras? is checked to be non-null in onCreate

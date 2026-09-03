@@ -171,7 +171,6 @@
   <!-- Oreo Autofill -->
   <string name="oreo_autofill_select_and_fill_into">Selecione a entrada para preencher</string>
   <string name="oreo_autofill_strict_domain_search">Busca resistente a phishing</string>
-  <string name="oreo_autofill_match_with">Combinar com %1$s</string>
   <string name="oreo_autofill_matches_clear_existing">Limpar correspondências existentes</string>
   <string name="oreo_autofill_filter_no_results">Sem resultados.</string>
   <string name="oreo_autofill_search_in_store">Pesquisar no armazenamento…</string>

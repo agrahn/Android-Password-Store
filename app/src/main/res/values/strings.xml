@@ -240,8 +240,8 @@
   <!-- Oreo Autofill -->
   <string name="oreo_autofill_select_and_fill_into">Select entry to fill into</string>
   <string name="oreo_autofill_strict_domain_search">Phishing-resistant search</string>
-  <string name="oreo_autofill_match_with">Match with %1$s</string>
-  <string name="oreo_autofill_matches_clear_existing">Clear existing matches</string>
+  <string name="oreo_autofill_match_with">Add quick select button for %1$s</string>
+  <string name="oreo_autofill_matches_clear_existing">Remove quick select buttons</string>
   <string name="oreo_autofill_filter_no_results">No results.</string>
   <string name="oreo_autofill_search_in_store">Search entry</string>
   <string name="oreo_autofill_save_internal_error">Save failed due to an internal error.</string>
@@ -328,7 +328,7 @@
   <string name="bottom_sheet_create_pgp_key">Create new key</string>
   <string name="pref_debug_logging_summary">Enable debug logging (requires app restart).</string>
   <string name="pref_debug_logging_title">Debug logging</string>
-  <string name="preference_default_username_summary">If the autofill function cannot retrieve the username from the contents of a password file, the value specified here will be used.</string>
+  <string name="preference_default_username_summary">If the autofill function cannot lookup the username from the password file\'s contents or context, the value specified here will be used.</string>
   <string name="preference_default_username_title">Default username</string>
   <string name="git_operation_hint_password">Password</string>
   <string name="preference_custom_public_suffixes_title">Custom domains</string>

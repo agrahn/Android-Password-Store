@@ -165,7 +165,6 @@
   <!-- Oreo Autofill -->
   <string name="oreo_autofill_select_and_fill_into">Sélectionnez l\'entrée à remplir</string>
   <string name="oreo_autofill_strict_domain_search">Recherche protégée contre le hameçonnage</string>
-  <string name="oreo_autofill_match_with">Apparier avec %1$s</string>
   <string name="oreo_autofill_matches_clear_existing">Effacer l’appairage actuel</string>
   <string name="oreo_autofill_filter_no_results">Aucun résultat.</string>
   <string name="oreo_autofill_search_in_store">Rechercher l\'entrée</string>

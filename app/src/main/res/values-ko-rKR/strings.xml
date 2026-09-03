@@ -170,7 +170,6 @@
   <!-- Oreo Autofill -->
   <string name="oreo_autofill_select_and_fill_into">입력할 항목 선택</string>
   <string name="oreo_autofill_strict_domain_search">피싱 방지 검색</string>
-  <string name="oreo_autofill_match_with">%1$s와 일치</string>
   <string name="oreo_autofill_matches_clear_existing">기존 일치 항목 지우기</string>
   <string name="oreo_autofill_filter_no_results">검색 결과가 없습니다.</string>
   <string name="oreo_autofill_search_in_store">검색 항목</string>

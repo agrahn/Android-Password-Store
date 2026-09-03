@@ -172,7 +172,6 @@
   <!-- Oreo Autofill -->
   <string name="oreo_autofill_select_and_fill_into">Elixe o elemento a completar</string>
   <string name="oreo_autofill_strict_domain_search">Busca resistente ao phishing</string>
-  <string name="oreo_autofill_match_with">Coincidencia con %1$s</string>
   <string name="oreo_autofill_matches_clear_existing">Limpar coincidencias existentes</string>
   <string name="oreo_autofill_filter_no_results">Sen resultados.</string>
   <string name="oreo_autofill_search_in_store">Buscar elemento</string>

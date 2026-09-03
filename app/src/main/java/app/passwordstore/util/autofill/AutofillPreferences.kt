@@ -22,13 +22,20 @@ object AutofillPreferences {
     return DirectoryStructure.fromValue(value)
   }
 
-  fun strictDomainSearch(context: Context): Boolean {
-    return context.sharedPrefs.getBoolean(PreferenceKeys.STRICT_DOMAIN_SEARCH, true)
-  }
+  fun strictDomainSearch(context: Context, strict: Boolean? = null): Boolean =
+    strict?.also {
+      context.sharedPrefs.edit { putBoolean(PreferenceKeys.STRICT_DOMAIN_SEARCH, strict) }
+    } ?: context.sharedPrefs.getBoolean(PreferenceKeys.STRICT_DOMAIN_SEARCH, true)
 
-  fun setStrictDomainSearch(context: Context, strict: Boolean) {
-    context.sharedPrefs.edit { putBoolean(PreferenceKeys.STRICT_DOMAIN_SEARCH, strict) }
-  }
+  fun addQuickSelectButton(context: Context, enabled: Boolean? = null): Boolean =
+    enabled?.also {
+      context.sharedPrefs.edit { putBoolean(PreferenceKeys.DOMAIN_QUICK_SELECT_ADD, enabled) }
+    } ?: context.sharedPrefs.getBoolean(PreferenceKeys.DOMAIN_QUICK_SELECT_ADD, true)
+
+  fun removeQuickSelectButtons(context: Context, enabled: Boolean? = null): Boolean =
+    enabled?.also {
+      context.sharedPrefs.edit { putBoolean(PreferenceKeys.DOMAIN_QUICK_SELECT_REMOVE, enabled) }
+    } ?: context.sharedPrefs.getBoolean(PreferenceKeys.DOMAIN_QUICK_SELECT_REMOVE, false)
 
   fun credentialsFromStoreEntry(
     context: Context,
