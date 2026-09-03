@@ -208,7 +208,6 @@
   <!-- Oreo Autofill -->
   <string name="oreo_autofill_select_and_fill_into">Seleccione la entrada para completar</string>
   <string name="oreo_autofill_strict_domain_search">Búsqueda resistente al phishing</string>
-  <string name="oreo_autofill_match_with">Match with %1$s</string>
   <string name="oreo_autofill_matches_clear_existing">Borrar coincidencias existentes</string>
   <string name="oreo_autofill_filter_no_results">Sin resultados.</string>
   <string name="oreo_autofill_search_in_store">Entrada de búsqueda</string>

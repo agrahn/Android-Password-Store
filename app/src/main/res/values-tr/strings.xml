@@ -204,7 +204,6 @@
   <!-- Oreo Autofill -->
   <string name="oreo_autofill_select_and_fill_into">Doldurulacak girdiyi seç</string>
   <string name="oreo_autofill_strict_domain_search">Kimlik avına dayanıklı arama</string>
-  <string name="oreo_autofill_match_with">%1$s ile eşleştir</string>
   <string name="oreo_autofill_matches_clear_existing">Mevcut eşleşmeleri temizle</string>
   <string name="oreo_autofill_filter_no_results">Sonuç yok.</string>
   <string name="oreo_autofill_search_in_store">Girdi ara</string>

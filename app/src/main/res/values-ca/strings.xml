@@ -169,7 +169,6 @@
     <string name="app_icon_hint">Icona de l\'aplicació</string>
     <string name="oreo_autofill_select_and_fill_into">Selecciona l\'entrada a omplir</string>
     <string name="oreo_autofill_strict_domain_search">Cerca resistent al Phishing</string>
-    <string name="oreo_autofill_match_with">Coincideix amb %1$s</string>
     <string name="oreo_autofill_matches_clear_existing">Neteja les concordances</string>
     <string name="oreo_autofill_filter_no_results">Sense resultats.</string>
     <string name="oreo_autofill_search_in_store">Entrada de la cerca</string>

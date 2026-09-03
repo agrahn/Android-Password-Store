@@ -174,7 +174,6 @@
   <!-- Oreo Autofill -->
   <string name="oreo_autofill_select_and_fill_into">选择要填写的条目</string>
   <string name="oreo_autofill_strict_domain_search">防钓鱼搜索</string>
-  <string name="oreo_autofill_match_with">与%1$s匹配</string>
   <string name="oreo_autofill_matches_clear_existing">清除现有匹配</string>
   <string name="oreo_autofill_filter_no_results">无返回值</string>
   <string name="oreo_autofill_search_in_store">在存储库搜索…</string>

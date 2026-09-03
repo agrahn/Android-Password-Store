@@ -237,8 +237,8 @@
   <!-- Oreo Autofill -->
   <string name="oreo_autofill_select_and_fill_into">Eintrag zum Ausfüllen auswählen</string>
   <string name="oreo_autofill_strict_domain_search">Phishing-resistente Suche</string>
-  <string name="oreo_autofill_match_with">Übereinstimmung mit %1$s</string>
-  <string name="oreo_autofill_matches_clear_existing">Bestehende Übereinstimmungen löschen</string>
+  <string name="oreo_autofill_match_with">Schnellauswahltaste für %1$s hinzufügen</string>
+  <string name="oreo_autofill_matches_clear_existing">Schnellauswahltasten entfernen</string>
   <string name="oreo_autofill_filter_no_results">Keine Ergebnisse</string>
   <string name="oreo_autofill_search_in_store">Eintrag suchen</string>
   <string name="oreo_autofill_save_internal_error">Speichern aufgrund eines internen Fehlers fehlgeschlagen.</string>
@@ -325,7 +325,7 @@
   <string name="bottom_sheet_create_pgp_key">Neuen Schlüssel erstellen</string>
   <string name="pref_debug_logging_summary">Debug-Ausgaben aktivieren (Erfordert Neustart der App).</string>
   <string name="pref_debug_logging_title">Debug-Logging</string>
-  <string name="preference_default_username_summary">Kann die Autofill-Funktion den Benutzernamen nicht aus dem Inhalt einer Passwortdatei abrufen, wird der hier angegebene Wert verwendet.</string>
+  <string name="preference_default_username_summary">Kann die Autofill-Funktion den Benutzernamen nicht aus dem Inhalt oder dem Kontext einer Passwortdatei ermitteln, wird der hier angegebene Wert verwendet.</string>
   <string name="preference_default_username_title">Standard-Benutzername</string>
   <string name="git_operation_hint_password">Passwort</string>
   <string name="preference_custom_public_suffixes_title">Benutzerdefinierte Domains</string>
