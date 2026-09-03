@@ -38,6 +38,11 @@ android {
 
 dependencies {
   implementation(platform(libs.compose.bom))
+  implementation(platform(libs.thirdparty.bouncycastle.bom))
+  implementation(libs.thirdparty.bouncycastle.bcpkix)
+  implementation(libs.thirdparty.bouncycastle.bcprov)
+  implementation(libs.thirdparty.bouncycastle.bcutil)
+  implementation(libs.thirdparty.bouncycastle.bcpg)
   ksp(libs.dagger.hilt.compiler)
   implementation(libs.androidx.annotation)
   coreLibraryDesugaring(libs.android.desugarJdkLibs)
@@ -88,10 +93,6 @@ dependencies {
   implementation(libs.thirdparty.logcat)
   implementation(libs.thirdparty.modernAndroidPrefs)
   implementation(libs.thirdparty.sshj)
-  implementation(libs.thirdparty.bouncycastle.bcpkix)
-  implementation(libs.thirdparty.bouncycastle.bcprov)
-  implementation(libs.thirdparty.bouncycastle.bcutil)
-  implementation(libs.thirdparty.bouncycastle.bcpg)
 
   implementation(libs.thirdparty.slf4j.api) {
     because("SSHJ now uses SLF4J 2.0 which we don't want")

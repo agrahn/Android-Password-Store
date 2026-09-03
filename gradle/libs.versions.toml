@@ -1,8 +1,7 @@
 [versions]
 agp = "9.4.0"
 androidxActivity = "1.13.0"
-bouncycastle = "1.85"
-bouncycastle-bcprov = "1.85.2"
+bouncycastle = "1.85.2"
 coroutines = "1.11.0"
 serialization = "1.11.0"
 flowbinding = "1.2.0"
@@ -71,10 +70,11 @@ testing-robolectric = "org.robolectric:robolectric:4.16.1"
 testing-sharedPrefsMock = "com.github.android-password-store:shared-preferences-fake:2.0.0"
 testing-testparameterinjector = "com.google.testparameterinjector:test-parameter-injector:1.22"
 testing-turbine = "app.cash.turbine:turbine:1.2.1"
-thirdparty-bouncycastle-bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
-thirdparty-bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle-bcprov" }
-thirdparty-bouncycastle-bcutil = { module = "org.bouncycastle:bcutil-jdk18on", version.ref = "bouncycastle" }
-thirdparty-bouncycastle-bcpg = { module = "org.bouncycastle:bcpg-jdk18on", version.ref = "bouncycastle" }
+thirdparty-bouncycastle-bom = { module = "org.bouncycastle:bc-jdk18on-bom", version.ref = "bouncycastle" }
+thirdparty-bouncycastle-bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on" }
+thirdparty-bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk18on" }
+thirdparty-bouncycastle-bcutil = { module = "org.bouncycastle:bcutil-jdk18on" }
+thirdparty-bouncycastle-bcpg = { module = "org.bouncycastle:bcpg-jdk18on" }
 thirdparty-commons_codec = "commons-codec:commons-codec:1.22.1"
 thirdparty-compose-lints = "com.slack.lint.compose:compose-lint-checks:1.6.0"
 thirdparty-fastscroll = "me.zhanghai.android.fastscroll:library:1.3.0"
