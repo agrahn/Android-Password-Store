@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file
 
 ### Fixed
 
+- Alert dialogs no longer get clipped by the keyboard on short screens
 - During PGP key selection, pressing the system navigation bar's back-button instead of the action bar's back arrow did not select the checkmarked key(s)
 - The selected password file organisation (in General settings) is now honoured when new entries are manually created
 - During autofill, login form fields are now pre-filled with the newly created credentials

@@ -12,6 +12,7 @@
     <item name="android:navigationBarColor">?android:colorBackground</item>
     <item name="toolbarStyle">@style/APSThemeM3.Toolbar</item>
     <item name="bottomSheetDialogTheme">@style/APSThemeM3.BottomSheetDialog</item>
+    <item name="materialAlertDialogTheme">@style/APSThemeM3.AlertDialog</item>
   </style>
 
   <style name="NoBackgroundThemeM3" parent="@style/AppThemeM3">
@@ -42,6 +43,15 @@
     <item name="android:windowIsFloating">false</item>
     <item name="android:statusBarColor">@android:color/transparent</item>
     <item name="android:navigationBarColor">@android:color/transparent</item>
+  </style>
+
+  <style name="APSThemeM3.AlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+    <item name="alertDialogStyle">@style/APSThemeM3.AlertDialog.Style</item>
+  </style>
+
+  <style name="APSThemeM3.AlertDialog.Style" parent="MaterialAlertDialog.Material3">
+    <item name="backgroundInsetTop">0dp</item>
+    <item name="backgroundInsetBottom">0dp</item>
   </style>
 
   <style name="APSThemeM3" parent="Theme.Material3.DayNight">
