@@ -40,7 +40,7 @@ class PinDialog : DialogFragment() {
     binding.descriptionText.setText(descriptionText)
 
     builder.setPositiveButton(android.R.string.ok) { _, _ -> setPinAndDismiss() }
-    builder.setNegativeButton(android.R.string.cancel) { d, _ -> d.cancel() }
+    builder.setNegativeButton(R.string.dialog_cancel) { d, _ -> d.cancel() }
 
     val dialog = builder.create()
 

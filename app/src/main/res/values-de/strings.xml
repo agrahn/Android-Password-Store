@@ -16,7 +16,7 @@
   <string name="dialog_delete_title">Ordner existiert bereits</string>
   <string name="dialog_delete_msg">Zielordner existiert bereits. Die aktuelle Version unterstützt nur eine einzige Datenquelle. Möchten Sie die aktuelle Datenquelle löschen?\n(%1$s)</string>
   <string name="dialog_delete">Ordner löschen</string>
-  <string name="dialog_do_not_delete">Abbruch</string>
+  <string name="dialog_do_not_delete">Abbrechen</string>
   <string name="title_activity_git_clone">Repository-Informationen</string>
   <string name="title_activity_git_config">Git-Konfiguration</string>
   <string name="title_activity_git_log">Commit-Log</string>
@@ -218,7 +218,7 @@
   <string name="dialog_ok">OK</string>
   <string name="dialog_yes">Ja</string>
   <string name="dialog_no">Nein</string>
-  <string name="dialog_cancel">Abbruch</string>
+  <string name="dialog_cancel">Abbrechen</string>
   <string name="git_sync">Synchronisiere Repository</string>
   <string name="git_pull">Git Pull</string>
   <string name="git_push">Git Push</string>
@@ -246,8 +246,8 @@
   <string name="oreo_autofill_save_passwords_dont_match">Die Passwörter stimmen nicht überein.</string>
   <string name="oreo_autofill_generate_password">Passwort erstellen…</string>
   <string name="oreo_autofill_max_matches_reached">Maximale Anzahl an Übereinstimmungen (%1$d) erreicht; lösche Übereinstimmungen, bevor neue hinzugefügt werden.</string>
-  <string name="oreo_autofill_warning_publisher_header">Der Hersteller dieser App hat sich geändert, seit Sie einen Eintrag zum Passwort-Speicher mit ihr verknüpft haben: </string>
-  <string name="oreo_autofill_warning_publisher_footer"><b>Die derzeit installierte App versucht, Ihre Anmeldeinformationen zu stehlen, indem sie vorgibt, eine vertrauenswürdige App zu sein.</b>\n\nVersuchen Sie, die App zu deinstallieren und installieren Sie sie erneut aus einer vertrauenswürdigen Quelle wie dem Play Store, Amazon Appstore, F-Droid oder dem Shop Ihres Telefonherstellers.</string>
+  <string name="oreo_autofill_warning_publisher_header">Der Signatur dieser App hat sich geändert, seit Sie einen Eintrag zum Passwort-Speicher mit ihr verknüpft haben: </string>
+  <string name="oreo_autofill_warning_publisher_footer"><b>Die derzeit installierte App versucht, Ihre Anmeldeinformationen zu stehlen, indem sie vorgibt, eine vertrauenswürdige App zu sein.</b>\n\n Es wird dringend empfohlen, die App zu deinstallieren und aus einer vertrauenswürdigen Quelle wie dem Play Store, Amazon Appstore, F-Droid oder dem Shop Ihres Telefonherstellers erneut zu installieren.</string>
   <string name="oreo_autofill_warning_publisher_install_time">Installiert: %1$s</string>
 
   <string name="oreo_autofill_warning_publisher_advanced_info_template">Paket:\n%1$s\n\nHash:\n%2$s</string>
@@ -307,7 +307,7 @@
   <string name="git_server_hostkey_dialog_title">Fingerabdruck des %s-Hostschlüssels</string>
   <string name="git_server_hostkey_dialog_message">%s\n\nÜberprüfen Sie die Korrektheit des Fingerabdrucks vor dem Verbinden.</string>
   <string name="git_server_hostkey_dialog_connect">Verbinden</string>
-  <string name="git_server_hostkey_dialog_abort">Abbruch</string>
+  <string name="git_server_hostkey_dialog_abort">Abbrechen</string>
   <string name="git_server_config_save_success">Konfiguration erfolgreich gespeichert</string>
   <string name="git_server_config_save_error">Die angegebene Repository-URL ist ungültig.</string>
   <string name="git_server_config_save_missing_username_https">Bitte geben Sie den HTTPS-Benutzernamen in der Form https://username@example.com/… an.</string>
@@ -351,8 +351,8 @@
   <string name="empty_gpg_id">.gpg-id wurde gefunden, ist jedoch leer.</string>
   <string name="missing_gpg_id">.gpg-id wurde nicht gefunden.</string>
   <string name="short_gpg_id">.gpg-id wurde gefunden, enthält jedoch eine kurze Hex-ID, die nicht unterstützt wird.</string>
-  <string name="invalid_filename_text">Der Dateiname darf kein \'/\' enthalten; Verzeichnis oben setzen.</string>
-  <string name="invalid_name_text">Der Name darf kein \'/\' enthalten; Verzeichnis oben setzen.</string>
+  <string name="invalid_filename_text">Der Dateiname darf kein ‚/‘ enthalten; Verzeichnis oben setzen.</string>
+  <string name="invalid_name_text">Der Name darf kein ‚/‘ enthalten; Verzeichnis oben setzen.</string>
   <string name="directory_hint">Ordner</string>
   <string name="new_folder_set_gpg_key">PGP-Schlüssel für Ordner festlegen</string>
 
@@ -362,7 +362,7 @@
 
   <!-- GitException messages -->
   <string name="git_unknown_error">Unbekannter Fehler</string>
-  <string name="git_pull_rebase_fail_error">Pull fehlgeschlagen. Sie befinden sich in einem abgelösten Head. Speichern Sie die Änderungen in „Einstellungen &gt; Lokale Git-Konfiguration &amp; Dienstprogramme“ auf das Remote-Repository in einem neuen Branch und lösen Sie den Konflikt auf Ihrem Computer auf.</string>
+  <string name="git_pull_rebase_fail_error">Pull fehlgeschlagen. Sie befinden sich in einem abgelösten Head. Verwenden Sie „Einstellungen &gt; Repository &gt; Lokale Git-Konfiguration &amp; Dienstprogramme &gt; Rebase abbrechen und neuen Branch pushen“ zum Speichern der Änderungen in einem neuen Branch des Remote-Repositorys und lösen Sie den Konflikt dort.</string>
   <string name="git_pull_merge_fail_error">Merge fehlgeschlagen. Sie befinden sich in einem Konflikt. TODO: Wiederherstellungsmethode hinzufügen.</string>
 
   <string name="git_push_nff_error">Push wurde vom Remote abgelehnt. Führen Sie den Pull vor dem Push aus. Sie können „Synchronisieren“ statt Pull/Push nutzen, da es beides implementiert.</string>
@@ -379,7 +379,7 @@
   <string name="folder_creation_err_folder_exists">Ein Ordner mit diesem Namen existiert bereits.</string>
 
   <!-- Onboarding flow -->
-  <string name="let_s_go">Los geht\'s</string>
+  <string name="let_s_go">Los geht’s</string>
   <string name="select_n_repository_type">Wählen Sie einen \nRepository-Typ.</string>
   <string name="select_repo_type_text">Wählen Sie aus, ob Sie ein lokales Repository anlegen, oder ein Remote-Repository klonen möchten.</string>
   <string name="clone_remote_repo">Remote-Repository klonen</string>
@@ -515,11 +515,17 @@
   <string name="rp_name_hint">Gegenstellen-ID</string>
   <string name="fullname_hint">Vollständiger Benutzername</string>
   <string name="reveal_passkey_username">Benutzernamen in der Passkey-Auswahl anzeigen</string>
-  <string name="passkey_authentication_error_title">Fehler bei der Passkey-Authentifizierung</string>
+  <string name="passkey_authentication_error_title">Fehler bei der Passkey-Authentisierung</string>
   <string name="passkey_biometric_auth_missing_error">Für die Passkey-Erstellung muss eine Bildschirmsperre eingerichtet sein. Überprüfen Sie die Geräteeinstellungen.</string>
   <string name="passkey_parse_error_message">Fehler beim Lesen von\n\n%1$s\n\nDie Datei scheint keine gültigen Passkey-Daten zu enthalten.</string>
   <string name="passkey_mismatch_error_message">Die Passkey-Daten in der Datei\n\n%1$s\n\npassen nicht zum Datei- und zum Verzeichnisnamen.</string>
-  <string name="passkey_sign_error_message">Die Signatur konnte nicht erzeugt werden:\n\n%1$s</string>
+  <string name="passkey_authentication_error_message">Die Authentisierung ist aus folgendem Grund fehlgeschlagen:\n\n%1$s</string>
   <string name="passkey_request_error_message">Keine Aufforderung zum Authentisieren von der Gegenstelle empfangen</string>
 
+  <string name="passkey_caller_wrong_signature">Der Passkey-Vorgang ist fehlgeschlagen, weil die Signatur der anfragenden App %1$s ungültig ist. Es handelt sich möglicherweise um eine bösartige App. Es wird dringend empfohlen, die App zu deinstallieren und aus einer vertrauenswürdigen Quelle erneut zu installieren.</string>
+  <string name="passkey_caller_user_trust">Der Passkey-Vorgang wurde angehalten, weil die anfragende App %1$s unbekannt ist. Wenn Sie sich der Echtheit der App nicht sicher sind, wählen Sie „Abbrechen“ (empfohlen). Wählen Sie „Vertrauen“, wenn Sie dennoch fortfahren wollen.</string>
+  <string name="passkey_caller_relying_party_not_identified">Der Passkey-Vorgang ist fehlgeschlagen, weil die Gegenstelle %1$s nicht identifiziert werden konnte.</string>
+  <string name="passkey_caller_missing_asset_links">Der Passkey-Vorgang ist fehlgeschlagen, weil die Gegenstelle %1$s keine Asset-Links (assetlinks.json) bereitstellt.</string>
+  <string name="passkey_caller_unknown_failure">Der Passkey-Vorgang ist aus folgendem Grund fehlgeschlagen:\n\n%1$s</string>
+  <string name="passkey_caller_dialog_trust">Vertrauen</string>
 </resources>

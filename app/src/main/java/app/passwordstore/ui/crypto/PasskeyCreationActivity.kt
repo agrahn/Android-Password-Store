@@ -45,7 +45,14 @@ import app.passwordstore.ui.folderselect.SelectFolderActivity
 import app.passwordstore.ui.passwords.PasswordStore
 import app.passwordstore.util.auth.BiometricAuthenticator
 import app.passwordstore.util.auth.BiometricAuthenticator.Result
+import app.passwordstore.util.credman.CALLER_MISSING_ASSET_LINKS
+import app.passwordstore.util.credman.CALLER_RELYING_PARTY_NOT_IDENTIFIED
+import app.passwordstore.util.credman.CALLER_REQUEST_UNSUPPORTED
+import app.passwordstore.util.credman.CALLER_UNKNOWN
+import app.passwordstore.util.credman.CALLER_WRONG_SIGNATURE
 import app.passwordstore.util.credman.CredmanUtils
+import app.passwordstore.util.credman.getAppOrigin
+import app.passwordstore.util.credman.verifyCaller
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.asLog
@@ -61,6 +68,7 @@ import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.extensions.wipe
 import com.github.michaelbull.result.get
+import com.github.michaelbull.result.getOrElse
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.onOk
@@ -97,6 +105,7 @@ import logcat.logcat
 @AndroidEntryPoint
 @SuppressLint("RestrictedApi")
 class PasskeyCreationActivity : BasePGPActivity() {
+  private lateinit var validatedOrigin: String
 
   @CredentialUsernames @Inject lateinit var credentialUsernames: SharedPreferences
   @PasswordHistory @Inject lateinit var passwordHistory: SharedPreferences
@@ -281,6 +290,59 @@ class PasskeyCreationActivity : BasePGPActivity() {
 
           val requestOptions = PublicKeyCredentialCreationOptions(request.requestJson)
 
+          /*
+           * caller verification and origin
+           */
+          requireNotNull(providerRequest.callingAppInfo) {
+            "providerRequest.callingAppInfo is null"
+          }
+          val rpId = requestOptions.rp.id
+          val packageName = providerRequest.callingAppInfo.packageName
+
+          validatedOrigin =
+            providerRequest.callingAppInfo.verifyCaller(rpId).getOrElse { e ->
+              val dialogMessage =
+                when (e.message) {
+                  CALLER_UNKNOWN -> getString(R.string.passkey_caller_user_trust, packageName)
+                  CALLER_WRONG_SIGNATURE ->
+                    getString(R.string.passkey_caller_wrong_signature, packageName)
+                  CALLER_RELYING_PARTY_NOT_IDENTIFIED ->
+                    getString(R.string.passkey_caller_relying_party_not_identified, rpId)
+                  CALLER_MISSING_ASSET_LINKS ->
+                    getString(R.string.passkey_caller_missing_asset_links, rpId)
+                  CALLER_REQUEST_UNSUPPORTED ->
+                    getString(R.string.passkey_caller_request_unsupported)
+                  else ->
+                    getString(R.string.passkey_caller_unknown_failure, e.message ?: e.toString())
+                }
+
+              val dialog = MaterialAlertDialogBuilder(this@PasskeyCreationActivity)
+
+              when (e.message) {
+                CALLER_UNKNOWN -> {
+                  dialog
+                    .setIcon(R.drawable.ic_warning_red_24dp)
+                    .setTitle(R.string.oreo_autofill_warning_publisher_warning_sign_description)
+                    .setNegativeButton(
+                      R.string.passkey_caller_dialog_trust,
+                      null,
+                    )
+                    .setPositiveButton(R.string.dialog_cancel) { _, _ -> finish() }
+                }
+                else -> {
+                  dialog
+                    .setIcon(R.drawable.ic_crossmark_red_24dp)
+                    .setTitle(R.string.error)
+                    .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
+                }
+              }
+
+              dialog.setMessage(dialogMessage).setCancelable(false).show()
+
+              // User trusts unknown app
+              providerRequest.callingAppInfo.getAppOrigin()
+            }
+
           val suggestedFullPath =
             PasswordRepository.findSubdirectoryRecursively(repoPath, requestOptions.rp.id)
               ?: Paths.get(repoPath, requestOptions.rp.id).absolutePathString()
@@ -427,19 +489,19 @@ class PasskeyCreationActivity : BasePGPActivity() {
               }
 
               val passkeyAndCreatePublicKeyCredentialResponse = requestOptions?.let { options ->
-                requireNotNull(providerRequest) { "providerRequest must not be null here" }
-                requireNotNull(publicKeyRequest) { "publicKeyRequest must not be null here" }
                 CredmanUtils.buildCreatePublicKeyCredentialResponse(
-                  options,
-                  credentialHexId,
-                  providerRequest.callingAppInfo,
-                  publicKeyRequest.clientDataHash,
-                )
+                    options,
+                    credentialHexId,
+                    publicKeyRequest.clientDataHash,
+                    providerRequest.callingAppInfo.packageName,
+                    validatedOrigin,
+                  )
+                  .getOrThrow()
               }
 
               passkeyAndCreatePublicKeyCredentialResponse?.let { response ->
                 PendingIntentHandler.setCreateCredentialResponse(returnIntent, response.second)
-                response.first
+                response.first // the just-created passkey
               }
             } else null
 
@@ -635,7 +697,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
               }
             MaterialAlertDialogBuilder(this@PasskeyCreationActivity)
               .setIcon(R.drawable.ic_crossmark_red_24dp)
-              .setTitle(getString(R.string.error))
+              .setTitle(R.string.error)
               .setMessage(errMessage)
               .setCancelable(false)
               .setPositiveButton(android.R.string.ok) { _, _ -> finish() }

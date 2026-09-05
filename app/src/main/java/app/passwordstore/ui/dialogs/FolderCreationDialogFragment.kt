@@ -39,7 +39,7 @@ class FolderCreationDialogFragment : DialogFragment() {
     builder.setTitle(R.string.title_create_folder)
     builder.setView(binding.root)
     builder.setPositiveButton(getString(R.string.button_create), null)
-    builder.setNegativeButton(getString(android.R.string.cancel)) { _, _ -> dismiss() }
+    builder.setNegativeButton(getString(R.string.dialog_cancel)) { _, _ -> dismiss() }
     binding.setGpgKey.isVisible = requireArguments().getBoolean(SET_GPG_KEY_EXTRA)
     val dialog = builder.create()
     dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)

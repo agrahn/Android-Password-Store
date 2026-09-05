@@ -31,7 +31,6 @@ import androidx.credentials.webauthn.AuthenticatorAttestationResponse
 import androidx.credentials.webauthn.FidoPublicKeyCredential
 import androidx.credentials.webauthn.PublicKeyCredentialCreationOptions
 import app.passwordstore.Application
-import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
@@ -47,7 +46,6 @@ import app.passwordstore.util.passkey.PasskeyCredential
 import app.passwordstore.util.services.UDCakeCredentialProviderService
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.get
-import com.github.michaelbull.result.getOrElse
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.runCatching
 import java.nio.file.Paths
@@ -63,17 +61,8 @@ import java.security.spec.RSAKeyGenParameterSpec
 import java.time.Instant
 import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
 import logcat.logcat
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -83,7 +72,9 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 @SuppressLint("RestrictedApi")
 object CredmanUtils {
 
-  public val json: Json = Json {
+  private val mdSha256 = MessageDigest.getInstance("SHA-256")
+
+  private val json: Json = Json {
     ignoreUnknownKeys = true
     encodeDefaults = true
   }
@@ -136,14 +127,12 @@ object CredmanUtils {
   }
 
   fun processGetCredentialRequest(request: BeginGetCredentialRequest): BeginGetCredentialResponse {
-    val callingPackageInfo = request.callingAppInfo
-    val callingPackageName = callingPackageInfo?.packageName.orEmpty()
     val credentialEntries: MutableList<CredentialEntry> = mutableListOf()
 
     for (option in request.beginGetCredentialOptions) {
       when (option) {
         is BeginGetPublicKeyCredentialOption -> {
-          credentialEntries.addAll(populatePasskeyData(callingPackageInfo, option))
+          credentialEntries.addAll(populatePasskeyData(request.callingAppInfo, option))
         }
         else -> {
           logcat { "Request options of type ${option::class.qualifiedName} are not implemented" }
@@ -244,42 +233,6 @@ object CredmanUtils {
     return passkeyEntries
   }
 
-  fun appInfoToOrigin(info: CallingAppInfo): String {
-    val cert = info.signingInfo.apkContentsSigners[0].toByteArray()
-    val md = MessageDigest.getInstance("SHA-256")
-    val certHash = md.digest(cert)
-
-    // https://www.gstatic.com/gpm-passkeys-privileged-apps/apps.json
-    val privilegedAllowlistGstatic =
-      context.resources.openRawResource(R.raw.apps).bufferedReader().use { it.readText() }
-    // https://raw.githubusercontent.com/bitwarden/android/refs/heads/main/app/src/main/assets/fido2_privileged_community.json
-    val privilegedAllowlistOther =
-      context.resources.openRawResource(R.raw.fido2_privileged_community).bufferedReader().use {
-        it.readText()
-      }
-    // https://raw.githubusercontent.com/bitwarden/android/refs/heads/main/app/src/main/assets/fido2_privileged_google.json
-    val privilegedAllowlistGoogle =
-      context.resources.openRawResource(R.raw.fido2_privileged_google).bufferedReader().use {
-        it.readText()
-      }
-
-    val privilegedAllowlist =
-      mergeJsonArrays(
-        privilegedAllowlistGstatic,
-        privilegedAllowlistOther,
-        privilegedAllowlistGoogle,
-        arrayName = "apps",
-        deduplicateByIdPath = "info.package_name",
-      )
-
-    return runCatching {
-      info.getOrigin(privilegedAllowlist) ?: throw NullPointerException()
-    }
-      .getOrElse { error ->
-        "android:apk-key-hash:${certHash.b64Encode().concatToString()}"
-      }
-  }
-
   // find RP's most preferred algorithm that our app supports, with ES256 as fallback
   fun getPreferredAlgorithm(requestOptions: PublicKeyCredentialCreationOptions): Algorithm {
     // RP's supported key algorithms, in decending order of preference
@@ -372,11 +325,10 @@ object CredmanUtils {
   fun buildCreatePublicKeyCredentialResponse(
     requestOptions: PublicKeyCredentialCreationOptions,
     credentialHexId: String,
-    callingAppInfo: CallingAppInfo?,
     clientDataHash: ByteArray?,
-  ): Pair<PasskeyCredential, CreatePublicKeyCredentialResponse> {
-    requireNotNull(callingAppInfo) { "callingAppInfo must not be null here" }
-
+    packageName: String,
+    origin: String,
+  ): Result<Pair<PasskeyCredential, CreatePublicKeyCredentialResponse>, Throwable> = runCatching {
     val credentialId = credentialHexId.hexToByteArray()
 
     val chosenAlgorithm = getPreferredAlgorithm(requestOptions)
@@ -418,12 +370,12 @@ object CredmanUtils {
         requestOptions = requestOptions,
         credentialId = credentialId,
         credentialPublicKey = publicKeyCbor,
-        origin = appInfoToOrigin(callingAppInfo),
+        origin = origin,
         up = true,
         uv = true,
         be = true,
         bs = true,
-        packageName = callingAppInfo.packageName,
+        packageName = packageName,
         clientDataHash = clientDataHash,
       )
 
@@ -438,7 +390,7 @@ object CredmanUtils {
       // this step is required for a successful registration ceremony in chromium browsers
       populateEasyAccessorFields(fidoCredential, passkey, keyPair.public, publicKeyCbor)
 
-    return passkey to CreatePublicKeyCredentialResponse(credentialJson)
+    passkey to CreatePublicKeyCredentialResponse(credentialJson)
   }
 
   /**
@@ -467,8 +419,7 @@ object CredmanUtils {
     // all zeros -> our app is not officially registered authenticator
     val AAGUID = "00000000000000000000000000000000" // must have an even length
 
-    val rpIdHash: ByteArray =
-      MessageDigest.getInstance("SHA-256").digest(passkey.rp.id.toByteArray())
+    val rpIdHash: ByteArray = mdSha256.digest(passkey.rp.id.toByteArray())
 
     val flags: ByteArray = byteArrayOf(0x5d.toByte())
     val signCount: ByteArray = byteArrayOf(0x00, 0x00, 0x00, 0x00)
@@ -489,23 +440,22 @@ object CredmanUtils {
   @Serializable
   private data class CreatePublicKeyCredentialResponseJson(
     // RegistrationResponseJSON
-    @SerialName("id") val id: String,
-    @SerialName("rawId") val rawId: String,
-    @SerialName("response") val response: Response,
-    @SerialName("authenticatorAttachment") val authenticatorAttachment: String?,
-    @SerialName("clientExtensionResults") val clientExtensionResults: EmptyClass = EmptyClass(),
-    @SerialName("type") val type: String,
+    val id: String,
+    val rawId: String,
+    val response: Response,
+    val authenticatorAttachment: String?,
+    val clientExtensionResults: EmptyClass = EmptyClass(),
+    val type: String,
   ) {
     @Serializable
     data class Response(
       // AuthenticatorAttestationResponseJSON
-      @SerialName("clientDataJSON") val clientDataJSON: String? = null,
-      @SerialName("authenticatorData") var authenticatorData: String? = null,
-      @SerialName("transports") val transports: List<String>? = arrayOf("internal").toList(),
-      @SerialName("publicKey") var publicKey: String? = null, // easy accessors fields
-      @SerialName("publicKeyAlgorithm")
+      val clientDataJSON: String? = null,
+      var authenticatorData: String? = null,
+      val transports: List<String>? = arrayOf("internal").toList(),
+      var publicKey: String? = null, // easy accessors fields
       var publicKeyAlgorithm: Long? = null, // easy accessors fields
-      @SerialName("attestationObject") val attestationObject: String?, // easy accessors fields
+      val attestationObject: String?, // easy accessors fields
     )
 
     @Serializable class EmptyClass
@@ -515,18 +465,17 @@ object CredmanUtils {
    * misses to do that */
   @Serializable
   private data class PublicKeyCredentialRequestOptions(
-    @SerialName("challenge") val challenge: String = "",
-    @SerialName("timeout") val timeout: Long = 0,
-    @SerialName("rpId") val rpId: String = "",
-    @SerialName("allowCredentials")
+    val challenge: String = "",
+    val timeout: Long = 0,
+    val rpId: String = "",
     val allowCredentials: List<PublicKeyCredentialDescriptor> = emptyList(),
-    @SerialName("userVerification") val userVerification: String = "",
+    val userVerification: String = "",
   ) {
     @Serializable
     data class PublicKeyCredentialDescriptor(
-      @SerialName("id") val id: String = "",
-      @SerialName("type") val type: String = "",
-      @SerialName("transports") val transports: List<String> = emptyList(),
+      val id: String = "",
+      val type: String = "",
+      val transports: List<String> = emptyList(),
     ) {
       fun idHex(): String? = id.toCharArray().b64Decode()?.toHexString()
     }
@@ -535,8 +484,8 @@ object CredmanUtils {
   fun buildGetCredentialResponse(
     providerRequest: ProviderGetCredentialRequest,
     passkey: PasskeyCredential,
+    origin: String,
   ): Result<GetCredentialResponse, Throwable> = runCatching {
-    val origin = appInfoToOrigin(providerRequest.callingAppInfo)
     val packageName = providerRequest.callingAppInfo.packageName
 
     val publicKeyRequest = providerRequest.credentialOptions.first() as GetPublicKeyCredentialOption
@@ -570,70 +519,5 @@ object CredmanUtils {
 
     val passkeyCredential = PublicKeyCredential(fidoCredential.json())
     GetCredentialResponse(passkeyCredential)
-  }
-
-  private fun mergeJsonArrays(
-    vararg jsonStrings: String,
-    arrayName: String,
-    deduplicateByIdPath: String? = null,
-  ): String {
-    // Parse all inputs safely into JsonObjects and extract the target arrays
-    val arrays = jsonStrings.map {
-      Json.parseToJsonElement(it).jsonObject[arrayName]?.jsonArray ?: JsonArray(emptyList())
-    }
-
-    // Track deduplicated elements if a path is provided
-    val elementsById = deduplicateByIdPath?.let { linkedMapOf<String, JsonObject>() }
-    // Track non-object elements or elements mixed in when deduplication is disabled
-    val rawElements = mutableListOf<JsonElement>()
-
-    arrays.forEach { array ->
-      array.forEach { element ->
-        if (elementsById != null && element is JsonObject) {
-          // Find ID using the path picker, fallback to memory identity hash code if missing
-          val id =
-            getNestedValue(element, deduplicateByIdPath)
-              ?: "auto_${System.identityHashCode(element)}"
-          elementsById[id] = element
-        } else {
-          rawElements.add(element)
-        }
-      }
-    }
-
-    // Construct the immutable payload using structural builders
-    val finalJson = buildJsonObject {
-      put(
-        arrayName,
-        buildJsonArray {
-          // Add raw/non-deduplicated elements first to mimic original logic behavior
-          rawElements.forEach { add(it) }
-          // Add your deduplicated objects
-          elementsById?.values?.forEach { add(it) }
-        },
-      )
-    }
-
-    return finalJson.toString()
-  }
-
-  private fun getNestedValue(obj: JsonObject, path: String): String? {
-    val keys = path.split(".")
-    var current: JsonElement? = obj
-
-    for (key in keys) {
-      current =
-        when (current) {
-          is JsonObject -> current[key]
-          else -> return null
-        }
-      if (current == null) return null
-    }
-
-    // Safely unwrap json primitives to string literal text (avoids double quotes)
-    return when (current) {
-      is JsonPrimitive -> current.content
-      else -> current.toString()
-    }
   }
 }

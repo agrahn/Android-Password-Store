@@ -17,7 +17,7 @@
   <string name="dialog_delete_title">Directory already exists</string>
   <string name="dialog_delete_msg">Target directory already exists. Current version only supports a single store. Do you want to delete the current password store directory?\n(%1$s)</string>
   <string name="dialog_delete">Delete directory</string>
-  <string name="dialog_do_not_delete">Cancel</string>
+  <string name="dialog_do_not_delete">Abort</string>
   <string name="title_activity_git_clone">Repository information</string>
   <string name="title_activity_git_config">Git configuration</string>
   <string name="title_activity_git_log">Commit log</string>
@@ -158,7 +158,7 @@
   <string name="prefs_repo_invalid_source_dialog_summary">The source directory does not appear to be a valid Git repository: missing .git folder.</string>
   <string name="pref_rebase_on_pull_title">Rebase on pull</string>
   <string name="pref_rebase_on_pull_summary">When pulling or syncing, create a merge commit with upstream changes.</string>
-  <string name="pref_rebase_on_pull_summary_on">When pulling or syncing, rebase local commits on the top of the remote repository\'s history. (Recommended)</string>
+  <string name="pref_rebase_on_pull_summary_on">When pulling or syncing, rebase local commits on the top of the remote repository’s history. (Recommended)</string>
   <string name="pref_disable_sync_on_pull_title">Disable swipe gesture</string>
   <string name="pref_disable_sync_on_pull_summary">Prevent swiping down on the password list from triggering a Git sync.</string>
   <string name="pref_import_pgp_key_title">Import PGP key</string>
@@ -221,7 +221,7 @@
   <string name="dialog_ok">OK</string>
   <string name="dialog_yes">Yes</string>
   <string name="dialog_no">No</string>
-  <string name="dialog_cancel">Cancel</string>
+  <string name="dialog_cancel">Abort</string>
   <string name="git_sync">Synchronise repository</string>
   <string name="git_pull">Pull from remote</string>
   <string name="git_push">Push to remote</string>
@@ -246,13 +246,13 @@
   <string name="oreo_autofill_search_in_store">Search entry</string>
   <string name="oreo_autofill_save_internal_error">Save failed due to an internal error.</string>
   <string name="oreo_autofill_save_app_not_supported">This app is currently not supported</string>
-  <string name="oreo_autofill_save_passwords_dont_match">Passwords don\'t match</string>
+  <string name="oreo_autofill_save_passwords_dont_match">Passwords don’t match</string>
   <string name="oreo_autofill_generate_password">Create entry</string>
   <string name="oreo_autofill_max_matches_reached">Maximum number of matches (%1$d) reached; clear matches before adding new ones.</string>
-  <string name="oreo_autofill_warning_publisher_header">This app\'s publisher has changed since you first associated a Password Store entry with it: </string>
-  <string name="oreo_autofill_warning_publisher_footer"><b>The currently installed app may be trying to steal your credentials by pretending to be a trusted app.</b>\n\nTry to uninstall and reinstall the app from a trusted source, such as the Play Store, Amazon Appstore, F-Droid, or your phone manufacturer\'s store.</string>
+  <string name="oreo_autofill_warning_publisher_header">This app’s signature has changed since you first associated a Password Store entry with it: </string>
+  <string name="oreo_autofill_warning_publisher_footer"><b>The currently installed app may be trying to steal your credentials by pretending to be a trusted app.</b>\n\nIt is strongly recommended to uninstall the app and to reinstall it from a trusted source, such as the Play Store, Amazon Appstore, F-Droid, or your phone manufacturer’s store.</string>
   <string name="oreo_autofill_warning_publisher_install_time">Installed: %1$s</string>
-  <string name="oreo_autofill_warning_publisher_app_name" translatable="false">“%1$s“</string>
+  <string name="oreo_autofill_warning_publisher_app_name" translatable="false">“%1$s”</string>
   <string name="oreo_autofill_warning_publisher_advanced_info_template">Package:\n%1$s\n\nHash:\n%2$s</string>
   <string name="oreo_autofill_warning_publisher_advanced_info_button">Advanced information</string>
   <string name="oreo_autofill_warning_publisher_changed_disable_autofill_button">Keep Autofill disabled</string>
@@ -291,7 +291,7 @@
   <string name="pref_show_hidden_summary">Include non-password files and directories in the password list.</string>
   <string name="title_create_folder">Create folder</string>
   <string name="title_rename_folder">Rename folder</string>
-  <string name="message_category_error_empty_field">Category name can\'t be empty.</string>
+  <string name="message_category_error_empty_field">Category name can’t be empty.</string>
   <string name="message_category_error_category_exists">Category name already exists.</string>
   <string name="message_error_destination_outside_repo">Destination must be within the repository.</string>
   <string name="message_rename_folder">Enter destination for %1$s</string>
@@ -354,8 +354,8 @@
   <string name="empty_gpg_id">Found .gpg-id, but it is empty.</string>
   <string name="missing_gpg_id">No .gpg-id could be found.</string>
   <string name="short_gpg_id">Found .gpg-id, but it contains a short hex ID, which is not supported.</string>
-  <string name="invalid_filename_text">The file name must not contain \'/\', set directory above.</string>
-  <string name="invalid_name_text">The name must not contain \'/\', set directory above.</string>
+  <string name="invalid_filename_text">The file name must not contain ‘/’, set directory above.</string>
+  <string name="invalid_name_text">The name must not contain ‘/’, set directory above.</string>
   <string name="directory_hint">Directory</string>
   <string name="new_folder_set_gpg_key">Set PGP key for directory</string>
 
@@ -365,8 +365,8 @@
 
   <!-- GitException messages -->
   <string name="git_unknown_error">Unknown error</string>
-  <string name="git_pull_rebase_fail_error">Pull has failed, you\'re in a detached head. Using "settings > git utils", save your changes to the remote in a new branch and resolve the conflict on your computer.</string>
-  <string name="git_pull_merge_fail_error">Merge has failed, you\'re in a conflicting state. TODO: Add a recovery method.</string>
+  <string name="git_pull_rebase_fail_error">Pull has failed, you’re in a detached head. Use “Settings &gt; Repository &gt; Local Git config &amp; utilities &gt; Abort rebase and push new branch” to save your changes to the remote in a new branch and resolve the conflict there.</string>
+  <string name="git_pull_merge_fail_error">Merge has failed, you’re in a conflicting state. TODO: Add a recovery method.</string>
 
   <string name="git_push_nff_error">Push was rejected by remote, run pull before pushing again. You can use Synchronise rather than pull/push as it implements both.</string>
   <string name="git_push_generic_error">Push was rejected by remote, reason: %1$s</string>
@@ -382,7 +382,7 @@
   <string name="folder_creation_err_folder_exists">A folder by that name already exists</string>
 
   <!-- Onboarding flow -->
-  <string name="let_s_go">Let\'s Go</string>
+  <string name="let_s_go">Let’s Go</string>
   <string name="select_n_repository_type">Select \nRepository Type</string>
   <string name="select_repo_type_text">Select if you want to create a local repo or clone a remote repo.</string>
   <string name="clone_remote_repo">Clone Remote Repo</string>
@@ -522,7 +522,16 @@
   <string name="passkey_biometric_auth_missing_error">A screen lock must be set up to create a passkey. Check your device settings.</string>
   <string name="passkey_parse_error_message">Failed to parse\n\n%1$s\n\nThe file does not appear to contain valid passkey data.</string>
   <string name="passkey_mismatch_error_message">The passkey data in file\n\n%1$s\n\ndoes not match the file and directory names.</string>
-  <string name="passkey_sign_error_message">The signature could not be generated:\n\n%1$s</string>
+  <string name="passkey_authentication_error_message">Authentication failed for the following reason:\n\n%1$s</string>
   <string name="passkey_request_error_message">No authentication request received from relying party</string>
+
+  <string name="passkey_caller_wrong_signature">The passkey operation failed because the signature of the requesting app %1$s is invalid. It may be a malicious app. It is strongly recommended to uninstall the app and reinstall it from a trusted source.</string>
+  <string name="passkey_caller_user_trust">The passkey operation was paused because the requesting app %1$s is unknown. If you are unsure about the app’s authenticity, select “Abort” (recommended). Select “Trust” if you wish to proceed anyway.</string>
+  <string name="passkey_caller_relying_party_not_identified">The passkey operation failed because the relying party %1$s cannot be identified.</string>
+  <string name="passkey_caller_missing_asset_links">The passkey operation failed because the relying party %1$s does not provide asset links (assetlinks.json).</string>
+  <string name="passkey_caller_request_unsupported">The passkey operation failed because the request is unsupported.</string>
+  <string name="passkey_caller_unknown_failure">The passkey operation failed for the following reason:\n\n%1$s</string>
+  <string name="passkey_caller_dialog_trust">Trust</string>
+The Passkey operation failed because the request is unsupported.
 
 </resources>
