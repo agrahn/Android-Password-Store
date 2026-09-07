@@ -1,4 +1,4 @@
-141904
+144362
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -89,6 +89,7 @@
 *.begetcdn.cloud
 *.build.run
 *.builder.code.com
+*.builtwithrocket.new
 *.bwcloud-os-instance.de
 *.c.ts.net
 *.ca-central-1.airflow.amazonaws.com
@@ -122,6 +123,8 @@
 *.elb.amazonaws.com
 *.elb.amazonaws.com.cn
 *.er
+*.eth.limo
+*.eth.link
 *.eu-central-1.airflow.amazonaws.com
 *.eu-central-1.r.cloud.int.apple
 *.eu-central-1.rds.amazonaws.com
@@ -198,6 +201,7 @@
 *.oraclegovcloudapps.uk
 *.otap.co
 *.owo.codes
+*.p.azurewebsites.net
 *.pa.crm.dev
 *.paywhirl.com
 *.pb.crm.dev
@@ -841,7 +845,12 @@ aurskog-høland.no
 aus.basketball
 auspost
 austevoll.no
+australiacentral-01.azurewebsites.net
+australiacentral2-01.azurewebsites.net
+australiaeast-01.azurewebsites.net
+australiasoutheast-01.azurewebsites.net
 austrheim.no
+austriaeast-01.azurewebsites.net
 auth-fips.us-east-1.amazoncognito.com
 auth-fips.us-east-2.amazoncognito.com
 auth-fips.us-gov-east-1.amazoncognito.com
@@ -1055,6 +1064,7 @@ beer
 beiarn.no
 bel.tr
 belem.br
+belgiumcentral-01.azurewebsites.net
 bellevue.wa.us
 belluno.it
 benevento.it
@@ -1242,6 +1252,8 @@ brasilia.me
 brave.app
 brave.dev
 brave.io
+brazilsouth-01.azurewebsites.net
+brazilsoutheast-01.azurewebsites.net
 bremanger.no
 bremerton.wa.us
 brescia.it
@@ -1355,12 +1367,15 @@ campinagrande.br
 campinas.br
 campobasso.it
 can.re
+canadacentral-01.azurewebsites.net
+canadaeast-01.azurewebsites.net
 canary.replit.dev
 candypop.jp
 canon
 cantho.vn
 canva-apps.cn
 canva-apps.com
+canva-code.cn
 canva-hosted-embed.com
 canva.link
 canva.run
@@ -1481,7 +1496,10 @@ ce.leg.br
 cechire.com
 center
 centralia.wa.us
+centralindia-01.azurewebsites.net
+centralus-01.azurewebsites.net
 centralus.azurestaticapps.net
+centraluseuap-01.azurewebsites.net
 ceo
 cern
 certification.aero
@@ -1534,6 +1552,7 @@ chikuma.nagano.jp
 chikusei.ibaraki.jp
 chikushino.fukuoka.jp
 chikuzen.fukuoka.jp
+chilecentral-01.azurewebsites.net
 chillout.jp
 chimkent.su
 chino.nagano.jp
@@ -2106,12 +2125,12 @@ dell-ogliastra.it
 dellogliastra.it
 deloitte
 delta
-demo.datacenter.fi
 demo.datadetect.com
 demo.jelastic.com
 democracia.bo
 democrat
 demon.nl
+denmarkeast-01.azurewebsites.net
 deno-staging.dev
 deno.dev
 deno.net
@@ -2320,8 +2339,14 @@ e2b.app
 e4.cz
 earth
 east-kazakhstan.su
+eastasia-01.azurewebsites.net
 eastasia.azurestaticapps.net
+eastasiastage-01.azurewebsites.net
+eastus-01.azurewebsites.net
+eastus2-01.azurewebsites.net
 eastus2.azurestaticapps.net
+eastus2euap-01.azurewebsites.net
+eastus3-01.azurewebsites.net
 easypanel.app
 easypanel.host
 eat
@@ -2966,6 +2991,8 @@ framer.website
 framer.wiki
 framercanvas.com
 frana.no
+francecentral-01.azurewebsites.net
+francesouth-01.azurewebsites.net
 fredrikstad.no
 free
 freebox-os.com
@@ -3191,6 +3218,8 @@ gentlentapis.com
 geo.br
 george
 georgia.su
+germanynorth-01.azurewebsites.net
+germanywestcentral-01.azurewebsites.net
 getmyip.com
 gets-it.net
 gf
@@ -3925,6 +3954,7 @@ i.ng
 i.ph
 i.se
 i234.me
+ia.bo
 ia.br
 ia.us
 ia.ve
@@ -4075,7 +4105,9 @@ independent-review.uk
 inderoy.no
 inderøy.no
 indevs.in
+indiasouthcentral-01.azurewebsites.net
 indigena.bo
+indonesiacentral-01.azurewebsites.net
 industria.bo
 industries
 ine.kyoto.jp
@@ -4293,6 +4325,8 @@ ishinomaki.miyagi.jp
 isla.pr
 ismaili
 ispmanager.name
+israelcentral-01.azurewebsites.net
+israelnorthwest-01.azurewebsites.net
 isshiki.aichi.jp
 issmarterthanyou.com
 ist
@@ -4311,6 +4345,7 @@ it1.jenv-aruba.cloud
 itabashi.tokyo.jp
 itako.ibaraki.jp
 itakura.gunma.jp
+italynorth-01.azurewebsites.net
 itami.hyogo.jp
 itano.tokushima.jp
 itau
@@ -4364,6 +4399,8 @@ jambyl.su
 jampa.br
 jan-mayen.no
 janeway.replit.dev
+japaneast-01.azurewebsites.net
+japanwest-01.azurewebsites.net
 java
 jaworzno.pl
 jc.neen.it
@@ -4397,6 +4434,8 @@ jewelry
 jgora.pl
 jinsekikogen.hiroshima.jp
 jio
+jioindiacentral-01.azurewebsites.net
+jioindiawest-01.azurewebsites.net
 jl.cn
 jll
 jls-sto1.elastx.net
@@ -4821,6 +4860,8 @@ koobin.events
 koori.fukushima.jp
 kop.id
 kopervik.no
+koreacentral-01.azurewebsites.net
+koreasouth-01.azurewebsites.net
 koriyama.fukushima.jp
 koryo.nara.jp
 kosai.shizuoka.jp
@@ -5320,6 +5361,7 @@ makeup
 makinohara.shizuoka.jp
 makurazaki.kagoshima.jp
 malatvuopmi.no
+malaysiawest-01.azurewebsites.net
 malbork.pl
 malopolska.pl
 malselv.no
@@ -5466,6 +5508,7 @@ messina.it
 messwithdns.com
 meteorapp.com
 mex.com
+mexicocentral-01.azurewebsites.net
 mg
 mg.gov.br
 mg.leg.br
@@ -6224,6 +6267,7 @@ neustar
 new
 news
 news.hu
+newzealandnorth-01.azurewebsites.net
 next
 nextdirect
 nexus
@@ -6379,7 +6423,13 @@ nordre-land.no
 nordreisa.no
 nore-og-uvdal.no
 north-kazakhstan.su
+northcentralus-01.azurewebsites.net
+northcentralusstage-01.azurewebsites.net
+northeastus5-01.azurewebsites.net
+northeurope-01.azurewebsites.net
 norton
+norwayeast-01.azurewebsites.net
+norwaywest-01.azurewebsites.net
 nose.osaka.jp
 nosegawa.nara.jp
 noshiro.akita.jp
@@ -6664,6 +6714,7 @@ ooshika.nagano.jp
 oow.gov.pl
 opal.ne.jp
 open
+opencloud.me
 opencraft.hosting
 opensocial.site
 opentunnel.xyz
@@ -6949,7 +7000,6 @@ pa.it
 pa.leg.br
 pa.us
 paas.beebyte.io
-paas.datacenter.fi
 paas.hosted-by-previder.com
 paas.massivegrid.com
 pabianice.pl
@@ -7117,6 +7167,7 @@ pokrovsk.su
 pol.dz
 pol.ht
 pol.tr
+polandcentral-01.azurewebsites.net
 police.uk
 politica.bo
 politie
@@ -7268,6 +7319,7 @@ pz.it
 q.bg
 qa
 qa2.com
+qatarcentral-01.azurewebsites.net
 qbuser.com
 qc.ca
 qcx.io
@@ -7467,6 +7519,7 @@ ro.gov.br
 ro.it
 ro.leg.br
 roan.no
+rocketpreview.app
 rocks
 rocky.page
 rodeo
@@ -8415,6 +8468,13 @@ sosa.chiba.jp
 sosnowiec.pl
 soundcast.me
 sourcecraft.site
+southafricanorth-01.azurewebsites.net
+southafricawest-01.azurewebsites.net
+southcentralus-01.azurewebsites.net
+southcentralus2-01.azurewebsites.net
+southeastasia-01.azurewebsites.net
+southeastus5-01.azurewebsites.net
+southindia-01.azurewebsites.net
 sowa.ibaraki.jp
 soy
 sp.gov.br
@@ -8423,6 +8483,7 @@ sp.leg.br
 spa
 space
 space-to-rent.com
+spaincentral-01.azurewebsites.net
 spawnbase.app
 spb.ru
 spb.su
@@ -8620,12 +8681,16 @@ sveio.no
 svelvik.no
 svn-repos.de
 swatch
+swedencentral-01.azurewebsites.net
+swedensouth-01.azurewebsites.net
 sweetpepper.org
 swidnica.pl
 swidnik.pl
 swiebodzin.pl
 swinoujscie.pl
 swiss
+switzerlandnorth-01.azurewebsites.net
+switzerlandwest-01.azurewebsites.net
 sx
 sx.cn
 sy
@@ -8684,6 +8749,8 @@ taishi.osaka.jp
 taishin.fukushima.jp
 taito.tokyo.jp
 taiwa.miyagi.jp
+taiwannorth-01.azurewebsites.net
+taiwannorthwest-01.azurewebsites.net
 tajimi.gifu.jp
 tajiri.osaka.jp
 taka.hyogo.jp
@@ -8871,6 +8938,7 @@ tm.se
 tm.za
 tmall
 tmp.br
+tmp.now
 tn
 tn.it
 tn.oxa.cloud
@@ -9196,9 +9264,9 @@ tønsberg.no
 u.bg
 u.channelsdvr.net
 u.se
-u2-local.xnbay.com
-u2.xnbay.com
 ua
+uaecentral-01.azurewebsites.net
+uaenorth-01.azurewebsites.net
 ub.in
 ubank
 ube.yamaguchi.jp
@@ -9238,6 +9306,8 @@ uk.primetel.cloud
 uk.reclaim.cloud
 uki.kumamoto.jp
 ukiha.fukuoka.jp
+uksouth-01.azurewebsites.net
+ukwest-01.azurewebsites.net
 ullensaker.no
 ullensvang.no
 ulsan.kr
@@ -9692,8 +9762,14 @@ weibo
 weir
 wesley.replit.dev
 west1-us.cloudjiffy.net
+westcentralus-01.azurewebsites.net
+westeurope-01.azurewebsites.net
 westeurope.azurestaticapps.net
+westindia-01.azurewebsites.net
+westus-01.azurewebsites.net
+westus2-01.azurewebsites.net
 westus2.azurestaticapps.net
+westus3-01.azurewebsites.net
 wf
 whitesnow.jp
 whm.fr-par.scw.cloud
@@ -9784,7 +9860,6 @@ xii.jp
 xin
 xj.cn
 xmit.dev
-xnbay.com
 xs4all.space
 xtooldevice.com
 xx.kg
