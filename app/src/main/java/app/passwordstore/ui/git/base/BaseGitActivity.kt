@@ -4,8 +4,13 @@
  */
 package app.passwordstore.ui.git.base
 
+import android.Manifest
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import app.passwordstore.R
 import app.passwordstore.data.crypto.CryptoRepository
@@ -19,15 +24,22 @@ import app.passwordstore.util.git.operation.PullOperation
 import app.passwordstore.util.git.operation.PushOperation
 import app.passwordstore.util.git.operation.ResetToRemoteOperation
 import app.passwordstore.util.git.operation.SyncOperation
+import app.passwordstore.util.git.sshj.fixUri
 import app.passwordstore.util.settings.GitSettings
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.andThen
 import com.github.michaelbull.result.mapError
+import com.github.michaelbull.result.onErr
+import com.github.michaelbull.result.onOk
+import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import java.net.InetAddress
 import javax.inject.Inject
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.asLog
 import logcat.logcat
@@ -35,6 +47,7 @@ import net.schmizz.sshj.common.DisconnectReason
 import net.schmizz.sshj.common.SSHException
 import net.schmizz.sshj.transport.TransportException
 import net.schmizz.sshj.userauth.UserAuthException
+import org.eclipse.jgit.transport.URIish
 
 /**
  * Abstract [AppCompatActivity] that holds some information that is commonly shared across
@@ -42,6 +55,15 @@ import net.schmizz.sshj.userauth.UserAuthException
  */
 @AndroidEntryPoint
 abstract class BaseGitActivity : AppCompatActivity() {
+
+  private var localNetworkAccessSetupCompletion: CompletableDeferred<Unit>? = null
+  private var accessLocalNetworkGranted: Boolean = true
+
+  private val requestLocalNetworkLauncher =
+    registerForActivityResult(RequestPermission()) { isGranted ->
+      accessLocalNetworkGranted = isGranted
+      localNetworkAccessSetupCompletion?.complete(Unit)
+    }
 
   /** Enum of possible Git operations than can be run through [launchGitOperation]. */
   enum class GitOp {
@@ -71,14 +93,58 @@ abstract class BaseGitActivity : AppCompatActivity() {
    * @param operation The type of git operation to launch
    */
   suspend fun launchGitOperation(operation: GitOp): Result<Unit, Throwable> {
-    if (gitSettings.url == null) {
-      return Err(IllegalStateException("Git url is not set!"))
+
+    if (gitSettings.url == null)
+      return Err(IllegalStateException(resources.getString(R.string.git_url_not_set_error)))
+
+    val host = fixUri(URIish(gitSettings.url)).host
+
+    // check whether local network access runtime permission needs to be granted (Android 17+)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN) {
+
+      var networkPermission = Manifest.permission.ACCESS_LOCAL_NETWORK
+      accessLocalNetworkGranted = false
+
+      localNetworkAccessSetupCompletion = CompletableDeferred<Unit>()
+
+      runCatching {
+        withContext(dispatcherProvider.io()) { InetAddress.getByName(host) }
+      }
+        .onOk {
+          accessLocalNetworkGranted = true
+          localNetworkAccessSetupCompletion?.complete(Unit)
+        }
+        .onErr { e ->
+          if (
+            e is SecurityException &&
+              ContextCompat.checkSelfPermission(this, networkPermission) !=
+                PackageManager.PERMISSION_GRANTED
+          )
+            requestLocalNetworkLauncher.launch(networkPermission)
+          else return Err(e) // something else must have gone wrong
+        }
     }
+
+    localNetworkAccessSetupCompletion?.await()
+
+    return if (accessLocalNetworkGranted) launchGitOperationWithPermission(operation)
+    else
+      Err(
+        IllegalStateException(
+          resources.getString(R.string.git_local_network_unreachable_error, host)
+        )
+      )
+  }
+
+  private suspend fun launchGitOperationWithPermission(operation: GitOp): Result<Unit, Throwable> {
     if (operation == GitOp.SYNC && !gitSettings.useMultiplexing) {
       // If the server does not support multiple SSH channels per connection, we cannot run
       // a sync operation without reconnecting and thus break sync into its two parts.
-      return launchGitOperation(GitOp.PULL).andThen { launchGitOperation(GitOp.PUSH) }
+      return launchGitOperationWithPermission(GitOp.PULL).andThen {
+        launchGitOperationWithPermission(GitOp.PUSH)
+      }
     }
+
     val op =
       when (operation) {
         GitOp.CLONE -> CloneOperation(this, gitSettings.url ?: throw NullPointerException())
@@ -89,6 +155,7 @@ abstract class BaseGitActivity : AppCompatActivity() {
         GitOp.RESET -> ResetToRemoteOperation(this, remoteBranch)
         GitOp.GC -> GcOperation(this)
       }
+
     return (if (op.requiresAuth) {
         op.executeAfterAuthentication(gitSettings.authMode)
       } else {

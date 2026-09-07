@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file
 - In case of file (work/example.org/john@doe.org) and dir-based (work/example.org/john@dow.org/password.gpg) password file organisation, the subfolder structure is now preserved when modifying the suggested destination folder on the "New password" form
 - Improved credential lookup for autofill, now based on origin (web/app form) and independent from current password file organisation setting
 - After reaching a soft-keyboard-dependent number of autofill suggestion buttons, the Search button became inaccessible. Now, the display of suggestions switches automatically to popup mode, where suggestions are shown in a scrollable box above the input field
+- Request `ACCESS_LOCAL_NETWORK` runtime permission if needed during Git operations on Android 17+ devices
 
 ## [2.0.1] - 2026-08-07
 
