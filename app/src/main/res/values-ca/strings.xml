@@ -176,7 +176,6 @@
     <string name="oreo_autofill_save_app_not_supported">Aquesta aplicació no està actualment suportada</string>
     <string name="oreo_autofill_save_passwords_dont_match">Les contrasenyes no coincideixen</string>
     <string name="oreo_autofill_generate_password">Crea una entrada</string>
-    <string name="oreo_autofill_max_matches_reached">Nombre màxim de coincidències (%1$d) assolit; neteja les concordances abans d\'afegir noves.</string>
     <string name="oreo_autofill_warning_publisher_header">L\'editor d\'aquesta aplicació ha canviat des que hi vau associar per primera vegada una entrada del magatzem de contrasenyes:</string>
     <string name="oreo_autofill_warning_publisher_footer"><b>És possible que l\'aplicació instal·lada actualment estigui intentant robar les vostres credencials fent-se passar per una aplicació de confiança.</b> Proveu de desinstal·lar i tornar a instal·lar l\'aplicació des d\'una font de confiança, com ara Play Store, Amazon Appstore, F-Droid o la botiga del fabricant del telèfon.</string>
     <string name="oreo_autofill_warning_publisher_install_time">Instal·lat: %1$s</string>

@@ -211,7 +211,6 @@
   <string name="oreo_autofill_save_app_not_supported">Bu uygulama şu anda desteklenmiyor</string>
   <string name="oreo_autofill_save_passwords_dont_match">Şifreler eşleşmiyor</string>
   <string name="oreo_autofill_generate_password">Girdi oluştur</string>
-  <string name="oreo_autofill_max_matches_reached">Maksimum eşleşme sayısına (%1$d) ulaşıldı; yeni eşleşmeler eklemeden önce mevcutları temizleyin.</string>
   <string name="oreo_autofill_warning_publisher_header">Bu uygulamanın yayıncısı, bir Password Store girdisini onunla ilk ilişkilendirdiğinizden beri değişti:</string>
   <string name="oreo_autofill_warning_publisher_footer"><b>Şu anda yüklü olan uygulama, güvenilir bir uygulama gibi davranarak kimlik bilgilerinizi çalmaya çalışıyor olabilir.</b>\n\nPlay Store, Amazon Appstore, F-Droid veya telefon üreticinizin mağazası gibi güvenilir bir kaynaktan uygulamayı kaldırıp yeniden yüklemeyi deneyin.</string>
   <string name="oreo_autofill_warning_publisher_install_time">Yüklenme tarihi: %1$s</string>

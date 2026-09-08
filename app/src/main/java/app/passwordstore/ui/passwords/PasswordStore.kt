@@ -689,7 +689,7 @@ class PasswordStore : BaseGitActivity() {
           putString(dest.absolutePath.base64(), timestamp)
         }
       }
-      AutofillMatcher.updateMatches(this, sourceDestinationMap)
+      AutofillMatcher.updateMatches(this, moveFromTo = sourceDestinationMap)
     }
   }
 
