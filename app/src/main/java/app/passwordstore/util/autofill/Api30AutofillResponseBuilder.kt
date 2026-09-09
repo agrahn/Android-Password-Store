@@ -104,7 +104,7 @@ class Api30AutofillResponseBuilder private constructor(form: FillableForm) :
     val presentationsBuilder = Presentations.Builder()
     if (imeSpec != null) {
       val inlinePresentation = makeInlinePresentation(context, imeSpec, metadata)
-      if (inlinePresentation != null) {
+      if (inlinePresentation != null && metadata.suggestionCount < metadata.maxSuggestions - 1) {
         presentationsBuilder.setInlinePresentation(inlinePresentation)
       } else {
         presentationsBuilder.setMenuPresentation(makeRemoteView(context, metadata))
@@ -124,27 +124,57 @@ class Api30AutofillResponseBuilder private constructor(form: FillableForm) :
     context: Context,
     file: File,
     imeSpec: InlinePresentationSpec?,
+    suggestionCount: Int,
+    maxSuggestions: Int,
   ): Dataset? {
     if (!scenario.hasFieldsToFillOn(AutofillAction.Match)) return null
-    val metadata = makeFillMatchMetadata(context, file)
+    val metadata = makeFillMatchMetadata(context, file, suggestionCount, maxSuggestions)
     val intentSender =
       AutofillDecryptActivity.makeDecryptFileIntentSender(file, context, formOrigin)
-    return makeIntentDataset(context, AutofillAction.Match, intentSender, metadata, imeSpec)
+    return makeIntentDataset(
+      context,
+      AutofillAction.Match,
+      intentSender,
+      metadata,
+      imeSpec,
+    )
   }
 
-  private fun makeSearchDataset(context: Context, imeSpec: InlinePresentationSpec?): Dataset? {
+  private fun makeSearchDataset(
+    context: Context,
+    imeSpec: InlinePresentationSpec?,
+    suggestionCount: Int,
+    maxSuggestions: Int,
+  ): Dataset? {
     if (!scenario.hasFieldsToFillOn(AutofillAction.Search)) return null
-    val metadata = makeSearchAndFillMetadata(context)
+    val metadata = makeSearchAndFillMetadata(context, suggestionCount, maxSuggestions)
     val intentSender = AutofillFilterView.makeMatchAndDecryptFileIntentSender(context, formOrigin)
-    return makeIntentDataset(context, AutofillAction.Search, intentSender, metadata, imeSpec)
+    return makeIntentDataset(
+      context,
+      AutofillAction.Search,
+      intentSender,
+      metadata,
+      imeSpec,
+    )
   }
 
-  private fun makeGenerateDataset(context: Context, imeSpec: InlinePresentationSpec?): Dataset? {
+  private fun makeGenerateDataset(
+    context: Context,
+    imeSpec: InlinePresentationSpec?,
+    suggestionCount: Int,
+    maxSuggestions: Int,
+  ): Dataset? {
     if (!scenario.hasFieldsToFillOn(AutofillAction.Generate)) return null
-    val metadata = makeGenerateAndFillMetadata(context)
+    val metadata = makeGenerateAndFillMetadata(context, suggestionCount, maxSuggestions)
     val intentSender =
       AutofillSaveActivity.makeSaveIntentSender(context, null, formOrigin, clientState)
-    return makeIntentDataset(context, AutofillAction.Generate, intentSender, metadata, imeSpec)
+    return makeIntentDataset(
+      context,
+      AutofillAction.Generate,
+      intentSender,
+      metadata,
+      imeSpec,
+    )
   }
 
   private fun makePublisherChangedDataset(
@@ -197,16 +227,16 @@ class Api30AutofillResponseBuilder private constructor(form: FillableForm) :
       }
     return FillResponse.Builder().run {
       for (file in matchedFiles) {
-        makeMatchDataset(context, file, nextImeSpec())?.let {
+        makeMatchDataset(context, file, nextImeSpec(), matchedFiles.size, maxSuggestions)?.let {
           datasetCount++
           addDataset(it)
         }
       }
-      makeGenerateDataset(context, nextImeSpec())?.let {
+      makeGenerateDataset(context, nextImeSpec(), matchedFiles.size, maxSuggestions)?.let {
         datasetCount++
         addDataset(it)
       }
-      makeSearchDataset(context, nextImeSpec())?.let {
+      makeSearchDataset(context, nextImeSpec(), matchedFiles.size, maxSuggestions)?.let {
         datasetCount++
         addDataset(it)
       }

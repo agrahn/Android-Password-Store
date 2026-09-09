@@ -215,7 +215,6 @@
   <string name="oreo_autofill_save_app_not_supported">Esta aplicación no es compatible</string>
   <string name="oreo_autofill_save_passwords_dont_match">Las contraseñas no coinciden</string>
   <string name="oreo_autofill_generate_password">Crear entrada</string>
-  <string name="oreo_autofill_max_matches_reached">Número máximo de coincidencias (%1$d) alcanzadas; Borra las coincidencias antes de agregar otras nuevas.</string>
   <string name="oreo_autofill_warning_publisher_header">El editor de esta aplicación ha cambiado desde que asoció por primera vez una entrada de almacén de contraseñas con ella:</string>
   <string name="oreo_autofill_warning_publisher_footer"><b>Es posible que la aplicación instalada actualmente esté intentando robar sus credenciales haciéndose pasar por una aplicación de confianza.</b>\n\nIntente desinstalar y volver a instalar la aplicación desde una fuente confiable, como Play Store, Amazon Appstore, F-Droid o la tienda del fabricante de su teléfono.</string>
   <string name="oreo_autofill_warning_publisher_install_time">Instalado: %1$s</string>

@@ -21,6 +21,7 @@ import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.injection.prefs.PasswordHistory
 import app.passwordstore.ui.crypto.BasePGPActivity
+import app.passwordstore.util.autofill.AutofillMatcher
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.autofill.AutofillResponseBuilder
 import app.passwordstore.util.extensions.base64
@@ -146,6 +147,11 @@ class AutofillDecryptActivity : BasePGPActivity() {
 
       onSuccess(lastResult.first) // pass ID
 
+      // update autofill suggestion order
+      formOrigin?.let {
+        AutofillMatcher.addMatchFor(this@AutofillDecryptActivity, it, File(filePath))
+      }
+
       withContext(dispatcherProvider.main()) { finish() }
     } else {
       passphrases.values.forEach { it?.wipe() }
@@ -188,6 +194,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
   companion object {
 
     var origin: String? = null
+    var formOrigin: FormOrigin? = null
     private const val EXTRA_FILE_PATH = "app.passwordstore.autofill.oreo.EXTRA_FILE_PATH"
     private const val EXTRA_SEARCH_ACTION = "app.passwordstore.autofill.oreo.EXTRA_SEARCH_ACTION"
 
@@ -208,6 +215,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
       formOrigin: FormOrigin,
     ): IntentSender {
       origin = formOrigin.getPrettyIdentifier(context, untrusted = false) // web origin or app name
+      this.formOrigin = formOrigin
 
       val intent =
         Intent(context, AutofillDecryptActivity::class.java).apply {

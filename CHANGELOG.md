@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file
 ### Added
 
 - Verify authenticity of passkey requesting apps against Google's and Bitwarden's allow lists and via asset links
+- Autofill suggestions sorted by most recent usage, the newest at the top
 
 ### Fixed
 
@@ -15,7 +16,8 @@ All notable changes to this project will be documented in this file
 - The selected password file organisation (in General settings) is now honoured when new entries are manually created
 - During autofill, login form fields are now pre-filled with the newly created credentials
 - In case of file (work/example.org/john@doe.org) and dir-based (work/example.org/john@dow.org/password.gpg) password file organisation, the subfolder structure is now preserved when modifying the suggested destination folder on the "New password" form
-- Improved username lookup for autofill, now based on origin (web/app form) and independent from current password file organisation setting
+- Improved credential lookup for autofill, now based on origin (web/app form) and independent from current password file organisation setting
+- After reaching a soft-keyboard-dependent number of autofill suggestion buttons, the Search button became inaccessible. Now, the display of suggestions switches automatically to popup mode, where suggestions are shown in a scrollable box above the input field
 
 ## [2.0.1] - 2026-08-07
 
