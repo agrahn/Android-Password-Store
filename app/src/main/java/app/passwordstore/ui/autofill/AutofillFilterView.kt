@@ -233,7 +233,8 @@ class AutofillFilterView : AppCompatActivity() {
                 .map { it.value }
                 .toList()
 
-            title.text = buildSpannedString {
+            val pathWithMatches = buildSpannedString {
+              append("/")
               parts.getOrNull(0)?.let { append(it) }
               matches.forEachIndexed { i, m ->
                 if (i == 0 || parts.getOrNull(i)?.isNotEmpty() ?: false)
@@ -242,7 +243,17 @@ class AutofillFilterView : AppCompatActivity() {
                 parts.getOrNull(i + 1)?.let { append(it) }
               }
             }
-            subtitle.text = directoryStructure.getPathStringWithAtMostTwoParentsFor(file)
+
+            val endPath = directoryStructure.getPathStringWithAtMostTwoParentsFor(file)
+
+            title.text = pathWithMatches
+
+            if (pathString.equals(endPath)) {
+              subtitle.visibility = View.GONE
+              title.setTextSize(14f)
+            } else {
+              subtitle.text = endPath
+            }
           }
           .onItemClicked { _, item -> decryptAndFill(item) }
       layoutManager = LinearLayoutManager(context)
