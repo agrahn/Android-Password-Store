@@ -356,9 +356,9 @@
   <string name="new_folder_set_gpg_key">PGP-Schlüssel für Ordner festlegen</string>
 
   <!-- Password decryption failure -->
-  <string name="password_decryption_no_decryption_key">Entschlüsseln fehlgeschlagen. Kein geeigneter geheimer Schlüssel gefunden.</string>
+  <string name="password_decryption_no_decryption_key">Entschlüsseln fehlgeschlagen. Kein geeigneter geheimer Schlüssel gefunden</string>
   <string name="password_decryption_unknown_error">Unbekannter Fehler beim Entschlüsseln</string>
-  <string name="password_decryption_no_autofill_with_passkey_error">Kein automatisches Ausfüllen mit Passekey-Daten</string>
+  <string name="password_decryption_no_autofill_with_passkey_error">Automatisches Ausfüllen mit Passkey-Daten nicht möglich</string>
 
   <!-- GitException messages -->
   <string name="git_unknown_error">Unbekannter Fehler</string>

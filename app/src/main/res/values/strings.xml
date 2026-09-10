@@ -361,7 +361,7 @@
   <!-- Password decryption failure -->
   <string name="password_decryption_no_decryption_key">Decryption failed. No suitable decryption key found</string>
   <string name="password_decryption_unknown_error">Unknown decryption error</string>
-  <string name="password_decryption_no_autofill_with_passkey_error">No autofill with passkey data</string>
+  <string name="password_decryption_no_autofill_with_passkey_error">Autofill with passkey data not possible</string>
 
   <!-- GitException messages -->
   <string name="git_unknown_error">Unknown error</string>

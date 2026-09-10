@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -16,6 +17,7 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
 import androidx.core.text.underline
@@ -25,12 +27,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import app.passwordstore.R
 import app.passwordstore.data.password.PasswordItem
 import app.passwordstore.databinding.ActivityOreoAutofillFilterBinding
+import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.autofill.AutofillMatcher
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.settings.DirectoryStructure
+import app.passwordstore.util.settings.PreferenceKeys
 import app.passwordstore.util.viewmodel.FilterMode
 import app.passwordstore.util.viewmodel.ListMode
 import app.passwordstore.util.viewmodel.SearchMode
@@ -48,6 +52,8 @@ import logcat.logcat
 class AutofillFilterView : AppCompatActivity() {
 
   @Inject lateinit var dispatcherProvider: DispatcherProvider
+
+  @SettingsPreferences @Inject lateinit var settings: SharedPreferences
 
   companion object {
 
@@ -90,6 +96,7 @@ class AutofillFilterView : AppCompatActivity() {
   private val binding by viewBinding(ActivityOreoAutofillFilterBinding::inflate)
 
   private val model: SearchableRepositoryViewModel by viewModels()
+  private var showHiddenSetting: Boolean = false
 
   private val decryptAction =
     registerForActivityResult(StartActivityForResult()) { result ->
@@ -138,9 +145,19 @@ class AutofillFilterView : AppCompatActivity() {
     directoryStructure = AutofillPreferences.directoryStructure(this)
 
     supportActionBar?.hide()
+
+    // temporarily suppress display of hidden files
+    showHiddenSetting = settings.getBoolean(PreferenceKeys.SHOW_HIDDEN_CONTENTS, false)
+    settings.edit { putBoolean(PreferenceKeys.SHOW_HIDDEN_CONTENTS, false) }
+
     bindUI()
     updateSearch()
     setResult(RESULT_CANCELED)
+  }
+
+  override fun onStop() {
+    super.onStop()
+    settings.edit { putBoolean(PreferenceKeys.SHOW_HIDDEN_CONTENTS, showHiddenSetting) }
   }
 
   private fun bindUI() {
@@ -238,7 +255,10 @@ class AutofillFilterView : AppCompatActivity() {
     model.search(
       binding.search.text.toString(),
       filterMode =
-        if (binding.strictDomainSearch.isChecked) FilterMode.StrictDomain else FilterMode.Fuzzy,
+        if (binding.strictDomainSearch.isChecked) FilterMode.StrictDomain
+        else if (settings.getString(PreferenceKeys.SEARCH_FILTER_MODE, "exact") == "fuzzy")
+          FilterMode.Fuzzy
+        else FilterMode.Exact,
       searchMode = SearchMode.RecursivelyInSubdirectories,
       listMode = ListMode.FilesOnly,
     )

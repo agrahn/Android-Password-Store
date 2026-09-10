@@ -109,7 +109,9 @@ class AutofillDecryptActivity : BasePGPActivity() {
       if (retrievePasskey(entry, stripped = true) != null) {
         entry.clear()
 
-        onSuccess(lastResult.first) // but pass ID for peristent passphrase caching
+        AutofillMatcher.updateMatches(this@AutofillDecryptActivity, delete = listOf(encryptedFile))
+
+        onSuccess(lastResult.first) // but pass ID for passphrase caching
 
         if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {
           cachedPassphrases.values.forEach { it.wipe() }
@@ -165,7 +167,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
           )
         }
 
-        onSuccess(lastResult.first) // pass ID for persistent passphrase caching
+        onSuccess(lastResult.first) // pass ID for passphrase caching
 
         if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {
           cachedPassphrases.values.forEach { it.wipe() }
@@ -175,7 +177,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
         // update autofill suggestion order
         formOrigin?.let {
           if (AutofillPreferences.addQuickSelectButton(this@AutofillDecryptActivity))
-            AutofillMatcher.addMatchFor(this@AutofillDecryptActivity, it, File(filePath))
+            AutofillMatcher.addMatchFor(this@AutofillDecryptActivity, it, encryptedFile)
         }
 
         withContext(dispatcherProvider.main()) { finish() }
@@ -208,6 +210,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
         val timer = Executors.newSingleThreadScheduledExecutor()
         timer.schedule({ finish() }, 4.toLong(), TimeUnit.SECONDS)
       }
+
       results
         .filter { it.second.getError() is Throwable }
         .forEach { logcat { it.second.getError()?.asLog() ?: "unknown error" } }
