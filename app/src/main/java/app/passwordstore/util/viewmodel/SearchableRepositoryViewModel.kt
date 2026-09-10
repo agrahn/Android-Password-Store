@@ -277,18 +277,6 @@ constructor(
       }
       .flowOn(dispatcherProvider.io())
 
-  private fun shouldTake(file: File) =
-    with(file) {
-      if (showHiddenContents) {
-        return !file.name.startsWith(".git")
-      }
-      if (isDirectory) {
-        !isHidden
-      } else {
-        !isHidden && file.extension == "gpg"
-      }
-    }
-
   private fun listFiles(dir: File): Flow<File> {
     return dir.listFiles(::shouldTake)?.asFlow() ?: emptyFlow()
   }
@@ -314,6 +302,18 @@ constructor(
   data class NavigationStackEntry(val dir: File, val recyclerViewState: Parcelable?)
 
   private val navigationStack = ArrayDeque<NavigationStackEntry>()
+
+  fun shouldTake(file: File): Boolean =
+    with(file) {
+      if (showHiddenContents) {
+        return !name.startsWith(".git")
+      }
+      if (isDirectory) {
+        !isHidden
+      } else {
+        !isHidden && extension == "gpg"
+      }
+    }
 
   fun navigateTo(
     newDirectory: File = root,
