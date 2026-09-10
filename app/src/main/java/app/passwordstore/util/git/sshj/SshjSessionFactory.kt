@@ -171,21 +171,7 @@ private class SshjSession(
   private lateinit var ssh: SSHClient
   private var currentCommand: Session? = null
 
-  private val uri =
-    if (uri.host.contains('@')) {
-      // URIish's String constructor cannot handle '@' in the user part of the URI and the URL
-      // constructor can't be used since Java's URL does not recognize the ssh scheme. We thus
-      // need to patch everything up ourselves.
-      logcat { "Before fixup: user=${uri.user}, host=${uri.host}" }
-      val userPlusHost = "${uri.user}@${uri.host}"
-      val realUser = userPlusHost.substringBeforeLast('@')
-      val realHost = userPlusHost.substringAfterLast('@')
-      uri.setUser(realUser).setHost(realHost).also {
-        logcat { "After fixup: user=${it.user}, host=${it.host}" }
-      }
-    } else {
-      uri
-    }
+  private val uri = fixUri(uri)
 
   fun connect(): SshjSession {
     ssh = SSHClient(SshjConfig())
@@ -261,3 +247,19 @@ private class SshjProcess(private val command: Session.Command, private val time
 
   override fun getInputStream(): InputStream = command.inputStream
 }
+
+fun fixUri(uri: URIish): URIish =
+  if (uri.host.contains('@')) {
+    // URIish's String constructor cannot handle '@' in the user part of the URI and the URL
+    // constructor can't be used since Java's URL does not recognize the ssh scheme. We thus
+    // need to patch everything up ourselves.
+    logcat("sshj.fixUri") { "Before fixup: user=${uri.user}, host=${uri.host}" }
+    val userPlusHost = "${uri.user}@${uri.host}"
+    val realUser = userPlusHost.substringBeforeLast('@')
+    val realHost = userPlusHost.substringAfterLast('@')
+    uri.setUser(realUser).setHost(realHost).also {
+      logcat("sshj.fixUri") { "After fixup: user=${it.user}, host=${it.host}" }
+    }
+  } else {
+    uri
+  }
