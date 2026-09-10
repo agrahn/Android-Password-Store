@@ -14,7 +14,7 @@
 
   <string name="action_settings">Einstellungen</string>
   <string name="dialog_delete_title">Ordner existiert bereits</string>
-  <string name="dialog_delete_msg">Zielordner existiert bereits. Die aktuelle Version unterstützt nur eine einzige Datenquelle. Möchten Sie die aktuelle Datenquelle löschen?\n(%1$s)</string>
+  <string name="dialog_delete_msg">Möchten Sie das lokale Password-Repository wirklich löschen?\n\n%1$s</string>
   <string name="dialog_delete">Ordner löschen</string>
   <string name="dialog_do_not_delete">Abbrechen</string>
   <string name="title_activity_git_clone">Repository-Informationen</string>
@@ -358,6 +358,7 @@
   <!-- Password decryption failure -->
   <string name="password_decryption_no_decryption_key">Entschlüsseln fehlgeschlagen. Kein geeigneter geheimer Schlüssel gefunden.</string>
   <string name="password_decryption_unknown_error">Unbekannter Fehler beim Entschlüsseln</string>
+  <string name="password_decryption_no_autofill_with_passkey_error">Kein automatisches Ausfüllen mit Passekey-Daten</string>
 
   <!-- GitException messages -->
   <string name="git_unknown_error">Unbekannter Fehler</string>

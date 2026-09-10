@@ -15,7 +15,7 @@
 
   <string name="action_settings">Settings</string>
   <string name="dialog_delete_title">Directory already exists</string>
-  <string name="dialog_delete_msg">Target directory already exists. Current version only supports a single store. Do you want to delete the current password store directory?\n(%1$s)</string>
+  <string name="dialog_delete_msg">Do you really want to delete the local password repository?\n\n%1$s</string>
   <string name="dialog_delete">Delete directory</string>
   <string name="dialog_do_not_delete">Abort</string>
   <string name="title_activity_git_clone">Repository information</string>
@@ -361,6 +361,7 @@
   <!-- Password decryption failure -->
   <string name="password_decryption_no_decryption_key">Decryption failed. No suitable decryption key found</string>
   <string name="password_decryption_unknown_error">Unknown decryption error</string>
+  <string name="password_decryption_no_autofill_with_passkey_error">No autofill with passkey data</string>
 
   <!-- GitException messages -->
   <string name="git_unknown_error">Unknown error</string>
