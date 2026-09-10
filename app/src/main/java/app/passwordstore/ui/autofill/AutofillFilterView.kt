@@ -250,8 +250,6 @@ class AutofillFilterView : AppCompatActivity() {
     if (binding.shouldClear.isChecked)
       AutofillMatcher.clearMatchesFor(applicationContext, formOrigin)
     AutofillPreferences.addQuickSelectButton(this, binding.shouldMatch.isChecked)
-    if (binding.shouldMatch.isChecked)
-      AutofillMatcher.addMatchFor(applicationContext, formOrigin, item.file)
     // intent?.extras? is checked to be non-null in onCreate
     decryptAction.launch(
       AutofillDecryptActivity.makeDecryptFileIntent(

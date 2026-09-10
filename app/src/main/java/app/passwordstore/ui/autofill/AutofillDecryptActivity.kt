@@ -95,64 +95,91 @@ class AutofillDecryptActivity : BasePGPActivity() {
     val outputStream = ByteArrayOutputStream()
     val results = repository.decrypt(passphrases, identifiers, message, outputStream)
     val lastResult = results.last()
+
     if (lastResult.second.isOk) {
+
       val decryptedEntryBytes = lastResult.second.getOrThrow().toByteArray()
       lastResult.second.getOrThrow().wipe()
       val decryptedEntryChars = decryptedEntryBytes.toCharArray()
       decryptedEntryBytes.wipe()
       val entry = passwordEntryFactory.create(decryptedEntryChars)
       entry.clearExtra()
-      val directoryStructure = AutofillPreferences.directoryStructure(this)
-      val credentials =
-        AutofillPreferences.credentialsFromStoreEntry(
-          this,
-          encryptedFile,
-          entry,
-          origin,
-          directoryStructure,
+
+      // no autofill if it is a passkey
+      if (retrievePasskey(entry, stripped = true) != null) {
+        entry.clear()
+
+        onSuccess(lastResult.first) // but pass ID for peristent passphrase caching
+
+        if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {
+          cachedPassphrases.values.forEach { it.wipe() }
+          cachedPassphrases.clear()
+        }
+
+        snackbar(
+          message = resources.getString(R.string.password_decryption_no_autofill_with_passkey_error)
         )
-      val fillInDataset =
-        AutofillResponseBuilder.makeFillInDataset(
-          this@AutofillDecryptActivity,
-          credentials,
-          clientState,
-          action,
-        )
-      withContext(dispatcherProvider.main()) {
-        setResult(
-          RESULT_OK,
-          Intent().apply { putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, fillInDataset) },
-        )
-        if (entry.hasTotp()) {
-          val otp = entry.currentOtp
-          val remainingTime = otp.remainingTime.inWholeSeconds
-          copyTextToClipboard(otp.value.toCharArray(), isSensitive = false)
-          otpTimer?.shutdownNow()
-          val otpTimerNew = Executors.newSingleThreadScheduledExecutor()
-          otpTimer = otpTimerNew
-          otpTimerNew.schedule( // refresh otp once
-            { copyTextToClipboard(entry.currentOtp.value.toCharArray(), isSensitive = false) },
-            remainingTime,
-            TimeUnit.SECONDS,
+        val timer = Executors.newSingleThreadScheduledExecutor()
+        timer.schedule({ finish() }, 4.toLong(), TimeUnit.SECONDS)
+      } else {
+        val directoryStructure = AutofillPreferences.directoryStructure(this)
+        val credentials =
+          AutofillPreferences.credentialsFromStoreEntry(
+            this,
+            encryptedFile,
+            entry,
+            origin,
+            directoryStructure,
+          )
+        val fillInDataset =
+          AutofillResponseBuilder.makeFillInDataset(
+            this@AutofillDecryptActivity,
+            credentials,
+            clientState,
+            action,
+          )
+        withContext(dispatcherProvider.main()) {
+          setResult(
+            RESULT_OK,
+            Intent().apply { putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, fillInDataset) },
+          )
+          if (entry.hasTotp()) {
+            val otp = entry.currentOtp
+            val remainingTime = otp.remainingTime.inWholeSeconds
+            copyTextToClipboard(otp.value.toCharArray(), isSensitive = false)
+            otpTimer?.shutdownNow()
+            val otpTimerNew = Executors.newSingleThreadScheduledExecutor()
+            otpTimer = otpTimerNew
+            otpTimerNew.schedule( // refresh otp once
+              { copyTextToClipboard(entry.currentOtp.value.toCharArray(), isSensitive = false) },
+              remainingTime,
+              TimeUnit.SECONDS,
+            )
+          }
+        }
+
+        passwordHistory.edit { // create/update timestamp on the current password file
+          putString(
+            filePath.base64(),
+            System.currentTimeMillis().toString(),
           )
         }
+
+        onSuccess(lastResult.first) // pass ID for persistent passphrase caching
+
+        if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {
+          cachedPassphrases.values.forEach { it.wipe() }
+          cachedPassphrases.clear()
+        }
+
+        // update autofill suggestion order
+        formOrigin?.let {
+          if (AutofillPreferences.addQuickSelectButton(this@AutofillDecryptActivity))
+            AutofillMatcher.addMatchFor(this@AutofillDecryptActivity, it, File(filePath))
+        }
+
+        withContext(dispatcherProvider.main()) { finish() }
       }
-
-      passwordHistory.edit { // create/update timestamp on the current password file
-        putString(
-          filePath.base64(),
-          System.currentTimeMillis().toString(),
-        )
-      }
-
-      onSuccess(lastResult.first) // pass ID
-
-      // update autofill suggestion order
-      formOrigin?.let {
-        AutofillMatcher.addMatchFor(this@AutofillDecryptActivity, it, File(filePath))
-      }
-
-      withContext(dispatcherProvider.main()) { finish() }
     } else {
       passphrases.values.forEach { it?.wipe() }
       if (
@@ -184,10 +211,11 @@ class AutofillDecryptActivity : BasePGPActivity() {
       results
         .filter { it.second.getError() is Throwable }
         .forEach { logcat { it.second.getError()?.asLog() ?: "unknown error" } }
-    }
-    if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {
-      cachedPassphrases.values.forEach { it.wipe() }
-      cachedPassphrases.clear()
+
+      if (!settings.getBoolean(PreferenceKeys.CACHE_PASSPHRASE, false)) {
+        cachedPassphrases.values.forEach { it.wipe() }
+        cachedPassphrases.clear()
+      }
     }
   }
 
