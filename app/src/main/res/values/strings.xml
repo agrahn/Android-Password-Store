@@ -43,7 +43,7 @@
   <string name="git_commit_add_text">New password %1$s added using Android Password Store</string>
   <string name="git_commit_edit_text">Password %1$s edited using Android Password Store</string>
   <string name="git_commit_add_passkey_text">New passkey %1$s added using Android Password Store</string>
-  <string name="git_commit_edit_passkey_text">Passkey %1$s edited Android Password Store</string>
+  <string name="git_commit_edit_passkey_text">Passkey %1$s edited using Android Password Store</string>
   <string name="git_commit_remove_text">%1$s removed from store</string>
   <string name="git_commit_move_text">Renamed %1$s to %2$s</string>
   <string name="git_commit_move_multiple_text">Multiple items moved to %1$s</string>

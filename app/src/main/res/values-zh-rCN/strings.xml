@@ -10,8 +10,6 @@
   <!-- Activity names -->
   <string name="action_settings">设置</string>
   <string name="dialog_delete_title">目录已存在</string>
-  <string name="dialog_delete_msg">目标目录已存在,当前版本仅支持单个目录,是否要删除当前密码存储目录?
-(%1$s)</string>
   <string name="dialog_delete">删除目录</string>
   <string name="dialog_do_not_delete">取消</string>
   <string name="title_activity_git_clone">存储库信息</string>

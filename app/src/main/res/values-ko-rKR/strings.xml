@@ -10,7 +10,6 @@
   <!-- Activity names -->
   <string name="action_settings">설정</string>
   <string name="dialog_delete_title">이미 생성된 디렉토리입니다</string>
-  <string name="dialog_delete_msg">해당 디렉토리는 이미 사용 중입니다. 아직은 하나의 저장소만 지원합니다. 현재 비밀번호 저장소 디렉토리를 삭제하시겠습니까?\n(%1$s)</string>
   <string name="dialog_delete">디렉토리 삭제</string>
   <string name="dialog_do_not_delete">삭제 취소</string>
   <string name="title_activity_git_clone">레포지토리 정보</string>

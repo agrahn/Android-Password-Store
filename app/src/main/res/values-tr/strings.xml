@@ -15,7 +15,7 @@
 
   <string name="action_settings">Ayarlar</string>
   <string name="dialog_delete_title">Dizin zaten mevcut</string>
-  <string name="dialog_delete_msg">Hedef dizin zaten mevcut. Mevcut sürüm yalnızca tek bir depoyu desteklemektedir. Mevcut şifre deposu dizinini silmek istiyor musunuz?\n(%1$s)</string>
+  <string name="dialog_delete_msg">Mevcut şifre deposu dizinini silmek istiyor musunuz?\n(%1$s)</string>
   <string name="dialog_delete">Dizini sil</string>
   <string name="dialog_do_not_delete">İptal</string>
   <string name="title_activity_git_clone">Depo bilgileri</string>

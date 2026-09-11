@@ -11,7 +11,7 @@
   <!-- Activity names -->
   <string name="action_settings">Impostazioni</string>
   <string name="dialog_delete_title">La directory esiste già</string>
-  <string name="dialog_delete_msg">La directory di destinazione esiste già. La versione corrente supporta solo un negozio singolo. Vuoi eliminare la directory dell\'archivio delle password corrente?\n(%1$s)</string>
+  <string name="dialog_delete_msg">Vuoi eliminare la directory dell\'archivio delle password corrente?\n(%1$s)</string>
   <string name="dialog_delete">Elimina directory</string>
   <string name="dialog_do_not_delete">Annulla</string>
   <string name="title_activity_git_clone">Informazioni della repository</string>

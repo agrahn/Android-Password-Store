@@ -11,7 +11,7 @@
   <!-- Activity names -->
   <string name="action_settings">Axustes</string>
   <string name="dialog_delete_title">Xa existe o directorio</string>
-  <string name="dialog_delete_msg">O directorio elexido xa existe. A versión actual só admite unha almacenaxe. Desexas eliminar o directorio actual de password store?\n(%1$s)</string>
+  <string name="dialog_delete_msg">Desexas eliminar o directorio actual de password store?\n(%1$s)</string>
   <string name="dialog_delete">Eliminar directorio</string>
   <string name="dialog_do_not_delete">Cancelar</string>
   <string name="title_activity_git_clone">Información do repositorio</string>

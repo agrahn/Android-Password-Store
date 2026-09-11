@@ -14,7 +14,7 @@
   <!-- Activity names -->
   <string name="action_settings">Ustawienia</string>
   <string name="dialog_delete_title">Katalog już istnieje</string>
-  <string name="dialog_delete_msg">Katalog docelowy już istnieje. Bieżąca wersja obsługuje tylko jedno repozytorium. Czy chcesz usunąć aktualny katalog z repozytorium haseł?\n(%1$s)</string>
+  <string name="dialog_delete_msg">Czy chcesz usunąć aktualny katalog z repozytorium haseł?\n(%1$s)</string>
   <string name="dialog_delete">Usuń katalog</string>
   <string name="dialog_do_not_delete">Anuluj</string>
   <string name="title_activity_git_clone">Konfiguracja repozytorium</string>

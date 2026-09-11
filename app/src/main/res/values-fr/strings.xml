@@ -11,7 +11,7 @@
   <!-- Activity names -->
   <string name="action_settings">Paramètres</string>
   <string name="dialog_delete_title">Répertoire déjà existant</string>
-  <string name="dialog_delete_msg">Répertoire cible déjà existant. La version actuelle ne supporte qu\'un seul gestionnaire. Voulez vous supprimer le répertoire actual du gestionnaire de mots de passe?\n(%1$s)</string>
+  <string name="dialog_delete_msg">Voulez vous supprimer le répertoire actual du gestionnaire de mots de passe?\n(%1$s)</string>
   <string name="dialog_delete">Supprimer le répertoire</string>
   <string name="dialog_do_not_delete">Annuler</string>
   <string name="title_activity_git_clone">Information sur le dépôt Git</string>

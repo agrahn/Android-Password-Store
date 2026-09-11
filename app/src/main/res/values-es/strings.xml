@@ -15,7 +15,7 @@
 
     <string name="action_settings">Configuración</string>
   <string name="dialog_delete_title">El directorio ya existe</string>
-  <string name="dialog_delete_msg">El directorio de destino ya existe. La versión actual solo admite un único almacén. ¿Desea eliminar el directorio actual del almacén de contraseñas?\n(%1$s)</string>
+  <string name="dialog_delete_msg">¿Desea eliminar el directorio actual del almacén de contraseñas?\n(%1$s)</string>
   <string name="dialog_delete">Eliminar directorio</string>
   <string name="dialog_do_not_delete">Cancelar</string>
   <string name="title_activity_git_clone">Información del repositorio</string>

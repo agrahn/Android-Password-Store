@@ -13,7 +13,7 @@
   <!-- Activity names -->
   <string name="action_settings">Настройки</string>
   <string name="dialog_delete_title">Директория уже существует</string>
-  <string name="dialog_delete_msg">Директория уже существует. Текущая версия поддерживает только одно хранилище. Хотите удалить существующую директорию\n(%1$s)</string>
+  <string name="dialog_delete_msg">Хотите удалить существующую директорию\n(%1$s)</string>
   <string name="dialog_delete">Удалить директорию</string>
   <string name="dialog_do_not_delete">Отменить</string>
   <string name="title_activity_git_clone">Информация о репозитории</string>

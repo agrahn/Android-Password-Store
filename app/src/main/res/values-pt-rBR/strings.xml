@@ -11,7 +11,7 @@
   <!-- Activity names -->
   <string name="action_settings">Configurações</string>
   <string name="dialog_delete_title">O diretório já existe</string>
-  <string name="dialog_delete_msg">O diretório de destino já existe. A versão atual suporta apenas uma única armazenagem. Você quer excluir o diretório atual de armazenamento de senhas?\n(%1$s)</string>
+  <string name="dialog_delete_msg">Você quer excluir o diretório atual de armazenamento de senhas?\n(%1$s)</string>
   <string name="dialog_delete">Excluir diretório</string>
   <string name="dialog_do_not_delete">Cancelar</string>
   <string name="title_activity_git_clone">Informações do repositório</string>
