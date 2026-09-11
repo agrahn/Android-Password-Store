@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.SharedPreferences
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -41,6 +42,7 @@ import app.passwordstore.util.viewmodel.SearchMode
 import app.passwordstore.util.viewmodel.SearchableRepositoryAdapter
 import app.passwordstore.util.viewmodel.SearchableRepositoryViewModel
 import com.github.androidpasswordstore.autofillparser.FormOrigin
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.flow.collect
@@ -57,7 +59,7 @@ class AutofillFilterView : AppCompatActivity() {
 
   companion object {
 
-    private const val HEIGHT_PERCENTAGE = .95
+    private const val HEIGHT_PERCENTAGE = .9
     private const val WIDTH_PERCENTAGE = .95
 
     private const val EXTRA_FORM_ORIGIN_WEB =
@@ -106,22 +108,33 @@ class AutofillFilterView : AppCompatActivity() {
       finish()
     }
 
+  private fun resize() {
+    val params = window.attributes
+    params.height = (HEIGHT_PERCENTAGE * resources.displayMetrics.heightPixels).toInt()
+    params.width = (WIDTH_PERCENTAGE * resources.displayMetrics.widthPixels).toInt()
+    window.attributes = params
+  }
+
+  override fun onConfigurationChanged(newConfig: Configuration) {
+    super.onConfigurationChanged(newConfig)
+
+    resize()
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdgeView(binding.root)
     setContentView(binding.root)
     setFinishOnTouchOutside(true)
 
-    val params = window.attributes
-    params.height = (HEIGHT_PERCENTAGE * resources.displayMetrics.heightPixels).toInt()
-    params.width = (WIDTH_PERCENTAGE * resources.displayMetrics.widthPixels).toInt()
-    window.attributes = params
+    resize()
 
     if (intent?.hasExtra(AutofillManager.EXTRA_CLIENT_STATE) != true) {
       logcat(ERROR) { "AutofillFilterActivity started without EXTRA_CLIENT_STATE" }
       finish()
       return
     }
+
     formOrigin =
       when {
         intent?.hasExtra(EXTRA_FORM_ORIGIN_WEB) == true -> {
@@ -142,9 +155,53 @@ class AutofillFilterView : AppCompatActivity() {
           return
         }
       }
+
     directoryStructure = AutofillPreferences.directoryStructure(this)
 
     supportActionBar?.hide()
+
+    binding.filterMenuButton.setOnClickListener {
+      var items =
+        arrayOf(
+          getString(
+            R.string.oreo_autofill_match_with,
+            formOrigin.getPrettyIdentifier(applicationContext, untrusted = false),
+          ),
+          getString(R.string.oreo_autofill_matches_clear_existing),
+        )
+
+      var checked =
+        booleanArrayOf(
+          AutofillPreferences.addQuickSelectButton(this@AutofillFilterView),
+          AutofillPreferences.removeQuickSelectButtons(this@AutofillFilterView),
+        )
+
+      if (formOrigin is FormOrigin.Web) {
+        items = arrayOf(getString(R.string.oreo_autofill_strict_domain_search)) + items
+        checked =
+          booleanArrayOf(AutofillPreferences.strictDomainSearch(this@AutofillFilterView)) + checked
+      }
+
+      MaterialAlertDialogBuilder(this)
+        .setMultiChoiceItems(items, checked) { _, which, isChecked ->
+          if (formOrigin is FormOrigin.Web) {
+            when (which) {
+              0 -> {
+                AutofillPreferences.strictDomainSearch(this@AutofillFilterView, isChecked)
+                updateSearch()
+              }
+              1 -> AutofillPreferences.addQuickSelectButton(this@AutofillFilterView, isChecked)
+              2 -> AutofillPreferences.removeQuickSelectButtons(this@AutofillFilterView, isChecked)
+            }
+          } else {
+            when (which) {
+              0 -> AutofillPreferences.addQuickSelectButton(this@AutofillFilterView, isChecked)
+              1 -> AutofillPreferences.removeQuickSelectButtons(this@AutofillFilterView, isChecked)
+            }
+          }
+        }
+        .show()
+    }
 
     // temporarily suppress display of hidden files
     showHiddenSetting = settings.getBoolean(PreferenceKeys.SHOW_HIDDEN_CONTENTS, false)
@@ -161,8 +218,6 @@ class AutofillFilterView : AppCompatActivity() {
   }
 
   private fun bindUI() {
-    val strictDomainSearchPref =
-      formOrigin is FormOrigin.Web && AutofillPreferences.strictDomainSearch(this)
     with(binding) {
       search.apply {
         val initialSearch = formOrigin.getPrettyIdentifier(applicationContext, untrusted = false)
@@ -170,25 +225,8 @@ class AutofillFilterView : AppCompatActivity() {
         addTextChangedListener { updateSearch() }
       }
       origin.text = buildSpannedString {
-        append(getString(R.string.oreo_autofill_select_and_fill_into))
-        append("\n")
+        append(getString(R.string.oreo_autofill_select_and_fill_into) + " ")
         bold { append(formOrigin.getPrettyIdentifier(applicationContext, untrusted = true)) }
-      }
-      strictDomainSearch.apply {
-        visibility = if (formOrigin is FormOrigin.Web) View.VISIBLE else View.GONE
-        isChecked = strictDomainSearchPref
-        setOnCheckedChangeListener { _, _ -> updateSearch() }
-      }
-      shouldMatch.apply {
-        text =
-          getString(
-            R.string.oreo_autofill_match_with,
-            formOrigin.getPrettyIdentifier(applicationContext),
-          )
-        isChecked = AutofillPreferences.addQuickSelectButton(applicationContext)
-      }
-      shouldClear.apply {
-        isChecked = AutofillPreferences.removeQuickSelectButtons(applicationContext)
       }
       lifecycleScope.launch { handleSearchResults() }
     }
@@ -261,12 +299,14 @@ class AutofillFilterView : AppCompatActivity() {
   }
 
   private fun updateSearch() {
-    if (formOrigin is FormOrigin.Web)
-      AutofillPreferences.strictDomainSearch(this, binding.strictDomainSearch.isChecked)
     model.search(
       binding.search.text.toString(),
       filterMode =
-        if (binding.strictDomainSearch.isChecked) FilterMode.StrictDomain
+        if (
+          formOrigin is FormOrigin.Web &&
+            AutofillPreferences.strictDomainSearch(this@AutofillFilterView)
+        )
+          FilterMode.StrictDomain
         else if (settings.getString(PreferenceKeys.SEARCH_FILTER_MODE, "exact") == "fuzzy")
           FilterMode.Fuzzy
         else FilterMode.Exact,
@@ -277,14 +317,12 @@ class AutofillFilterView : AppCompatActivity() {
   }
 
   private fun decryptAndFill(item: PasswordItem) {
-    AutofillPreferences.removeQuickSelectButtons(this, binding.shouldClear.isChecked)
-    if (binding.shouldClear.isChecked)
+    if (AutofillPreferences.removeQuickSelectButtons(this@AutofillFilterView))
       AutofillMatcher.clearMatchesFor(applicationContext, formOrigin)
-    AutofillPreferences.addQuickSelectButton(this, binding.shouldMatch.isChecked)
-    // intent?.extras? is checked to be non-null in onCreate
     decryptAction.launch(
       AutofillDecryptActivity.makeDecryptFileIntent(
         item.file,
+        formOrigin,
         intent?.extras ?: throw NullPointerException(),
         this,
       )

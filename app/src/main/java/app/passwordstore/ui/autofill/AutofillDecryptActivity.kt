@@ -174,10 +174,15 @@ class AutofillDecryptActivity : BasePGPActivity() {
           cachedPassphrases.clear()
         }
 
-        // update autofill suggestion order
+        // update autofill suggestion order (add/move to front or remove)
         formOrigin?.let {
           if (AutofillPreferences.addQuickSelectButton(this@AutofillDecryptActivity))
             AutofillMatcher.addMatchFor(this@AutofillDecryptActivity, it, encryptedFile)
+          else
+            AutofillMatcher.updateMatches(
+              this@AutofillDecryptActivity,
+              delete = listOf(encryptedFile),
+            )
         }
 
         withContext(dispatcherProvider.main()) { finish() }
@@ -232,7 +237,14 @@ class AutofillDecryptActivity : BasePGPActivity() {
     private var decryptFileRequestCode = 100000
     private var otpTimer: ScheduledExecutorService? = null
 
-    fun makeDecryptFileIntent(file: File, forwardedExtras: Bundle, context: Context): Intent {
+    fun makeDecryptFileIntent(
+      file: File,
+      formOrigin: FormOrigin,
+      forwardedExtras: Bundle,
+      context: Context,
+    ): Intent {
+      origin = formOrigin.getPrettyIdentifier(context, untrusted = false) // web origin or app name
+      this.formOrigin = formOrigin
       return Intent(context, AutofillDecryptActivity::class.java).apply {
         putExtras(forwardedExtras)
         putExtra(EXTRA_SEARCH_ACTION, true)
