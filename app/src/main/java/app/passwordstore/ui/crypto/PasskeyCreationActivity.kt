@@ -629,7 +629,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
             commitChange(
                 resources.getString(
                   commitMessageRes,
-                  directory.text.toString().trim().trim('/') + "/" + credentialHexId,
+                  directory.text.toString().trim().trim('/') + "/" + credentialHexId.take(8) + "…",
                 )
               )
               .onOk {
