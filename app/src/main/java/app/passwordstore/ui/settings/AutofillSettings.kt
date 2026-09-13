@@ -90,11 +90,8 @@ class AutofillSettings(private val activity: FragmentActivity) : SettingsProvide
         titleRes = R.string.pref_autofill_enable_title
         defaultValue = isAutofillServiceEnabled
         onClick {
-          if (isAutofillServiceEnabled) {
-            activity.autofillManager?.disableAutofillServices()
-          } else {
-            showAutofillDialog(this)
-          }
+          if (checked) showAutofillDialog(this)
+          else activity.autofillManager?.disableAutofillServices()
           false
         }
       }
