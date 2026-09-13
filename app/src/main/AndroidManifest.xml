@@ -184,8 +184,8 @@
       android:theme="@style/NoBackgroundThemeM3" />
     <activity
       android:name=".ui.autofill.AutofillFilterView"
-      android:configChanges="orientation|keyboardHidden"
       android:exported="false"
+      android:configChanges="orientation|screenSize|keyboardHidden"
       android:theme="@style/DialogLikeThemeM3"
       android:windowSoftInputMode="adjustNothing" />
     <activity

@@ -45,11 +45,11 @@ enum class DirectoryStructure(val value: String) {
       if (file.isAbsolute()) file.relativeTo(PasswordRepository.getRepositoryDirectory()) else file
 
     return if (origin != null) {
-      when (origin) {
-        passFile.parentFile?.parentFile?.name -> passFile.parentFile?.name // DirectoryBased
-        passFile.parentFile?.name -> passFile.nameWithoutExtension // FileBased
-        else -> null // EncryptedUsername or no-match
-      }
+      if (origin.equals(passFile.parentFile?.parentFile?.name, ignoreCase = true))
+        passFile.parentFile?.name // DirectoryBased
+      else if (origin.equals(passFile.parentFile?.name, ignoreCase = true))
+        passFile.nameWithoutExtension // FileBased
+      else null // EncryptedUsername or no-match
     } else {
       when (this) { // current directory structure setting as fallback for missing origin
         EncryptedUsername -> null
