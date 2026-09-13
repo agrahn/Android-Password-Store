@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Setup build environment
-      uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@8c172aa00e7ed769dda445d7834940c2b9094ed0 # develop
+      uses: agrahn/android-password-store/.github/reusable-workflows/setup-gradle@7d62402d1bbeafefc048d10ba4983f6da50af826 # develop
       with:
         java-version: 21
 
