@@ -259,9 +259,12 @@ class AutofillFilterView : AppCompatActivity() {
             dispatcherProvider,
           ) { item, _ ->
             val file = item.file.relativeTo(item.rootDir)
+            val fileName =
+              file.nameWithoutExtension.let {
+                if (it.matches("[a-fA-F0-9]{64}$".toRegex())) it.dropLast(56) + "…" else it
+              }
             val pathString =
-              file.parentFile?.let { parentFile -> "${parentFile}/${file.nameWithoutExtension}" }
-                ?: file.nameWithoutExtension
+              file.parentFile?.let { parentFile -> "${parentFile}/${fileName}" } ?: fileName
 
             val searchString = binding.search.text.toString()
             val parts = pathString.split(searchString, ignoreCase = true)
@@ -282,7 +285,10 @@ class AutofillFilterView : AppCompatActivity() {
               }
             }
 
-            val endPath = directoryStructure.getPathStringWithAtMostTwoParentsFor(file)
+            val endPath =
+              directoryStructure
+                .getPathStringWithAtMostTwoParentsFor(file)
+                .replace("[a-fA-F0-9]{64}$".toRegex(), fileName)
 
             title.text = pathWithMatches
 
