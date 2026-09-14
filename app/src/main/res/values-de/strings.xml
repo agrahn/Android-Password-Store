@@ -139,6 +139,7 @@
   <string name="pref_recently_used_sort_order">Zuletzt verwendet</string>
   <string name="pref_category_autofill_title">Automatisches Ausfüllen</string>
   <string name="pref_autofill_enable_title">Autofill aktivieren</string>
+  <string name="pref_autofill_ask_save_passwords_title">Fragen, ob Passwörter gespeichert werden sollen</string>
   <string name="pref_category_misc_title">Verschiedenes</string>
   <string name="pref_clear_clipboard_title">Zwischenablagenverlauf umgehen</string>
   <string name="pref_clear_clipboard_summary">Zwischenablagenverlauf (Samsung-Geräte, Gboard) mit Zufallszahlen überschreiben, um ggf. bestehende Passwörter zu entfernen.</string>

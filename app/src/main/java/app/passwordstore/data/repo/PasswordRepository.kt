@@ -18,7 +18,6 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.io.path.absolutePathString
 import kotlin.io.path.isDirectory
 import kotlin.io.path.name
 import kotlin.streams.asSequence
@@ -267,12 +266,12 @@ object PasswordRepository {
   }
 
   fun findByName(
-    rootPath: String,
-    fileName: String,
+    startPath: String,
+    name: String,
     type: Int = TYPE_DIR or TYPE_FILE,
     ignoreCase: Boolean = false,
-  ): List<String> {
-    return Files.walk(Paths.get(rootPath)).use { stream ->
+  ): List<Path> {
+    return Files.walk(Paths.get(startPath)).use { stream ->
       stream
         .asSequence()
         .filter {
@@ -282,36 +281,32 @@ object PasswordRepository {
             else -> true
           }
         }
-        .filter { it.name.equals(fileName, ignoreCase = ignoreCase) }
-        .map { it.absolutePathString() }
+        .filter { it.name.equals(name, ignoreCase = ignoreCase) }
         .toList()
     }
   }
 
-  fun findFilesByParentName(
-    rootPath: String,
-    parentName: String,
+  fun findByParentName(
+    startPath: String,
+    name: String,
+    type: Int = TYPE_DIR or TYPE_FILE,
     ignoreCase: Boolean = false,
-  ): List<String> {
-    return Files.walk(Paths.get(rootPath)).use { stream ->
+  ): List<Path> {
+    return Files.walk(Paths.get(startPath)).use { stream ->
       stream
         .asSequence()
-        .filter { Files.isRegularFile(it) }
+        .filter {
+          when (type) {
+            TYPE_FILE -> Files.isRegularFile(it)
+            TYPE_DIR -> Files.isDirectory(it)
+            else -> true
+          }
+        }
         .filter { path ->
           val parent: Path? = path.parent
-          parent != null && parent.name.equals(parentName, ignoreCase = ignoreCase)
+          parent != null && parent.name.equals(name, ignoreCase = ignoreCase)
         }
-        .map { it.absolutePathString() }
         .toList()
     }
-  }
-
-  fun findSubdirectoryRecursively(rootPath: String, targetName: String): String? {
-    val match =
-      Files.walk(Paths.get(rootPath))
-        .filter { it.isDirectory() && it.fileName.toString() == targetName }
-        .findFirst()
-        .orElse(null)
-    return match?.let { match.absolutePathString() }
   }
 }

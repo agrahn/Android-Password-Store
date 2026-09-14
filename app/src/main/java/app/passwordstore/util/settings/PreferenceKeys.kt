@@ -9,6 +9,7 @@ object PreferenceKeys {
 
   const val APP_THEME = "app_theme"
   const val AUTOFILL_ENABLE = "autofill_enable"
+  const val AUTOFILL_ASK_TO_SAVE_PASSWORDS = "autofill_ask_to_save_passwords"
   const val BIOMETRIC_AUTH = "biometric_auth"
   const val BIOMETRIC_AUTH_2 = "biometric_auth_delete_soon_please"
   @Deprecated(

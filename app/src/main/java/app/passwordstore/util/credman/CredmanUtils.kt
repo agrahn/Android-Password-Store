@@ -48,7 +48,7 @@ import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.runCatching
-import java.nio.file.Paths
+import java.nio.file.Path
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.MessageDigest
@@ -59,6 +59,7 @@ import java.security.interfaces.RSAPublicKey
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.RSAKeyGenParameterSpec
 import java.time.Instant
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
 import kotlinx.serialization.Serializable
@@ -154,21 +155,19 @@ object CredmanUtils {
 
     val allowCredentialsHex = requestOptions.allowCredentials.map { it.idHex() }
 
-    val passkeyCandidates = mutableListOf<String>()
+    val passkeyCandidates = mutableListOf<Path>()
     val repoPath = PasswordRepository.getRepositoryDirectory().absolutePath
 
     /* First, try to find valid passkey file canditates in Password Store by credential hex ID;
      * expired passkeys (deleted on the RP's side but still existing in APS) will not be listed */
     allowCredentialsHex.forEach { id ->
       passkeyCandidates.addAll(
-        PasswordRepository.findFilesByParentName(
-            rootPath = repoPath,
-            parentName = requestOptions.rpId,
-            ignoreCase = true,
+        PasswordRepository.findByParentName(
+            startPath = repoPath,
+            name = requestOptions.rpId,
+            PasswordRepository.TYPE_FILE,
           )
-          .filter { file ->
-            Paths.get(file).nameWithoutExtension.equals(id, ignoreCase = true)
-          }
+          .filter { it.nameWithoutExtension.equals(id, ignoreCase = true) }
       )
     }
 
@@ -176,29 +175,29 @@ object CredmanUtils {
      * we try to find passkey file canditates by RP ID */
     if (allowCredentialsHex.isEmpty()) {
       passkeyCandidates.addAll(
-        PasswordRepository.findFilesByParentName(
-            rootPath = repoPath,
-            parentName = requestOptions.rpId,
-            ignoreCase = true,
+        PasswordRepository.findByParentName(
+            startPath = repoPath,
+            name = requestOptions.rpId,
+            PasswordRepository.TYPE_FILE,
           )
-          .filter { file ->
-            Paths.get(file).nameWithoutExtension.matches("[a-fA-F0-9]{64}".toRegex())
-          }
+          .filter { it.nameWithoutExtension.matches("[a-fA-F0-9]{64}".toRegex()) }
       )
     }
 
     /*
         // redundant, since we set lastUsedTime on each PublicKeyCredentialEntry
         passkeyCandidates.sortByDescending {
-          context.passwordHistory.getString(it.base64(), null)?.toLongOrNull() ?: 0L
+          context.passwordHistory.getString(it.absolutePathString().base64(), null)?.toLongOrNull() ?: 0L
         }
     */
 
     passkeyCandidates.forEach { passkeyPath ->
-      val credentialHexId = Paths.get(passkeyPath).nameWithoutExtension
-      val shortenedHexId = credentialHexId.take(7)
+      val credentialHexId = passkeyPath.nameWithoutExtension
+      val shortenedHexId = credentialHexId.take(8)
       val displayPath =
-        PasswordRepository.getParentPath(passkeyPath, repoPath) + shortenedHexId + "…"
+        PasswordRepository.getParentPath(passkeyPath.absolutePathString(), repoPath) +
+          shortenedHexId +
+          "…"
 
       val displayUser =
         context.credentialUsernames.getString(credentialHexId, null)?.let {
@@ -207,12 +206,15 @@ object CredmanUtils {
 
       val lastUsedTime =
         context.passwordHistory
-          .getString(passkeyPath.base64(), null)
+          .getString(passkeyPath.absolutePathString().base64(), null)
           ?.let { it.toLongOrNull() ?: 0L }
           ?.let { Instant.ofEpochMilli(it) }
 
       val data = Bundle()
-      data.putString(UDCakeCredentialProviderService.CREDENTIAL_PATH, passkeyPath)
+      data.putString(
+        UDCakeCredentialProviderService.CREDENTIAL_PATH,
+        passkeyPath.absolutePathString(),
+      )
       passkeyEntries.add(
         PublicKeyCredentialEntry.Builder(
             context = context,

@@ -92,6 +92,11 @@ class AutofillSettings(private val activity: FragmentActivity) : SettingsProvide
           false
         }
       }
+      switch(PreferenceKeys.AUTOFILL_ASK_TO_SAVE_PASSWORDS) {
+        titleRes = R.string.pref_autofill_ask_save_passwords_title
+        defaultValue = true
+        dependency = PreferenceKeys.AUTOFILL_ENABLE
+      }
       editText(PreferenceKeys.OREO_AUTOFILL_DEFAULT_USERNAME) {
         dependency = PreferenceKeys.AUTOFILL_ENABLE
         titleRes = R.string.preference_default_username_title
