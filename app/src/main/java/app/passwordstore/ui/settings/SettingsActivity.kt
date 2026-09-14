@@ -15,7 +15,6 @@ import androidx.core.os.BundleCompat
 import app.passwordstore.R
 import app.passwordstore.databinding.ActivityPreferenceRecyclerviewBinding
 import app.passwordstore.injection.prefs.SettingsPreferences
-import app.passwordstore.util.extensions.autofillManager
 import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.settings.PreferenceKeys
@@ -43,6 +42,11 @@ class SettingsActivity : AppCompatActivity() {
   private val preferencesAdapter: PreferencesAdapter
     get() = binding.preferenceRecyclerView.adapter as PreferencesAdapter
 
+  override fun onResume() {
+    super.onResume()
+    autofillSettings.run { autofillSwitchPreference?.checked = isAutofillServiceEnabled }
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdgeView(binding.root)
@@ -51,7 +55,7 @@ class SettingsActivity : AppCompatActivity() {
     settings.edit {
       putBoolean(
         PreferenceKeys.AUTOFILL_ENABLE,
-        autofillManager?.hasEnabledAutofillServices() == true,
+        autofillSettings.isAutofillServiceEnabled,
       )
     }
 
