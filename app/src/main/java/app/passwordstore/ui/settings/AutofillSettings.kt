@@ -29,9 +29,7 @@ import de.Maxr1998.modernpreferences.preferences.SwitchPreference
 class AutofillSettings(private val activity: FragmentActivity) : SettingsProvider {
 
   private val isAutofillServiceEnabled: Boolean
-    get() {
-      return activity.autofillManager?.hasEnabledAutofillServices() == true
-    }
+    get() = activity.autofillManager?.hasEnabledAutofillServices() == true
 
   private fun showAutofillDialog(pref: SwitchPreference) {
     val observer = LifecycleEventObserver { _, event ->
@@ -88,7 +86,6 @@ class AutofillSettings(private val activity: FragmentActivity) : SettingsProvide
     builder.apply {
       switch(PreferenceKeys.AUTOFILL_ENABLE) {
         titleRes = R.string.pref_autofill_enable_title
-        defaultValue = isAutofillServiceEnabled
         onClick {
           if (checked) showAutofillDialog(this)
           else activity.autofillManager?.disableAutofillServices()
