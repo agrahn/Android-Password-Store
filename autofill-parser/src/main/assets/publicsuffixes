@@ -1,4 +1,4 @@
-144362
+144382
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -513,6 +513,7 @@ ai.id
 ai.in
 ai.jo
 ai.kr
+ai.studio
 ai.vn
 aibetsu.hokkaido.jp
 aichi.jp
@@ -1628,6 +1629,7 @@ cloud.fedoraproject.org
 cloud.goog
 cloud.interhostsolutions.be
 cloud.nospamproxy.com
+cloud.run
 cloud66.ws
 cloudaccess.host
 cloudaccess.net
