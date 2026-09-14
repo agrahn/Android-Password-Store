@@ -344,9 +344,15 @@ class PasskeyCreationActivity : BasePGPActivity() {
             }
 
           val suggestedFullPath =
-            PasswordRepository.findSubdirectoryRecursively(repoPath, requestOptions.rp.id)
-              ?: Paths.get(repoPath, requestOptions.rp.id).absolutePathString()
-          val relPath = PasswordRepository.getRelativePath(suggestedFullPath, repoPath)
+            PasswordRepository.findByName(
+                startPath = repoPath,
+                name = requestOptions.rp.id,
+                type = PasswordRepository.TYPE_DIR,
+              )
+              .firstOrNull() ?: Paths.get(repoPath, requestOptions.rp.id)
+
+          val relPath =
+            PasswordRepository.getRelativePath(suggestedFullPath.absolutePathString(), repoPath)
 
           directory.setText(relPath)
           credId.setText(credentialId.toHexString())

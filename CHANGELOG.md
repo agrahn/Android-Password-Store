@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file
 
 - Verify authenticity of passkey requesting apps against Google's and Bitwarden's allow lists and via asset links
 - Autofill suggestions sorted by most recent usage, the newest at the top
+- Autofill app setting "Ask to save passwords"
+- After manually entering username and password into a web form and submitting it, the password-saving UI is suppressed if a file named `.../<origin>/<username>.gpg` or `.../<origin>/<username>/password.gpg` already exists in the repository
 
 ### Fixed
 

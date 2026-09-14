@@ -27,7 +27,6 @@ import com.github.androidpasswordstore.autofillparser.Credentials
 import com.github.androidpasswordstore.autofillparser.FormOrigin
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
-import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 import logcat.LogPriority.ERROR
 import logcat.logcat
@@ -70,12 +69,12 @@ class AutofillSaveActivity : AppCompatActivity() {
         PasswordRepository.findByName(repoPath, origin, PasswordRepository.TYPE_DIR)
           .firstOrNull()
           ?.let {
-            Paths.get(it).parent.absolutePathString() // nio.Path -> String
+            it.parent.absolutePathString() // nio.Path -> String
           }
           ?: PasswordRepository.findByName(repoPath, "$origin.gpg", PasswordRepository.TYPE_FILE)
             .firstOrNull()
             ?.let {
-              Paths.get(it).parent.absolutePathString()
+              it.parent.absolutePathString()
             }
           ?: repoPath
 

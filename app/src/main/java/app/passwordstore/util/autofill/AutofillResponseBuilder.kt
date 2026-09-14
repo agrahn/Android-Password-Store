@@ -11,11 +11,15 @@ import android.os.Bundle
 import android.service.autofill.Dataset
 import android.service.autofill.FillCallback
 import android.service.autofill.FillRequest
+import app.passwordstore.data.repo.PasswordRepository
 import com.github.androidpasswordstore.autofillparser.AutofillAction
 import com.github.androidpasswordstore.autofillparser.AutofillScenario
 import com.github.androidpasswordstore.autofillparser.Credentials
 import com.github.androidpasswordstore.autofillparser.FillableForm
 import com.github.androidpasswordstore.autofillparser.fillWith
+import java.nio.file.Files
+import kotlin.io.path.name
+import kotlin.io.path.nameWithoutExtension
 import logcat.LogPriority
 import logcat.logcat
 
@@ -25,6 +29,17 @@ interface AutofillResponseBuilder {
   interface Factory {
     fun create(form: FillableForm): AutofillResponseBuilder
   }
+
+  fun findKnownUsernamesFor(origin: String): List<String> =
+    PasswordRepository.findByParentName(
+        startPath = PasswordRepository.getRepositoryDirectory().absolutePath,
+        name = origin,
+        ignoreCase = true,
+      )
+      .map {
+        if (Files.isRegularFile(it)) it.nameWithoutExtension else it.name
+      }
+      .distinct()
 
   companion object {
     fun makeFillInDataset(
