@@ -5,24 +5,32 @@
 
 package app.passwordstore.ui.settings
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.core.os.BundleCompat
 import app.passwordstore.R
 import app.passwordstore.databinding.ActivityPreferenceRecyclerviewBinding
+import app.passwordstore.injection.prefs.SettingsPreferences
+import app.passwordstore.util.extensions.autofillManager
 import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.viewBinding
+import app.passwordstore.util.settings.PreferenceKeys
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import de.Maxr1998.modernpreferences.Preference
 import de.Maxr1998.modernpreferences.PreferencesAdapter
 import de.Maxr1998.modernpreferences.helpers.screen
 import de.Maxr1998.modernpreferences.helpers.subScreen
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class SettingsActivity : AppCompatActivity() {
+
+  @SettingsPreferences @Inject lateinit var settings: SharedPreferences
 
   private val miscSettings = MiscSettings(this)
   private val autofillSettings = AutofillSettings(this)
@@ -39,6 +47,14 @@ class SettingsActivity : AppCompatActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdgeView(binding.root)
     setContentView(binding.root)
+
+    settings.edit {
+      putBoolean(
+        PreferenceKeys.AUTOFILL_ENABLE,
+        autofillManager?.hasEnabledAutofillServices() == true,
+      )
+    }
+
     Preference.Config.dialogBuilderFactory = { context -> MaterialAlertDialogBuilder(context) }
     val screen =
       screen(this) {
