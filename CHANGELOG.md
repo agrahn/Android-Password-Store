@@ -9,7 +9,6 @@ All notable changes to this project will be documented in this file
 - Verify authenticity of passkey requesting apps against Google's and Bitwarden's allow lists and via asset links
 - Autofill suggestions sorted by most recent usage, the newest at the top
 - Autofill app setting "Ask to save passwords"
-- After manually entering username and password into a web form and submitting it, the password-saving UI is suppressed if a file named `.../<origin>/<username>.gpg` or `.../<origin>/<username>/password.gpg` already exists in the repository
 
 ### Fixed
 
@@ -21,6 +20,7 @@ All notable changes to this project will be documented in this file
 - Improved credential lookup for autofill, now based on origin (web/app form) and independent from current password file organisation setting
 - After reaching a soft-keyboard-dependent number of autofill suggestion buttons, the Search button became inaccessible. Now, the display of suggestions switches automatically to popup mode, where suggestions are shown in a scrollable box above the input field
 - Prevent autofill of username/password forms with passkey data
+- After manually entering username and password into a web form and submitting it, the password-saving UI is now suppressed if a file named `.../<origin>/<username>.gpg` or `.../<origin>/<username>/password.gpg` already exists in the repository
 - Request `ACCESS_LOCAL_NETWORK` runtime permission if needed during Git operations on Android 17+ devices
 
 ## [2.0.1] - 2026-08-07
