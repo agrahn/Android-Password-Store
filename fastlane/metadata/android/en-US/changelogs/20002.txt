@@ -1,0 +1,11 @@
+Added
+
+- Verify authenticity of passkey requesting apps
+- Sorting autofill suggestions by most recent usage
+- App setting "Ask to save passwords"
+
+### Fixed
+
+- Autofill-related issues
+- Clipped alert dialogs on short screens, such as front screens of foldables
+- Prompt user for granting "Nearby devices" permission, if needed during Git operations on Android 17+ devices
