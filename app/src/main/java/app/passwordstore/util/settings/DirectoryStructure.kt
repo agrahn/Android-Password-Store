@@ -5,6 +5,7 @@
 package app.passwordstore.util.settings
 
 import app.passwordstore.data.repo.PasswordRepository
+import com.github.androidpasswordstore.sublimefuzzy.Fuzzy
 import java.io.File
 import java.nio.file.Paths
 
@@ -45,9 +46,13 @@ enum class DirectoryStructure(val value: String) {
       if (file.isAbsolute()) file.relativeTo(PasswordRepository.getRepositoryDirectory()) else file
 
     return if (origin != null) {
-      if (origin.equals(passFile.parentFile?.parentFile?.name, ignoreCase = true))
+      val grandparent = passFile.parentFile?.parentFile?.name ?: ""
+      val parent = passFile.parentFile?.name ?: ""
+      if (
+        Fuzzy.fuzzyMatchSimple(origin, grandparent) || Fuzzy.fuzzyMatchSimple(grandparent, origin)
+      )
         passFile.parentFile?.name // DirectoryBased
-      else if (origin.equals(passFile.parentFile?.name, ignoreCase = true))
+      else if (Fuzzy.fuzzyMatchSimple(origin, parent) || Fuzzy.fuzzyMatchSimple(parent, origin))
         passFile.nameWithoutExtension // FileBased
       else null // EncryptedUsername or no-match
     } else {
