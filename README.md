@@ -22,7 +22,7 @@ Latest [snapshot build (APK)](https://github.com/agrahn/Android-Password-Store/r
 Verification info:
 
 - Package ID: `app.passwordstore.agrahn`
-- SHA-256 hash of signing certificate (GitHub relases): `CA:3A:D7:C5:F9:90:BF:82:57:7C:EC:3B:9F:F9:E5:DB:C1:7E:05:2F:AB:C3:C7:58:8A:48:92:C4:15:67:12:90`
+- SHA-256 hash of signing certificate (GitHub releases): `CA:3A:D7:C5:F9:90:BF:82:57:7C:EC:3B:9F:F9:E5:DB:C1:7E:05:2F:AB:C3:C7:58:8A:48:92:C4:15:67:12:90`
 
 ## Documentation
 
