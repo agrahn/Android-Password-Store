@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-09-15
+
 ### Added
 
 - Verify authenticity of passkey requesting apps against Google's and Bitwarden's allow lists and via asset links
@@ -703,7 +705,8 @@ All notable changes to this project will be documented in this file
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v2.0.1...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v2.0.2...HEAD
+[2.0.2]: https://github.com/agrahn/Android-Password-Store/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/agrahn/Android-Password-Store/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.4...v2.0.0
 [1.16.4]: https://github.com/agrahn/Android-Password-Store/compare/v1.16.3...v1.16.4
