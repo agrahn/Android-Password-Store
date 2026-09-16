@@ -53,7 +53,8 @@ class Api30AutofillResponseBuilder private constructor(form: FillableForm) :
 
   // We do not offer save when the only relevant field is a username field or there is no field.
   private val scenarioSupportsSave = scenario.hasPasswordFieldsToSave
-  private val canBeSaved = saveFlags != null && scenarioSupportsSave
+  //private val canBeSaved = saveFlags != null && scenarioSupportsSave
+  private val canBeSaved = scenarioSupportsSave
 
   private fun makeIntentDataset(
     context: Context,
@@ -265,12 +266,11 @@ class Api30AutofillResponseBuilder private constructor(form: FillableForm) :
   // See:
   // https://developer.android.com/reference/android/service/autofill/SaveInfo#FLAG_DELAY_SAVE
   private fun makeSaveInfo(context: Context): SaveInfo? {
+    logcat{"++++++++++++++++++++++++++++++++${scenarioSupportsSave}+++${scenario.hasUsername}++++++++++++++++++++++++++++++"}
     if (
-      !canBeSaved ||
         !context.sharedPrefs.getBoolean(PreferenceKeys.AUTOFILL_ASK_TO_SAVE_PASSWORDS, true)
     )
       return null
-    check(saveFlags != null) { "saveFlags must not be null" }
     val idsToSave = scenario.fieldsToSave.toTypedArray()
     if (idsToSave.isEmpty()) return null
     var saveDataTypes = SaveInfo.SAVE_DATA_TYPE_PASSWORD
@@ -298,7 +298,9 @@ class Api30AutofillResponseBuilder private constructor(form: FillableForm) :
         setValidator(validator)
       }
 
-      setFlags(saveFlags)
+      
+      setFlags(if(!scenarioSupportsSave && scenario.hasUsername) 4 else 0)
+	  setFlags(saveFlags ?: 1)
       build()
     }
   }
