@@ -4,7 +4,7 @@ Added
 - Sorting autofill suggestions by most recent usage
 - App setting "Ask to save passwords"
 
-### Fixed
+Fixed
 
 - Autofill-related issues
 - Clipped alert dialogs on short screens, such as front screens of foldables

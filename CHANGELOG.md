@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+### Fixed
+
+- autofill-parser: on some login forms, the "Create entry" button was not shown in the keyboard's suggestions strip
+
 ## [2.0.2] - 2026-09-15
 
 ### Added
