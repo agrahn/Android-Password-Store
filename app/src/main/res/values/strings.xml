@@ -44,9 +44,9 @@
   <string name="git_commit_edit_text">Password %1$s edited using Android Password Store</string>
   <string name="git_commit_add_passkey_text">New passkey %1$s added using Android Password Store</string>
   <string name="git_commit_edit_passkey_text">Passkey %1$s edited using Android Password Store</string>
-  <string name="git_commit_remove_text">%1$s removed from store</string>
-  <string name="git_commit_move_text">Renamed %1$s to %2$s</string>
-  <string name="git_commit_move_multiple_text">Multiple items moved to %1$s</string>
+  <string name="git_commit_remove_text">%1$s removed from Android Password Store</string>
+  <string name="git_commit_move_text">Renamed %1$s to %2$s in Android Password Store</string>
+  <string name="git_commit_move_multiple_text">Multiple items moved to %1$s in Android Password Store</string>
   <string name="git_commit_gpg_id">PGP IDs in %1$s initialised</string>
 
   <!-- PGPHandler -->
@@ -328,7 +328,7 @@
   <string name="bottom_sheet_create_pgp_key">Create new key</string>
   <string name="pref_debug_logging_summary">Enable debug logging (requires app restart).</string>
   <string name="pref_debug_logging_title">Debug logging</string>
-  <string name="preference_default_username_summary">If the autofill function cannot lookup the username from the password file\'s contents or context, the value specified here will be used.</string>
+  <string name="preference_default_username_summary">If the autofill function cannot look up the username from the password file\'s content or context, the value specified here will be used.</string>
   <string name="preference_default_username_title">Default username</string>
   <string name="git_operation_hint_password">Password</string>
   <string name="preference_custom_public_suffixes_title">Custom domains</string>
@@ -356,6 +356,7 @@
   <string name="short_gpg_id">Found .gpg-id, but it contains a short hex ID, which is not supported.</string>
   <string name="invalid_filename_text">The file name must not contain ‘/’, set directory above.</string>
   <string name="invalid_name_text">The name must not contain ‘/’, set directory above.</string>
+  <string name="invalid_username_text">The username must not contain ‘/’.</string>
   <string name="directory_hint">Directory</string>
   <string name="new_folder_set_gpg_key">Set PGP key for directory</string>
 

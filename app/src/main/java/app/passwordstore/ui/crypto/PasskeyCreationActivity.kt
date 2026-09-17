@@ -584,14 +584,14 @@ class PasskeyCreationActivity : BasePGPActivity() {
 
           val path = run { // password item's full file path string
             val editRelativePath = directory.text.toString().trim()
-            val passwordDirectory = Paths.get(repoPath, editRelativePath.trim('/'))
-            passwordDirectory.createDirectories() // ensure destination dir exists
-            if (!passwordDirectory.exists()) { // should not happen
+            val destinationFolder = Paths.get(repoPath, editRelativePath.trim('/'))
+            destinationFolder.createDirectories() // ensure destination dir exists
+            if (!destinationFolder.exists()) { // should not happen
               snackbar(message = "Failed to create directory ${editRelativePath.trimEnd('/')}")
               return@runCatching
             }
 
-            "${passwordDirectory.pathString}/$credentialHexId.gpg"
+            "${destinationFolder.pathString}/$credentialHexId.gpg"
           }
 
           val passkeyFile = Paths.get(path)

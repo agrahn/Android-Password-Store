@@ -241,20 +241,33 @@ class PasswordCreationActivity : BasePGPActivity() {
         selectFolderAction.launch(intent)
       }
 
-      if (editing) nameInputLayout.setHint(R.string.crypto_filename_hint)
-
-      if (suggestedName != null) {
-        name.setText(suggestedName)
-      } else {
-        name.requestFocus()
-      }
-
       val suggestedEntry: PasswordEntry? = suggestedEntryChars?.let { encrypted ->
         AESEncryption.decrypt(encrypted)?.let { decrypted ->
           passwordEntryFactory.create(decrypted).also { decrypted.wipe() }
         }
       }
 
+      /*
+       * input fields
+       */
+
+      // name (domain) when creating, filename when editing
+      if (suggestedName != null) {
+        name.setText(suggestedName)
+      }
+
+      nameInputLayout.visibility =
+        if (
+          suggestedName != null ||
+            AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
+              DirectoryStructure.EncryptedUsername
+        )
+          View.VISIBLE
+        else View.GONE
+
+      if (editing) nameInputLayout.setHint(R.string.crypto_filename_hint)
+
+      // username
       if (suggestedEntry?.username != null) {
         val charBuf = CharBuffer.wrap(suggestedEntry?.username)
         username.setText(charBuf)
@@ -275,8 +288,11 @@ class PasswordCreationActivity : BasePGPActivity() {
             }
           }
         }
+      } else {
+        usernameInputLayout.visibility = View.VISIBLE
       }
 
+      // password filename
       if (
         !editing &&
           AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
@@ -291,6 +307,8 @@ class PasswordCreationActivity : BasePGPActivity() {
         charBuf.array()?.wipe()
         password.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
       }
+
+      // extra content
       suggestedEntry?.extraContentChars?.let {
         val charBuf =
           if (it.last() == '\n') CharBuffer.wrap(it.copyOfRange(0, it.size - 1))
@@ -391,16 +409,39 @@ class PasswordCreationActivity : BasePGPActivity() {
       var editExtra =
         extraContent.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
 
-      if (editName.isBlank()) {
-        name.requestFocus()
-        if (editing) snackbar(message = resources.getString(R.string.file_toast_text))
-        else snackbar(message = resources.getString(R.string.empty_name_toast_text))
-        return@with
-      } else if (editName.contains('/')) {
-        name.requestFocus()
-        if (editing) snackbar(message = resources.getString(R.string.invalid_filename_text))
-        else snackbar(message = resources.getString(R.string.invalid_name_text))
-        return@with
+      if (
+        editing ||
+          suggestedName != null ||
+          AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
+            DirectoryStructure.EncryptedUsername
+      ) {
+        if (editName.isBlank()) {
+          name.requestFocus()
+          if (editing) snackbar(message = resources.getString(R.string.file_toast_text))
+          else snackbar(message = resources.getString(R.string.empty_name_toast_text))
+          return@with
+        } else if (editName.contains('/')) {
+          name.requestFocus()
+          if (editing) snackbar(message = resources.getString(R.string.invalid_filename_text))
+          else snackbar(message = resources.getString(R.string.invalid_name_text))
+          return@with
+        }
+      }
+
+      if (
+        !editing &&
+          AutofillPreferences.directoryStructure(this@PasswordCreationActivity) !=
+            DirectoryStructure.EncryptedUsername
+      ) {
+        if (username.text?.isBlank() ?: true) {
+          name.requestFocus()
+          snackbar(message = resources.getString(R.string.empty_username_toast_text))
+          return@with
+        } else if (username.text?.contains('/') ?: false) {
+          name.requestFocus()
+          snackbar(message = resources.getString(R.string.invalid_username_text))
+          return@with
+        }
       }
 
       if (
@@ -417,17 +458,6 @@ class PasswordCreationActivity : BasePGPActivity() {
           snackbar(message = resources.getString(R.string.invalid_filename_text))
           return@with
         }
-      }
-
-      if (
-        !editing &&
-          AutofillPreferences.directoryStructure(this@PasswordCreationActivity) !=
-            DirectoryStructure.EncryptedUsername &&
-          username.text?.isBlank() ?: true
-      ) {
-        username.requestFocus()
-        snackbar(message = resources.getString(R.string.empty_username_toast_text))
-        return@with
       }
 
       if (editPass.isEmpty() && editExtra.isEmpty()) {
@@ -460,28 +490,28 @@ class PasswordCreationActivity : BasePGPActivity() {
       val path = run { // password item's full file path string
         val editRelativePath = directory.text.toString().trim()
 
-        var passwordDirectory = Paths.get(repoPath, editRelativePath.trim('/'))
+        var destinationFolder = Paths.get(repoPath, editRelativePath.trim('/'))
 
         if (!editing) {
           // fix destination path due to erroneous user input
-          if (passwordDirectory.endsWith(editName)) {
-            passwordDirectory = passwordDirectory.parent
+          if (destinationFolder.endsWith(editName)) {
+            destinationFolder = destinationFolder.parent
           } else if (
-            passwordDirectory.parent.endsWith(editName) &&
+            destinationFolder.parent.endsWith(editName) &&
               AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
                 DirectoryStructure.DirectoryBased
           ) {
-            passwordDirectory = passwordDirectory.parent.parent
+            destinationFolder = destinationFolder.parent.parent
           }
 
           when (AutofillPreferences.directoryStructure(this@PasswordCreationActivity)) {
             DirectoryStructure.FileBased -> {
-              passwordDirectory = Paths.get(passwordDirectory.pathString, editName)
+              destinationFolder = Paths.get(destinationFolder.pathString, editName)
             }
             DirectoryStructure.DirectoryBased -> {
-              passwordDirectory =
+              destinationFolder =
                 Paths.get(
-                  passwordDirectory.pathString,
+                  destinationFolder.pathString,
                   editName,
                   editUsername.concatToString().trim(),
                 )
@@ -491,19 +521,19 @@ class PasswordCreationActivity : BasePGPActivity() {
         }
 
         // ensure destination dir exists
-        passwordDirectory.createDirectories()
-        if (!passwordDirectory.exists()) { // should not happen
+        destinationFolder.createDirectories()
+        if (!destinationFolder.exists()) { // should not happen
           snackbar(message = "Failed to create directory ${editRelativePath.trimEnd('/')}")
           return
         }
 
-        if (editing) "${passwordDirectory.pathString}/$editName.gpg"
+        if (editing) "${destinationFolder.pathString}/$editName.gpg"
         else
           when (AutofillPreferences.directoryStructure(this@PasswordCreationActivity)) {
-            DirectoryStructure.EncryptedUsername -> "${passwordDirectory.pathString}/$editName.gpg"
+            DirectoryStructure.EncryptedUsername -> "${destinationFolder.pathString}/$editName.gpg"
             DirectoryStructure.FileBased ->
-              "${passwordDirectory.pathString}/${editUsername.concatToString().trim()}.gpg"
-            DirectoryStructure.DirectoryBased -> "${passwordDirectory.pathString}/$editFilename.gpg"
+              "${destinationFolder.pathString}/${editUsername.concatToString().trim()}.gpg"
+            DirectoryStructure.DirectoryBased -> "${destinationFolder.pathString}/$editFilename.gpg"
           }
       }
 
@@ -511,9 +541,10 @@ class PasswordCreationActivity : BasePGPActivity() {
         runCatching {
           val contentChars =
             if (
-              (AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
-                DirectoryStructure.EncryptedUsername || insertUsername.isChecked) &&
-                !editUsername.isEmpty()
+              !editUsername.isEmpty() &&
+                (editing ||
+                  AutofillPreferences.directoryStructure(this@PasswordCreationActivity) ==
+                    DirectoryStructure.EncryptedUsername)
             )
               editPass + "\nusername: ".toCharArray() + editUsername + '\n' + editExtra
             else editPass + '\n' + editExtra
