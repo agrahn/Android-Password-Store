@@ -35,6 +35,11 @@ enum class DirectoryStructure(val value: String) {
   /**
    * Returns the username associated with [file]
    *
+   * tries to deduce the directory structure by comparing parent and grandparent directory names
+   * with the origin identifier, first using exact, then fuzzy matching
+   *
+   * without origin identifier given, current DirectoryStructure setting is used
+   *
    * Examples:
    * - * --> null (EncryptedUsername)
    * - work/example.org/john@doe.org.gpg --> john@doe.org (FileBased)
@@ -49,12 +54,19 @@ enum class DirectoryStructure(val value: String) {
       val grandparent = passFile.parentFile?.parentFile?.name ?: ""
       val parent = passFile.parentFile?.name ?: ""
       if (
-        Fuzzy.fuzzyMatchSimple(origin, grandparent) || Fuzzy.fuzzyMatchSimple(grandparent, origin)
-      )
+        origin.equals(passFile.nameWithoutExtension, ignoreCase = true)
+      ) // EncryptedUsername, with no username provided
+       null
+      else if (origin.equals(parent, ignoreCase = true)) passFile.nameWithoutExtension // FileBased
+      else if (origin.equals(grandparent, ignoreCase = true))
         passFile.parentFile?.name // DirectoryBased
       else if (Fuzzy.fuzzyMatchSimple(origin, parent) || Fuzzy.fuzzyMatchSimple(parent, origin))
         passFile.nameWithoutExtension // FileBased
-      else null // EncryptedUsername or no-match
+      else if (
+        Fuzzy.fuzzyMatchSimple(origin, grandparent) || Fuzzy.fuzzyMatchSimple(grandparent, origin)
+      )
+        passFile.parentFile?.name // DirectoryBased
+      else null // no-match
     } else {
       when (this) { // current directory structure setting as fallback for missing origin
         EncryptedUsername -> null
