@@ -264,7 +264,7 @@ class Api30AutofillResponseBuilder private constructor(form: FillableForm) :
   // See:
   // https://developer.android.com/reference/android/service/autofill/SaveInfo#FLAG_DELAY_SAVE
   private fun makeSaveInfo(context: Context): SaveInfo? {
-    logcat{"++++++++++++++++++++++++++++++++${scenarioSupportsSave}+++${scenario.hasUsername}++++++++++++++++++++++++++++++"}
+    logcat{"++++++++++++++++++${saveFlags}++++++++++++++${scenarioSupportsSave}+++${scenario.hasUsername}++++++++++++++++++++++++++++++"}
 
     if (
         saveFlags == null || !context.sharedPrefs.getBoolean(PreferenceKeys.AUTOFILL_ASK_TO_SAVE_PASSWORDS, true)
@@ -299,9 +299,11 @@ class Api30AutofillResponseBuilder private constructor(form: FillableForm) :
         setValidator(validator)
       }
       
-      setFlags(
-	    if(!scenarioSupportsSave && scenario.hasUsername) SaveInfo.FLAG_DELAY_SAVE else saveFlags
-	  )
+      //setFlags(
+	  //  if(!scenarioSupportsSave && scenario.hasUsername) SaveInfo.FLAG_DELAY_SAVE else saveFlags
+	  //)
+	  if(!scenarioSupportsSave) setFlags(SaveInfo.FLAG_DELAY_SAVE or saveFlags)
+	  else setFlags(0)
 
       build()
     }
