@@ -356,6 +356,7 @@
   <string name="short_gpg_id">Found .gpg-id, but it contains a short hex ID, which is not supported.</string>
   <string name="invalid_filename_text">The file name must not contain ‘/’, set directory above.</string>
   <string name="invalid_name_text">The name must not contain ‘/’, set directory above.</string>
+  <string name="invalid_username_text">The username must not contain ‘/’.</string>
   <string name="directory_hint">Directory</string>
   <string name="new_folder_set_gpg_key">Set PGP key for directory</string>
 

@@ -65,7 +65,7 @@ class AutofillSaveActivity : AppCompatActivity() {
        * close to existing ones
        */
       val repoPath = repo.absolutePath // io.File -> String
-      val parentFolderPath =
+      val destinationFolder =
         PasswordRepository.findByName(repoPath, origin, PasswordRepository.TYPE_DIR)
           .firstOrNull()
           ?.let {
@@ -97,7 +97,7 @@ class AutofillSaveActivity : AppCompatActivity() {
             Bundle().also {
               it.apply {
                 putBundle(AutofillManager.EXTRA_CLIENT_STATE, clientState)
-                putString(EXTRA_FOLDER_NAME, parentFolderPath)
+                putString(EXTRA_FOLDER_NAME, destinationFolder)
                 putString(EXTRA_NAME, origin)
                 putCharArray(EXTRA_ENTRY, encryptedCredentials)
                 putString(
