@@ -185,6 +185,7 @@ private val BROWSER_SAVE_FLAG =
     "eu.weblibre.gecko" to 0,
     "io.github.forkmaintainers.iceraven" to 0,
     "net.waterfox.android.release" to 0,
+    "org.gnu.icecat" to 0,
     "org.ironfoxoss.ironfox.nightly" to 0,
     "org.ironfoxoss.ironfox" to 0,
     "org.mozilla.fenix.nightly" to 0,
@@ -203,6 +204,7 @@ private val BROWSER_SAVE_FLAG_IF_NO_ACCESSIBILITY =
   mapOf(
     "app.vanadium.browser" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "com.android.chrome" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
+    "com.brave.browser" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "com.chrome.beta" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "com.chrome.canary" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,
     "com.chrome.dev" to SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE,

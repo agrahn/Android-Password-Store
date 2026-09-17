@@ -85,9 +85,6 @@ private class AutofillFormParser(
 
   private var appPackage = structure.activityComponent.packageName
 
-  private val trustedBrowserInfo = getBrowserAutofillSupportInfoIfTrusted(context, appPackage)
-  val saveFlags = trustedBrowserInfo?.saveFlags
-
   private val webOrigins = mutableSetOf<String>()
 
   init {
@@ -101,6 +98,10 @@ private class AutofillFormParser(
   init {
     logcat { "Origin: $formOrigin" }
   }
+
+  private val trustedBrowserInfo = getBrowserAutofillSupportInfoIfTrusted(context, appPackage)
+  val saveFlags = if(formOrigin is FormOrigin.Web) trustedBrowserInfo?.saveFlags
+                  else 1
 
   private fun parseStructure(structure: AssistStructure) {
     for (i in 0 until structure.windowNodeCount) {
