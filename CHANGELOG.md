@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file
 ### Fixed
 
 - autofill-parser: on some login forms, the "Create entry" button was not shown in the keyboard's suggestions strip
-- When adding a new password in the app (i.e., not via the autofill function), the input field "Name" for the domain name will henceforth only be visible if the setting for organising password files is `.../example.org(.gpg)`.
+- On the New password UI, input fields are now correctly checked for presence of filled-in values
 
 ## [2.0.2] - 2026-09-15
 

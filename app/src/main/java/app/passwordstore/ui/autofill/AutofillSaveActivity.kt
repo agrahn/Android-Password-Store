@@ -147,7 +147,7 @@ class AutofillSaveActivity : AppCompatActivity() {
                 BasePGPActivity.EXTRA_FILE_PATH,
                 intent.getStringExtra(EXTRA_FOLDER_NAME) ?: throw NullPointerException(),
               )
-              putString(PasswordCreationActivity.EXTRA_FILE_NAME, intent.getStringExtra(EXTRA_NAME))
+              putString(PasswordCreationActivity.EXTRA_NAME, intent.getStringExtra(EXTRA_NAME))
               putCharArray(
                 PasswordCreationActivity.EXTRA_ENTRY,
                 intent.getCharArrayExtra(EXTRA_ENTRY),
