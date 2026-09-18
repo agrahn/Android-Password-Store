@@ -93,7 +93,7 @@ class PasswordCreationActivity : BasePGPActivity() {
   private val binding by viewBinding(PasswordCreationActivityBinding::inflate)
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
 
-  private val suggestedName by unsafeLazy { intent.getStringExtra(EXTRA_FILE_NAME) }
+  private val suggestedName by unsafeLazy { intent.getStringExtra(EXTRA_NAME) }
   private val suggestedEntryChars by unsafeLazy { intent.getCharArrayExtra(EXTRA_ENTRY) }
   private val shouldGeneratePassword by unsafeLazy {
     intent.getBooleanExtra(EXTRA_GENERATE_PASSWORD, false)
@@ -253,7 +253,12 @@ class PasswordCreationActivity : BasePGPActivity() {
 
       // name (domain) when creating, filename when editing
       if (suggestedName != null) {
-        name.setText(suggestedName)
+        if(editing) {  
+          filename.setText(suggestedName)
+          nameInputLayout.visibility = View.GONE
+        } else {
+          name.setText(suggestedName)
+        }
       }
 
       nameInputLayout.visibility =
@@ -264,8 +269,6 @@ class PasswordCreationActivity : BasePGPActivity() {
         )
           View.VISIBLE
         else View.GONE
-
-      if (editing) nameInputLayout.setHint(R.string.crypto_filename_hint)
 
       // username
       if (suggestedEntry?.username != null) {
@@ -709,7 +712,7 @@ class PasswordCreationActivity : BasePGPActivity() {
     const val RETURN_EXTRA_LONG_NAME = "LONG_NAME"
     const val RETURN_EXTRA_USERNAME = "USERNAME"
     const val RETURN_EXTRA_PASSWORD = "PASSWORD"
-    const val EXTRA_FILE_NAME = "EXTRA_FILENAME"
+    const val EXTRA_NAME = "EXTRA_NAME"
     const val EXTRA_ENTRY = "EXTRA_ENTRY"
     const val EXTRA_GENERATE_PASSWORD = "EXTRA_GENERATE_PASSWORD"
     const val EXTRA_EDITING = "EXTRA_EDITING"

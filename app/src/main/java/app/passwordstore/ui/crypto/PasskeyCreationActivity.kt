@@ -114,7 +114,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
 
   private val suggestedName by unsafeLazy {
-    intent.getStringExtra(PasswordCreationActivity.EXTRA_FILE_NAME)
+    intent.getStringExtra(PasswordCreationActivity.EXTRA_NAME)
   }
 
   private val suggestedEntryChars by unsafeLazy {
