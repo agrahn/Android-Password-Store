@@ -68,7 +68,7 @@ testing-junit = "junit:junit:4.13.2"
 testing-kotlintest-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 testing-robolectric = "org.robolectric:robolectric:4.17"
 testing-sharedPrefsMock = "com.github.android-password-store:shared-preferences-fake:2.0.0"
-testing-testparameterinjector = "com.google.testparameterinjector:test-parameter-injector:1.22"
+testing-testparameterinjector = "com.google.testparameterinjector:test-parameter-injector:1.23"
 testing-turbine = "app.cash.turbine:turbine:1.2.1"
 thirdparty-bouncycastle-bom = { module = "org.bouncycastle:bc-jdk18on-bom", version.ref = "bouncycastle" }
 thirdparty-bouncycastle-bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on" }
