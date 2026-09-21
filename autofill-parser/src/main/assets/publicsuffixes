@@ -1,4 +1,4 @@
-144382
+144393
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -110,6 +110,7 @@
 *.compute.amazonaws.com
 *.compute.amazonaws.com.cn
 *.compute.estate
+*.compute.herokuapp.com
 *.cursorusercontent.com
 *.customer-oci.com
 *.d.crm.dev
@@ -588,7 +589,6 @@ allfinanz
 allstate
 ally
 alp1.ae.flow.ch
-alpha-myqnapcloud.com
 alsace
 alstahaug.no
 alstom
@@ -2153,7 +2153,6 @@ deus-canvas.com
 deuxfleurs.eu
 deuxfleurs.page
 dev
-dev-myqnapcloud.com
 dev.br
 dev.cv
 dev.project-study.com
@@ -3900,6 +3899,7 @@ horten.no
 hosp.uk
 hospital
 host
+hosted-by-files.com
 hostedpi.com
 hosting
 hosting-cluster.nl
@@ -8665,6 +8665,7 @@ supply
 support
 support.site
 surf
+surge.sh
 surgery
 surnadal.no
 surveys.so
