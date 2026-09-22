@@ -203,7 +203,7 @@ class DecryptActivity : BasePGPActivity() {
       intent.action = Intent.ACTION_VIEW
       intent.putExtra(EXTRA_FILE_PATH, Paths.get(fullPath).parent.pathString)
       intent.putExtra(EXTRA_REPO_PATH, repoPath)
-      intent.putExtra(PasswordCreationActivity.EXTRA_FILE_NAME, name)
+      intent.putExtra(PasswordCreationActivity.EXTRA_NAME, name)
       intent.putExtra(PasswordCreationActivity.EXTRA_ENTRY, encrypted)
       intent.putExtra(PasswordCreationActivity.EXTRA_EDITING, true)
       startActivity(intent)
@@ -217,7 +217,7 @@ class DecryptActivity : BasePGPActivity() {
       intent.action = Intent.ACTION_VIEW
       intent.putExtra(EXTRA_FILE_PATH, Paths.get(fullPath).parent.pathString)
       intent.putExtra(EXTRA_REPO_PATH, repoPath)
-      intent.putExtra(PasswordCreationActivity.EXTRA_FILE_NAME, name)
+      intent.putExtra(PasswordCreationActivity.EXTRA_NAME, name)
       intent.putExtra(PasswordCreationActivity.EXTRA_ENTRY, encrypted)
       intent.putExtra(PasswordCreationActivity.EXTRA_EDITING, true)
       startActivity(intent)
