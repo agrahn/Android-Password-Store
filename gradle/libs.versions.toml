@@ -19,16 +19,16 @@ credentials = "1.6.0"
 android-desugarJdkLibs = "com.android.tools:desugar_jdk_libs:2.1.5"
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidxActivity" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
-androidx-annotation = "androidx.annotation:annotation:1.10.0"
+androidx-annotation = "androidx.annotation:annotation:1.11.0"
 androidx-appcompat = "androidx.appcompat:appcompat:1.8.0"
 androidx-autofill = "androidx.autofill:autofill:1.3.0"
 androidx-biometricKtx = "androidx.biometric:biometric-ktx:1.2.0-alpha05"
 androidx-constraintlayout = "androidx.constraintlayout:constraintlayout:2.2.2"
-androidx-core-ktx = "androidx.core:core-ktx:1.19.0"
+androidx-core-ktx = "androidx.core:core-ktx:1.19.1"
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
 androidx-documentfile = "androidx.documentfile:documentfile:1.1.0"
-androidx-fragment-ktx = "androidx.fragment:fragment-ktx:1.9.0"
-androidx-work-runtime-ktx = "androidx.work:work-runtime-ktx:2.11.2"
+androidx-fragment-ktx = "androidx.fragment:fragment-ktx:1.9.1"
+androidx-work-runtime-ktx = "androidx.work:work-runtime-ktx:2.12.0"
 androidx-lifecycle-common = { module = "androidx.lifecycle:lifecycle-common", version.ref = "lifecycle" }
 androidx-lifecycle-livedataKtx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
