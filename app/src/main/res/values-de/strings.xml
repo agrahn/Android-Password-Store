@@ -71,8 +71,8 @@
   <!-- Clone fragment -->
 
   <string name="server_url">Repository-URL</string>
-
   <string name="connection_mode">Authentifizierungsmethode</string>
+  <string name="show_server_response">Serverbanner anzeigen (wenn vorhanden)</string>
 
   <!-- Git Config fragment -->
   <string name="git_user_name_hint">Benutzername</string>
@@ -308,6 +308,8 @@
   <string name="git_server_hostkey_dialog_message">%s\n\nÜberprüfen Sie die Korrektheit des Fingerabdrucks vor dem Verbinden.</string>
   <string name="git_server_hostkey_dialog_connect">Verbinden</string>
   <string name="git_server_hostkey_dialog_abort">Abbrechen</string>
+  <string name="git_server_response_dialog_title">Serverbanner</string>
+  <string name="git_server_response_dialog_do_not_show_again">Nicht mehr anzeigen</string>
   <string name="git_server_config_save_success">Konfiguration erfolgreich gespeichert</string>
   <string name="git_server_config_save_error">Die angegebene Repository-URL ist ungültig.</string>
   <string name="git_server_config_save_missing_username_https">Bitte geben Sie den HTTPS-Benutzernamen in der Form https://username@example.com/… an.</string>

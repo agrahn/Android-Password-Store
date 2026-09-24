@@ -61,7 +61,7 @@ abstract class BaseGitActivity : AppCompatActivity() {
   private var localNetworkAccessSetupCompletion: CompletableDeferred<Unit>? = null
 
   private val requestLocalNetworkLauncher =
-    registerForActivityResult(RequestPermission()) { isGranted ->
+    registerForActivityResult(RequestPermission()) { _ ->
       localNetworkAccessSetupCompletion?.complete(Unit)
     }
 

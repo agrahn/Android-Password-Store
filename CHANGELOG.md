@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+### Added
+
+- Show SSH authentication banner sent by the server
+
 ### Fixed
 
 - autofill-parser: on some login forms, the "Create entry" button was not shown in the keyboard's suggestions strip

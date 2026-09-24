@@ -103,6 +103,18 @@ class GitServerConfigActivity : BaseGitActivity() {
         .show()
       it.isVisible = false
     }
+
+    binding.showServerResponse.isChecked = gitSettings.showSshServerResponse
+    binding.showServerResponse.visibility =
+      gitSettings.url.let {
+        if (it.isNullOrEmpty() || !it.startsWith("http://") && !it.startsWith("https://"))
+          View.VISIBLE
+        else View.GONE
+      }
+    binding.showServerResponse.setOnCheckedChangeListener { _, isChecked ->
+      gitSettings.showSshServerResponse = isChecked
+    }
+
     binding.saveButton.setOnClickListener {
       val newUrl = binding.serverUrl.text.toString().trim()
       if (newUrl.startsWith("git://")) {
@@ -190,10 +202,14 @@ class GitServerConfigActivity : BaseGitActivity() {
       if (isHttps) {
         authModeSshKey.isVisible = false
         authModePassword.isVisible = true
+        showServerResponse.visibility = View.GONE
+        gitSettings.showSshServerResponse = true
         if (authModeGroup.checkedButtonId != authModePassword.id) authModeGroup.clearChecked()
       } else {
         authModeSshKey.isVisible = true
         authModePassword.isVisible = true
+        showServerResponse.visibility = View.VISIBLE
+        showServerResponse.isChecked = gitSettings.showSshServerResponse
         if (authModeGroup.checkedButtonId == View.NO_ID) authModeGroup.check(authModeSshKey.id)
       }
     }

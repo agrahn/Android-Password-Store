@@ -8,8 +8,11 @@ import android.util.Base64
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentActivity
 import app.passwordstore.R
+import app.passwordstore.databinding.DialogSelectableMessageBinding
+import app.passwordstore.ui.git.base.BaseGitActivity
 import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.extensions.getString
+import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.git.operation.CredentialFinder
 import app.passwordstore.util.settings.AuthMode
 import com.github.michaelbull.result.getOrElse
@@ -113,22 +116,21 @@ private fun makeTofuHostKeyVerifier(
                   R.string.git_server_hostkey_dialog_message,
                   hostKeyEntryNoPadding,
                 )
-              val showHostKeyDialog =
-                MaterialAlertDialogBuilder(callingActivity)
-                  .setCancelable(false)
-                  .setTitle(title)
-                  .setMessage(message)
-                  .setPositiveButton(R.string.git_server_hostkey_dialog_connect) { _, _ ->
-                    hostKeyFile.writeText(hostKeyEntry)
-                    logcat(SshjSessionFactory::class.java.simpleName) {
-                      "Trusting host key after approval by user: $hostKeyEntryNoPadding"
-                    }
-                    cont.resume(true)
+              MaterialAlertDialogBuilder(callingActivity)
+                .setCancelable(false)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton(R.string.git_server_hostkey_dialog_connect) { _, _ ->
+                  hostKeyFile.writeText(hostKeyEntry)
+                  logcat(SshjSessionFactory::class.java.simpleName) {
+                    "Trusting host key after approval by user: $hostKeyEntryNoPadding"
                   }
-                  .setNegativeButton(R.string.git_server_hostkey_dialog_abort) { _, _ ->
-                    cont.resume(false)
-                  }
-                  .show()
+                  cont.resume(true)
+                }
+                .setNegativeButton(R.string.git_server_hostkey_dialog_abort) { _, _ ->
+                  cont.resume(false)
+                }
+                .show()
             }
           }
         return hostKeyTrusted
@@ -196,7 +198,31 @@ private class SshjSession(
         ssh.auth(username, pubkeyAuth)
       }
     }
-    return this
+
+    val gitSettings = (callingActivity as BaseGitActivity).gitSettings
+    return if (!ssh.getUserAuth().getBanner().isBlank() && gitSettings.showSshServerResponse) {
+      runBlocking(dispatcherProvider.main()) {
+        suspendCoroutine { cont ->
+          val binding by unsafeLazy {
+            DialogSelectableMessageBinding.inflate(callingActivity.layoutInflater)
+          }
+          binding.message.setText(ssh.getUserAuth().getBanner())
+          binding.doNotShowAgain.isChecked = !gitSettings.showSshServerResponse
+
+          MaterialAlertDialogBuilder(callingActivity)
+            .setView(binding.root)
+            .setCancelable(false)
+            .setTitle(R.string.git_server_response_dialog_title)
+            .setOnDismissListener {
+              gitSettings.showSshServerResponse = !binding.doNotShowAgain.isChecked
+            }
+            .setPositiveButton(R.string.dialog_ok) { _, _ ->
+              cont.resume(this@SshjSession)
+            }
+            .show()
+        }
+      }
+    } else this
   }
 
   override fun exec(commandName: String?, timeout: Int): Process {
