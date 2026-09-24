@@ -10,7 +10,6 @@ kotlin = "2.4.20"
 ksp = "2.3.12"
 kotlinResult = "2.3.1"
 lifecycle = "2.11.0"
-jackson = "2.22.1"
 credentials = "1.6.0"
 # moshi = "1.15.2"
 
@@ -59,9 +58,9 @@ dagger-hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref
 dagger-hilt-core = { module = "com.google.dagger:hilt-core", version.ref = "hilt" }
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
 kotlinx-collections-immutable = "org.jetbrains.kotlinx:kotlinx-collections-immutable:0.5.2"
-kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-bom = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-bom", version.ref = "coroutines" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
-kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 kotlinx-serialization-cbor = { module = "org.jetbrains.kotlinx:kotlinx-serialization-cbor", version.ref = "serialization" }
 testing-junit = "junit:junit:4.13.2"
