@@ -76,7 +76,7 @@ dependencies {
   implementation(libs.dagger.hilt.android)
 
   implementation(libs.kotlinx.collections.immutable)
-  implementation(libs.kotlinx.coroutines.android)
+  implementation(platform(libs.kotlinx.coroutines.bom))
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.serialization.json)
   implementation(libs.kotlinx.serialization.cbor)
