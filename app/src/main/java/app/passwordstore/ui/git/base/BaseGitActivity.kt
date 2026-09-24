@@ -36,8 +36,10 @@ import com.github.michaelbull.result.onOk
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.SocketTimeoutException
 import javax.inject.Inject
+import javax.net.SocketFactory
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -97,32 +99,40 @@ abstract class BaseGitActivity : AppCompatActivity() {
     if (gitSettings.url == null)
       return Err(IllegalStateException(resources.getString(R.string.git_url_not_set_error)))
 
-    val host = fixUri(URIish(gitSettings.url)).host
+    val fixedUri = fixUri(URIish(gitSettings.url))
+    val host = fixedUri.host
 
     // check whether local network access runtime permission needs to be granted (Android 17+)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN) {
 
       var networkPermission = Manifest.permission.ACCESS_LOCAL_NETWORK
-      accessLocalNetworkGranted = false
 
-      localNetworkAccessSetupCompletion = CompletableDeferred<Unit>()
+      if (
+        ContextCompat.checkSelfPermission(this, networkPermission) !=
+          PackageManager.PERMISSION_GRANTED
+      ) {
 
-      runCatching {
-        withContext(dispatcherProvider.io()) { InetAddress.getByName(host) }
+        accessLocalNetworkGranted = false
+
+        localNetworkAccessSetupCompletion = CompletableDeferred<Unit>()
+
+        runCatching {
+          withContext(dispatcherProvider.io()) {
+            val port = fixedUri.port
+            val socketFactory = SocketFactory.getDefault()
+            val socket = socketFactory.createSocket()
+            if (!socket.isConnected()) socket.connect(InetSocketAddress(host, port), 5000)
+          }
+        }
+          .onOk {
+            accessLocalNetworkGranted = true
+            localNetworkAccessSetupCompletion?.complete(Unit)
+          }
+          .onErr { e ->
+            if (e is SocketTimeoutException) requestLocalNetworkLauncher.launch(networkPermission)
+            else return Err(e) // something else must have gone wrong
+          }
       }
-        .onOk {
-          accessLocalNetworkGranted = true
-          localNetworkAccessSetupCompletion?.complete(Unit)
-        }
-        .onErr { e ->
-          if (
-            e is SecurityException &&
-              ContextCompat.checkSelfPermission(this, networkPermission) !=
-                PackageManager.PERMISSION_GRANTED
-          )
-            requestLocalNetworkLauncher.launch(networkPermission)
-          else return Err(e) // something else must have gone wrong
-        }
     }
 
     localNetworkAccessSetupCompletion?.await()
