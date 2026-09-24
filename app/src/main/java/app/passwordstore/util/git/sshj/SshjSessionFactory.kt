@@ -90,14 +90,13 @@ private fun makeTofuHostKeyVerifier(
   if (!hostKeyFile.exists()) {
     return object : HostKeyVerifier {
       override fun verify(hostname: String?, port: Int, key: PublicKey?): Boolean {
-        val normalizedKey = key?.let { normalizeForSshj(it) }
         val digest = runCatching {
           SecurityUtils.getMessageDigest("SHA-256")
         }
           .getOrElse { e -> throw SSHRuntimeException(e) }
-        digest.update(PlainBuffer().putPublicKey(normalizedKey).compactData)
+        digest.update(PlainBuffer().putPublicKey(key).compactData)
         val digestData = digest.digest()
-        val keyType = KeyType.fromKey(normalizedKey)
+        val keyType = KeyType.fromKey(key)
         val hostKeyEntry = "SHA256:${Base64.encodeToString(digestData, Base64.NO_WRAP)}"
         val hostKeyEntryNoPadding =
           "SHA256:${Base64.encodeToString(digestData, Base64.NO_WRAP or Base64.NO_PADDING)}"
@@ -145,7 +144,7 @@ private fun makeTofuHostKeyVerifier(
     val delegate = FingerprintVerifier.getInstance(hostKeyEntry)
     return object : HostKeyVerifier {
       override fun verify(hostname: String?, port: Int, key: PublicKey?): Boolean {
-        return delegate.verify(hostname, port, key?.let { normalizeForSshj(it) })
+        return delegate.verify(hostname, port, key)
       }
 
       override fun findExistingAlgorithms(hostname: String?, port: Int): MutableList<String> {
