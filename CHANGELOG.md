@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file
 
 - autofill-parser: on some login forms, the "Create entry" button was not shown in the keyboard's suggestions strip
 - On the New password UI, input fields are now correctly checked for presence of filled-in values
+- "Nearby devices" permission on Android 17+: connection test and request for user consent fixed
 
 ## [2.0.2] - 2026-09-15
 
