@@ -371,7 +371,10 @@
   <string name="git_push_generic_error">Push wurde von Remote abgelehnt, Grund: %1$s</string>
   <string name="git_push_other_error">Remote hat den Push abgelehnt. Prüfen Sie die Variable receive.denyNonFastForwards in der Konfigurationsdatei des Ziel-Repositorys.</string>
   <string name="git_unknown_host">Unbekannter Host: %1$s</string>
-  <string name="git_local_network_unreachable_error">Host %1$s nicht erreichbar. Fehlende Berechtigung für „Geräte in der Nähe“.</string>
+  <string name="git_local_network_unreachable_dialog_title">Server nicht erreichbar</string>
+  <string name="git_local_network_unreachable_dialog_message">Falls sich der Server %1$s im lokalen Netz befindet, muss die Berechtigung „Geräte in der Nähe“ erteilt werden.</string>
+  <string name="git_local_network_permission_skip">Überspringen</string>
+  <string name="git_local_network_permission_grant">Berechtigung erteilen</string>
   <string name="git_url_not_set_error">Git-URL ist nicht gesetzt.</string>
   <string name="git_operation_running">Git-Operation wird ausgeführt…</string>
   <string name="git_break_out_of_detached_success">Es gab einen Konflikt während des Rebase-Prozesses. Ihr lokaler Branch %1$s wurde auf einen anderen Branch namens %2$s gepusht.\nNutzen Sie diesen Branch, um den Konflikt auf dem Server zu beheben</string>

@@ -59,11 +59,9 @@ import org.eclipse.jgit.transport.URIish
 abstract class BaseGitActivity : AppCompatActivity() {
 
   private var localNetworkAccessSetupCompletion: CompletableDeferred<Unit>? = null
-  private var accessLocalNetworkGranted: Boolean = true
 
   private val requestLocalNetworkLauncher =
     registerForActivityResult(RequestPermission()) { isGranted ->
-      accessLocalNetworkGranted = isGranted
       localNetworkAccessSetupCompletion?.complete(Unit)
     }
 
@@ -112,38 +110,55 @@ abstract class BaseGitActivity : AppCompatActivity() {
           PackageManager.PERMISSION_GRANTED
       ) {
 
-        accessLocalNetworkGranted = false
-
         localNetworkAccessSetupCompletion = CompletableDeferred<Unit>()
 
         runCatching {
           withContext(dispatcherProvider.io()) {
-            val port = fixedUri.port
+            val port =
+              fixedUri.port.takeUnless { it == -1 }
+                ?: run {
+                  when (fixedUri.scheme) {
+                    "http" -> 80
+                    "https" -> 443
+                    else -> 22
+                  }
+                }
             val socketFactory = SocketFactory.getDefault()
             val socket = socketFactory.createSocket()
             if (!socket.isConnected()) socket.connect(InetSocketAddress(host, port), 5000)
           }
         }
           .onOk {
-            accessLocalNetworkGranted = true
             localNetworkAccessSetupCompletion?.complete(Unit)
           }
           .onErr { e ->
-            if (e is SocketTimeoutException) requestLocalNetworkLauncher.launch(networkPermission)
-            else return Err(e) // something else must have gone wrong
+            if (e is SocketTimeoutException) {
+              withContext(dispatcherProvider.main()) {
+                MaterialAlertDialogBuilder(this@BaseGitActivity)
+                  .setCancelable(false)
+                  .setTitle(R.string.git_local_network_unreachable_dialog_title)
+                  .setMessage(
+                    resources.getString(
+                      R.string.git_local_network_unreachable_dialog_message,
+                      host,
+                    )
+                  )
+                  .setPositiveButton(R.string.git_local_network_permission_grant) { _, _ ->
+                    requestLocalNetworkLauncher.launch(networkPermission)
+                  }
+                  .setNegativeButton(R.string.git_local_network_permission_skip) { _, _ ->
+                    localNetworkAccessSetupCompletion?.complete(Unit)
+                  }
+                  .show()
+              }
+            } else return Err(e) // something else must have gone wrong
           }
       }
     }
 
     localNetworkAccessSetupCompletion?.await()
 
-    return if (accessLocalNetworkGranted) launchGitOperationWithPermission(operation)
-    else
-      Err(
-        IllegalStateException(
-          resources.getString(R.string.git_local_network_unreachable_error, host)
-        )
-      )
+    return launchGitOperationWithPermission(operation)
   }
 
   private suspend fun launchGitOperationWithPermission(operation: GitOp): Result<Unit, Throwable> {
