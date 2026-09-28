@@ -1,4 +1,4 @@
-144393
+144555
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -84,6 +84,7 @@
 *.auiusercontent.com
 *.awdev.ca
 *.awsapprunner.com
+*.azure.databricksapps.com
 *.azurecontainer.io
 *.beget.app
 *.begetcdn.cloud
@@ -910,6 +911,8 @@ avoues.fr
 aw
 awaji.hyogo.jp
 aws
+aws-gov.databricksapps.us
+aws.databricksapps.com
 awsapps.com
 awsglobalaccelerator.com
 ax
@@ -3191,6 +3194,7 @@ gb
 gb.net
 gbiz
 gc.ca
+gcp.databricksapps.com
 gd
 gd.cn
 gda.pl
@@ -3272,6 +3276,7 @@ gl.srv.us
 glass
 gle
 gleeze.com
+glideos.app
 gliding.aero
 gliwice.pl
 global
@@ -4212,6 +4217,7 @@ ipiranga
 ipv64.de
 ipv64.net
 iq
+iqhs.pl
 ir
 ir.md
 iran.liara.run
@@ -8353,9 +8359,11 @@ siracusa.it
 sirdal.no
 sisko.replit.dev
 site
+site.hosting-cluster.nl
 site.rb-hosting.io
 site.tb-hosting.com
 site.transip.me
+site.webhosting.be
 siteleaf.net
 sj
 sjc.br
