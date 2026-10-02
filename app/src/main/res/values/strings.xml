@@ -72,8 +72,8 @@
   <!-- Clone fragment -->
 
   <string name="server_url">Repository URL</string>
-
   <string name="connection_mode">Authentication method</string>
+  <string name="show_server_response">Show server banner (if any)</string>
 
   <!-- Git Config fragment -->
   <string name="git_user_name_hint">Username</string>
@@ -311,6 +311,8 @@
   <string name="git_server_hostkey_dialog_message">%s\n\nVerify the correctness of the fingerprint before connecting.</string>
   <string name="git_server_hostkey_dialog_connect">Connect</string>
   <string name="git_server_hostkey_dialog_abort">Abort</string>
+  <string name="git_server_response_dialog_title">Server banner</string>
+  <string name="git_server_response_dialog_do_not_show_again">Do not show again</string>
   <string name="git_server_config_save_success">Successfully saved configuration</string>
   <string name="git_server_config_save_error">The provided repository URL is not valid.</string>
   <string name="git_server_config_save_missing_username_https">Please specify the HTTPS username in the form https://username@example.com/…</string>

@@ -89,6 +89,12 @@ constructor(
       settings.edit { putString(PreferenceKeys.GIT_CONFIG_AUTHOR_EMAIL, value) }
     }
 
+  var showSshServerResponse
+    get() = settings.getBoolean(PreferenceKeys.GIT_SHOW_SSH_SERVER_RESPONSE, true)
+    set(value) {
+      settings.edit { putBoolean(PreferenceKeys.GIT_SHOW_SSH_SERVER_RESPONSE, value) }
+    }
+
   var useMultiplexing
     get() = settings.getBoolean(PreferenceKeys.GIT_REMOTE_USE_MULTIPLEXING, true)
     set(value) {
