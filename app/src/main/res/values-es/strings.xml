@@ -210,7 +210,7 @@
   <string name="oreo_autofill_strict_domain_search">Búsqueda resistente al phishing</string>
   <string name="oreo_autofill_matches_clear_existing">Borrar coincidencias existentes</string>
   <string name="oreo_autofill_filter_no_results">Sin resultados.</string>
-  <string name="oreo_autofill_search_in_store">Entrada de búsqueda</string>
+  <string name="oreo_autofill_search_in_store">Búsqueda de entrada</string>
   <string name="oreo_autofill_save_internal_error">Error al guardar debido a un error interno</string>
   <string name="oreo_autofill_save_app_not_supported">Esta aplicación no es compatible</string>
   <string name="oreo_autofill_save_passwords_dont_match">Las contraseñas no coinciden</string>
