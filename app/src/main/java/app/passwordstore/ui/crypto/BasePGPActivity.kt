@@ -24,6 +24,8 @@ import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.findGpgId
+import app.passwordstore.data.repo.store.writeGpgId
 import app.passwordstore.injection.prefs.PGPPassphrases
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.injection.prefs.UnlockPins
@@ -38,7 +40,6 @@ import app.passwordstore.util.extensions.b64Decode
 import app.passwordstore.util.extensions.clipboard
 import app.passwordstore.util.extensions.commitChange
 import app.passwordstore.util.extensions.getString
-import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.substringBefore
 import app.passwordstore.util.extensions.unsafeLazy
@@ -123,30 +124,23 @@ open class BasePGPActivity : AppCompatActivity() {
           data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
 
-        val repoRoot = PasswordRepository.getRepositoryDirectory()
         val subPath = data.getStringExtra("SUB_PATH") ?: return@registerForActivityResult
 
+        val subDir = PasswordRepository.nodeAt(subPath)
         val gpgIdDir =
-          File(repoRoot, subPath)
-            .let {
-              if (it.isFile() || !it.exists()) it.getParentFile() else it.getAbsoluteFile()
-            }
-            .also {
-              if (!it.exists()) it.mkdirs() // should not be necessary
-            }
+          if (subDir.isFile || !subDir.exists()) subDir.parent() ?: PasswordRepository.storeRoot
+          else subDir
 
-        File(gpgIdDir, ".gpg-id")?.let {
-          it.writeText(selectedKeyId + "\n")
-          runBlocking {
-            commitChange(
-              getString(
-                R.string.git_commit_gpg_id,
-                getString(R.string.app_name),
-              )
+        gpgIdDir.writeGpgId(selectedKeyId)
+        runBlocking {
+          commitChange(
+            getString(
+              R.string.git_commit_gpg_id,
+              getString(R.string.app_name),
             )
-          }
-          onKeyListCallback?.invoke()
-        } ?: return@registerForActivityResult
+          )
+        }
+        onKeyListCallback?.invoke()
       } else {
         finish()
       }
@@ -402,9 +396,8 @@ open class BasePGPActivity : AppCompatActivity() {
   protected fun getPGPIdentifiers(subDir: String): List<PGPIdentifier>? {
     var shortIdCount = 0
     var invalidIdCount = 0
-    val repoRoot = PasswordRepository.getRepositoryDirectory()
     val gpgIdentifierFile =
-      File(repoRoot, subDir).findTillRoot(".gpg-id", repoRoot)
+      PasswordRepository.nodeAt(subDir).findGpgId(PasswordRepository.storeRoot)
         ?: run {
           snackbar(message = getString(R.string.missing_gpg_id))
           return null
@@ -449,26 +442,6 @@ open class BasePGPActivity : AppCompatActivity() {
     if (emails.isEmpty()) return null
     val label = if (emails.size > 1) R.string.pgp_id_label_plural else R.string.pgp_id_label
     return "${getString(label)} ${emails.joinToString(", ")}"
-  }
-
-  @Suppress("ReturnCount")
-  private fun File.findTillRoot(fileName: String, rootPath: File): File? {
-    val gpgFile = File(this, fileName)
-    require(gpgFile.isInsideRepository()) { "Trying to access target outside the repository" }
-    if (gpgFile.exists()) return gpgFile
-
-    if (this.absolutePath == rootPath.absolutePath) {
-      return null
-    }
-    val parent = parentFile
-    parent?.let {
-      require(it.isInsideRepository()) { "Trying to access target outside the repository" }
-    }
-    return if (parent != null && parent.exists()) {
-      parent.findTillRoot(fileName, rootPath)
-    } else {
-      null
-    }
   }
 
   /** Opens the dialog for passphrase input and then forwards it to the decryption method. */

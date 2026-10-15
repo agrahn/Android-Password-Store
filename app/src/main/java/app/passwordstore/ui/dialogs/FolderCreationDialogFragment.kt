@@ -14,6 +14,8 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import app.passwordstore.R
+import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.writeGpgId
 import app.passwordstore.databinding.FolderDialogFragmentBinding
 import app.passwordstore.ui.folderselect.SelectFolderActivity
 import app.passwordstore.ui.passwords.PasswordStore
@@ -66,8 +68,7 @@ class FolderCreationDialogFragment : DialogFragment() {
         val selectedKeyId =
           data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
-        val gpgIdentifierFile = File(newFolder, ".gpg-id")
-        gpgIdentifierFile.writeText(selectedKeyId + "\n")
+        PasswordRepository.nodeAtFile(newFolder).writeGpgId(selectedKeyId)
         runBlocking {
           requireActivity()
             .commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))

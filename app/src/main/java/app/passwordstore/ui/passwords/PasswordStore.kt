@@ -27,6 +27,7 @@ import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.data.password.PasswordItem
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.writeGpgId
 import app.passwordstore.databinding.ActivityPwdstoreBinding
 import app.passwordstore.injection.prefs.CredentialUsernames
 import app.passwordstore.injection.prefs.PasswordHistory
@@ -95,8 +96,7 @@ class PasswordStore : BaseGitActivity() {
         val selectedKeyId =
           data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
-        val gpgIdentifierFile = File(currentDir.absolutePath, ".gpg-id")
-        gpgIdentifierFile.writeText(selectedKeyId + "\n")
+        PasswordRepository.nodeAtFile(currentDir).writeGpgId(selectedKeyId)
         runBlocking {
           commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))
         }

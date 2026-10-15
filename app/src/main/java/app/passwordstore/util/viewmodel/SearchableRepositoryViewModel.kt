@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import app.passwordstore.data.password.PasswordItem
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.GPG_ID
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.checkMainThread
@@ -57,7 +58,7 @@ import me.zhanghai.android.fastscroll.PopupTextProvider
 
 private fun File.toPasswordItem() =
   if (isFile) {
-    if (name == ".gpg-id")
+    if (name == GPG_ID)
       PasswordItem.newGpgIdItem(name, this, PasswordRepository.getRepositoryDirectory())
     else if (extension == "gpg")
       PasswordItem.newPassword(name, this, PasswordRepository.getRepositoryDirectory())

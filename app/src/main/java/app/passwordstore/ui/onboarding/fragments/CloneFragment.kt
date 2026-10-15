@@ -14,6 +14,7 @@ import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.GPG_ID
 import app.passwordstore.databinding.FragmentCloneBinding
 import app.passwordstore.ui.git.config.GitServerConfigActivity
 import app.passwordstore.util.extensions.finish
@@ -25,7 +26,6 @@ import app.passwordstore.util.extensions.windowInsetsLambda
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
-import java.io.File
 import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
@@ -39,7 +39,7 @@ class CloneFragment : Fragment(R.layout.fragment_clone) {
   private val cloneAction =
     registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
       if (result.resultCode == AppCompatActivity.RESULT_OK) {
-        if (File(PasswordRepository.getRepositoryDirectory(), ".gpg-id").isFile()) {
+        if (PasswordRepository.storeRoot.findChild(GPG_ID)?.isFile == true) {
           settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
           finish()
         } else {
