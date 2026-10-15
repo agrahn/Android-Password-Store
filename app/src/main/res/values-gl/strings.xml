@@ -14,7 +14,6 @@
   <string name="dialog_delete_msg">Desexas eliminar o directorio actual de password store?\n(%1$s)</string>
   <string name="dialog_delete">Eliminar directorio</string>
   <string name="dialog_do_not_delete">Cancelar</string>
-  <string name="title_activity_git_clone">Información do repositorio</string>
   <string name="title_activity_git_log">Rexistro de cambios</string>
   <!-- Password Store -->
   <string name="creation_dialog_text">Clona ou crea un novo repositorio aquí antes de intentar engadir un contrasinal ou realizar unha sincronización.</string>
@@ -75,7 +74,6 @@
   <string name="share_as_plaintext">Compartir como texto plano</string>
   <!-- Preferences -->
   <string name="pref_category_repository_title">Repositorio</string>
-  <string name="pref_edit_git_server_settings">Editar axustes do servidor git</string>
   <string name="pref_edit_git_config">Configuración e Utilidades locais Git</string>
   <string name="pref_import_ssh_key_title">Importar chave SSH</string>
   <string name="pref_ssh_keygen_title">Crear par de chaves SSH</string>

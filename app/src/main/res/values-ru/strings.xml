@@ -16,7 +16,6 @@
   <string name="dialog_delete_msg">Хотите удалить существующую директорию\n(%1$s)</string>
   <string name="dialog_delete">Удалить директорию</string>
   <string name="dialog_do_not_delete">Отменить</string>
-  <string name="title_activity_git_clone">Информация о репозитории</string>
   <string name="title_activity_git_log">Журнал изменений</string>
   <!-- Password Store -->
   <string name="creation_dialog_text">Пожалуйста, клонируйте или создайте новый репозиторий перед тем, как добавлять пароль или выполнять синхронизацию.</string>
@@ -79,7 +78,6 @@
   <string name="share_as_plaintext">Поделиться в открытом виде</string>
   <!-- Preferences -->
   <string name="pref_category_repository_title">Репозиторий</string>
-  <string name="pref_edit_git_server_settings">Изменить настройки сервера Git</string>
   <string name="pref_edit_git_config">Конфигурация локального Git</string>
   <string name="pref_import_ssh_key_title">Импортировать SSH ключ</string>
   <string name="pref_ssh_keygen_title">Сгенерировать пару SSH ключей</string>

@@ -14,7 +14,6 @@
   <string name="dialog_delete_msg">Voulez vous supprimer le répertoire actual du gestionnaire de mots de passe?\n(%1$s)</string>
   <string name="dialog_delete">Supprimer le répertoire</string>
   <string name="dialog_do_not_delete">Annuler</string>
-  <string name="title_activity_git_clone">Information sur le dépôt Git</string>
   <string name="title_activity_git_log">Historique des commits</string>
   <!-- Password Store -->
   <string name="creation_dialog_text">Clonez ou créez un dépôt suivant avant d\'essayer d\'ajouter un mot de passe ou d\'effectuer une opération de synchronisation.</string>
@@ -74,7 +73,6 @@
   <string name="share_as_plaintext">Partager en clair</string>
   <!-- Preferences -->
   <string name="pref_category_repository_title">Dépôt</string>
-  <string name="pref_edit_git_server_settings">Modifier les paramètres du serveur Git</string>
   <string name="pref_edit_git_config">Configuration locale de Git &amp; utilitaires</string>
   <string name="pref_import_ssh_key_title">Importer une clef SSH</string>
   <string name="pref_ssh_keygen_title">Générer une paire de clefs SSH</string>

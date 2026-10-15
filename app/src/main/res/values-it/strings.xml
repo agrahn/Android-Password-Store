@@ -14,7 +14,6 @@
   <string name="dialog_delete_msg">Vuoi eliminare la directory dell\'archivio delle password corrente?\n(%1$s)</string>
   <string name="dialog_delete">Elimina directory</string>
   <string name="dialog_do_not_delete">Annulla</string>
-  <string name="title_activity_git_clone">Informazioni della repository</string>
   <string name="title_activity_git_log">Conferma registro</string>
   <!-- Password Store -->
   <string name="creation_dialog_text">Sei pregato di clonare o creare una nuova repository sotto prima di provare ad aggiungere una password o eseguire qualsiasi operazione di sincronizzazione.</string>
@@ -74,7 +73,6 @@
   <string name="share_as_plaintext">Condividi come testo semplice</string>
   <!-- Preferences -->
   <string name="pref_category_repository_title">Repository</string>
-  <string name="pref_edit_git_server_settings">Modifica impostazioni del server di Git</string>
   <string name="pref_edit_git_config">Configurazione &amp; utilità della configurazione di Git</string>
   <string name="pref_import_ssh_key_title">Importa chiave SSH</string>
   <string name="pref_ssh_keygen_title">Genera coppia di chiavi SSH</string>

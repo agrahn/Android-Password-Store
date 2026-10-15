@@ -14,7 +14,6 @@
   <string name="dialog_delete_msg">Você quer excluir o diretório atual de armazenamento de senhas?\n(%1$s)</string>
   <string name="dialog_delete">Excluir diretório</string>
   <string name="dialog_do_not_delete">Cancelar</string>
-  <string name="title_activity_git_clone">Informações do repositório</string>
   <string name="title_activity_git_log">Log de Commits</string>
   <!-- Password Store -->
   <string name="creation_dialog_text">Por favor, clone ou crie um novo repositório abaixo antes de tentar adicionar uma senha ou executar qualquer operação de sincronização.</string>
@@ -75,7 +74,6 @@
   <string name="share_as_plaintext">Compartilhar como texto</string>
   <!-- Preferences -->
   <string name="pref_category_repository_title">Repositório</string>
-  <string name="pref_edit_git_server_settings">Editar configurações do servidor Git</string>
   <string name="pref_edit_git_config">Configuração local do Git &amp; utilitários</string>
   <string name="pref_import_ssh_key_title">Importar chave SSH</string>
   <string name="pref_ssh_keygen_title">Gerar um par de chave SSH</string>

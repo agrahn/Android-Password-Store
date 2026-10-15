@@ -52,7 +52,7 @@ class GitConfigActivity : BaseGitActivity() {
     binding.saveButton.setOnClickListener {
       val email = binding.gitUserEmail.text.toString().trim()
       val name = binding.gitUserName.text.toString().trim()
-      if (!email.matches(Patterns.EMAIL_ADDRESS.toRegex())) {
+      if (!email.isEmpty() && !email.matches(Patterns.EMAIL_ADDRESS.toRegex())) {
         MaterialAlertDialogBuilder(this)
           .setMessage(getString(R.string.invalid_email_dialog_text))
           .setPositiveButton(getString(R.string.dialog_ok), null)
