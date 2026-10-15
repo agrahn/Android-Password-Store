@@ -17,7 +17,7 @@
   <string name="dialog_delete_msg">Möchten Sie das lokale Password-Repository wirklich löschen?\n\n%1$s</string>
   <string name="dialog_delete">Ordner löschen</string>
   <string name="dialog_do_not_delete">Abbrechen</string>
-  <string name="title_activity_git_clone">Repository-Informationen</string>
+  <string name="title_activity_git_remote">Remote-Repository</string>
   <string name="title_activity_git_config">Git-Konfiguration</string>
   <string name="title_activity_git_log">Commit-Log</string>
 
@@ -104,7 +104,6 @@
 
   <!-- Preferences -->
   <string name="pref_category_repository_title">Repository</string>
-  <string name="pref_edit_git_server_settings">Git-Server-Einstellungen</string>
   <string name="pref_git_server_auth_key">Authentifizierungsschlüssel</string>
   <string name="pref_edit_git_config">Lokale Git-Konfiguration &amp; Dienstprogramme</string>
   <string name="pref_ssh_use_pgp_key_title">PGP-Schlüssel verwenden</string>

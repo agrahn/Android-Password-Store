@@ -18,7 +18,6 @@
   <string name="dialog_delete_msg">¿Desea eliminar el directorio actual del almacén de contraseñas?\n(%1$s)</string>
   <string name="dialog_delete">Eliminar directorio</string>
   <string name="dialog_do_not_delete">Cancelar</string>
-  <string name="title_activity_git_clone">Información del repositorio</string>
     <string name="title_activity_git_config">Configuración de Git</string>
     <string name="title_activity_git_log">Registro de commits</string>
 
@@ -95,7 +94,6 @@
 
   <!-- Preferences -->
   <string name="pref_category_repository_title">Repositorio</string>
-  <string name="pref_edit_git_server_settings">Editar la configuración del servidor Git</string>
   <string name="pref_edit_git_config">Configuración y utilidades locales de Git</string>
   <string name="pref_import_ssh_key_title">Importar clave SSH</string>
   <string name="pref_ssh_keygen_title">Generar claves SSH</string>

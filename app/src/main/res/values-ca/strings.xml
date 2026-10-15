@@ -14,7 +14,6 @@
     <string name="dialog_delete_msg">Voleu suprimir el directori actual del magatzem de contrasenyes?\n(%1$s)</string>
     <string name="dialog_delete">Suprimeix el directori</string>
     <string name="dialog_do_not_delete">Cancel·lar</string>
-    <string name="title_activity_git_clone">Informació del repositori</string>
     <string name="title_activity_git_config">Configuració de Git</string>
     <string name="title_activity_git_log">Registre de commits</string>
     <string name="creation_dialog_text">Cloneu o creeu un nou repositori absn d\'intentar afegir una contrasenya o sincronitzar.</string>
@@ -69,7 +68,6 @@
     <string name="copy_password">Copia la contrasenya</string>
     <string name="share_as_plaintext">Comparteix com a text</string>
     <string name="pref_category_repository_title">Repositori</string>
-    <string name="pref_edit_git_server_settings">Edita la configuració del servidor Git</string>
     <string name="pref_edit_git_config">Configuració local de Git i utilitats</string>
     <string name="pref_import_ssh_key_title">Importa clau SSH</string>
     <string name="pref_ssh_keygen_title">Genera un parell de claus SSH</string>

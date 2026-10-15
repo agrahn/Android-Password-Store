@@ -76,7 +76,7 @@
     <activity
       android:name=".ui.git.config.GitServerConfigActivity"
       android:exported="false"
-      android:label="@string/title_activity_git_clone"
+      android:label="@string/title_activity_git_remote"
       android:windowSoftInputMode="adjustResize" />
 
     <activity

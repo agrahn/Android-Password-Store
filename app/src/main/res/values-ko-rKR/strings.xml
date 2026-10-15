@@ -12,7 +12,6 @@
   <string name="dialog_delete_title">이미 생성된 디렉토리입니다</string>
   <string name="dialog_delete">디렉토리 삭제</string>
   <string name="dialog_do_not_delete">삭제 취소</string>
-  <string name="title_activity_git_clone">레포지토리 정보</string>
   <string name="title_activity_git_log">커밋 로그</string>
   <!-- Password Store -->
   <string name="creation_dialog_text">비밀번호를 추가하거나 동기화 하기 전에 레포지토리를 클론 하거나 새로 생성해 주세요.</string>
@@ -72,7 +71,6 @@
   <string name="share_as_plaintext">텍스트로 공유</string>
   <!-- Preferences -->
   <string name="pref_category_repository_title">저장소</string>
-  <string name="pref_edit_git_server_settings">Git 서버 설정 수정</string>
   <string name="pref_edit_git_config">로컬 Git 설정 &amp; 툴</string>
   <string name="pref_import_ssh_key_title">SSH 키 가져오기</string>
   <string name="pref_ssh_keygen_title">SSH 키쌍 생성</string>
