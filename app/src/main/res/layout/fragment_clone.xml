@@ -92,5 +92,17 @@
       app:layout_constraintStart_toStartOf="@id/clone_remote"
       app:layout_constraintTop_toBottomOf="@id/clone_remote" />
 
+    <com.google.android.material.button.MaterialButton
+      android:id="@+id/use_local_folder"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:maxWidth="300dp"
+      android:minWidth="100dp"
+      android:text="@string/use_local_folder_store"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="@id/create_local"
+      app:layout_constraintStart_toStartOf="@id/create_local"
+      app:layout_constraintTop_toBottomOf="@id/create_local" />
+
   </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

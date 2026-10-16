@@ -19,7 +19,7 @@ import androidx.annotation.DrawableRes
 import androidx.autofill.inline.UiVersions
 import androidx.autofill.inline.v1.InlineSuggestionUi
 import app.passwordstore.R
-import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.StoreNode
 import app.passwordstore.ui.passwords.PasswordStore
 import java.io.File
 
@@ -93,12 +93,14 @@ fun makeInlinePresentation(
 
 fun makeFillMatchMetadata(
   context: Context,
-  file: File,
+  node: StoreNode,
   suggestionCount: Int,
   maxSuggestions: Int,
 ): DatasetMetadata {
   val directoryStructure = AutofillPreferences.directoryStructure(context)
-  val relativeFile = file.relativeTo(PasswordRepository.getRepositoryDirectory())
+  // DirectoryStructure only reads path components, never the filesystem, so a relative File over
+  // the store-relative path gives it the same view for every backend.
+  val relativeFile = File(node.path)
   val title = directoryStructure.getPathStringWithAtMostTwoParentsFor(relativeFile)
 
   return DatasetMetadata(

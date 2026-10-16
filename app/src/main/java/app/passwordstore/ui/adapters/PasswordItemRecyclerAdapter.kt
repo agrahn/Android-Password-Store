@@ -15,10 +15,13 @@ import androidx.recyclerview.selection.Selection
 import androidx.recyclerview.widget.RecyclerView
 import app.passwordstore.R
 import app.passwordstore.data.password.PasswordItem
+import app.passwordstore.data.repo.store.extension
 import app.passwordstore.util.coroutines.DispatcherProvider
+import app.passwordstore.util.viewmodel.RebindableViewHolder
 import app.passwordstore.util.viewmodel.SearchableRepositoryAdapter
 import app.passwordstore.util.viewmodel.stableId
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
 
 open class PasswordItemRecyclerAdapter(
@@ -49,12 +52,14 @@ open class PasswordItemRecyclerAdapter(
     return super.onSelectionChanged(listener) as PasswordItemRecyclerAdapter
   }
 
-  class PasswordItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+  class PasswordItemViewHolder(view: View) : RecyclerView.ViewHolder(view), RebindableViewHolder {
 
     private val name: AppCompatTextView = itemView.findViewById(R.id.label)
     private val childCount: AppCompatTextView = itemView.findViewById(R.id.child_count)
     private val folderIndicator: AppCompatImageView = itemView.findViewById(R.id.folder_indicator)
     var itemDetails: ItemDetailsLookup.ItemDetails<String>? = null
+
+    override var bindJob: Job? = null
 
     suspend fun bind(item: PasswordItem, dispatcherProvider: DispatcherProvider) {
       val parentPath = item.fullPathToParent.replace("(^/)|(/$)".toRegex(), "")
@@ -71,7 +76,8 @@ open class PasswordItemRecyclerAdapter(
         folderIndicator.visibility = View.VISIBLE
         val count =
           withContext(dispatcherProvider.io()) {
-            item.file.listFiles { path -> path.isDirectory || path.extension == "gpg" }?.size ?: 0
+            // The folder's listing is cached, so counting its children costs no query on a rebind.
+            item.node.children().count { child -> child.isDirectory || child.extension == "gpg" }
           }
         childCount.visibility = if (count > 0) View.VISIBLE else View.GONE
         childCount.text = "$count"

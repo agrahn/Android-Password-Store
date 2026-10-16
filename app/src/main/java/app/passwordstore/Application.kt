@@ -70,8 +70,12 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
     }
     logcat { "Debug logging enabled." }
 
-    val repoDir = PasswordRepository.getRepositoryDirectory()
-    if (!repoDir.exists()) repoDir.mkdirs()
+    // Only the app-private store has a directory to create. A SAF store is a folder the user
+    // already picked, and it cannot be created on their behalf.
+    if (!PasswordRepository.isSafStore) {
+      val repoDir = PasswordRepository.getRepositoryDirectory()
+      if (!repoDir.exists()) repoDir.mkdirs()
+    }
 
     prefs.registerOnSharedPreferenceChangeListener(this)
     setNightMode()
@@ -174,6 +178,10 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
   override fun onSharedPreferenceChanged(prefs: SharedPreferences, key: String?) {
     if (key == PreferenceKeys.APP_THEME) {
       setNightMode()
+    }
+    if (key == PreferenceKeys.STORE_MODE || key == PreferenceKeys.STORE_URI) {
+      // The backend caches the store location, so a new preference has to drop it.
+      PasswordRepository.resetBackend()
     }
   }
 

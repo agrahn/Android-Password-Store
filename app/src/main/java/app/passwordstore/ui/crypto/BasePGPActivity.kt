@@ -25,6 +25,7 @@ import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.data.repo.store.findGpgId
+import app.passwordstore.data.repo.store.needsCommitWarning
 import app.passwordstore.data.repo.store.writeGpgId
 import app.passwordstore.injection.prefs.PGPPassphrases
 import app.passwordstore.injection.prefs.SettingsPreferences
@@ -52,7 +53,6 @@ import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
 import java.nio.CharBuffer
 import java.time.Instant
 import java.util.concurrent.Executors
@@ -71,28 +71,22 @@ import logcat.logcat
 @AndroidEntryPoint
 open class BasePGPActivity : AppCompatActivity() {
 
-  /** Full path to the password file being worked on */
-  val fullPath: String by unsafeLazy {
-    intent.getStringExtra(EXTRA_FILE_PATH)
-      ?: PasswordRepository.getRepositoryDirectory().absolutePath
-  }
+  /** Store-relative path of the password file being worked on */
+  val fullPath: String by unsafeLazy { intent.getStringExtra(EXTRA_FILE_PATH) ?: "" }
 
-  /** Full path to the repository */
-  val repoPath: String by unsafeLazy {
-    intent.getStringExtra(EXTRA_REPO_PATH)
-      ?: PasswordRepository.getRepositoryDirectory().absolutePath
-  }
+  /** Store-relative path of the directory the password file lives in */
+  val repoPath: String by unsafeLazy { intent.getStringExtra(EXTRA_REPO_PATH) ?: "" }
 
-  protected val relativeParentPath by unsafeLazy {
-    PasswordRepository.getParentPath(fullPath, repoPath)
-  }
+  protected val relativeParentPath by unsafeLazy { PasswordRepository.getParentPath(fullPath) }
 
   /**
    * Name of the password file
    *
    * Converts personal/auth.foo.org/john_doe@example.org.gpg to john_doe.example.org
    */
-  val name: String by unsafeLazy { File(fullPath).nameWithoutExtension }
+  val name: String by unsafeLazy {
+    PasswordRepository.getLongName(fullPath).substringAfterLast('/')
+  }
 
   /* Counter for the user's decryption (with passphrase) attempts */
   private var retries = 0
@@ -317,6 +311,36 @@ open class BasePGPActivity : AppCompatActivity() {
       } else {
         onKeysExist(ids)
       }
+    }
+  }
+
+  /**
+   * Asks the user to confirm a save that will not produce a Git commit.
+   *
+   * The app can only commit to a store it can address as a filesystem path, so a folder store that
+   * nevertheless holds a `.git` directory saves without a commit even though the user may expect
+   * one. A user who enabled [PreferenceKeys.SAF_WARN_NO_COMMIT] is warned before that happens.
+   *
+   * @return `true` when the save may go ahead, either because nothing needs to be confirmed or
+   *   because the user confirmed it.
+   */
+  protected suspend fun confirmSaveIfNoGitCommit(): Boolean {
+    if (
+      !PasswordRepository.backend.needsCommitWarning() ||
+        !settings.getBoolean(PreferenceKeys.SAF_WARN_NO_COMMIT, true)
+    )
+      return true
+
+    return withContext(dispatcherProvider.main()) {
+      val confirmation = CompletableDeferred<Boolean>()
+      MaterialAlertDialogBuilder(this@BasePGPActivity)
+        .setTitle(R.string.saf_no_commit_dialog_title)
+        .setMessage(R.string.saf_no_commit_dialog_message)
+        .setPositiveButton(R.string.dialog_ok) { _, _ -> confirmation.complete(true) }
+        .setNegativeButton(R.string.dialog_cancel) { _, _ -> confirmation.complete(false) }
+        .setOnCancelListener { confirmation.complete(false) }
+        .show()
+      confirmation.await()
     }
   }
 

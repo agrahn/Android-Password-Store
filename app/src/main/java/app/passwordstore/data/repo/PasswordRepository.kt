@@ -4,11 +4,16 @@
  */
 package app.passwordstore.data.repo
 
+import android.net.Uri
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import app.passwordstore.Application
 import app.passwordstore.data.password.PasswordItem
 import app.passwordstore.data.repo.store.FileStoreBackend
+import app.passwordstore.data.repo.store.GPG_ID
+import app.passwordstore.data.repo.store.SafStoreBackend
 import app.passwordstore.data.repo.store.StoreBackend
+import app.passwordstore.data.repo.store.StoreMode
 import app.passwordstore.data.repo.store.StoreNode
 import app.passwordstore.data.repo.store.requireFile
 import app.passwordstore.util.extensions.isInsideRepository
@@ -20,7 +25,6 @@ import com.github.michaelbull.result.getOrElse
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import java.io.File
-import java.nio.file.Path
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.BranchTrackingStatus
 import org.eclipse.jgit.lib.Constants
@@ -41,10 +45,13 @@ object PasswordRepository {
     get() = Application.instance.filesDir
 
   val isInitialized: Boolean
-    get() = repository != null
+    get() = if (isSafStore) backend.root.exists() else repository != null
 
   fun isGitRepo(): Boolean {
-    return repository?.objectDatabase?.exists() ?: false
+    val repo = repository ?: return false
+    // A folder store is never git-backed. `repository` can still hold the app-private repository
+    // after a mode switch, so the mode has to be part of the answer.
+    return !isSafStore && repo.objectDatabase.exists()
   }
 
   /**
@@ -116,16 +123,69 @@ object PasswordRepository {
     repository = null
   }
 
+  private var cachedBackend: StoreBackend? = null
+
   /**
    * The backend that provides access to the password store.
    *
    * This is the single place where the store's location is decided; callers must not derive the
-   * store location themselves. It is resolved lazily because [Application.instance] is unavailable
-   * until `Application.onCreate` has begun.
+   * store location themselves. It is built on first use because [Application.instance] is
+   * unavailable until `Application.onCreate` has begun, and then reused, because a backend caches
+   * its directory listings. [resetBackend] drops that cache when the location changes.
    */
-  val backend: StoreBackend by unsafeLazy { FileStoreBackend(File(filesDir.toString(), "/store")) }
+  val backend: StoreBackend
+    get() = cachedBackend ?: newBackend().also { cachedBackend = it }
 
-  /** The store root as a plain [File]. Throws if the active backend is not file-backed. */
+  /** Whether the store lives in a folder picked with the Storage Access Framework. */
+  val isSafStore: Boolean
+    get() = backend is SafStoreBackend
+
+  /** The mode the store is currently served from. */
+  val storeMode: StoreMode
+    get() = if (isSafStore) StoreMode.SAF else StoreMode.INTERNAL
+
+  /**
+   * Whether the picked folder contains a `.git` directory, which the app cannot use but which makes
+   * a user expect a commit on save. Always false for the app-private store unless it holds a repo.
+   */
+  fun hasGitDir(): Boolean = backend.hasGitDir()
+
+  /** The tree URI of the folder store, or `null` when the store is the app-private one. */
+  val storeUri: Uri?
+    get() = if (isSafStore) settings.getString(PreferenceKeys.STORE_URI, null)?.toUri() else null
+
+  /** Forgets the cached backend so the next access picks up a changed store location. */
+  fun resetBackend() {
+    cachedBackend = null
+  }
+
+  /**
+   * Forgets the backend's cached views of the store, so the next read comes from the store itself.
+   *
+   * Asking for a re-read is the only way to see a folder store that another program wrote into: the
+   * framework reports no change to a tree.
+   */
+  fun invalidateStoreCache() {
+    backend.invalidate()
+  }
+
+  private fun newBackend(): StoreBackend {
+    val uri = settings.getString(PreferenceKeys.STORE_URI, null)
+    if (
+      StoreMode.from(settings.getString(PreferenceKeys.STORE_MODE, null)) == StoreMode.SAF &&
+        uri != null
+    ) {
+      return SafStoreBackend(uri.toUri())
+    }
+    return FileStoreBackend(File(filesDir.toString(), "/store"))
+  }
+
+  /**
+   * The store root as a plain [File].
+   *
+   * @throws IllegalStateException if the active backend is not file-backed, which is the case for a
+   *   SAF store. This is the marker that a call site has to move to [storeRoot] or [nodeAt].
+   */
   fun getRepositoryDirectory(): File = backend.root.requireFile()
 
   /** The store root as a [StoreNode]. */
@@ -142,47 +202,30 @@ object PasswordRepository {
     return backend.resolve(root.relativize(file.canonicalFile.toPath()).toString())
   }
 
-  /* referencePath: /a/b/c
-   * /a/b/c/d/e/dir -> /d/e/dir
-   * /a/b/c/d/e/file.ext -> /d/e/file.ext
+  /**
+   * Normalises a store path to the form [StoreNode.path] uses: `/`-separated, store-relative, no
+   * leading or trailing separator, `""` for the store root.
    */
-  fun getRelativePath(fullPath: String, referencePath: String): String {
-    return fullPath.replace(referencePath, "").replace("/+".toRegex(), "/")
-  }
+  fun getRelativePath(path: String): String =
+    path.replace("/+".toRegex(), "/").trim('/').takeIf { it.isNotEmpty() && it != "." } ?: ""
 
-  /* referencePath=/a/b/c
-   * fullPath=/a/b/c/d/e
-   * basename=file
-   * -> d/e/file
-   */
-  fun getLongName(fullPath: String, referencePath: String, basename: String): String {
-    var relativePath = getRelativePath(fullPath, referencePath)
-    return if (relativePath.isNotEmpty() && relativePath != "/") {
-      // remove preceding '/'
-      relativePath = relativePath.substring(1)
-      if (relativePath.endsWith('/')) {
-        relativePath + basename
-      } else {
-        "$relativePath/$basename"
-      }
-    } else {
-      basename
-    }
-  }
+  /** `a/b/c.gpg` -> `a/b/c`, i.e. the store-relative path without the `.gpg` extension. */
+  fun getLongName(path: String): String = getRelativePath(path).removeSuffix(".gpg")
 
-  /* referencePath: /a/b/c
-   * /a/b/c/d/e/file.ext -> /d/e/
-   */
-  fun getParentPath(fullPath: String, referencePath: String): String {
-    val relativePath = getRelativePath(fullPath, referencePath)
-    val index = relativePath.lastIndexOf("/")
-    return "/${relativePath.substring(startIndex = 0, endIndex = index + 1)}/"
-      .replace("/+".toRegex(), "/")
+  /** `a/b/c.gpg` -> `a/b/`, an entry at the store root -> `""`. */
+  fun getParentPath(path: String): String {
+    val relative = getRelativePath(path)
+    val index = relative.lastIndexOf("/")
+    return if (index < 0) "" else relative.substring(0, index + 1)
   }
 
   fun initialize(): Repository? {
-    // Un-initialize the repo if the dir does not exist or is absolutely empty
+    // A store is set up once it holds something. An empty directory — or an empty picked folder —
+    // is one that setup has not finished, so the password list must not open on it.
     settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, !isEmpty()) }
+    // A SAF store has no git repository and none can be created for it, so there is nothing to
+    // open here. isGitRepo() is what gates every git operation, and it stays false.
+    if (isSafStore) return repository
     // Create the `repository` static variable in PasswordRepository
     initializeRepository(getRepositoryDirectory().resolve(".git"))
 
@@ -254,13 +297,14 @@ object PasswordRepository {
       passList.filter { !it.isHidden }.toCollection(passList.apply { clear() })
     }
     passList.forEach { file ->
+      val node = nodeAtFile(file)
       passwordList.add(
         if (file.isFile) {
-          if (file.name == ".gpg-id") PasswordItem.newGpgIdItem(file.name, file, rootDir)
-          else if (file.extension == "gpg") PasswordItem.newPassword(file.name, file, rootDir)
-          else PasswordItem.newOtherItem(file.name, file, rootDir)
+          if (file.name == GPG_ID) PasswordItem.newGpgIdItem(file.name, node)
+          else if (file.extension == "gpg") PasswordItem.newPassword(file.name, node)
+          else PasswordItem.newOtherItem(file.name, node)
         } else {
-          PasswordItem.newCategory(file.name, file, rootDir)
+          PasswordItem.newCategory(file.name, node)
         }
       )
     }
@@ -271,7 +315,7 @@ object PasswordRepository {
   /**
    * Every entry of the subtree rooted at [startPath] whose own name matches [name].
    *
-   * @param startPath absolute path inside the store to search from
+   * @param startPath store-relative path to search from
    * @param name entry name to look for
    * @param type [TYPE_FILE], [TYPE_DIR], or both to accept either
    */
@@ -280,7 +324,8 @@ object PasswordRepository {
     name: String,
     type: Int = TYPE_DIR or TYPE_FILE,
     ignoreCase: Boolean = false,
-  ): List<Path> = findInSubtree(startPath, type) { it.name.equals(name, ignoreCase = ignoreCase) }
+  ): List<StoreNode> =
+    findInSubtree(startPath, type) { it.name.equals(name, ignoreCase = ignoreCase) }
 
   /**
    * Every entry of the subtree rooted at [startPath] whose *parent directory* is named [name].
@@ -292,7 +337,7 @@ object PasswordRepository {
     name: String,
     type: Int = TYPE_DIR or TYPE_FILE,
     ignoreCase: Boolean = false,
-  ): List<Path> =
+  ): List<StoreNode> =
     findInSubtree(startPath, type) {
       it.parent()?.name?.equals(name, ignoreCase = ignoreCase) == true
     }
@@ -301,10 +346,7 @@ object PasswordRepository {
     startPath: String,
     type: Int,
     matches: (StoreNode) -> Boolean,
-  ): List<Path> =
-    nodeAtFile(File(startPath))
-      .walk { it.matchesType(type) && matches(it) }
-      .map { it.requireFile().toPath() }
+  ): List<StoreNode> = nodeAt(startPath).walk { it.matchesType(type) && matches(it) }
 }
 
 private fun StoreNode.matchesType(type: Int): Boolean =

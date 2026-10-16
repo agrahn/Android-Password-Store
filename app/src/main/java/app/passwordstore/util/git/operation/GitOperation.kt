@@ -70,7 +70,11 @@ abstract class GitOperation(protected val callingActivity: FragmentActivity) {
   private var sshSessionFactory: SshjSessionFactory? = null
   private val hiltEntryPoint =
     EntryPointAccessors.fromApplication<GitOperationEntryPoint>(callingActivity)
-  protected val repository = PasswordRepository.repository ?: throw NullPointerException()
+  // A folder store has no repository at all. Every entry point to an operation is reached from a
+  // menu item that is hidden in that mode, so this only fires if the repository was closed after
+  // the operation was built.
+  protected val repository =
+    checkNotNull(PasswordRepository.repository) { "No Git repository is open" }
   protected val git = Git(repository)
   private val authActivity
     get() = callingActivity as AppCompatActivity
@@ -143,6 +147,9 @@ abstract class GitOperation(protected val callingActivity: FragmentActivity) {
 
   /** Executes the GitCommand in an async task. */
   suspend fun execute(): Result<Unit, Throwable> {
+    if (PasswordRepository.repository == null) {
+      return Err(IllegalStateException("No Git repository is open"))
+    }
     if (!preExecute()) {
       return Ok(Unit)
     }

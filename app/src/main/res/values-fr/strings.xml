@@ -265,9 +265,14 @@
   <!-- Onboarding flow -->
   <string name="let_s_go">Allons-y</string>
   <string name="select_n_repository_type">Sélectionnez le type de dépôt \n</string>
-  <string name="select_repo_type_text">Sélectionnez si vous voulez créer un dépôt local ou cloner un dépôt distant.</string>
+  <string name="select_repo_type_text">Sélectionnez si vous voulez créer un dépôt local, cloner un dépôt distant, ou conserver le magasin dans un dossier de cet appareil.</string>
   <string name="clone_remote_repo">Cloner le dépôt distant</string>
   <string name="create_local_repo">Créer un dépôt local</string>
+  <string name="use_local_folder_store">Utiliser un dossier local</string>
+  <string name="saf_store_invalid_folder_title">Ce dossier ne peut pas être utilisé</string>
+  <string name="saf_store_invalid_folder_message">Impossible d\'ouvrir le dossier sélectionné en lecture et en écriture. Choisissez un autre dossier et réessayez.</string>
+  <string name="saf_no_commit_dialog_title">Aucun commit Git ne sera créé</string>
+  <string name="saf_no_commit_dialog_message">Ce dossier est un dépôt Git, mais l\'application ne peut pas utiliser Git pour un magasin en dossier. L\'enregistrement de ce mot de passe ne créera pas de commit : la modification reste non validée jusqu\'à ce que vous synchronisiez depuis un ordinateur. Vous pouvez désactiver cet avertissement dans les paramètres de l\'application.</string>
   <string name="select_gpg_key_title">Sélectionnez\nla clé PGP</string>
   <string name="select_gpg_key_message">Sélectionnez une clé PGP pour initialiser votre magasin</string>
   <string name="gpg_key_select">Sélectionner la clé</string>
@@ -277,6 +282,13 @@
   <string name="proxy_hostname">Nom d\'hôte du proxy</string>
   <string name="port">Port</string>
   <string name="pref_edit_proxy_settings">Paramètres du proxy HTTP(S)</string>
+  <string name="pref_external_folder_store_title">Utiliser un dossier de cet appareil</string>
+  <string name="pref_external_folder_store_summary">Le magasin de mots de passe se trouve dans le répertoire privé de l\'application et utilise Git.</string>
+  <string name="pref_external_folder_store_summary_on">Le magasin se trouve dans le dossier ci-dessous. Git n\'est pas disponible.</string>
+  <string name="pref_select_store_folder_title">Dossier local du magasin</string>
+  <string name="pref_folder_store_needs_folder">Sélectionnez un dossier local pour utiliser le mode dossier</string>
+  <string name="pref_saf_warn_no_commit_title">Avertir avant d\'enregistrer sans commit</string>
+  <string name="pref_saf_warn_no_commit_summary">Commits non pris en charge. Confirmer avant d\'enregistrer si le dossier local est un dépôt Git.</string>
   <string name="invalid_proxy_url">URL invalide</string>
   <string name="oreo_autofill_password_fill_and_conditional_save_support">Remplir et enregistrer les mots de passe (enregistrer nécessite qu\'aucun service d\'accessibilité ne soit activé)</string>
   <string name="clear_saved_host_key">Effacer la clé d\'hôte enregistrée</string>

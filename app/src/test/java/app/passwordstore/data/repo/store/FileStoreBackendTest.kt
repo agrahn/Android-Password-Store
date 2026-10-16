@@ -8,7 +8,9 @@ import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
@@ -24,6 +26,22 @@ class FileStoreBackendTest {
   private fun setUpStore() {
     root = tmp.newFolder("store")
     backend = FileStoreBackend(root)
+  }
+
+  @Test
+  fun invalidateLeavesFilesystemListingsLive() {
+    setUpStore()
+    File(root, "work").mkdirs()
+    val work = backend.resolve("work")
+    assertEquals(0, work.children().size)
+
+    File(root, "work/added.gpg").writeText("secret")
+
+    assertEquals("a file listing is never cached", 1, work.children().size)
+
+    backend.invalidate()
+
+    assertEquals(1, work.children().size)
   }
 
   @Test
@@ -87,5 +105,54 @@ class FileStoreBackendTest {
       setOf("", "work", "work/example.org", "work/loop"),
       backend.root.walk { true }.map { it.path }.toSet(),
     )
+  }
+
+  @Test
+  fun hasGitDirDetectsGitMetadata() {
+    setUpStore()
+    assertFalse(backend.hasGitDir())
+
+    File(root, ".git").mkdirs()
+    assertTrue(backend.hasGitDir())
+  }
+
+  @Test
+  fun fileBackendIsGitCapableAndNeverWarns() {
+    setUpStore()
+    File(root, ".git").mkdirs()
+    // A commit is created here, so the user is never warned about a missing one.
+    assertTrue(backend.gitCapable)
+    assertFalse(backend.needsCommitWarning())
+  }
+
+  @Test
+  fun fileBackendWithoutGitDoesNotWarn() {
+    setUpStore()
+    assertFalse(backend.needsCommitWarning())
+  }
+
+  @Test
+  fun readAndWriteRoundTrip() {
+    setUpStore()
+    val node = backend.root.createFile("secret.gpg")
+    node.writeText("hello")
+    assertEquals("hello", String(node.readBytes()))
+    assertEquals(listOf("hello"), node.readLines())
+  }
+
+  @Test
+  fun createDirectoryRenameAndDelete() {
+    setUpStore()
+    val dir = backend.root.createDirectory("work")
+    assertTrue(dir.isDirectory)
+    assertEquals(dir, backend.root.findChild("work"))
+
+    dir.rename("life")
+    assertNull(backend.root.findChild("work"))
+    // Identity is the store path, which a rename does not change, so compare the backing file.
+    assertEquals(File(root, "life"), backend.root.findChild("life")?.requireFile())
+
+    backend.root.findChild("life")?.deleteRecursively()
+    assertNull(backend.root.findChild("life"))
   }
 }

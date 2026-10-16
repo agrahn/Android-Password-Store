@@ -19,6 +19,7 @@ import android.view.autofill.AutofillId
 import android.view.inputmethod.InlineSuggestionsRequest
 import android.widget.inline.InlinePresentationSpec
 import androidx.annotation.RequiresApi
+import app.passwordstore.data.repo.store.StoreNode
 import app.passwordstore.ui.autofill.AutofillDecryptActivity
 import app.passwordstore.ui.autofill.AutofillFilterView
 import app.passwordstore.ui.autofill.AutofillPublisherChangedActivity
@@ -29,7 +30,6 @@ import com.github.androidpasswordstore.autofillparser.AutofillAction
 import com.github.androidpasswordstore.autofillparser.FillableForm
 import com.github.androidpasswordstore.autofillparser.fillWith
 import com.github.michaelbull.result.fold
-import java.io.File
 import java.util.regex.Pattern
 import logcat.LogPriority.ERROR
 import logcat.asLog
@@ -127,7 +127,7 @@ class Api30AutofillResponseBuilder private constructor(form: FillableForm) :
 
   private fun makeMatchDataset(
     context: Context,
-    file: File,
+    file: StoreNode,
     imeSpec: InlinePresentationSpec?,
     suggestionCount: Int,
     maxSuggestions: Int,
@@ -218,7 +218,7 @@ class Api30AutofillResponseBuilder private constructor(form: FillableForm) :
   private fun makeFillResponse(
     context: Context,
     inlineSuggestionsRequest: InlineSuggestionsRequest?,
-    matchedFiles: List<File>,
+    matchedFiles: List<StoreNode>,
   ): FillResponse? {
     var datasetCount = 0
     val maxSuggestions =

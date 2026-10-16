@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import app.passwordstore.R
 import app.passwordstore.data.password.PasswordItem
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.StoreNode
 import app.passwordstore.databinding.PasswordRecyclerViewBinding
 import app.passwordstore.ui.adapters.PasswordItemRecyclerAdapter
 import app.passwordstore.ui.passwords.PasswordStore
@@ -28,7 +29,6 @@ import app.passwordstore.util.viewmodel.SearchableRepositoryViewModel
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.launch
 import me.zhanghai.android.fastscroll.FastScrollerBuilder
@@ -66,14 +66,14 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
     registerForContextMenu(binding.passRecycler)
 
     model.navigateTo(
-      PasswordRepository.getRepositoryDirectory(),
+      PasswordRepository.storeRoot,
       listMode = ListMode.AllEntries,
       pushPreviousLocation = false,
     )
     getArguments()?.getString(PasswordStore.REQUEST_ARG_PATH)?.let { relPath ->
       relPath.trim('/').split('/').forEach { dir ->
         model.navigateTo(
-          File(currentDir, dir),
+          PasswordRepository.nodeAt("${currentDir.path}/$dir"),
           pushPreviousLocation = true,
           listMode = ListMode.AllEntries,
         )
@@ -90,9 +90,9 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
     }
   }
 
-  fun navigateTo(file: File) {
+  fun navigateTo(node: StoreNode) {
     model.navigateTo(
-      file,
+      node,
       listMode = ListMode.AllEntries,
       recyclerViewState =
         binding.passRecycler.layoutManager?.onSaveInstanceState() ?: throw NullPointerException(),
@@ -106,7 +106,7 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
         object : OnFragmentInteractionListener {
           override fun onFragmentInteraction(item: PasswordItem) {
             if (item.type == PasswordItem.TYPE_CATEGORY) {
-              model.navigateTo(item.file, listMode = ListMode.AllEntries)
+              model.navigateTo(item.node, listMode = ListMode.AllEntries)
               (requireActivity() as AppCompatActivity)
                 .supportActionBar
                 ?.setDisplayHomeAsUpEnabled(true)
@@ -126,7 +126,7 @@ class SelectFolderFragment : Fragment(R.layout.password_recycler_view) {
     return true
   }
 
-  val currentDir: File
+  val currentDir: StoreNode
     get() = model.currentDir.value
 
   interface OnFragmentInteractionListener {

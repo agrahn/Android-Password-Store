@@ -32,6 +32,8 @@ import androidx.credentials.webauthn.FidoPublicKeyCredential
 import androidx.credentials.webauthn.PublicKeyCredentialCreationOptions
 import app.passwordstore.Application
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.StoreNode
+import app.passwordstore.data.repo.store.extension
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.b64Decode
@@ -48,7 +50,6 @@ import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.runCatching
-import java.nio.file.Path
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.MessageDigest
@@ -59,9 +60,6 @@ import java.security.interfaces.RSAPublicKey
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.RSAKeyGenParameterSpec
 import java.time.Instant
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.name
-import kotlin.io.path.nameWithoutExtension
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import logcat.logcat
@@ -155,19 +153,18 @@ object CredmanUtils {
 
     val allowCredentialsHex = requestOptions.allowCredentials.map { it.idHex() }
 
-    val passkeyCandidates = mutableListOf<Path>()
-    val repoPath = PasswordRepository.getRepositoryDirectory().absolutePath
+    val passkeyCandidates = mutableListOf<StoreNode>()
 
     /* First, try to find valid passkey file canditates in Password Store by credential hex ID;
      * expired passkeys (deleted on the RP's side but still existing in APS) will not be listed */
     allowCredentialsHex.forEach { id ->
       passkeyCandidates.addAll(
         PasswordRepository.findByParentName(
-            startPath = repoPath,
+            startPath = "",
             name = requestOptions.rpId,
             PasswordRepository.TYPE_FILE,
           )
-          .filter { it.nameWithoutExtension.equals(id, ignoreCase = true) }
+          .filter { it.nameWithoutExtension().equals(id, ignoreCase = true) }
       )
     }
 
@@ -176,28 +173,25 @@ object CredmanUtils {
     if (allowCredentialsHex.isEmpty()) {
       passkeyCandidates.addAll(
         PasswordRepository.findByParentName(
-            startPath = repoPath,
+            startPath = "",
             name = requestOptions.rpId,
             PasswordRepository.TYPE_FILE,
           )
-          .filter { it.nameWithoutExtension.matches("[a-fA-F0-9]{64}".toRegex()) }
+          .filter { it.nameWithoutExtension().matches("[a-fA-F0-9]{64}".toRegex()) }
       )
     }
 
     /*
         // redundant, since we set lastUsedTime on each PublicKeyCredentialEntry
         passkeyCandidates.sortByDescending {
-          context.passwordHistory.getString(it.absolutePathString().base64(), null)?.toLongOrNull() ?: 0L
+          context.passwordHistory.getString(it.path.base64(), null)?.toLongOrNull() ?: 0L
         }
     */
 
-    passkeyCandidates.forEach { passkeyPath ->
-      val credentialHexId = passkeyPath.nameWithoutExtension
+    passkeyCandidates.forEach { passkeyNode ->
+      val credentialHexId = passkeyNode.nameWithoutExtension()
       val shortenedHexId = credentialHexId.take(8)
-      val displayPath =
-        PasswordRepository.getParentPath(passkeyPath.absolutePathString(), repoPath) +
-          shortenedHexId +
-          "…"
+      val displayPath = PasswordRepository.getParentPath(passkeyNode.path) + shortenedHexId + "…"
 
       val displayUser =
         context.credentialUsernames.getString(credentialHexId, null)?.let {
@@ -206,15 +200,12 @@ object CredmanUtils {
 
       val lastUsedTime =
         context.passwordHistory
-          .getString(passkeyPath.absolutePathString().base64(), null)
+          .getString(passkeyNode.path.base64(), null)
           ?.let { it.toLongOrNull() ?: 0L }
           ?.let { Instant.ofEpochMilli(it) }
 
       val data = Bundle()
-      data.putString(
-        UDCakeCredentialProviderService.CREDENTIAL_PATH,
-        passkeyPath.absolutePathString(),
-      )
+      data.putString(UDCakeCredentialProviderService.CREDENTIAL_PATH, passkeyNode.path)
       passkeyEntries.add(
         PublicKeyCredentialEntry.Builder(
             context = context,
@@ -523,3 +514,8 @@ object CredmanUtils {
     GetCredentialResponse(passkeyCredential)
   }
 }
+
+/**
+ * Name of this node without its extension, as `kotlin.io.path.nameWithoutExtension` computed it.
+ */
+private fun StoreNode.nameWithoutExtension(): String = name.removeSuffix(".$extension")

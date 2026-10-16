@@ -39,10 +39,30 @@ interface StoreNode {
 
   fun readLines(): List<String>
 
+  /** The raw contents of this node. */
+  fun readBytes(): ByteArray
+
+  /**
+   * Writes [bytes] to this node, creating any missing parent directories.
+   *
+   * Password files are PGP output, which is binary unless the user enabled ASCII armor, so they
+   * must be written as bytes. [writeText] encodes as UTF-8 and would mangle them.
+   */
+  fun writeBytes(bytes: ByteArray)
+
   /** Writes [text] to this node, creating any missing parent directories. */
   fun writeText(text: String)
 
   fun createFile(name: String): StoreNode
+
+  /** Creates a child directory named [name] and returns it. */
+  fun createDirectory(name: String): StoreNode
+
+  /** Renames this node to [newName], which must be a plain name without any path component. */
+  fun rename(newName: String)
+
+  /** Removes this node, recursively if it is a directory. */
+  fun deleteRecursively()
 
   /**
    * Every node in this subtree that satisfies [include], in depth-first pre-order, starting with
@@ -52,6 +72,26 @@ interface StoreNode {
    */
   fun walk(include: (StoreNode) -> Boolean): List<StoreNode>
 }
+
+/** The extension of this node's name, without the dot. Empty when the name has no extension. */
+val StoreNode.extension: String
+  get() = name.substringAfterLast('.', "")
+
+/** Whether this node is hidden by name, i.e. its name starts with a dot. */
+val StoreNode.isHidden: Boolean
+  get() = name.startsWith(".")
+
+/** Name of the git metadata directory. It is never part of a store's contents. */
+const val GIT_DIR = ".git"
+
+/**
+ * Whether saving into this store would silently skip a git commit that the user expects.
+ *
+ * True only for a store that contains a `.git` directory the app cannot use — a folder store that
+ * the user also syncs from a computer. An app-private store with a repository commits normally, and
+ * a folder without any `.git` never promised a commit in the first place.
+ */
+fun StoreBackend.needsCommitWarning(): Boolean = hasGitDir() && !gitCapable
 
 /**
  * Whether this node is [root] itself or lives below it.

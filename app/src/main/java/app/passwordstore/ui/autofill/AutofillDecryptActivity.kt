@@ -19,6 +19,7 @@ import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.StoreNode
 import app.passwordstore.injection.prefs.PasswordHistory
 import app.passwordstore.ui.crypto.BasePGPActivity
 import app.passwordstore.util.autofill.AutofillMatcher
@@ -52,7 +53,6 @@ class AutofillDecryptActivity : BasePGPActivity() {
   @PasswordHistory @Inject lateinit var passwordHistory: SharedPreferences
 
   private lateinit var filePath: String
-  private lateinit var repositoryPath: String
   private lateinit var clientState: Bundle
   private lateinit var action: AutofillAction
 
@@ -65,7 +65,6 @@ class AutofillDecryptActivity : BasePGPActivity() {
           finish()
           return
         }
-    repositoryPath = PasswordRepository.getRepositoryDirectory().toString()
     clientState =
       intent?.getBundleExtra(AutofillManager.EXTRA_CLIENT_STATE)
         ?: run {
@@ -78,8 +77,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
     action = if (isSearchAction) AutofillAction.Search else AutofillAction.Match
     logcat { action.toString() }
     requireKeysExist {
-      requireDecryptionKeysExist(PasswordRepository.getParentPath(filePath, repositoryPath)) { ids
-        ->
+      requireDecryptionKeysExist(PasswordRepository.getParentPath(filePath)) { ids ->
         getPersistentAndDecrypt(ids, action = "autofill")
       }
     }
@@ -90,7 +88,10 @@ class AutofillDecryptActivity : BasePGPActivity() {
     identifiers: List<PGPIdentifier>,
     onSuccess: suspend (String) -> Unit,
   ) {
-    val encryptedFile = File(filePath)
+    val encryptedFile = PasswordRepository.nodeAt(filePath)
+    // DirectoryStructure and AutofillMatcher still take a File; a relative one over the
+    // store-relative path gives them the same view they had for the app-private store.
+    val relativeFile = File(filePath)
     val message = withContext(dispatcherProvider.io()) { encryptedFile.readBytes().inputStream() }
     val outputStream = ByteArrayOutputStream()
     val results = repository.decrypt(passphrases, identifiers, message, outputStream)
@@ -109,7 +110,10 @@ class AutofillDecryptActivity : BasePGPActivity() {
       if (retrievePasskey(entry, stripped = true) != null) {
         entry.clear()
 
-        AutofillMatcher.updateMatches(this@AutofillDecryptActivity, delete = listOf(encryptedFile))
+        AutofillMatcher.updateMatches(
+          this@AutofillDecryptActivity,
+          delete = listOf(relativeFile.path),
+        )
 
         onSuccess(lastResult.first) // but pass ID for passphrase caching
 
@@ -128,7 +132,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
         val credentials =
           AutofillPreferences.credentialsFromStoreEntry(
             this,
-            encryptedFile,
+            relativeFile,
             entry,
             origin,
             directoryStructure,
@@ -177,11 +181,11 @@ class AutofillDecryptActivity : BasePGPActivity() {
         // update autofill suggestion order (add/move to front or remove)
         formOrigin?.let {
           if (AutofillPreferences.addQuickSelectButton(this@AutofillDecryptActivity))
-            AutofillMatcher.addMatchFor(this@AutofillDecryptActivity, it, encryptedFile)
+            AutofillMatcher.addMatchFor(this@AutofillDecryptActivity, it, relativeFile.path)
           else
             AutofillMatcher.updateMatches(
               this@AutofillDecryptActivity,
-              delete = listOf(encryptedFile),
+              delete = listOf(relativeFile.path),
             )
         }
 
@@ -238,7 +242,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
     private var otpTimer: ScheduledExecutorService? = null
 
     fun makeDecryptFileIntent(
-      file: File,
+      node: StoreNode,
       formOrigin: FormOrigin,
       forwardedExtras: Bundle,
       context: Context,
@@ -248,12 +252,12 @@ class AutofillDecryptActivity : BasePGPActivity() {
       return Intent(context, AutofillDecryptActivity::class.java).apply {
         putExtras(forwardedExtras)
         putExtra(EXTRA_SEARCH_ACTION, true)
-        putExtra(EXTRA_FILE_PATH, file.absolutePath)
+        putExtra(EXTRA_FILE_PATH, node.path)
       }
     }
 
     fun makeDecryptFileIntentSender(
-      file: File,
+      node: StoreNode,
       context: Context,
       formOrigin: FormOrigin,
     ): IntentSender {
@@ -263,7 +267,7 @@ class AutofillDecryptActivity : BasePGPActivity() {
       val intent =
         Intent(context, AutofillDecryptActivity::class.java).apply {
           putExtra(EXTRA_SEARCH_ACTION, false)
-          putExtra(EXTRA_FILE_PATH, file.absolutePath)
+          putExtra(EXTRA_FILE_PATH, node.path)
         }
       return PendingIntent.getActivity(
           context,

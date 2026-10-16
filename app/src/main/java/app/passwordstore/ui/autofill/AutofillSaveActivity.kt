@@ -26,8 +26,6 @@ import com.github.androidpasswordstore.autofillparser.AutofillAction
 import com.github.androidpasswordstore.autofillparser.Credentials
 import com.github.androidpasswordstore.autofillparser.FormOrigin
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
-import kotlin.io.path.absolutePathString
 import logcat.LogPriority.ERROR
 import logcat.logcat
 
@@ -48,8 +46,6 @@ class AutofillSaveActivity : AppCompatActivity() {
 
     private var saveRequestCode = 1
 
-    val repo = PasswordRepository.getRepositoryDirectory()
-
     fun makeSaveIntentSender(
       context: Context,
       credentials: Credentials?,
@@ -64,19 +60,16 @@ class AutofillSaveActivity : AppCompatActivity() {
        * set the suggested parent folder accordingly; this way, new related logins can/will be saved
        * close to existing ones
        */
-      val repoPath = repo.absolutePath // io.File -> String
       val destinationFolder =
-        PasswordRepository.findByName(repoPath, origin, PasswordRepository.TYPE_DIR)
-          .firstOrNull()
-          ?.let {
-            it.parent.absolutePathString() // nio.Path -> String
-          }
-          ?: PasswordRepository.findByName(repoPath, "$origin.gpg", PasswordRepository.TYPE_FILE)
+        PasswordRepository.findByName("", origin, PasswordRepository.TYPE_DIR).firstOrNull()?.let {
+          PasswordRepository.getParentPath(it.path)
+        }
+          ?: PasswordRepository.findByName("", "$origin.gpg", PasswordRepository.TYPE_FILE)
             .firstOrNull()
             ?.let {
-              it.parent.absolutePathString()
+              PasswordRepository.getParentPath(it.path)
             }
-          ?: repoPath
+          ?: ""
 
       val directoryStructure = AutofillPreferences.directoryStructure(context)
       val clearCredentials = credentials?.let {
@@ -142,7 +135,7 @@ class AutofillSaveActivity : AppCompatActivity() {
         putExtras(
           Bundle().also {
             it.apply {
-              putString(BasePGPActivity.EXTRA_REPO_PATH, repo.absolutePath)
+              putString(BasePGPActivity.EXTRA_REPO_PATH, "")
               putString(
                 BasePGPActivity.EXTRA_FILE_PATH,
                 intent.getStringExtra(EXTRA_FOLDER_NAME) ?: throw NullPointerException(),
@@ -164,7 +157,7 @@ class AutofillSaveActivity : AppCompatActivity() {
         val data = result.data
         if (result.resultCode == RESULT_OK && data != null) {
           val createdPath = data.getStringExtra("CREATED_FILE") ?: throw NullPointerException()
-          formOrigin?.let { AutofillMatcher.addMatchFor(this, it, File(createdPath)) }
+          formOrigin?.let { AutofillMatcher.addMatchFor(this, it, createdPath) }
           val password = data.getCharArrayExtra("PASSWORD")
           val resultIntent =
             if (password != null) {

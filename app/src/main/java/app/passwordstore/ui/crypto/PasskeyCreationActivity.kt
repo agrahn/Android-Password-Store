@@ -61,7 +61,6 @@ import app.passwordstore.util.extensions.base64
 import app.passwordstore.util.extensions.commitChange
 import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.getString
-import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.toByteArray
 import app.passwordstore.util.extensions.unsafeLazy
@@ -87,14 +86,8 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.nio.CharBuffer
-import java.nio.file.Paths
 import java.security.SecureRandom
 import javax.inject.Inject
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.createDirectories
-import kotlin.io.path.exists
-import kotlin.io.path.pathString
-import kotlin.io.path.writeBytes
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
@@ -200,17 +193,16 @@ class PasskeyCreationActivity : BasePGPActivity() {
       if (result.resultCode == RESULT_OK) {
         val rpId =
           result.data?.getStringExtra(PasswordStore.REQUEST_ARG_PATH)?.let { oldPath ->
-            Paths.get(oldPath).fileName.toString()
+            PasswordRepository.getRelativePath(oldPath).substringAfterLast('/')
           }
         val relPath =
           result.data?.getStringExtra(SelectFolderActivity.SELECTED_FOLDER_PATH)?.let { fullPath ->
-            PasswordRepository.getRelativePath(fullPath, repoPath)
+            PasswordRepository.getRelativePath(fullPath)
           } ?: ""
         rpId?.let {
           val path =
-            if (relPath.isEmpty()) "/${rpId}"
-            else if (Paths.get(relPath).endsWith(rpId)) relPath
-            else Paths.get(relPath, rpId).absolutePathString()
+            if (relPath.isEmpty()) rpId
+            else if (relPath == rpId || relPath.endsWith("/$rpId")) relPath else "$relPath/$rpId"
           binding.directory.setText(path)
         }
       }
@@ -343,16 +335,14 @@ class PasskeyCreationActivity : BasePGPActivity() {
               providerRequest.callingAppInfo.getAppOrigin()
             }
 
-          val suggestedFullPath =
+          val relPath =
             PasswordRepository.findByName(
                 startPath = repoPath,
                 name = requestOptions.rp.id,
                 type = PasswordRepository.TYPE_DIR,
               )
-              .firstOrNull() ?: Paths.get(repoPath, requestOptions.rp.id)
-
-          val relPath =
-            PasswordRepository.getRelativePath(suggestedFullPath.absolutePathString(), repoPath)
+              .firstOrNull()
+              ?.path ?: PasswordRepository.getRelativePath("${repoPath}/${requestOptions.rp.id}")
 
           directory.setText(relPath)
           credId.setText(credentialId.toHexString())
@@ -366,7 +356,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
       }
 
       if (editing) {
-        val relPath = PasswordRepository.getRelativePath(fullPath, repoPath)
+        val relPath = PasswordRepository.getRelativePath(fullPath)
         directory.setText(if (relPath.isEmpty()) "/" else relPath)
 
         val suggestedEntry: PasswordEntry? = suggestedEntryChars?.let { encrypted ->
@@ -582,37 +572,51 @@ class PasskeyCreationActivity : BasePGPActivity() {
               .distinct()
               .filter { it !in succeededUserEmails ?: emptyList() }
 
-          val path = run { // password item's full file path string
+          val path = run { // password item's store-relative file path
             val editRelativePath = directory.text.toString().trim()
-            val destinationFolder = Paths.get(repoPath, editRelativePath.trim('/'))
-            destinationFolder.createDirectories() // ensure destination dir exists
-            if (!destinationFolder.exists()) { // should not happen
+            val destinationFolder = PasswordRepository.getRelativePath(editRelativePath.trim('/'))
+            // ensure destination dir exists; a provider can only create one child at a time
+            var destinationNode = PasswordRepository.storeRoot
+            for (segment in destinationFolder.split('/')) {
+              if (segment.isEmpty()) continue
+              destinationNode =
+                destinationNode.findChild(segment) ?: destinationNode.createDirectory(segment)
+            }
+            if (!destinationNode.isDirectory) { // should not happen
               snackbar(message = "Failed to create directory ${editRelativePath.trimEnd('/')}")
               return@runCatching
             }
 
-            "${destinationFolder.pathString}/$credentialHexId.gpg"
+            PasswordRepository.getRelativePath("$destinationFolder/$credentialHexId.gpg")
           }
 
-          val passkeyFile = Paths.get(path)
+          val passkeyNode = PasswordRepository.nodeAt(path)
           /* If we were editing and the incoming and outgoing file paths differ, it means we renamed. Ensure
            * that the target doesn't already exist to prevent an accidental overwrite. */
           if (
             editing &&
-              "${fullPath.trimEnd('/')}/$suggestedName.gpg" != passkeyFile.absolutePathString() &&
-              passkeyFile.exists()
+              PasswordRepository.getRelativePath("${fullPath.trimEnd('/')}/$suggestedName.gpg") !=
+                path &&
+              passkeyNode.exists()
           ) {
             snackbar(message = getString(R.string.password_creation_duplicate_error))
             return@runCatching
           }
 
-          if (!passkeyFile.toFile().isInsideRepository()) {
+          // The backend clamps a path that climbs out of the store; tell the user instead of
+          // silently writing somewhere else.
+          if (path.split('/').any { it == ".." }) {
             snackbar(message = getString(R.string.message_error_destination_outside_repo))
             return@runCatching
           }
 
+          if (!confirmSaveIfNoGitCommit()) {
+            finish()
+            return@runCatching
+          }
+
           withContext(dispatcherProvider.io()) {
-            passkeyFile.writeBytes(encryptionResult.getOrThrow().toByteArray())
+            passkeyNode.writeBytes(encryptionResult.getOrThrow().toByteArray())
           }
 
           // create/update timestamp on the current passkey file
@@ -621,10 +625,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
               val oldFilePathHash = "${fullPath.trimEnd('/')}/$oldFile.gpg".base64()
               remove(oldFilePathHash)
             }
-            putString(
-              passkeyFile.absolutePathString().base64(),
-              System.currentTimeMillis().toString(),
-            )
+            putString(path.base64(), System.currentTimeMillis().toString())
           }
 
           lifecycleScope.launch {

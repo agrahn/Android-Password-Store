@@ -16,10 +16,19 @@ class FileStoreBackend(val rootPath: File) : StoreBackend {
 
   override val root: StoreNode = FileStoreNode(rootPath, "")
 
+  override val gitCapable: Boolean = true
+
   override fun resolve(path: String): StoreNode {
     val normalized = normalizePath(path)
     return FileStoreNode(File(rootPath, normalized), normalized)
   }
+
+  /**
+   * Nothing to forget: every read goes to the filesystem, so a listing is as current as the file.
+   */
+  override fun invalidate() = Unit
+
+  override fun hasGitDir(): Boolean = root.findChild(GIT_DIR)?.isDirectory == true
 
   private fun normalizePath(path: String): String {
     val segments = mutableListOf<String>()
@@ -67,12 +76,31 @@ class FileStoreNode(val file: File, override val path: String) : StoreNode {
 
   override fun readLines(): List<String> = file.readLines()
 
+  override fun readBytes(): ByteArray = file.readBytes()
+
+  override fun writeBytes(bytes: ByteArray) {
+    file.parentFile?.mkdirs()
+    file.writeBytes(bytes)
+  }
+
   override fun writeText(text: String) {
     file.parentFile?.mkdirs()
     file.writeText(text)
   }
 
   override fun createFile(name: String): StoreNode = child(name).also { it.file.createNewFile() }
+
+  override fun createDirectory(name: String): StoreNode =
+    child(name).also { check(it.file.isDirectory || it.file.mkdirs()) { "Failed to create $name" } }
+
+  override fun rename(newName: String) {
+    val target = file.parentFile?.resolve(newName)
+    check(target != null && file.renameTo(target)) { "Failed to rename ${file.name} to $newName" }
+  }
+
+  override fun deleteRecursively() {
+    file.deleteRecursively()
+  }
 
   override fun walk(include: (StoreNode) -> Boolean): List<StoreNode> {
     val result = mutableListOf<StoreNode>()

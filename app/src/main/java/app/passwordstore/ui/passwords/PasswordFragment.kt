@@ -28,6 +28,8 @@ import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.data.password.PasswordItem
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.GIT_DIR
+import app.passwordstore.data.repo.store.StoreNode
 import app.passwordstore.databinding.PasswordRecyclerViewBinding
 import app.passwordstore.injection.prefs.PasswordHistory
 import app.passwordstore.injection.prefs.SettingsPreferences
@@ -54,7 +56,6 @@ import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.launch
 import me.zhanghai.android.fastscroll.FastScrollerBuilder
@@ -74,7 +75,7 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
 
   private var recyclerViewStateToRestore: Parcelable? = null
   private var actionMode: ActionMode? = null
-  private var scrollTarget: File? = null
+  private var scrollTarget: StoreNode? = null
 
   private val model: SearchableRepositoryViewModel by activityViewModels()
   private val binding by viewBinding(PasswordRecyclerViewBinding::bind)
@@ -84,7 +85,7 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
       requireStore().refreshPasswordList()
     }
 
-  val currentDir: File
+  val currentDir: StoreNode
     get() = model.currentDir.value
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -118,11 +119,13 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
   }
 
   private fun initializePasswordList() {
-    val gitDir = File(PasswordRepository.getRepositoryDirectory(), ".git")
-    val hasGitDir =
-      gitDir.exists() && gitDir.isDirectory && (gitDir.listFiles()?.isNotEmpty() == true)
+    val gitDir = PasswordRepository.storeRoot.findChild(GIT_DIR)
+    val hasGitDir = gitDir?.isDirectory == true && gitDir.children().isNotEmpty()
     binding.swipeRefresher.setOnRefreshListener {
       if (!hasGitDir) {
+        // A folder store is written by other programs as well, so a pull to refresh asks the folder
+        // again instead of reading what was listed before.
+        PasswordRepository.invalidateStoreCache()
         requireStore().refreshPasswordList()
         binding.swipeRefresher.isRefreshing = false
       } else if (!PasswordRepository.isGitRepo()) {
@@ -205,7 +208,7 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
       requireNotNull(requireArguments().getString(PasswordStore.REQUEST_ARG_PATH)) {
         "Cannot navigate if ${PasswordStore.REQUEST_ARG_PATH} is not provided"
       }
-    model.navigateTo(File(path), pushPreviousLocation = false)
+    model.navigateTo(PasswordRepository.nodeAt(path), pushPreviousLocation = false)
     lifecycleScope.launch {
       model.searchResult.flowWithLifecycle(lifecycle).collect { result ->
         // Only run animations when the new list is filtered, i.e., the user submitted a search,
@@ -220,7 +223,7 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
             }
             scrollTarget != null -> {
               scrollTarget?.let {
-                recyclerView.scrollToPosition(recyclerAdapter.getPositionForFile(it))
+                recyclerView.scrollToPosition(recyclerAdapter.getPositionForNode(it))
               }
               scrollTarget = null
             }
@@ -377,19 +380,19 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
             ) {
               // save the time when password was used
               passwordHistory.edit {
-                putString(item.file.absolutePath.base64(), System.currentTimeMillis().toString())
+                putString(item.node.path.base64(), System.currentTimeMillis().toString())
               }
             }
 
             if (item.type == PasswordItem.TYPE_CATEGORY) {
-              navigateTo(item.file)
+              navigateTo(item.node)
             } else {
               if (requireArguments().getBoolean("matchWith", false)) {
                 requireStore().matchPasswordWithApp(item)
               } else if (item.type == PasswordItem.TYPE_PASSWORD) {
                 requireStore().decryptPassword(item)
               } else if (item.type == PasswordItem.TYPE_GPG_ID) {
-                showGpgIds(item.file)
+                showGpgIds(item.node)
               }
             }
           }
@@ -398,9 +401,9 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
       .onErr { throw ClassCastException("$context must implement OnFragmentInteractionListener") }
   }
 
-  private fun showGpgIds(file: File) {
+  private fun showGpgIds(node: StoreNode) {
     val gpgIds =
-      file
+      node
         .readLines()
         .map { // strip trailing comments and GPG subkey ID marker
           it.substringBefore(Regex("\\s*#|!"))
@@ -469,18 +472,18 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
     }
   }
 
-  fun navigateTo(file: File) {
+  fun navigateTo(node: StoreNode) {
     requireStore().clearSearch()
     model.navigateTo(
-      file,
+      node,
       recyclerViewState =
         binding.passRecycler.layoutManager?.onSaveInstanceState() ?: throw NullPointerException(),
     )
     requireStore().supportActionBar?.setDisplayHomeAsUpEnabled(true)
   }
 
-  fun scrollToOnNextRefresh(file: File) {
-    scrollTarget = file
+  fun scrollToOnNextRefresh(node: StoreNode) {
+    scrollTarget = node
   }
 
   interface OnFragmentInteractionListener {

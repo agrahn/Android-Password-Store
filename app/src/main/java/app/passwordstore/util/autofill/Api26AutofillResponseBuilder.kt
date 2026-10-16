@@ -14,6 +14,7 @@ import android.service.autofill.FillResponse
 import android.service.autofill.RegexValidator
 import android.service.autofill.SaveInfo
 import android.view.autofill.AutofillId
+import app.passwordstore.data.repo.store.StoreNode
 import app.passwordstore.ui.autofill.AutofillDecryptActivity
 import app.passwordstore.ui.autofill.AutofillFilterView
 import app.passwordstore.ui.autofill.AutofillPublisherChangedActivity
@@ -24,7 +25,6 @@ import com.github.androidpasswordstore.autofillparser.AutofillAction
 import com.github.androidpasswordstore.autofillparser.FillableForm
 import com.github.androidpasswordstore.autofillparser.fillWith
 import com.github.michaelbull.result.fold
-import java.io.File
 import java.util.regex.Pattern
 import logcat.LogPriority.ERROR
 import logcat.asLog
@@ -62,7 +62,7 @@ class Api26AutofillResponseBuilder private constructor(form: FillableForm) :
     }
   }
 
-  private fun makeMatchDataset(context: Context, file: File): Dataset? {
+  private fun makeMatchDataset(context: Context, file: StoreNode): Dataset? {
     if (!scenario.hasFieldsToFillOn(AutofillAction.Match)) return null
     val metadata = makeFillMatchMetadata(context, file, 0, 0)
     val intentSender =
@@ -159,7 +159,7 @@ class Api26AutofillResponseBuilder private constructor(form: FillableForm) :
     }
   }
 
-  private fun makeFillResponse(context: Context, matchedFiles: List<File>): FillResponse? {
+  private fun makeFillResponse(context: Context, matchedFiles: List<StoreNode>): FillResponse? {
     var datasetCount = 0
     return FillResponse.Builder().run {
       for (file in matchedFiles) {
