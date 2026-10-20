@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+### Fixed
+
+- Committer email, allow setting empty value in Git configuration; use `aps@<device model>` as default
+
 ## [2.0.3] - 2026-10-02
 
 ### Added
