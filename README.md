@@ -7,6 +7,7 @@ As a credential provider, it can respond to passkey creation and authentication 
 Forked from the archived [Password Store](https://github.com/android-password-store/Android-Password-Store) project.
 
 [![GitHub workflow](https://github.com/agrahn/Android-Password-Store/workflows/Deploy%20snapshot%20builds/badge.svg)](https://github.com/agrahn/Android-Password-Store/actions)
+[![Github All Releases](https://img.shields.io/github/downloads/agrahn/Android-Password-Store/total.svg)](https://github.com/agrahn/Android-Password-Store/releases)
 
 ## Download
 
