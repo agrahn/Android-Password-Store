@@ -18,6 +18,7 @@ import logcat.logcat
 import net.schmizz.keepalive.KeepAliveProvider
 import net.schmizz.sshj.ConfigImpl
 import net.schmizz.sshj.common.LoggerFactory
+import net.schmizz.sshj.common.SecurityUtils
 import net.schmizz.sshj.transport.compression.NoneCompression
 import net.schmizz.sshj.transport.kex.Curve25519SHA256
 import net.schmizz.sshj.transport.kex.Curve25519SHA256.FactoryLibSsh
@@ -49,6 +50,9 @@ fun setUpBouncyCastleForSshj() {
     runCatching { Class.forName("sun.security.jca.Providers") }
     Security.insertProviderAt(BouncyCastleProvider(), bcIndex + 1) // method wants 1-based idx
   }
+
+  SecurityUtils.setRegisterBouncyCastle(true)
+  SecurityUtils.setSecurityProvider(BouncyCastleProvider.PROVIDER_NAME)
 
   logcat("setUpBouncyCastleForSshj") {
     "JCE providers: ${Security.getProviders().joinToString { "${it.name} (${it.version})" }}"
