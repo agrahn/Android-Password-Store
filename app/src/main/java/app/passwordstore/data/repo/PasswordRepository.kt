@@ -29,6 +29,7 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.transport.RefSpec
 import org.eclipse.jgit.transport.RemoteConfig
 import org.eclipse.jgit.transport.URIish
+import android.os.Environment
 
 object PasswordRepository {
 
@@ -38,7 +39,9 @@ object PasswordRepository {
   var repository: Repository? = null
   private val settings by unsafeLazy { Application.instance.sharedPrefs }
   private val filesDir
-    get() = Application.instance.filesDir
+    // get() = Application.instance.filesDir
+    get() =
+      File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "PasswordStore").also { if(!it.exists()) it.mkdirs() }
 
   val isInitialized: Boolean
     get() = repository != null
