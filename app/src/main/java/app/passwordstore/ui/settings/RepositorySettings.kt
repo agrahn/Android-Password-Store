@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ShortcutManager
 import android.net.Uri
+import android.os.Build
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.core.content.edit
@@ -306,9 +307,19 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
         summaryOnRes = R.string.pref_rebase_on_pull_summary_on
         defaultValue = true
       }
+
+      switch(PreferenceKeys.PREF_SHARED_REPO) {
+        titleRes = R.string.prefs_external_repository_title
+        summaryRes = R.string.prefs_external_repository_summary
+        summaryOn = activity.getString(R.string.shared_repo_path, android.os.Build.MODEL)
+        disableDependents = true
+        defaultValue = false
+      }
+
       pref(PreferenceKeys.EXPORT_PASSWORDS) {
         titleRes = R.string.prefs_export_passwords_title
         summaryRes = R.string.prefs_export_passwords_summary
+        dependency = PreferenceKeys.PREF_SHARED_REPO
         onClick {
           storeExportAction.launch(null)
           true
@@ -317,6 +328,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
       pref(PreferenceKeys.IMPORT_PASSWORDS) {
         titleRes = R.string.prefs_import_passwords_title
         summaryRes = R.string.prefs_import_passwords_summary
+        dependency = PreferenceKeys.PREF_SHARED_REPO
         onClick {
           if (PasswordRepository.isEmpty()) {
             storeImportAction.launch(null)
@@ -334,6 +346,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
       pref(PreferenceKeys.GIT_DELETE_REPO) {
         titleRes = R.string.pref_git_delete_repo_title
         summaryRes = R.string.pref_git_delete_repo_summary
+        dependency = PreferenceKeys.PREF_SHARED_REPO
         onClick {
           val repoDir = PasswordRepository.getRepositoryDirectory()
           MaterialAlertDialogBuilder(activity)
@@ -342,11 +355,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
             .setCancelable(false)
             .setPositiveButton(R.string.dialog_delete) { dialogInterface, _ ->
               runCatching {
-                PasswordRepository.closeRepository()
-                PasswordRepository.getRepositoryDirectory().let { dir ->
-                  dir.deleteRecursively()
-                  dir.mkdirs()
-                }
+                PasswordRepository.deleteRepository()
               }
                 .onErr { it.message?.let { message -> activity.snackbar(message = message) } }
 

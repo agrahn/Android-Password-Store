@@ -144,7 +144,9 @@
   <string name="pref_category_misc_title">Misc</string>
   <string name="pref_clear_clipboard_title">Scramble clipboard history</string>
   <string name="pref_clear_clipboard_summary">Flood clipboard history (Samsung devices, Gboard) with random numbers, wiping out any passwords.</string>
-  <string name="pref_git_delete_repo_summary">Deletes local (hidden) repository.</string>
+  <string name="pref_git_delete_repo_summary">Deletes the hidden, app-internal repository.</string>
+  <string name="prefs_external_repository_title">External repository</string>
+  <string name="prefs_external_repository_summary">The password repository is located in a shared folder that other apps can also access.</string>
   <string name="prefs_export_passwords_title">Export repository</string>
   <string name="prefs_export_passwords_summary">Exports the password repository to an external directory.</string>
   <string name="prefs_export_passwords_dialog_title">Exporting passwords</string>
@@ -222,6 +224,7 @@
   <string name="dialog_yes">Yes</string>
   <string name="dialog_no">No</string>
   <string name="dialog_cancel">Abort</string>
+  <string name="dialog_continue">Continue</string>
   <string name="git_sync">Synchronise repository</string>
   <string name="git_pull">Pull from remote</string>
   <string name="git_push">Push to remote</string>
@@ -391,14 +394,20 @@
 
   <!-- Onboarding flow -->
   <string name="let_s_go">Let’s Go</string>
-  <string name="select_n_repository_type">Select \nRepository Type</string>
-  <string name="select_repo_type_text">Select if you want to create a local repo or clone a remote repo.</string>
-  <string name="clone_remote_repo">Clone Remote Repo</string>
-  <string name="create_local_repo">Create Local Repo</string>
+  <string name="select_n_repository_type">Repository type</string>
+  <string name="select_repo_type_text">Choose whether you want to clone a remote repo or create a local repo.</string>
+  <string name="clone_remote_repo">Clone remote repo</string>
+  <string name="create_local_repo">Create local repo</string>
   <string name="select_gpg_key_title">Select\nPGP key(s)</string>
   <string name="select_gpg_key_message">Select one or multiple PGP keys that you want to initialise the store with.</string>
   <string name="gpg_key_select">Select key(s)</string>
   <string name="gpg_key_single_select">Select key</string>
+  <string name="select_n_repository_visibility">Repository visibility</string>
+  <string name="select_repo_visibility_clone_text">Specify whether you want to clone the repository to the app’s internal directory (recommended) or to a shared folder that other apps can also access.</string>
+  <string name="select_repo_visibility_create_text">Specify whether you want to create the repository within the app’s internal directory (recommended) or in a shared folder that other apps can also access.</string>
+  <string name="internal_repo">app-internal (hidden)</string>
+  <string name="shared_repo">shared folder</string>
+  <string name="shared_repo_path" translatable="false">%1$s › Documents › PasswordStore</string>
 
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">Potentially incorrect URL</string>

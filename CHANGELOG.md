@@ -4,10 +4,14 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+### Added
+
+- **External repository** option restored: Repositories can now be cloned to or created in an external, shared folder under Device › Documents › PasswordStore
+
 ### Fixed
 
 - Committer email, allow setting empty value in Git configuration; `aps@<device model>` used as default
-- Host key verification failure when using Keystore-native ECDSA ssh key
+- Host key verification failure when using Keystore-native SSH key
 
 ## [2.0.3] - 2026-10-02
 
