@@ -28,13 +28,12 @@ class WelcomeFragment : Fragment(R.layout.fragment_welcome) {
 
     ViewCompat.setOnApplyWindowInsetsListener(view, windowInsetsLambda)
 
-    with(binding) {
-      letsGo.setOnClickListener {
-        parentFragmentManager.performTransactionWithBackStack(CloneFragment.newInstance())
-      }
-      settingsButton.setOnClickListener {
-        requireActivity().launchActivity(SettingsActivity::class.java)
-      }
+    binding.letsGo.setOnClickListener {
+      parentFragmentManager.performTransactionWithBackStack(CloneFragment.newInstance())
+    }
+
+    binding.settingsButton.setOnClickListener {
+      requireActivity().launchActivity(SettingsActivity::class.java)
     }
   }
 }

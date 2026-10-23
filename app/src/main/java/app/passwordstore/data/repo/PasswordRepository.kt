@@ -4,6 +4,7 @@
  */
 package app.passwordstore.data.repo
 
+import android.os.Environment
 import androidx.core.content.edit
 import app.passwordstore.Application
 import app.passwordstore.data.password.PasswordItem
@@ -29,7 +30,6 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.transport.RefSpec
 import org.eclipse.jgit.transport.RemoteConfig
 import org.eclipse.jgit.transport.URIish
-import android.os.Environment
 
 object PasswordRepository {
 
@@ -41,7 +41,11 @@ object PasswordRepository {
   private val filesDir
     // get() = Application.instance.filesDir
     get() =
-      File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "PasswordStore").also { if(!it.exists()) it.mkdirs() }
+      File(
+          Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),
+          "PasswordStore",
+        )
+        .also { if (!it.exists()) it.mkdirs() }
 
   val isInitialized: Boolean
     get() = repository != null

@@ -142,7 +142,7 @@
   <string name="pref_category_misc_title">Verschiedenes</string>
   <string name="pref_clear_clipboard_title">Zwischenablagenverlauf umgehen</string>
   <string name="pref_clear_clipboard_summary">Zwischenablagenverlauf (Samsung-Geräte, Gboard) mit Zufallszahlen überschreiben, um ggf. bestehende Passwörter zu entfernen.</string>
-  <string name="pref_git_delete_repo_summary">Lösche das lokale (versteckte) Repository.</string>
+  <string name="pref_git_delete_repo_summary">Löscht das versteckte, app-interne Repository.</string>
   <string name="prefs_export_passwords_title">Passwörter exportieren</string>
   <string name="prefs_export_passwords_summary">Exportiert das Password-Repository in ein externes Verzeichnis.</string>
   <string name="prefs_export_passwords_dialog_title">Passwörter werden exportiert</string>
@@ -219,6 +219,7 @@
   <string name="dialog_yes">Ja</string>
   <string name="dialog_no">Nein</string>
   <string name="dialog_cancel">Abbrechen</string>
+  <string name="dialog_continue">Weiter</string>
   <string name="git_sync">Synchronisiere Repository</string>
   <string name="git_pull">Git Pull</string>
   <string name="git_push">Git Push</string>
@@ -388,14 +389,20 @@
 
   <!-- Onboarding flow -->
   <string name="let_s_go">Los geht’s</string>
-  <string name="select_n_repository_type">Wählen Sie einen \nRepository-Typ.</string>
-  <string name="select_repo_type_text">Wählen Sie aus, ob Sie ein lokales Repository anlegen, oder ein Remote-Repository klonen möchten.</string>
+  <string name="select_n_repository_type">Repository-Typ</string>
+  <string name="select_repo_type_text">Wählen Sie aus, ob Sie ein Remote-Repository klonen oder ein lokales Repository anlegen möchten.</string>
   <string name="clone_remote_repo">Remote-Repository klonen</string>
   <string name="create_local_repo">Lokales Repository anlegen</string>
   <string name="select_gpg_key_title">PGP-Schlüssel wählen</string>
   <string name="select_gpg_key_message">Wählen Sie einen oder mehrere PGP-Schlüssel, mit denen der Store initialisiert werden soll.</string>
   <string name="gpg_key_select">Schlüssel auswählen</string>
   <string name="gpg_key_single_select">Schlüssel auswählen</string>
+  <string name="select_n_repository_visibility">Sichtbarkeit des Repositorys</string>
+  <string name="select_repo_visibility_clone_text">Legen Sie fest, ob das Repository in das interne Verzeichnis der App (empfohlen) oder in einen freigegebenen Ordner geklont werden soll, auf den auch andere Apps zugreifen können.</string>
+  <string name="select_repo_visibility_create_text">Legen Sie fest, ob das Repository innerhalb des internen Verzeichnisses der App (empfohlen) oder in einem freigegebenen Ordner angelegt werden soll, auf den auch andere Apps zugreifen können.</string>
+  <string name="internal_repo">app-intern (versteckt)</string>
+  <string name="shared_repo">freigegebener Ordner</string>
+  <string name="shared_repo_path">%1$s › Dokumente › PasswordStore</string>
 
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">Möglicherweise inkorrekte URL</string>
