@@ -59,20 +59,24 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
     ViewCompat.setOnApplyWindowInsetsListener(view, windowInsetsLambda)
 
     with(binding) {
-      continueButton.setOnClickListener {
-        if (requireArguments().getBoolean(SHOULD_CLONE_EXTRA)) cloneRepository()
-        else createRepository()
-      }
+      if (requireArguments().getBoolean(SHOULD_CLONE_EXTRA))
+        repoVisibilityText.setText(R.string.select_repo_visibility_clone_text)
+      else repoVisibilityText.setText(R.string.select_repo_visibility_create_text)
 
       internalRepo.setOnCheckedChangeListener { _, isChecked ->
-        if(isChecked) repoSharedParent.visibility = View.INVISIBLE
+        if (isChecked) repoSharedParent.visibility = View.INVISIBLE
       }
 
       sharedRepo.setOnCheckedChangeListener { _, isChecked ->
-        if(isChecked) {
+        if (isChecked) {
           repoSharedParent.text = getString(R.string.shared_repo_path, android.os.Build.MODEL)
           repoSharedParent.visibility = View.VISIBLE
         }
+      }
+
+      continueButton.setOnClickListener {
+        if (requireArguments().getBoolean(SHOULD_CLONE_EXTRA)) cloneRepository()
+        else createRepository()
       }
     }
   }

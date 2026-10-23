@@ -5,8 +5,10 @@
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
+  tools:ignore="Overdraw"
   android:background="?android:attr/colorBackground">
 
   <androidx.constraintlayout.widget.ConstraintLayout
@@ -54,7 +56,7 @@
       app:layout_constraintTop_toBottomOf="@id/app_icon" />
 
     <TextView
-      android:id="@+id/tv_repo_visibility_text"
+      android:id="@+id/repo_visibility_text"
       android:layout_width="0dp"
       android:layout_height="wrap_content"
       android:layout_marginTop="@dimen/onboarding_desc_margin_top"
@@ -76,7 +78,7 @@
       android:orientation="vertical"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@id/tv_repo_visibility_text">
+      app:layout_constraintTop_toBottomOf="@id/repo_visibility_text">
 
       <com.google.android.material.radiobutton.MaterialRadioButton
         android:id="@+id/internal_repo"
@@ -98,6 +100,7 @@
       android:layout_width="0dp"
       android:layout_height="wrap_content"
       android:textAppearance="?attr/textAppearanceTitleSmall"
+      android:layout_marginEnd="@dimen/fab_compat_margin"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toStartOf="@id/repo_visibility"
       app:layout_constraintTop_toBottomOf="@id/repo_visibility_group" />

@@ -402,7 +402,7 @@
   <string name="select_repo_visibility_create_text">Legen Sie fest, ob das Repository innerhalb des internen Verzeichnisses der App (empfohlen) oder in einem freigegebenen Ordner angelegt werden soll, auf den auch andere Apps zugreifen können.</string>
   <string name="internal_repo">app-intern (versteckt)</string>
   <string name="shared_repo">freigegebener Ordner</string>
-  <string name="shared_repo_path">%1$s › Dokumente › PasswordStore</string>
+
 
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">Möglicherweise inkorrekte URL</string>
