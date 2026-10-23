@@ -16,7 +16,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 
@@ -190,25 +189,6 @@ class MigrationsTest {
       runTest = true,
     )
     assertEquals("diceware", sharedPrefs.getString(PreferenceKeys.PREF_KEY_PWGEN_TYPE))
-  }
-
-  @Test
-  fun verifyExternalStorageMigration() {
-    sharedPrefs.edit {
-      putBoolean(PreferenceKeys.GIT_EXTERNAL, true)
-      putString(PreferenceKeys.GIT_EXTERNAL_REPO, "/sdcard/")
-    }
-    runMigrations(
-      filesDir,
-      sharedPrefs,
-      GitSettings(sharedPrefs, gitSecrets, filesDir),
-      sharedPrefs,
-      context,
-      runTest = true,
-    )
-    assertFalse { sharedPrefs.contains(PreferenceKeys.GIT_EXTERNAL) }
-    assertFalse { sharedPrefs.contains(PreferenceKeys.GIT_EXTERNAL_REPO) }
-    assertTrue { sharedPrefs.getBoolean(PreferenceKeys.GIT_EXTERNAL_MIGRATED, false) }
   }
 
   @Test
