@@ -65,20 +65,19 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
 
       internalRepo.setOnCheckedChangeListener { _, isChecked ->
         if (isChecked) {
-          settings.edit { putBoolean(PreferenceKeys.PREF_SHARED_REPO, false) }
           repoSharedParent.visibility = View.INVISIBLE
         }
       }
 
       sharedRepo.setOnCheckedChangeListener { _, isChecked ->
         if (isChecked) {
-          settings.edit { putBoolean(PreferenceKeys.PREF_SHARED_REPO, true) }
           repoSharedParent.text = getString(R.string.shared_repo_path, android.os.Build.MODEL)
           repoSharedParent.visibility = View.VISIBLE
         }
       }
 
       continueButton.setOnClickListener {
+        settings.edit { putBoolean(PreferenceKeys.PREF_SHARED_REPO, sharedRepo.isChecked) }
         if (requireArguments().getBoolean(SHOULD_CLONE_EXTRA)) cloneRepository()
         else createRepository()
       }
