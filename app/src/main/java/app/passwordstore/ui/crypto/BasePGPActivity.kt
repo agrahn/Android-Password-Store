@@ -24,6 +24,9 @@ import app.passwordstore.crypto.PGPIdentifier
 import app.passwordstore.data.crypto.CryptoRepository
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.findGpgId
+import app.passwordstore.data.repo.store.needsCommitWarning
+import app.passwordstore.data.repo.store.writeGpgId
 import app.passwordstore.injection.prefs.PGPPassphrases
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.injection.prefs.UnlockPins
@@ -38,7 +41,6 @@ import app.passwordstore.util.extensions.b64Decode
 import app.passwordstore.util.extensions.clipboard
 import app.passwordstore.util.extensions.commitChange
 import app.passwordstore.util.extensions.getString
-import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.substringBefore
 import app.passwordstore.util.extensions.unsafeLazy
@@ -51,7 +53,6 @@ import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
 import java.nio.CharBuffer
 import java.time.Instant
 import java.util.concurrent.Executors
@@ -70,28 +71,22 @@ import logcat.logcat
 @AndroidEntryPoint
 open class BasePGPActivity : AppCompatActivity() {
 
-  /** Full path to the password file being worked on */
-  val fullPath: String by unsafeLazy {
-    intent.getStringExtra(EXTRA_FILE_PATH)
-      ?: PasswordRepository.getRepositoryDirectory().absolutePath
-  }
+  /** Store-relative path of the password file being worked on */
+  val fullPath: String by unsafeLazy { intent.getStringExtra(EXTRA_FILE_PATH) ?: "" }
 
-  /** Full path to the repository */
-  val repoPath: String by unsafeLazy {
-    intent.getStringExtra(EXTRA_REPO_PATH)
-      ?: PasswordRepository.getRepositoryDirectory().absolutePath
-  }
+  /** Store-relative path of the directory the password file lives in */
+  val repoPath: String by unsafeLazy { intent.getStringExtra(EXTRA_REPO_PATH) ?: "" }
 
-  protected val relativeParentPath by unsafeLazy {
-    PasswordRepository.getParentPath(fullPath, repoPath)
-  }
+  protected val relativeParentPath by unsafeLazy { PasswordRepository.getParentPath(fullPath) }
 
   /**
    * Name of the password file
    *
    * Converts personal/auth.foo.org/john_doe@example.org.gpg to john_doe.example.org
    */
-  val name: String by unsafeLazy { File(fullPath).nameWithoutExtension }
+  val name: String by unsafeLazy {
+    PasswordRepository.getLongName(fullPath).substringAfterLast('/')
+  }
 
   /* Counter for the user's decryption (with passphrase) attempts */
   private var retries = 0
@@ -123,30 +118,23 @@ open class BasePGPActivity : AppCompatActivity() {
           data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
 
-        val repoRoot = PasswordRepository.getRepositoryDirectory()
         val subPath = data.getStringExtra("SUB_PATH") ?: return@registerForActivityResult
 
+        val subDir = PasswordRepository.nodeAt(subPath)
         val gpgIdDir =
-          File(repoRoot, subPath)
-            .let {
-              if (it.isFile() || !it.exists()) it.getParentFile() else it.getAbsoluteFile()
-            }
-            .also {
-              if (!it.exists()) it.mkdirs() // should not be necessary
-            }
+          if (subDir.isFile || !subDir.exists()) subDir.parent() ?: PasswordRepository.storeRoot
+          else subDir
 
-        File(gpgIdDir, ".gpg-id")?.let {
-          it.writeText(selectedKeyId + "\n")
-          runBlocking {
-            commitChange(
-              getString(
-                R.string.git_commit_gpg_id,
-                getString(R.string.app_name),
-              )
+        gpgIdDir.writeGpgId(selectedKeyId)
+        runBlocking {
+          commitChange(
+            getString(
+              R.string.git_commit_gpg_id,
+              getString(R.string.app_name),
             )
-          }
-          onKeyListCallback?.invoke()
-        } ?: return@registerForActivityResult
+          )
+        }
+        onKeyListCallback?.invoke()
       } else {
         finish()
       }
@@ -327,6 +315,36 @@ open class BasePGPActivity : AppCompatActivity() {
   }
 
   /**
+   * Asks the user to confirm a save that will not produce a Git commit.
+   *
+   * The app can only commit to a store it can address as a filesystem path, so a folder store that
+   * nevertheless holds a `.git` directory saves without a commit even though the user may expect
+   * one. A user who enabled [PreferenceKeys.SAF_WARN_NO_COMMIT] is warned before that happens.
+   *
+   * @return `true` when the save may go ahead, either because nothing needs to be confirmed or
+   *   because the user confirmed it.
+   */
+  protected suspend fun confirmSaveIfNoGitCommit(): Boolean {
+    if (
+      !PasswordRepository.backend.needsCommitWarning() ||
+        !settings.getBoolean(PreferenceKeys.SAF_WARN_NO_COMMIT, true)
+    )
+      return true
+
+    return withContext(dispatcherProvider.main()) {
+      val confirmation = CompletableDeferred<Boolean>()
+      MaterialAlertDialogBuilder(this@BasePGPActivity)
+        .setTitle(R.string.saf_no_commit_dialog_title)
+        .setMessage(R.string.saf_no_commit_dialog_message)
+        .setPositiveButton(R.string.dialog_ok) { _, _ -> confirmation.complete(true) }
+        .setNegativeButton(R.string.dialog_cancel) { _, _ -> confirmation.complete(false) }
+        .setOnCancelListener { confirmation.complete(false) }
+        .show()
+      confirmation.await()
+    }
+  }
+
+  /**
    * Copies a provided [password] string to the clipboard. This wraps [copyTextToClipboard] to
    * optionally hide the default [Snackbar] and starts off a timer to clear the clipboard.
    */
@@ -402,9 +420,8 @@ open class BasePGPActivity : AppCompatActivity() {
   protected fun getPGPIdentifiers(subDir: String): List<PGPIdentifier>? {
     var shortIdCount = 0
     var invalidIdCount = 0
-    val repoRoot = PasswordRepository.getRepositoryDirectory()
     val gpgIdentifierFile =
-      File(repoRoot, subDir).findTillRoot(".gpg-id", repoRoot)
+      PasswordRepository.nodeAt(subDir).findGpgId(PasswordRepository.storeRoot)
         ?: run {
           snackbar(message = getString(R.string.missing_gpg_id))
           return null
@@ -449,26 +466,6 @@ open class BasePGPActivity : AppCompatActivity() {
     if (emails.isEmpty()) return null
     val label = if (emails.size > 1) R.string.pgp_id_label_plural else R.string.pgp_id_label
     return "${getString(label)} ${emails.joinToString(", ")}"
-  }
-
-  @Suppress("ReturnCount")
-  private fun File.findTillRoot(fileName: String, rootPath: File): File? {
-    val gpgFile = File(this, fileName)
-    require(gpgFile.isInsideRepository()) { "Trying to access target outside the repository" }
-    if (gpgFile.exists()) return gpgFile
-
-    if (this.absolutePath == rootPath.absolutePath) {
-      return null
-    }
-    val parent = parentFile
-    parent?.let {
-      require(it.isInsideRepository()) { "Trying to access target outside the repository" }
-    }
-    return if (parent != null && parent.exists()) {
-      parent.findTillRoot(fileName, rootPath)
-    } else {
-      null
-    }
   }
 
   /** Opens the dialog for passphrase input and then forwards it to the decryption method. */

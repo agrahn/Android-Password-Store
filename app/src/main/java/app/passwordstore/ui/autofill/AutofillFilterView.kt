@@ -27,6 +27,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import app.passwordstore.R
 import app.passwordstore.data.password.PasswordItem
+import app.passwordstore.data.repo.store.extension
 import app.passwordstore.databinding.ActivityOreoAutofillFilterBinding
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.autofill.AutofillMatcher
@@ -44,6 +45,7 @@ import app.passwordstore.util.viewmodel.SearchableRepositoryViewModel
 import com.github.androidpasswordstore.autofillparser.FormOrigin
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -258,20 +260,23 @@ class AutofillFilterView : AppCompatActivity() {
             lifecycleScope,
             dispatcherProvider,
           ) { item, _ ->
-            val file = item.file.relativeTo(item.rootDir)
+            val node = item.node
+            // Store-relative path, split the way the relative File used to be split.
+            val parentPath = node.path.substringBeforeLast('/', "")
+            val nameWithoutExtension = node.name.removeSuffix(".${node.extension}")
 
             val hexIdRegex = """[A-Fa-f0-9]{8}([A-Fa-f0-9]+)$""".toRegex()
 
             val trailingCount =
-              hexIdRegex.find(file.nameWithoutExtension)?.groupValues?.getOrNull(1)?.length ?: 0
+              hexIdRegex.find(nameWithoutExtension)?.groupValues?.getOrNull(1)?.length ?: 0
 
-            val fileName =
-              file.nameWithoutExtension.let {
-                if (trailingCount > 0) it.dropLast(trailingCount) + "…" else it
-              }
+            val fileName = nameWithoutExtension.let {
+              if (trailingCount > 0) it.dropLast(trailingCount) + "…" else it
+            }
 
-            val pathString =
-              file.parentFile?.let { parentFile -> "${parentFile}/${fileName}" } ?: fileName
+            val pathString = parentPath.let { parent ->
+              if (parent.isEmpty()) fileName else "$parent/$fileName"
+            }
 
             val searchString = binding.search.text.toString()
             val parts = pathString.split(searchString, ignoreCase = true)
@@ -293,7 +298,10 @@ class AutofillFilterView : AppCompatActivity() {
             }
 
             val endPath =
-              directoryStructure.getPathStringWithAtMostTwoParentsFor(file).let {
+              // DirectoryStructure only reads path components, never the filesystem, so a
+              // relative File over the store-relative path gives it the same view for every
+              // backend.
+              directoryStructure.getPathStringWithAtMostTwoParentsFor(File(node.path)).let {
                 if (trailingCount > 0) it.dropLast(trailingCount) + "…" else it
               }
 
@@ -334,7 +342,7 @@ class AutofillFilterView : AppCompatActivity() {
       AutofillMatcher.clearMatchesFor(applicationContext, formOrigin)
     decryptAction.launch(
       AutofillDecryptActivity.makeDecryptFileIntent(
-        item.file,
+        item.node,
         formOrigin,
         intent?.extras ?: throw NullPointerException(),
         this,

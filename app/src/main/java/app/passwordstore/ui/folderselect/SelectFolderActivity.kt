@@ -16,14 +16,13 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.StoreNode
 import app.passwordstore.ui.dialogs.FolderCreationDialogFragment
 import app.passwordstore.ui.passwords.PASSWORD_FRAGMENT_TAG
 import app.passwordstore.ui.passwords.PasswordStore
 import app.passwordstore.util.extensions.contains
-import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.viewmodel.SearchableRepositoryViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -63,7 +62,7 @@ class SelectFolderActivity : AppCompatActivity(R.layout.select_folder_layout) {
 
     lifecycleScope.launch { // Update action bar title with current dir name
       model.currentDir.flowWithLifecycle(lifecycle).collect { dir ->
-        val basePath = PasswordRepository.getRepositoryDirectory().absoluteFile
+        val basePath = PasswordRepository.storeRoot
         supportActionBar?.apply {
           if (dir != basePath) title = dir.name else setTitle(R.string.app_name)
         }
@@ -91,20 +90,16 @@ class SelectFolderActivity : AppCompatActivity(R.layout.select_folder_layout) {
     return true
   }
 
-  fun refreshPasswordList(target: File? = null) {
-    val relativeTargetPath = target?.let {
-      require(it.isInsideRepository()) { "Trying to access target outside the repository" }
-      val repoPath = PasswordRepository.getRepositoryDirectory().absolutePath
-      PasswordRepository.getRelativePath(target.absolutePath, repoPath)
-    }
+  fun refreshPasswordList(target: StoreNode? = null) {
+    val relativeTargetPath = target?.path
     if (relativeTargetPath != null) {
       model.reset()
-      model.navigateTo(PasswordRepository.getRepositoryDirectory(), pushPreviousLocation = false)
+      model.navigateTo(PasswordRepository.storeRoot, pushPreviousLocation = false)
       relativeTargetPath.trim('/').split('/').forEach { item ->
-        val file = File(model.currentDir.value, item)
-        if (file.isDirectory) {
-          if (file.equals(model.currentDir.value)) model.forceRefresh()
-          else model.navigateTo(file, pushPreviousLocation = true)
+        val node = PasswordRepository.nodeAt("${model.currentDir.value.path}/$item")
+        if (node.isDirectory) {
+          if (node.equals(model.currentDir.value)) model.forceRefresh()
+          else model.navigateTo(node, pushPreviousLocation = true)
         }
       }
     } else if (model.currentDir.value.isDirectory) {
@@ -116,7 +111,7 @@ class SelectFolderActivity : AppCompatActivity(R.layout.select_folder_layout) {
   }
 
   private fun selectFolder() {
-    intent.putExtra(SELECTED_FOLDER_PATH, passwordList.currentDir.absolutePath)
+    intent.putExtra(SELECTED_FOLDER_PATH, passwordList.currentDir.path)
     setResult(RESULT_OK, intent)
     finish()
   }

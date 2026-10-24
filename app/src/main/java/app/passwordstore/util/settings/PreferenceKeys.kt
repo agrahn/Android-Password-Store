@@ -76,6 +76,13 @@ object PreferenceKeys {
   const val SHOW_HIDDEN_FOLDERS = "show_hidden_folders"
   const val SHOW_HIDDEN_CONTENTS = "show_hidden_contents"
   const val SORT_ORDER = "sort_order"
+  const val STORE_MODE = "store_mode"
+  const val STORE_URI = "store_uri"
+  const val SAF_WARN_NO_COMMIT = "saf_warn_no_commit"
+  const val SAF_STORE_FOLDER = "saf_store_folder"
+
+  /** Non-persistent switch in the settings screen; [STORE_MODE] stays the source of truth. */
+  const val STORE_MODE_EXTERNAL = "store_mode_external"
   const val SHOW_PASSWORD = "show_password"
   const val SHOW_EXTRA_CONTENT = "show_extra_content"
   @Deprecated(

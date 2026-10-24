@@ -259,9 +259,14 @@
   <!-- Onboarding flow -->
   <string name="let_s_go">Andiamo</string>
   <string name="select_n_repository_type">Seleziona \nTipo di repository</string>
-  <string name="select_repo_type_text">Seleziona se vuoi creare una repo locale o clonarne una remota.</string>
+  <string name="select_repo_type_text">Seleziona se vuoi creare una repo locale, clonarne una remota o conservare l\'archivio in una cartella di questo dispositivo.</string>
   <string name="clone_remote_repo">Clona Repo Remota</string>
   <string name="create_local_repo">Crea Repo Locale</string>
+  <string name="use_local_folder_store">Usa Cartella Locale</string>
+  <string name="saf_store_invalid_folder_title">Impossibile usare questa cartella</string>
+  <string name="saf_store_invalid_folder_message">Non è stato possibile aprire in lettura e scrittura la cartella selezionata. Scegli un\'altra cartella e riprova.</string>
+  <string name="saf_no_commit_dialog_title">Nessun commit Git verrà creato</string>
+  <string name="saf_no_commit_dialog_message">Questa cartella è un repository Git, ma l\'app non può usare Git per un archivio in cartella. Salvando questa password non verrà creato alcun commit, quindi la modifica resta non versionata finché non sincronizzi da un computer. Puoi disattivare questo avviso nelle impostazioni dell\'app.</string>
   <string name="select_gpg_key_title">Seleziona\nChiave\nPGP</string>
   <string name="select_gpg_key_message">Seleziona una chiave PGP con cui inizializzare il tuo archivio</string>
   <string name="gpg_key_select">Seleziona chiave</string>
@@ -271,6 +276,13 @@
   <string name="proxy_hostname">Nome host del proxy</string>
   <string name="port">Porta</string>
   <string name="pref_edit_proxy_settings">Impostazioni proxy HTTP(S)</string>
+  <string name="pref_external_folder_store_title">Usa una cartella su questo dispositivo</string>
+  <string name="pref_external_folder_store_summary">L\'archivio delle password si trova nella directory privata dell\'app e usa Git.</string>
+  <string name="pref_external_folder_store_summary_on">L\'archivio si trova nella cartella qui sotto. Git non è disponibile.</string>
+  <string name="pref_select_store_folder_title">Cartella locale dell\'archivio</string>
+  <string name="pref_folder_store_needs_folder">Scegli una cartella locale per usare la modalità cartella</string>
+  <string name="pref_saf_warn_no_commit_title">Avvisa prima di salvare senza un commit</string>
+  <string name="pref_saf_warn_no_commit_summary">Commit non supportati. Chiedi conferma prima di salvare se la cartella locale è un repository Git.</string>
   <string name="invalid_proxy_url">URL non valido</string>
   <string name="oreo_autofill_password_fill_and_conditional_save_support">Compila e salva le password (il salvataggio necessita che nessun servizio di accessibilità sia abilitato)</string>
   <string name="clear_saved_host_key">Cancella la chiave host salvata</string>

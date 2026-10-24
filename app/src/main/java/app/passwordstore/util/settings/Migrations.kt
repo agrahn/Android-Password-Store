@@ -8,10 +8,13 @@ package app.passwordstore.util.settings
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import androidx.core.content.edit
+import androidx.documentfile.provider.DocumentFile
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import app.passwordstore.Application
+import app.passwordstore.data.repo.store.StoreMode
 import app.passwordstore.util.crypto.AESEncryption
 import app.passwordstore.util.crypto.AESEncryption.KeyType
 import app.passwordstore.util.extensions.getString
@@ -45,6 +48,30 @@ fun runMigrations(
   if (!runTest) moveToPasswordGeneratorPrefs(sharedPrefs, context)
   deleteKeystoreWrappedEd25519Key(sharedPrefs, context)
   migrateToFastUnlockOptions(sharedPrefs, persistentPassphrases)
+  invalidateRevokedStoreGrant(sharedPrefs, context)
+}
+
+/**
+ * Falls back to the app-private store when the grant on the picked folder is gone.
+ *
+ * The grant can disappear without the app noticing: the user revokes it in system settings, or the
+ * package is reinstalled. The folder is left untouched; only the preference pointing at it is
+ * dropped, so the app asks for a folder again instead of failing to open the store.
+ */
+private fun invalidateRevokedStoreGrant(sharedPrefs: SharedPreferences, context: Context) {
+  if (sharedPrefs.getString(PreferenceKeys.STORE_MODE, null) != StoreMode.SAF.name) return
+  val uri = sharedPrefs.getString(PreferenceKeys.STORE_URI, null)?.let(Uri::parse) ?: return
+  val tree = DocumentFile.fromTreeUri(context, uri)
+  if (tree != null && tree.canWrite()) return
+
+  logcat(TAG, INFO) {
+    "Access to the local folder store was revoked, falling back to the internal store"
+  }
+  sharedPrefs.edit {
+    putString(PreferenceKeys.STORE_MODE, StoreMode.INTERNAL.name)
+    remove(PreferenceKeys.STORE_URI)
+    putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, false)
+  }
 }
 
 private fun deleteKeystoreWrappedEd25519Key(sharedPrefs: SharedPreferences, context: Context) {

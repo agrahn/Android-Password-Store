@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.writeGpgId
 import app.passwordstore.databinding.FragmentKeySelectionBinding
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.ui.pgp.PGPKeyListActivity
@@ -27,7 +28,6 @@ import app.passwordstore.util.extensions.windowInsetsLambda
 import app.passwordstore.util.settings.PreferenceKeys
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.launch
 
@@ -44,8 +44,7 @@ class KeySelectionFragment : Fragment(R.layout.fragment_key_selection) {
           data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
         lifecycleScope.launch {
-          val gpgIdentifierFile = File(PasswordRepository.getRepositoryDirectory(), ".gpg-id")
-          gpgIdentifierFile.writeText(selectedKeyId + "\n")
+          PasswordRepository.storeRoot.writeGpgId(selectedKeyId)
           settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
           requireActivity()
             .commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))

@@ -9,6 +9,26 @@ All notable changes to this project will be documented in this file
 - Committer email, allow setting empty value in Git configuration; `aps@<device model>` used as default
 - Host key verification failure when using Keystore-native ECDSA ssh key
 
+### Added
+
+- Optional local folder store: the password store can live in a folder the user picks through the
+  Storage Access Framework, reachable from onboarding ("Use Local Folder") and from
+  Settings -> Select local store folder. The app keeps access through a persisted grant, so the
+  folder stays available across restarts and reboots. An empty folder is initialised through key
+  selection, the same way the app-private store is
+
+### Notes
+
+- A folder store is never git-backed. jgit cannot open a Storage Access Framework tree, so git
+  menus, remotes, the sync action and "Import repository" are hidden in that mode and the
+  app-private store keeps its git support. If the picked folder happens to contain a `.git`
+  directory, the app does not touch it and warns before each save that no commit will be created;
+  the warning can be switched off in Settings
+- All-files-access (`MANAGE_EXTERNAL_STORAGE`) remains rejected: it is the only way to make git work
+  on an external folder, and it is restricted by the Play policy
+- Password history is now keyed by the store-relative path instead of an absolute one, so entries
+  recorded before this change no longer affect the "recently used" sort order
+
 ## [2.0.3] - 2026-10-02
 
 ### Added

@@ -389,9 +389,14 @@
   <!-- Onboarding flow -->
   <string name="let_s_go">Los geht’s</string>
   <string name="select_n_repository_type">Wählen Sie einen \nRepository-Typ.</string>
-  <string name="select_repo_type_text">Wählen Sie aus, ob Sie ein lokales Repository anlegen, oder ein Remote-Repository klonen möchten.</string>
+  <string name="select_repo_type_text">Wählen Sie aus, ob Sie ein lokales Repository anlegen, ein Remote-Repository klonen, oder den Store in einem Ordner auf diesem Gerät ablegen möchten.</string>
   <string name="clone_remote_repo">Remote-Repository klonen</string>
   <string name="create_local_repo">Lokales Repository anlegen</string>
+  <string name="use_local_folder_store">Lokalen Ordner verwenden</string>
+  <string name="saf_store_invalid_folder_title">Dieser Ordner kann nicht verwendet werden</string>
+  <string name="saf_store_invalid_folder_message">Der ausgewählte Ordner konnte nicht zum Lesen und Schreiben geöffnet werden. Wählen Sie einen anderen Ordner und versuchen Sie es erneut.</string>
+  <string name="saf_no_commit_dialog_title">Es wird kein Git-Commit erstellt</string>
+  <string name="saf_no_commit_dialog_message">Dieser Ordner ist ein Git-Repository, die App kann Git für einen Ordner-Store aber nicht verwenden. Beim Speichern dieses Passworts wird kein Commit erstellt, die Änderung bleibt also unverändert, bis Sie von einem Computer aus synchronisieren. Sie können diese Warnung in den App-Einstellungen deaktivieren.</string>
   <string name="select_gpg_key_title">PGP-Schlüssel wählen</string>
   <string name="select_gpg_key_message">Wählen Sie einen oder mehrere PGP-Schlüssel, mit denen der Store initialisiert werden soll.</string>
   <string name="gpg_key_select">Schlüssel auswählen</string>
@@ -407,6 +412,13 @@
   <string name="proxy_hostname">Proxy-Hostname</string>
   <string name="port">Port</string>
   <string name="pref_edit_proxy_settings">HTTP(S)-Proxy-Einstellungen</string>
+  <string name="pref_external_folder_store_title">Store in einem Ordner auf diesem Gerät ablegen</string>
+  <string name="pref_external_folder_store_summary">Der Passwort-Store liegt im app-privaten Verzeichnis und nutzt Git.</string>
+  <string name="pref_external_folder_store_summary_on">Der Store liegt im Ordner unten. Git ist nicht verfügbar.</string>
+  <string name="pref_select_store_folder_title">Lokaler Store-Ordner</string>
+  <string name="pref_folder_store_needs_folder">Wählen Sie einen lokalen Ordner, um den Ordner-Modus zu nutzen</string>
+  <string name="pref_saf_warn_no_commit_title">Vor dem Speichern ohne Commit warnen</string>
+  <string name="pref_saf_warn_no_commit_summary">Keine Commits möglich. Vor dem Speichern fragen, wenn der lokale Ordner ein Git-Repository ist.</string>
   <string name="invalid_proxy_url">Ungültige URL</string>
   <string name="oreo_autofill_password_fill_and_conditional_save_support">Passwörter ausfüllen und speichern (Für das Speichern dürfen keine Dienste zur Barrierefreiheit aktiviert sein.)</string>
   <string name="clear_saved_host_key">Gespeicherten\nHost-Schlüssel löschen</string>

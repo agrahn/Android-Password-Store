@@ -4,7 +4,6 @@
  */
 package app.passwordstore.util.settings
 
-import app.passwordstore.data.repo.PasswordRepository
 import com.github.androidpasswordstore.sublimefuzzy.Fuzzy
 import java.io.File
 import java.nio.file.Paths
@@ -35,6 +34,10 @@ enum class DirectoryStructure(val value: String) {
   /**
    * Returns the username associated with [file]
    *
+   * [file] is the store-relative path of the entry, which is all this needs: a directory structure
+   * is read off path components and the filesystem is never consulted, so a store that does not
+   * live on the filesystem answers the same as one that does.
+   *
    * tries to deduce the directory structure by comparing parent and grandparent directory names
    * with the origin identifier, first using exact, then fuzzy matching
    *
@@ -47,8 +50,7 @@ enum class DirectoryStructure(val value: String) {
    * - Temporary PIN.gpg --> Temporary PIN (DirectoryBased, fallback)
    */
   fun getUsernameFor(file: File, origin: String? = null): String? {
-    val passFile =
-      if (file.isAbsolute()) file.relativeTo(PasswordRepository.getRepositoryDirectory()) else file
+    val passFile = file
 
     return if (origin != null) {
       val grandparent = passFile.parentFile?.parentFile?.name ?: ""

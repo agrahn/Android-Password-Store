@@ -26,8 +26,10 @@ enum class PasswordSortOrder(val comparator: java.util.Comparator<PasswordItem>)
   RECENTLY_USED(
     Comparator { p1: PasswordItem, p2: PasswordItem ->
       val passwordHistory = Application.instance.passwordHistory
-      val timeP1 = passwordHistory.getString(p1.file.absolutePath.base64())
-      val timeP2 = passwordHistory.getString(p2.file.absolutePath.base64())
+      // Keyed by the store-relative path: an absolute path does not exist for a folder store, and
+      // the location of a store can change without the entries moving.
+      val timeP1 = passwordHistory.getString(p1.node.path.base64())
+      val timeP2 = passwordHistory.getString(p2.node.path.base64())
       when {
         timeP1 != null && timeP2 != null -> timeP2.compareTo(timeP1)
         timeP1 != null && timeP2 == null -> return@Comparator -1

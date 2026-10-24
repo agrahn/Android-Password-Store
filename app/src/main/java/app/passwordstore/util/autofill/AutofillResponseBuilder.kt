@@ -12,14 +12,12 @@ import android.service.autofill.Dataset
 import android.service.autofill.FillCallback
 import android.service.autofill.FillRequest
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.extension
 import com.github.androidpasswordstore.autofillparser.AutofillAction
 import com.github.androidpasswordstore.autofillparser.AutofillScenario
 import com.github.androidpasswordstore.autofillparser.Credentials
 import com.github.androidpasswordstore.autofillparser.FillableForm
 import com.github.androidpasswordstore.autofillparser.fillWith
-import java.nio.file.Files
-import kotlin.io.path.name
-import kotlin.io.path.nameWithoutExtension
 import logcat.LogPriority
 import logcat.logcat
 
@@ -31,14 +29,8 @@ interface AutofillResponseBuilder {
   }
 
   fun findKnownUsernamesFor(origin: String): List<String> =
-    PasswordRepository.findByParentName(
-        startPath = PasswordRepository.getRepositoryDirectory().absolutePath,
-        name = origin,
-        ignoreCase = true,
-      )
-      .map {
-        if (Files.isRegularFile(it)) it.nameWithoutExtension else it.name
-      }
+    PasswordRepository.findByParentName(startPath = "", name = origin, ignoreCase = true)
+      .map { if (it.isFile) it.name.removeSuffix(".${it.extension}") else it.name }
       .distinct()
 
   companion object {

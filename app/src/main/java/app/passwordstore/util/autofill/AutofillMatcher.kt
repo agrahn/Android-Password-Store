@@ -7,13 +7,14 @@ package app.passwordstore.util.autofill
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.StoreNode
 import com.github.androidpasswordstore.autofillparser.FormOrigin
 import com.github.androidpasswordstore.autofillparser.computeCertificatesHash
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.runCatching
-import java.io.File
 import logcat.LogPriority.ERROR
 import logcat.LogPriority.WARN
 import logcat.logcat
@@ -99,10 +100,16 @@ class AutofillMatcher {
      * time the user associated an entry with it, an [AutofillPublisherChangedException] will be
      * thrown.
      */
+    /**
+     * Every stored entry associated with [formOrigin], as store nodes.
+     *
+     * Matches are persisted as store-relative paths, which is the only form that survives a change
+     * of the store location and the only one a folder store has.
+     */
     fun getMatchesFor(
       context: Context,
       formOrigin: FormOrigin,
-    ): Result<List<File>, AutofillPublisherChangedException> {
+    ): Result<List<StoreNode>, AutofillPublisherChangedException> {
       if (hasFormOriginHashChanged(context, formOrigin)) {
         return Err(AutofillPublisherChangedException(formOrigin))
       }
@@ -114,21 +121,11 @@ class AutofillMatcher {
           }
         }
       }
-      val matchedFiles =
-        matchPreferences.getString(matchesKey(formOrigin), null)?.split("|§+")?.map { File(it) }
-          ?: emptyList<File>()
-      return Ok(
-        matchedFiles
-          .filter { it.exists() }
-          .also { validFiles ->
-            matchPreferences.edit {
-              putString(
-                matchesKey(formOrigin),
-                validFiles.map { it.absolutePath }.joinToString("|§+"),
-              )
-            }
-          }
-      )
+      val matchedPaths =
+        matchPreferences.getString(matchesKey(formOrigin), null)?.split("|§+") ?: emptyList()
+      val validPaths = matchedPaths.filter { PasswordRepository.nodeAt(it).exists() }
+      matchPreferences.edit { putString(matchesKey(formOrigin), validPaths.joinToString("|§+")) }
+      return Ok(validPaths.map { PasswordRepository.nodeAt(it) })
     }
 
     fun clearMatchesFor(context: Context, formOrigin: FormOrigin) {
@@ -145,8 +142,8 @@ class AutofillMatcher {
      * The maximum number of matches is limited by [MAX_NUM_MATCHES] since older versions of Android
      * may crash when too many datasets are offered.
      */
-    fun addMatchFor(context: Context, formOrigin: FormOrigin, file: File) {
-      if (!file.exists()) return
+    fun addMatchFor(context: Context, formOrigin: FormOrigin, path: String) {
+      if (!PasswordRepository.nodeAt(path).exists()) return
       if (hasFormOriginHashChanged(context, formOrigin)) {
         // This should never happen since we already verified the publisher in
         // getMatchesFor.
@@ -164,19 +161,17 @@ class AutofillMatcher {
           }
         }
       }
-      val matchedFiles =
+      val matchedPaths =
         matchPreferences
           .getString(matchesKey(formOrigin), null)
           ?.split("|§+")
           ?.asSequence()
-          ?.minus(file.absolutePath)
-          ?.filter { File(it).exists() }
+          ?.minus(path)
+          ?.filter { PasswordRepository.nodeAt(it).exists() }
           ?.toList()
           ?.take(MAX_NUM_MATCHES - 1) ?: emptyList()
-      val newFiles = listOf(file.absolutePath) + matchedFiles
-      matchPreferences.edit {
-        putString(matchesKey(formOrigin), newFiles.joinToString("|§+"))
-      }
+      val newPaths = listOf(path) + matchedPaths
+      matchPreferences.edit { putString(matchesKey(formOrigin), newPaths.joinToString("|§+")) }
       storeFormOriginHash(context, formOrigin)
       logcat { "Stored match for $formOrigin" }
     }
@@ -187,12 +182,11 @@ class AutofillMatcher {
      */
     fun updateMatches(
       context: Context,
-      moveFromTo: Map<File, File> = emptyMap(),
-      delete: Collection<File> = emptyList(),
+      moveFromTo: Map<String, String> = emptyMap(),
+      delete: Collection<String> = emptyList(),
     ) {
-      val deletePathList = delete.map { it.absolutePath }
-      val oldNewPathMap =
-        moveFromTo.mapValues { it.value.absolutePath }.mapKeys { it.key.absolutePath }
+      val deletePathList = delete.toList()
+      val oldNewPathMap = moveFromTo.toMap()
       for (prefs in listOf(context.autofillAppMatches, context.autofillWebMatches)) {
         for ((key, value) in prefs.all) {
           if (!key.startsWith(PREFERENCE_PREFIX_MATCHES)) continue

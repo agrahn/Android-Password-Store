@@ -14,25 +14,26 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import app.passwordstore.R
+import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.StoreNode
+import app.passwordstore.data.repo.store.writeGpgId
 import app.passwordstore.databinding.FolderDialogFragmentBinding
 import app.passwordstore.ui.folderselect.SelectFolderActivity
 import app.passwordstore.ui.passwords.PasswordStore
 import app.passwordstore.ui.pgp.PGPKeyListActivity
 import app.passwordstore.util.extensions.commitChange
-import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.extensions.unsafeLazy
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import java.io.File
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class FolderCreationDialogFragment : DialogFragment() {
 
   private val binding by unsafeLazy { FolderDialogFragmentBinding.inflate(layoutInflater) }
-  private lateinit var newFolder: File
+  private lateinit var newFolder: StoreNode
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val builder = MaterialAlertDialogBuilder(requireContext())
@@ -66,8 +67,7 @@ class FolderCreationDialogFragment : DialogFragment() {
         val selectedKeyId =
           data.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
             ?: return@registerForActivityResult
-        val gpgIdentifierFile = File(newFolder, ".gpg-id")
-        gpgIdentifierFile.writeText(selectedKeyId + "\n")
+        newFolder.writeGpgId(selectedKeyId)
         runBlocking {
           requireActivity()
             .commitChange(getString(R.string.git_commit_gpg_id, getString(R.string.app_name)))
@@ -84,17 +84,26 @@ class FolderCreationDialogFragment : DialogFragment() {
     val dialog = requireDialog()
     val folderNameView = dialog.findViewById<TextInputEditText>(R.id.folder_name_text)
     val folderNameViewContainer = dialog.findViewById<TextInputLayout>(R.id.folder_name_container)
-    newFolder = File("$currentDir/${folderNameView.text}")
+    val folderPath = PasswordRepository.getRelativePath("$currentDir/${folderNameView.text}")
+    newFolder = PasswordRepository.nodeAt(folderPath)
     folderNameViewContainer.error =
       when {
-        !newFolder.isInsideRepository() ->
+        // The backend clamps a path that climbs out of the store; tell the user instead of
+        // silently creating the folder somewhere else.
+        folderPath.split('/').any { it == ".." } ->
           getString(R.string.message_error_destination_outside_repo)
         newFolder.isFile -> getString(R.string.folder_creation_err_file_exists)
         newFolder.isDirectory -> getString(R.string.folder_creation_err_folder_exists)
         else -> null
       }
     if (folderNameViewContainer.error != null) return
-    newFolder.mkdirs()
+    // A provider can only create one child at a time, so walk the missing segments from the root.
+    var node = PasswordRepository.storeRoot
+    for (segment in folderPath.split('/')) {
+      if (segment.isEmpty()) continue
+      node = node.findChild(segment) ?: node.createDirectory(segment)
+    }
+    newFolder = node
     if (dialog.findViewById<MaterialCheckBox>(R.id.set_gpg_key).isChecked) {
       gpgKeySelectAction.launch(PGPKeyListActivity.newIntent(requireContext(), keySelection = true))
       return

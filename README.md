@@ -33,6 +33,20 @@ To activate passkey (Android 14+) and autofill support, go to Settings → Autof
 
 Utilising the standard `pass` file structure, passkey data is stored on the first line, followed by optional extra content, as line-oriented plain text secured by PGP encryption. Details on passkey encoding and storage are given in file [`PasskeyStorage.md`](PasskeyStorage.md).
 
+## Local folder store
+
+The store can optionally live in a folder you pick, instead of the app's private directory: pick
+"Use Local Folder" during onboarding, or Settings → Select local store folder.
+This is meant for a store that is synchronised from a computer running `pass`; the app keeps access
+through a persisted system grant and survives reboots with it.
+
+Such a store is never git-backed. Git needs a real filesystem path and the Storage Access Framework
+does not provide one, so git menus, remotes and the sync action are hidden while a folder store is
+selected. If the folder you pick contains a `.git` directory, the app leaves it untouched and warns
+before each save that no commit will be created; you can turn that warning off in the settings. The
+app-private store keeps full git support, and importing a folder into it (Settings → Import
+repository) remains the way to get git and an external folder at the same time.
+
 ## How-To: Transfer a PGP key to Password Store securely
 
 ### From GPG keyring

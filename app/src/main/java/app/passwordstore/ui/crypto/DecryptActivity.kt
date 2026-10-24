@@ -19,6 +19,7 @@ import app.passwordstore.crypto.errors.IncorrectPassphraseException
 import app.passwordstore.crypto.errors.NoDecryptionKeyAvailableException
 import app.passwordstore.data.passfile.PasswordEntry
 import app.passwordstore.data.password.FieldItem
+import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.DecryptLayoutBinding
 import app.passwordstore.injection.prefs.CredentialUsernames
 import app.passwordstore.injection.prefs.PasswordHistory
@@ -38,10 +39,7 @@ import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.getOrThrow
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.nio.file.Paths
 import javax.inject.Inject
-import kotlin.io.path.pathString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -94,7 +92,10 @@ class DecryptActivity : BasePGPActivity() {
     identifiers: List<PGPIdentifier>,
     onSuccess: suspend (String) -> Unit,
   ) {
-    val message = withContext(dispatcherProvider.io()) { File(fullPath).readBytes().inputStream() }
+    val message =
+      withContext(dispatcherProvider.io()) {
+        PasswordRepository.nodeAt(fullPath).readBytes().inputStream()
+      }
     val outputStream = ByteArrayOutputStream()
     val results = repository.decrypt(passphrases, identifiers, message, outputStream)
     val lastResult = results.last()
@@ -201,7 +202,7 @@ class DecryptActivity : BasePGPActivity() {
     encryptedEntryChars?.let { encrypted ->
       val intent = Intent(this, PasswordCreationActivity::class.java)
       intent.action = Intent.ACTION_VIEW
-      intent.putExtra(EXTRA_FILE_PATH, Paths.get(fullPath).parent.pathString)
+      intent.putExtra(EXTRA_FILE_PATH, PasswordRepository.nodeAt(fullPath).parent()?.path ?: "")
       intent.putExtra(EXTRA_REPO_PATH, repoPath)
       intent.putExtra(PasswordCreationActivity.EXTRA_NAME, name)
       intent.putExtra(PasswordCreationActivity.EXTRA_ENTRY, encrypted)
@@ -215,7 +216,7 @@ class DecryptActivity : BasePGPActivity() {
     encryptedEntryChars?.let { encrypted ->
       val intent = Intent(this, PasskeyCreationActivity::class.java)
       intent.action = Intent.ACTION_VIEW
-      intent.putExtra(EXTRA_FILE_PATH, Paths.get(fullPath).parent.pathString)
+      intent.putExtra(EXTRA_FILE_PATH, PasswordRepository.nodeAt(fullPath).parent()?.path ?: "")
       intent.putExtra(EXTRA_REPO_PATH, repoPath)
       intent.putExtra(PasswordCreationActivity.EXTRA_NAME, name)
       intent.putExtra(PasswordCreationActivity.EXTRA_ENTRY, encrypted)

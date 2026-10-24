@@ -23,11 +23,15 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import app.passwordstore.data.password.PasswordItem
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.GPG_ID
+import app.passwordstore.data.repo.store.StoreNode
+import app.passwordstore.data.repo.store.extension
+import app.passwordstore.data.repo.store.isHidden
+import app.passwordstore.data.repo.store.isUnder
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.checkMainThread
 import app.passwordstore.util.coroutines.DispatcherProvider
-import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.settings.DirectoryStructure
 import app.passwordstore.util.settings.PasswordSortOrder
 import app.passwordstore.util.settings.PreferenceKeys
@@ -37,14 +41,14 @@ import java.io.File
 import java.text.Collator
 import java.util.Locale
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -55,14 +59,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 import me.zhanghai.android.fastscroll.PopupTextProvider
 
-private fun File.toPasswordItem() =
+private fun StoreNode.toPasswordItem() =
   if (isFile) {
-    if (name == ".gpg-id")
-      PasswordItem.newGpgIdItem(name, this, PasswordRepository.getRepositoryDirectory())
-    else if (extension == "gpg")
-      PasswordItem.newPassword(name, this, PasswordRepository.getRepositoryDirectory())
-    else PasswordItem.newOtherItem(name, this, PasswordRepository.getRepositoryDirectory())
-  } else PasswordItem.newCategory(name, this, PasswordRepository.getRepositoryDirectory())
+    if (name == GPG_ID) PasswordItem.newGpgIdItem(name, this)
+    else if (extension == "gpg") PasswordItem.newPassword(name, this)
+    else PasswordItem.newOtherItem(name, this)
+  } else PasswordItem.newCategory(name, this)
 
 private fun PasswordItem.fuzzyMatch(filter: String): Int {
   val (_, score) = Fuzzy.fuzzyMatch(filter, longName)
@@ -70,6 +72,10 @@ private fun PasswordItem.fuzzyMatch(filter: String): Int {
 }
 
 private val CaseInsensitiveComparator = Collator.getInstance().apply { strength = Collator.PRIMARY }
+
+// DirectoryStructure only reads path components and never touches the filesystem, so a relative
+// File over the store-relative path gives it the same view for every backend.
+private fun PasswordItem.relativeFile() = File(node.path)
 
 private fun PasswordItem.Companion.makeComparator(
   typeSortOrder: PasswordSortOrder,
@@ -86,16 +92,18 @@ private fun PasswordItem.Companion.makeComparator(
     }
     .then(
       compareBy(nullsLast(CaseInsensitiveComparator)) {
-        directoryStructure.getIdentifierFor(it.file)
+        directoryStructure.getIdentifierFor(it.relativeFile())
       }
     )
     .then(
-      compareBy(nullsLast(CaseInsensitiveComparator)) { directoryStructure.getUsernameFor(it.file) }
+      compareBy(nullsLast(CaseInsensitiveComparator)) {
+        directoryStructure.getUsernameFor(it.relativeFile())
+      }
     )
 }
 
 val PasswordItem.stableId: String
-  get() = file.absolutePath
+  get() = node.path
 
 enum class FilterMode {
   NoFilter,
@@ -133,8 +141,8 @@ constructor(
     _updateCounter++
   }
 
-  private val root
-    get() = PasswordRepository.getRepositoryDirectory()
+  private val root: StoreNode
+    get() = PasswordRepository.storeRoot
 
   private val showHiddenContents
     get() = settings.getBoolean(PreferenceKeys.SHOW_HIDDEN_CONTENTS, false)
@@ -157,7 +165,7 @@ constructor(
     get() = PasswordItem.makeComparator(typeSortOrder, directoryStructure)
 
   private data class SearchAction(
-    val baseDirectory: File,
+    val baseDirectory: StoreNode,
     val filter: String,
     val filterMode: FilterMode,
     val searchMode: SearchMode,
@@ -168,7 +176,7 @@ constructor(
   )
 
   private fun makeSearchAction(
-    baseDirectory: File,
+    baseDirectory: StoreNode,
     filter: String,
     filterMode: FilterMode,
     searchMode: SearchMode,
@@ -243,11 +251,8 @@ constructor(
             }
             FilterMode.Exact -> {
               prefilteredResultFlow
-                .filter { absoluteFile ->
-                  absoluteFile
-                    .relativeTo(root)
-                    .path
-                    .contains(searchAction.filter, ignoreCase = true)
+                .filter { node ->
+                  node.path.contains(searchAction.filter, ignoreCase = true)
                 }
                 .map { it.toPasswordItem() }
                 .flowOn(dispatcherProvider.io())
@@ -261,9 +266,7 @@ constructor(
               val regex = generateStrictDomainRegex(searchAction.filter)
               if (regex != null) {
                 prefilteredResultFlow
-                  .filter { absoluteFile ->
-                    regex.containsMatchIn(absoluteFile.relativeTo(root).path)
-                  }
+                  .filter { node -> regex.containsMatchIn(node.path) }
                   .map { it.toPasswordItem() }
                   .flowOn(dispatcherProvider.io())
                   .toList()
@@ -277,34 +280,47 @@ constructor(
       }
       .flowOn(dispatcherProvider.io())
 
-  private fun listFiles(dir: File): Flow<File> {
-    return dir.listFiles(::shouldTake)?.asFlow() ?: emptyFlow()
+  private fun listFiles(dir: StoreNode): Flow<StoreNode> {
+    return dir.children().filter(::shouldTake).asFlow()
   }
 
-  private fun listFilesRecursively(dir: File): Flow<File> {
+  private fun listFilesRecursively(dir: StoreNode): Flow<StoreNode> {
     return dir
       // Take top directory even if it is hidden.
-      .walkTopDown()
-      .onEnter { file -> file == dir || shouldTake(file) }
+      .walk { node -> node != dir && shouldTake(node) && node.isVisibleBelow(dir) }
       .asFlow()
-      // Skip the root directory
-      .drop(1)
       .map {
         yield()
         it
       }
-      .filter(::shouldTake)
+  }
+
+  /**
+   * Whether every directory between this node and [dir], [dir] itself excluded, is one we would
+   * descend into.
+   *
+   * [StoreNode.walk] filters what it returns, not what it descends into, so the pruning the old
+   * `File.walkTopDown().onEnter { }` did has to be expressed here: an entry below a directory we
+   * would not enter is not listed even though it passes [shouldTake] itself.
+   */
+  private fun StoreNode.isVisibleBelow(dir: StoreNode): Boolean {
+    var ancestor = parent()
+    while (ancestor != null && ancestor.path != dir.path) {
+      if (!shouldTake(ancestor)) return false
+      ancestor = ancestor.parent()
+    }
+    return true
   }
 
   private val _currentDir = MutableStateFlow(root)
   val currentDir = _currentDir.asStateFlow()
 
-  data class NavigationStackEntry(val dir: File, val recyclerViewState: Parcelable?)
+  data class NavigationStackEntry(val dir: StoreNode, val recyclerViewState: Parcelable?)
 
   private val navigationStack = ArrayDeque<NavigationStackEntry>()
 
-  fun shouldTake(file: File): Boolean =
-    with(file) {
+  fun shouldTake(node: StoreNode): Boolean =
+    with(node) {
       if (showHiddenContents) {
         return !name.startsWith(".git")
       }
@@ -316,12 +332,12 @@ constructor(
     }
 
   fun navigateTo(
-    newDirectory: File = root,
+    newDirectory: StoreNode = root,
     listMode: ListMode = ListMode.AllEntries,
     recyclerViewState: Parcelable? = null,
     pushPreviousLocation: Boolean = true,
   ) {
-    require(newDirectory.isInsideRepository()) { "Trying to access target outside the repository" }
+    require(newDirectory.isUnder(root)) { "Trying to access target outside the repository" }
     if (!newDirectory.exists()) return
     require(newDirectory.isDirectory) { "Can only navigate to a directory" }
     if (pushPreviousLocation) {
@@ -363,7 +379,7 @@ constructor(
 
   fun search(
     filter: String,
-    baseDirectory: File? = null,
+    baseDirectory: StoreNode? = null,
     filterMode: FilterMode = FilterMode.Exact,
     searchMode: SearchMode? = null,
     listMode: ListMode = ListMode.AllEntries,
@@ -382,7 +398,19 @@ constructor(
 
   fun forceRefresh() {
     forceUpdateOnNextSearchAction()
-    searchActionFlow.update { updateSearchAction(searchActionFlow.value) }
+    // A store mode switch swaps the backend underneath the current node, and a node keeps the
+    // backend it was created from, so resolve it again before re-listing.
+    searchActionFlow.update { action ->
+      val liveBase =
+        try {
+          PasswordRepository.nodeAt(action.baseDirectory.path)
+        } catch (e: CancellationException) {
+          throw e
+        } catch (e: Exception) {
+          root
+        }
+      updateSearchAction(action).copy(baseDirectory = liveBase)
+    }
   }
 
   companion object {
@@ -411,9 +439,19 @@ constructor(
 private object PasswordItemDiffCallback : DiffUtil.ItemCallback<PasswordItem>() {
 
   override fun areItemsTheSame(oldItem: PasswordItem, newItem: PasswordItem) =
-    oldItem.file.absolutePath == newItem.file.absolutePath
+    oldItem.node.path == newItem.node.path
 
   override fun areContentsTheSame(oldItem: PasswordItem, newItem: PasswordItem) = oldItem == newItem
+}
+
+/**
+ * A view holder whose bind suspends, so that a row recycled into a second bind does not keep the
+ * result of the first one. Binding a folder row reads the directory it counts, and the late half of
+ * an abandoned bind must not write that count into a row that already shows another entry.
+ */
+interface RebindableViewHolder {
+
+  var bindJob: Job?
 }
 
 open class SearchableRepositoryAdapter<T : RecyclerView.ViewHolder>(
@@ -488,12 +526,12 @@ open class SearchableRepositoryAdapter<T : RecyclerView.ViewHolder>(
 
   fun requireSelectionTracker() = selectionTracker ?: throw NullPointerException()
 
-  private val selectedFiles
-    get() = requireSelectionTracker().selection.map { File(it) }
+  private val selectedNodes
+    get() = requireSelectionTracker().selection.map { PasswordRepository.nodeAt(it) }
 
-  fun getSelectedItems() = selectedFiles.map { it.toPasswordItem() }
+  fun getSelectedItems() = selectedNodes.map { it.toPasswordItem() }
 
-  fun getPositionForFile(file: File) = itemKeyProvider.getPosition(file.absolutePath)
+  fun getPositionForNode(node: StoreNode) = itemKeyProvider.getPosition(node.path)
 
   final override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): T {
     val view = LayoutInflater.from(parent.context).inflate(layoutRes, parent, false)
@@ -503,9 +541,12 @@ open class SearchableRepositoryAdapter<T : RecyclerView.ViewHolder>(
   final override fun onBindViewHolder(holder: T, position: Int) {
     val item = getItem(position)
     holder.apply {
-      coroutineScope.launch(dispatcherProvider.mainImmediate()) {
-        viewHolderBinder.invoke(holder, item, dispatcherProvider)
-      }
+      if (holder is RebindableViewHolder) holder.bindJob?.cancel()
+      val job =
+        coroutineScope.launch(dispatcherProvider.mainImmediate()) {
+          viewHolderBinder.invoke(holder, item, dispatcherProvider)
+        }
+      if (holder is RebindableViewHolder) holder.bindJob = job
       selectionTracker?.let { itemView.isSelected = it.isSelected(item.stableId) }
       itemView.setOnClickListener {
         // Do not emit custom click events while the user is selecting items.

@@ -44,13 +44,10 @@ import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.nio.file.Paths
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import kotlin.io.path.nameWithoutExtension
 import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
 import logcat.asLog
@@ -70,6 +67,9 @@ class PasskeyAuthenticationActivity : BasePGPActivity() {
   @Inject lateinit var passwordEntryFactory: PasswordEntry.Factory
   private lateinit var passkeyPath: String
 
+  /** Store-relative file name of the passkey, i.e. its path without the `.gpg` extension. */
+  private fun passkeyHexId() = PasswordRepository.getLongName(passkeyPath).substringAfterLast('/')
+
   private fun getPasskeyPath(): String? {
     val credentialDataBundle =
       intent.getBundleExtra(UDCakeCredentialProviderService.CREDENTIAL_DATA_EXTRA)
@@ -88,7 +88,7 @@ class PasskeyAuthenticationActivity : BasePGPActivity() {
         }
 
     requireKeysExist {
-      requireDecryptionKeysExist(PasswordRepository.getParentPath(passkeyPath, repoPath)) { ids ->
+      requireDecryptionKeysExist(PasswordRepository.getParentPath(passkeyPath)) { ids ->
         getPersistentAndDecrypt(ids, action = "passkey")
       }
     }
@@ -99,8 +99,8 @@ class PasskeyAuthenticationActivity : BasePGPActivity() {
     identifiers: List<PGPIdentifier>,
     onSuccess: suspend (String) -> Unit,
   ) {
-    val encryptedFile = File(passkeyPath)
-    val message = withContext(dispatcherProvider.io()) { encryptedFile.readBytes().inputStream() }
+    val passkeyNode = PasswordRepository.nodeAt(passkeyPath)
+    val message = withContext(dispatcherProvider.io()) { passkeyNode.readBytes().inputStream() }
     val outputStream = ByteArrayOutputStream()
     val results = repository.decrypt(passphrases, identifiers, message, outputStream)
     val lastResult = results.last()
@@ -120,8 +120,8 @@ class PasskeyAuthenticationActivity : BasePGPActivity() {
         if (passkey == null) throw Exception(INVALID_PASSKEY_DATA)
 
         // sanity checks before we proceed (or abort)
-        val credentialHexIdFromFileName = Paths.get(passkeyPath).nameWithoutExtension
-        val rpIdFromParentName = encryptedFile?.getParentFile()?.getName()
+        val credentialHexIdFromFileName = passkeyHexId()
+        val rpIdFromParentName = passkeyNode.parent()?.name
         if (rpIdFromParentName != passkey.rp.id || credentialHexIdFromFileName != passkey.idHex()) {
           throw Exception(PASSKEY_DATA_MISMATCH)
         }
@@ -182,17 +182,17 @@ class PasskeyAuthenticationActivity : BasePGPActivity() {
           val dialogMessage =
             when (e.message) {
               INVALID_PASSKEY_DATA -> {
-                val credentialHexId = Paths.get(passkeyPath).nameWithoutExtension
+                val credentialHexId = passkeyHexId()
                 val shortenedHexId = credentialHexId.take(7)
                 val displayPath =
-                  PasswordRepository.getParentPath(passkeyPath, repoPath) + shortenedHexId + "…"
+                  PasswordRepository.getParentPath(passkeyPath) + shortenedHexId + "…"
                 getString(R.string.passkey_parse_error_message, displayPath)
               }
               PASSKEY_DATA_MISMATCH -> {
-                val credentialHexId = Paths.get(passkeyPath).nameWithoutExtension
+                val credentialHexId = passkeyHexId()
                 val shortenedHexId = credentialHexId.take(7)
                 val displayPath =
-                  PasswordRepository.getParentPath(passkeyPath, repoPath) + shortenedHexId + "…"
+                  PasswordRepository.getParentPath(passkeyPath) + shortenedHexId + "…"
                 getString(R.string.passkey_mismatch_error_message, displayPath)
               }
               PROVIDER_REQUEST_NULL -> getString(R.string.passkey_request_error_message)

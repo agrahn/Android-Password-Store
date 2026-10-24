@@ -46,7 +46,6 @@ import app.passwordstore.util.extensions.base64
 import app.passwordstore.util.extensions.commitChange
 import app.passwordstore.util.extensions.enableEdgeToEdgeView
 import app.passwordstore.util.extensions.getString
-import app.passwordstore.util.extensions.isInsideRepository
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.toByteArray
 import app.passwordstore.util.extensions.unsafeLazy
@@ -72,13 +71,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.nio.CharBuffer
-import java.nio.file.Paths
 import javax.inject.Inject
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.createDirectories
-import kotlin.io.path.exists
-import kotlin.io.path.pathString
-import kotlin.io.path.writeBytes
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
@@ -167,7 +160,7 @@ class PasswordCreationActivity : BasePGPActivity() {
     registerForActivityResult(StartActivityForResult()) { result ->
       if (result.resultCode == RESULT_OK) {
         result.data?.getStringExtra(SelectFolderActivity.SELECTED_FOLDER_PATH)?.let { fullPath ->
-          val relPath = PasswordRepository.getRelativePath(fullPath, repoPath)
+          val relPath = PasswordRepository.getRelativePath(fullPath)
           val path = if (relPath.isEmpty()) "/" else relPath
           binding.directory.setText(path)
         }
@@ -234,7 +227,7 @@ class PasswordCreationActivity : BasePGPActivity() {
       }
 
       directory.inputType = InputType.TYPE_NULL
-      val relPath = PasswordRepository.getRelativePath(fullPath, repoPath)
+      val relPath = PasswordRepository.getRelativePath(fullPath)
       directory.setText(if (relPath.isEmpty()) "/" else relPath)
 
       directory.setOnClickListener {
@@ -517,44 +510,51 @@ class PasswordCreationActivity : BasePGPActivity() {
       val gpgIdentifiers = getPGPIdentifiers(directory.text.toString())
       if (gpgIdentifiers.isNullOrEmpty()) return@with
 
-      val path = run { // password item's full file path string
+      val path = run { // password item's store-relative file path
         val editRelativePath = directory.text.toString().trim()
 
-        var destinationFolder = Paths.get(repoPath, editRelativePath.trim('/'))
+        var destinationFolder = PasswordRepository.getRelativePath(editRelativePath.trim('/'))
 
         if (autofilling) {
           destinationFolder =
             when (AutofillPreferences.directoryStructure(this@PasswordCreationActivity)) {
               DirectoryStructure.EncryptedUsername -> destinationFolder
               DirectoryStructure.FileBased -> {
-                Paths.get(destinationFolder.pathString, editName)
+                PasswordRepository.getRelativePath("$destinationFolder/$editName")
               }
               else -> {
-                Paths.get(
-                  destinationFolder.pathString,
-                  editName,
-                  editUsername.concatToString().trim(),
+                PasswordRepository.getRelativePath(
+                  "$destinationFolder/$editName/${editUsername.concatToString().trim()}"
                 )
               }
             }
         }
 
-        // ensure destination dir exists
-        destinationFolder.createDirectories()
-        if (!destinationFolder.exists()) { // should not happen
+        // ensure destination dir exists; a provider can only create one child at a time
+        var destinationNode = PasswordRepository.storeRoot
+        for (segment in destinationFolder.split('/')) {
+          if (segment.isEmpty()) continue
+          destinationNode =
+            destinationNode.findChild(segment) ?: destinationNode.createDirectory(segment)
+        }
+        if (!destinationNode.isDirectory) { // should not happen
           snackbar(message = "Failed to create directory ${editRelativePath.trimEnd('/')}")
           return
         }
 
-        if (editing) "${destinationFolder.pathString}/$editFilename.gpg"
-        else
-          when (AutofillPreferences.directoryStructure(this@PasswordCreationActivity)) {
-            DirectoryStructure.EncryptedUsername -> "${destinationFolder.pathString}/$editName.gpg"
-            DirectoryStructure.FileBased ->
-              "${destinationFolder.pathString}/${editUsername.concatToString().trim()}.gpg"
-            DirectoryStructure.DirectoryBased -> "${destinationFolder.pathString}/$editFilename.gpg"
-          }
+        val fileName =
+          if (editing) "$editFilename.gpg"
+          else
+            when (AutofillPreferences.directoryStructure(this@PasswordCreationActivity)) {
+              DirectoryStructure.EncryptedUsername -> "$editName.gpg"
+              DirectoryStructure.FileBased -> "${editUsername.concatToString().trim()}.gpg"
+              DirectoryStructure.DirectoryBased -> "$editFilename.gpg"
+            }
+        PasswordRepository.getRelativePath("$destinationFolder/$fileName")
       }
+
+      /* Store-relative path of the entry without the extension, i.e. how it is displayed */
+      val longName = if (fullPath.isEmpty()) editName else "${fullPath.trimEnd('/')}/$editName"
 
       lifecycleScope.launch(dispatcherProvider.main()) {
         runCatching {
@@ -598,7 +598,7 @@ class PasswordCreationActivity : BasePGPActivity() {
               .distinct()
               .filter { it !in succeededUserEmails ?: emptyList() }
 
-          val passwordFile = Paths.get(path)
+          val passwordNode = PasswordRepository.nodeAt(path)
           // If we're not editing, this file should not yet exist!
           // Additionally, if we were editing and the incoming and outgoing
           // file paths differ, it means we renamed. Ensure that the target
@@ -606,20 +606,27 @@ class PasswordCreationActivity : BasePGPActivity() {
           if (
             (!editing ||
               (editing &&
-                "${fullPath.trimEnd('/')}/$suggestedName.gpg" !=
-                  passwordFile.absolutePathString())) && passwordFile.exists()
+                PasswordRepository.getRelativePath("${fullPath.trimEnd('/')}/$suggestedName.gpg") !=
+                  path)) && passwordNode.exists()
           ) {
             snackbar(message = getString(R.string.password_creation_duplicate_error))
             return@runCatching
           }
 
-          if (!passwordFile.toFile().isInsideRepository()) {
+          // The backend clamps a path that climbs out of the store; tell the user instead of
+          // silently writing somewhere else.
+          if (path.split('/').any { it == ".." }) {
             snackbar(message = getString(R.string.message_error_destination_outside_repo))
             return@runCatching
           }
 
+          if (!confirmSaveIfNoGitCommit()) {
+            finish()
+            return@runCatching
+          }
+
           withContext(dispatcherProvider.io()) {
-            passwordFile.writeBytes(result.getOrThrow().toByteArray())
+            passwordNode.writeBytes(result.getOrThrow().toByteArray())
           }
 
           // create/update timestamp on the current password file
@@ -628,19 +635,13 @@ class PasswordCreationActivity : BasePGPActivity() {
               val oldFilePathHash = "${fullPath.trimEnd('/')}/$oldFile.gpg".base64()
               remove(oldFilePathHash)
             }
-            putString(
-              passwordFile.absolutePathString().base64(),
-              System.currentTimeMillis().toString(),
-            )
+            putString(path.base64(), System.currentTimeMillis().toString())
           }
 
           val returnIntent = Intent()
           returnIntent.putExtra(RETURN_EXTRA_CREATED_FILE, path)
           returnIntent.putExtra(RETURN_EXTRA_NAME, editName)
-          returnIntent.putExtra(
-            RETURN_EXTRA_LONG_NAME,
-            PasswordRepository.getLongName(fullPath, repoPath, editName),
-          )
+          returnIntent.putExtra(RETURN_EXTRA_LONG_NAME, longName)
 
           if (shouldGeneratePassword) {
             if (!editPass.isEmpty()) returnIntent.putExtra(RETURN_EXTRA_PASSWORD, editPass)
@@ -659,7 +660,7 @@ class PasswordCreationActivity : BasePGPActivity() {
             commitChange(
                 resources.getString(
                   commitMessageRes,
-                  PasswordRepository.getLongName(fullPath, repoPath, editName),
+                  longName,
                 )
               )
               .onOk {

@@ -36,9 +36,14 @@ fun File.contains(other: File): Boolean {
 /**
  * Checks if this [File] is in the password repository directory as given by
  * [PasswordRepository.getRepositoryDirectory]
+ *
+ * The check is a path *prefix* comparison on canonical paths. A substring comparison would wrongly
+ * accept sibling directories, e.g. `/data/store-backup` for a store at `/data/store`.
  */
 fun File.isInsideRepository(): Boolean {
-  return canonicalPath.contains(PasswordRepository.getRepositoryDirectory().canonicalPath)
+  val root = PasswordRepository.getRepositoryDirectory().canonicalPath
+  val path = canonicalPath
+  return path == root || path.startsWith("$root${File.separator}")
 }
 
 /** Recursively lists the files in this [File], skipping any directories it encounters. */

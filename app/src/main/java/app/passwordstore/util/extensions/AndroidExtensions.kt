@@ -82,7 +82,9 @@ fun Context.resolveAttribute(attr: Int): Int {
  * [GitOperation]
  */
 suspend fun FragmentActivity.commitChange(message: String): Result<Unit, Throwable> {
-  if (!PasswordRepository.isInitialized) {
+  // A store without a git repository — the folder store — must still be writable, it just cannot
+  // commit. Gating on isInitialized instead could not tell "no store" from "no git".
+  if (!PasswordRepository.isGitRepo()) {
     return Ok(Unit)
   }
   return object : GitOperation(this@commitChange) {

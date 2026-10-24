@@ -392,9 +392,14 @@
   <!-- Onboarding flow -->
   <string name="let_s_go">Let’s Go</string>
   <string name="select_n_repository_type">Select \nRepository Type</string>
-  <string name="select_repo_type_text">Select if you want to create a local repo or clone a remote repo.</string>
+  <string name="select_repo_type_text">Select if you want to create a local repo, clone a remote repo, or keep the store in a folder on this device.</string>
   <string name="clone_remote_repo">Clone Remote Repo</string>
   <string name="create_local_repo">Create Local Repo</string>
+  <string name="use_local_folder_store">Use Local Folder</string>
+  <string name="saf_store_invalid_folder_title">Cannot use this folder</string>
+  <string name="saf_store_invalid_folder_message">The selected folder could not be opened for reading and writing. Pick a different folder and try again.</string>
+  <string name="saf_no_commit_dialog_title">No Git commit will be created</string>
+  <string name="saf_no_commit_dialog_message">This folder is a Git repository, but the app cannot use Git for a folder store. Saving this password will not create a commit, so the change stays uncommitted until you sync from a computer. You can turn this warning off in the app settings.</string>
   <string name="select_gpg_key_title">Select\nPGP key(s)</string>
   <string name="select_gpg_key_message">Select one or multiple PGP keys that you want to initialise the store with.</string>
   <string name="gpg_key_select">Select key(s)</string>
@@ -410,6 +415,13 @@
   <string name="proxy_hostname">Proxy hostname</string>
   <string name="port">Port</string>
   <string name="pref_edit_proxy_settings">HTTP(S) proxy settings</string>
+  <string name="pref_external_folder_store_title">Use a folder on this device</string>
+  <string name="pref_external_folder_store_summary">The password store is in the app\'s private directory and uses Git.</string>
+  <string name="pref_external_folder_store_summary_on">The store lives in the folder below. Git is not available.</string>
+  <string name="pref_select_store_folder_title">Local store folder</string>
+  <string name="pref_folder_store_needs_folder">Select a local folder to use folder mode</string>
+  <string name="pref_saf_warn_no_commit_title">Warn before saving without a commit</string>
+  <string name="pref_saf_warn_no_commit_summary">Creating commits not supported. Ask before saving if local dir contains a Git repository.</string>
   <string name="invalid_proxy_url">Invalid URL</string>
   <string name="oreo_autofill_password_fill_and_conditional_save_support">Fill and save passwords (saving requires that no accessibility services are enabled)</string>
   <string name="clear_saved_host_key">Clear saved host key</string>

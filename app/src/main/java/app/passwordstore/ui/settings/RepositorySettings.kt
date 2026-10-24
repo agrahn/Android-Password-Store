@@ -11,11 +11,13 @@ import android.content.pm.ShortcutManager
 import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -25,8 +27,12 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
+import app.passwordstore.data.repo.store.GPG_ID
+import app.passwordstore.data.repo.store.StoreMode
+import app.passwordstore.data.repo.store.writeGpgId
 import app.passwordstore.ui.git.config.GitConfigActivity
 import app.passwordstore.ui.git.config.GitServerConfigActivity
+import app.passwordstore.ui.pgp.PGPKeyListActivity
 import app.passwordstore.ui.proxy.ProxySelectorActivity
 import app.passwordstore.ui.sshkeygen.PgpAuthKeySelectionActivity
 import app.passwordstore.ui.sshkeygen.ShowSshKeyFragment
@@ -42,6 +48,7 @@ import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.git.sshj.SshKey
+import app.passwordstore.util.services.copyDirToDir
 import app.passwordstore.util.settings.GitSettings
 import app.passwordstore.util.settings.PreferenceKeys
 import com.github.michaelbull.result.fold
@@ -58,6 +65,7 @@ import de.Maxr1998.modernpreferences.helpers.onClick
 import de.Maxr1998.modernpreferences.helpers.pref
 import de.Maxr1998.modernpreferences.helpers.subScreen
 import de.Maxr1998.modernpreferences.helpers.switch
+import de.Maxr1998.modernpreferences.preferences.SwitchPreference
 import java.io.IOException
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
@@ -67,7 +75,9 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
 
@@ -183,6 +193,159 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
       }
     }
 
+  private val storeFolderAction =
+    activity.registerForActivityResult(
+      object : ActivityResultContracts.OpenDocumentTree() {
+        override fun createIntent(context: Context, input: Uri?): Intent {
+          return super.createIntent(context, input).apply {
+            flags =
+              Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+          }
+        }
+      }
+    ) { uri: Uri? ->
+      val pending = folderModePending
+      folderModePending = false
+      if (uri == null) return@registerForActivityResult
+      runCatching {
+        activity.contentResolver.takePersistableUriPermission(
+          uri,
+          Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+        )
+      }
+      activity.sharedPrefs.edit { putString(PreferenceKeys.STORE_URI, uri.toString()) }
+      if (pending) {
+        // The switch asked for this folder, so it turns itself on instead of waiting for a second
+        // tap.
+        storeModePref?.checked = true
+        setFolderMode(true, uri)
+      } else {
+        // Picking a folder from the row does not switch the store; the switch is for that.
+        PasswordRepository.resetBackend()
+        PasswordRepository.initialize()
+        storeFolderPref?.updateStoreFolderPref()
+        requestStoreKeyIfMissing()
+      }
+    }
+
+  private val storeKeyAction =
+    activity.registerForActivityResult(StartActivityForResult()) { result ->
+      if (result.resultCode != AppCompatActivity.RESULT_OK) {
+        activity.snackbar(message = activity.getString(R.string.gpg_key_select_mandatory))
+        return@registerForActivityResult
+      }
+      val keyId =
+        result.data?.getStringExtra(PGPKeyListActivity.EXTRA_SELECTED_KEY)
+          ?: return@registerForActivityResult
+      activity.lifecycleScope.launch {
+        // A folder store is never git-backed, so the new `.gpg-id` has nothing to be committed to.
+        PasswordRepository.storeRoot.writeGpgId(keyId)
+        activity.sharedPrefs.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
+      }
+    }
+
+  private var storeModePref: SwitchPreference? = null
+
+  /** True while the picker is open because the store mode switch asked for a folder. */
+  private var folderModePending = false
+
+  private var storeFolderPref: Preference? = null
+
+  /** The folder the user picked, whether or not the store currently uses it. */
+  private fun pickedFolderUri(): Uri? =
+    activity.sharedPrefs.getString(PreferenceKeys.STORE_URI, null)?.toUri()
+
+  private fun Preference.updateStoreFolderPref() {
+    titleRes = R.string.pref_select_store_folder_title
+    summary =
+      pickedFolderUri()?.let { uri ->
+        DocumentFile.fromTreeUri(activity.applicationContext, uri)?.name
+      }
+    requestRebind()
+  }
+
+  /**
+   * Folder mode needs a key before the store can hold anything. Onboarding asks for it right after
+   * the folder is picked, so settings does the same instead of leaving an empty store behind.
+   */
+  private fun requestStoreKeyIfMissing() {
+    if (!PasswordRepository.isSafStore) return
+    if (PasswordRepository.storeRoot.findChild(GPG_ID) != null) return
+    storeKeyAction.launch(PGPKeyListActivity.newIntent(activity, keySelection = true))
+  }
+
+  /**
+   * Settings that only mean something for the git-backed app-private store.
+   *
+   * A folder store is never git-backed, so these rows stay visible but are disabled there instead
+   * of disappearing, which keeps the two store modes distinguishable at a glance.
+   */
+  private fun Preference.gitOnly() {
+    enabled = !PasswordRepository.isSafStore
+    gitOnlyPrefs += this
+  }
+
+  /** Settings that only mean something for a folder store. */
+  private fun Preference.folderOnly() {
+    enabled = PasswordRepository.isSafStore
+    folderOnlyPrefs += this
+  }
+
+  private fun applyStoreMode() {
+    gitOnlyPrefs.forEach {
+      it.enabled = !PasswordRepository.isSafStore
+      it.requestRebind()
+    }
+    folderOnlyPrefs.forEach {
+      it.enabled = PasswordRepository.isSafStore
+      it.requestRebind()
+    }
+  }
+
+  /**
+   * Writes the store mode, hands the picked folder back when turning off, then re-applies the rows.
+   *
+   * Both the mode switch and the folder picker land here, so a folder chosen while the switch waits
+   * for one cannot end up in a different state than the same folder chosen from the row.
+   */
+  private fun setFolderMode(turningOn: Boolean, folder: Uri?) {
+    // Writing the folder mode without a folder would leave the switch claiming a store the app
+    // cannot open, because the backend falls back to the app-private one.
+    if (turningOn && folder == null) return
+    activity.sharedPrefs.edit {
+      putString(
+        PreferenceKeys.STORE_MODE,
+        if (turningOn) StoreMode.SAF.name else StoreMode.INTERNAL.name,
+      )
+      if (turningOn) putString(PreferenceKeys.STORE_URI, folder.toString())
+      else remove(PreferenceKeys.STORE_URI)
+    }
+    if (!turningOn) {
+      // Turning the switch off gives the picked folder up for good, so hand the grant back.
+      folder?.let { uri ->
+        runCatching {
+          activity.contentResolver.releasePersistableUriPermission(
+            uri,
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+          )
+        }
+          .onErr { e -> logcat(ERROR) { "Could not release the store folder grant: ${e.asLog()}" } }
+      }
+    }
+    PasswordRepository.resetBackend()
+    PasswordRepository.initialize()
+    applyStoreMode()
+    storeFolderPref?.updateStoreFolderPref()
+    // Turning the mode off cannot leave an unfinished store behind, so only switching it on asks.
+    if (turningOn) requestStoreKeyIfMissing()
+  }
+
+  private val gitOnlyPrefs = mutableListOf<Preference>()
+  private val folderOnlyPrefs = mutableListOf<Preference>()
+
   private fun Preference.updateProxyPref() {
     titleRes = R.string.pref_edit_proxy_settings
     visible =
@@ -231,8 +394,51 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
 
   override fun provideSettings(builder: PreferenceScreen.Builder) {
     builder.apply {
+      storeModePref =
+        switch(PreferenceKeys.STORE_MODE_EXTERNAL) {
+          // STORE_MODE is the single source of truth, so this switch owns no persisted state.
+          persistent = false
+          titleRes = R.string.pref_external_folder_store_title
+          summaryRes = R.string.pref_external_folder_store_summary
+          summaryOnRes = R.string.pref_external_folder_store_summary_on
+          // setChecked() throws before the row is attached; defaultValue is read at attach time.
+          defaultValue = PasswordRepository.isSafStore
+          onClick {
+            // The library has already toggled and committed when this runs, so revert by hand.
+            val turningOn = checked
+            val folder = pickedFolderUri()
+            if (turningOn && folder == null) {
+              checked = false
+              requestRebind()
+              activity.snackbar(
+                message = activity.getString(R.string.pref_folder_store_needs_folder)
+              )
+              folderModePending = true
+              storeFolderAction.launch(null)
+            } else {
+              setFolderMode(turningOn, folder)
+            }
+            false
+          }
+        }
+      storeFolderPref =
+        pref(PreferenceKeys.SAF_STORE_FOLDER) {
+          folderOnly()
+          onClick {
+            storeFolderAction.launch(null)
+            true
+          }
+          updateStoreFolderPref()
+        }
+      switch(PreferenceKeys.SAF_WARN_NO_COMMIT) {
+        titleRes = R.string.pref_saf_warn_no_commit_title
+        summaryRes = R.string.pref_saf_warn_no_commit_summary
+        defaultValue = true
+        folderOnly()
+      }
       pref(PreferenceKeys.GIT_SERVER_INFO) {
         titleRes = R.string.title_activity_git_remote
+        gitOnly()
         onClick {
           configureGitServer.launch(Intent(activity, GitServerConfigActivity::class.java))
           true
@@ -244,6 +450,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
 
         pref(PreferenceKeys.SSH_USE_PGP_KEY) {
           titleRes = R.string.pref_ssh_use_pgp_key_title
+          gitOnly()
           onClick {
             sshKeyAction.launch(Intent(activity, PgpAuthKeySelectionActivity::class.java))
             true
@@ -251,6 +458,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
         }
         pref(PreferenceKeys.SSH_KEYGEN) {
           titleRes = R.string.pref_ssh_keygen_title
+          gitOnly()
           onClick {
             sshKeyAction.launch(Intent(activity, SshKeyGenActivity::class.java))
             true
@@ -258,6 +466,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
         }
         pref(PreferenceKeys.SSH_KEY) {
           titleRes = R.string.pref_import_ssh_key_title
+          gitOnly()
           onClick {
             sshKeyAction.launch(Intent(activity, SshKeyImportActivity::class.java))
             true
@@ -266,6 +475,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
         showSshKeyPref =
           pref(PreferenceKeys.SSH_SEE_KEY) {
             titleRes = R.string.pref_ssh_see_key_title
+            gitOnly()
             onClick {
               ShowSshKeyFragment().show(activity.supportFragmentManager, "public_key")
               true
@@ -273,50 +483,26 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
             updateShowSshKeyPref()
           }
       }
-      clearSavedPassPref =
-        pref(PreferenceKeys.CLEAR_SAVED_PASS) {
-          onClick {
-            activity.gitSecrets.edit {
-              remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE)
-              remove(PreferenceKeys.HTTPS_PASSWORD)
-            }
-            updateClearSavedPassPref()
-            true
-          }
-          updateClearSavedPassPref()
-        }
-      proxySettingsPref =
-        pref(PreferenceKeys.PROXY_SETTINGS) {
-          onClick {
-            activity.launchActivity(ProxySelectorActivity::class.java)
-            true
-          }
-          updateProxyPref()
-        }
+        .gitOnly()
       pref(PreferenceKeys.GIT_CONFIG) {
         titleRes = R.string.pref_edit_git_config
+        gitOnly()
         onClick {
           activity.launchActivity(GitConfigActivity::class.java)
           true
         }
       }
       switch(PreferenceKeys.REBASE_ON_PULL) {
+        gitOnly()
         titleRes = R.string.pref_rebase_on_pull_title
         summaryRes = R.string.pref_rebase_on_pull_summary
         summaryOnRes = R.string.pref_rebase_on_pull_summary_on
         defaultValue = true
       }
-      pref(PreferenceKeys.EXPORT_PASSWORDS) {
-        titleRes = R.string.prefs_export_passwords_title
-        summaryRes = R.string.prefs_export_passwords_summary
-        onClick {
-          storeExportAction.launch(null)
-          true
-        }
-      }
       pref(PreferenceKeys.IMPORT_PASSWORDS) {
         titleRes = R.string.prefs_import_passwords_title
         summaryRes = R.string.prefs_import_passwords_summary
+        gitOnly()
         onClick {
           if (PasswordRepository.isEmpty()) {
             storeImportAction.launch(null)
@@ -331,9 +517,40 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
           }
         }
       }
+      clearSavedPassPref =
+        pref(PreferenceKeys.CLEAR_SAVED_PASS) {
+          gitOnly()
+          onClick {
+            activity.gitSecrets.edit {
+              remove(PreferenceKeys.SSH_KEY_LOCAL_PASSPHRASE)
+              remove(PreferenceKeys.HTTPS_PASSWORD)
+            }
+            updateClearSavedPassPref()
+            true
+          }
+          updateClearSavedPassPref()
+        }
+      proxySettingsPref =
+        pref(PreferenceKeys.PROXY_SETTINGS) {
+          gitOnly()
+          onClick {
+            activity.launchActivity(ProxySelectorActivity::class.java)
+            true
+          }
+          updateProxyPref()
+        }
+      pref(PreferenceKeys.EXPORT_PASSWORDS) {
+        titleRes = R.string.prefs_export_passwords_title
+        summaryRes = R.string.prefs_export_passwords_summary
+        onClick {
+          storeExportAction.launch(null)
+          true
+        }
+      }
       pref(PreferenceKeys.GIT_DELETE_REPO) {
         titleRes = R.string.pref_git_delete_repo_title
         summaryRes = R.string.pref_git_delete_repo_summary
+        gitOnly()
         onClick {
           val repoDir = PasswordRepository.getRepositoryDirectory()
           MaterialAlertDialogBuilder(activity)
@@ -353,7 +570,9 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
               activity.getSystemService<ShortcutManager>()?.apply {
                 removeDynamicShortcuts(dynamicShortcuts.map { it.id }.toMutableList())
               }
-              activity.sharedPrefs.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, false) }
+              activity.sharedPrefs.edit {
+                putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, false)
+              }
               activity.passwordHistory.edit { clear() }
               activity.credentialUsernames.edit { clear() }
               dialogInterface.cancel()
@@ -400,13 +619,21 @@ class ExportPasswordsWorker(context: Context, params: WorkerParameters) :
           "Failed to create target directory ${targetDirectory?.uri?.path}/password_store_$dateString"
         )
 
-    val repositoryDirectory = PasswordRepository.getRepositoryDirectory()
-    val internalRepository = DocumentFile.fromFile(repositoryDirectory)
+    val sourceDirectory =
+      if (PasswordRepository.isSafStore) {
+        val storeUri =
+          PasswordRepository.storeUri
+            ?: throw IllegalArgumentException("No folder store is configured for export")
+        DocumentFile.fromTreeUri(applicationContext, storeUri)
+          ?: throw IllegalArgumentException("The folder store could not be opened for export")
+      } else {
+        DocumentFile.fromFile(PasswordRepository.getRepositoryDirectory())
+      }
 
     withContext(hiltEntryPoint.dispatcherProvider().io()) {
-      logcat { "Exporting ${repositoryDirectory.path} to ${passDir.uri.path}" }
-      copyDirToDir(applicationContext, internalRepository, passDir)
-      logcat { "Done with exporting ${repositoryDirectory.path} to ${passDir.uri.path}" }
+      logcat { "Exporting the store to ${passDir.uri.path}" }
+      copyDirToDir(applicationContext, sourceDirectory, passDir)
+      logcat { "Done with exporting the store to ${passDir.uri.path}" }
     }
     Result.success()
   }
@@ -479,54 +706,6 @@ class ImportPasswordsWorker(context: Context, params: WorkerParameters) :
   @InstallIn(SingletonComponent::class)
   interface ImportPasswordsWorkerEntryPoint {
     fun dispatcherProvider(): DispatcherProvider
-  }
-}
-
-/**
- * Recursively copies a directory to a destination.
- *
- * @param sourceDirectory directory to copy from.
- * @param targetDirectory directory to copy to.
- */
-private fun copyDirToDir(
-  context: Context,
-  sourceDirectory: DocumentFile,
-  targetDirectory: DocumentFile,
-) {
-  sourceDirectory.listFiles().forEach { file ->
-    if (file.isDirectory()) {
-      // Create new directory and recurse
-      val newDir = targetDirectory.createDirectory(file.name ?: throw NullPointerException())
-      copyDirToDir(context, file, newDir ?: throw NullPointerException())
-    } else {
-      copyFileToDir(context, file, targetDirectory)
-    }
-  }
-}
-
-/**
- * Copies a password file to a given directory.
- *
- * Note: this does not preserve last modified time.
- *
- * @param passwordFile password file to copy.
- * @param targetDirectory target directory to copy password.
- */
-private fun copyFileToDir(
-  context: Context,
-  passwordFile: DocumentFile,
-  targetDirectory: DocumentFile,
-) {
-  val sourceInputStream = context.contentResolver.openInputStream(passwordFile.uri)
-  val name = passwordFile.name
-  val targetPasswordFile =
-    targetDirectory.createFile("application/octet-stream", name ?: throw NullPointerException())
-  if (targetPasswordFile?.exists() == true) {
-    val destOutputStream = context.contentResolver.openOutputStream(targetPasswordFile.uri)
-
-    if (destOutputStream != null && sourceInputStream != null) {
-      sourceInputStream.use { source -> destOutputStream.use { dest -> source.copyTo(dest) } }
-    }
   }
 }
 
