@@ -19,7 +19,6 @@ import android.view.View
 import android.view.WindowInsetsController
 import androidx.appcompat.app.AppCompatDelegate
 import app.passwordstore.data.repo.PasswordRepository
-import app.passwordstore.injection.context.FilesDirPath
 import app.passwordstore.injection.prefs.PGPPassphrases
 import app.passwordstore.injection.prefs.SettingsPreferences
 import app.passwordstore.ui.crypto.BasePGPActivity.Companion.cachedPassphrases
@@ -47,7 +46,6 @@ import logcat.logcat
 class Application : android.app.Application(), SharedPreferences.OnSharedPreferenceChangeListener {
 
   @Inject @SettingsPreferences lateinit var prefs: SharedPreferences
-  @Inject @FilesDirPath lateinit var filesDirPath: String
   @Inject @PGPPassphrases lateinit var persistentPassphrases: SharedPreferences
   @Inject lateinit var dispatcherProvider: DispatcherProvider
   @Inject lateinit var gitSettings: GitSettings
@@ -75,7 +73,7 @@ class Application : android.app.Application(), SharedPreferences.OnSharedPrefere
 
     prefs.registerOnSharedPreferenceChangeListener(this)
     setNightMode()
-    runMigrations(filesDirPath, prefs, gitSettings, persistentPassphrases)
+    runMigrations(prefs, gitSettings, persistentPassphrases)
     proxyUtils.setDefaultProxy()
     DynamicColors.applyToActivitiesIfAvailable(this)
     setupScreenOffHandler()

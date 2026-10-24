@@ -28,7 +28,6 @@ import logcat.logcat
 private const val TAG = "Migrations"
 
 fun runMigrations(
-  filesDirPath: String,
   sharedPrefs: SharedPreferences,
   gitSettings: GitSettings,
   persistentPassphrases: SharedPreferences,

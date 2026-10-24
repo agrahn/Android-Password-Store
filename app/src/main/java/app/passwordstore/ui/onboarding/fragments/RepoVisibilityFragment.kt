@@ -64,11 +64,15 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
       else repoVisibilityText.setText(R.string.select_repo_visibility_create_text)
 
       internalRepo.setOnCheckedChangeListener { _, isChecked ->
-        if (isChecked) repoSharedParent.visibility = View.INVISIBLE
+        if (isChecked) {
+          settings.edit { putBoolean(PreferenceKeys.PREF_SHARED_REPO, false) }
+          repoSharedParent.visibility = View.INVISIBLE
+        }
       }
 
       sharedRepo.setOnCheckedChangeListener { _, isChecked ->
         if (isChecked) {
+          settings.edit { putBoolean(PreferenceKeys.PREF_SHARED_REPO, true) }
           repoSharedParent.text = getString(R.string.shared_repo_path, android.os.Build.MODEL)
           repoSharedParent.visibility = View.VISIBLE
         }
@@ -90,7 +94,7 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
   private fun createRepository() {
     val localDir = PasswordRepository.getRepositoryDirectory()
     runCatching {
-      check(localDir.exists() || localDir.mkdir()) { "Failed to create directory!" }
+      check(localDir.exists() || localDir.mkdirs()) { "Failed to create directory!" }
       PasswordRepository.createRepository(localDir)
       if (!PasswordRepository.isInitialized) {
         PasswordRepository.initialize()

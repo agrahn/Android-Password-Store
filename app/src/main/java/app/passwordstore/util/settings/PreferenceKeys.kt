@@ -30,7 +30,7 @@ object PreferenceKeys {
   const val GIT_CONFIG_AUTHOR_NAME = "git_config_user_name"
   const val GIT_SHOW_SSH_SERVER_RESPONSE = "git_show_ssh_server_response"
 
-  const val GIT_EXTERNAL = "git_external"
+  const val PREF_SHARED_REPO = "pref_shared_repo"
 
   const val GIT_REMOTE_AUTH = "git_remote_auth"
   const val GIT_REMOTE_KEY_TYPE = "git_remote_key_type"

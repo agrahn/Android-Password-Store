@@ -39,13 +39,7 @@ object PasswordRepository {
   var repository: Repository? = null
   private val settings by unsafeLazy { Application.instance.sharedPrefs }
   private val filesDir
-    // get() = Application.instance.filesDir
-    get() =
-      File(
-          Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),
-          "PasswordStore",
-        )
-        .also { if (!it.exists()) it.mkdirs() }
+    get() = Application.instance.filesDir
 
   val isInitialized: Boolean
     get() = repository != null
@@ -123,9 +117,16 @@ object PasswordRepository {
     repository = null
   }
 
-  fun getRepositoryDirectory(): File {
-    return File(filesDir.toString(), "/store")
-  }
+  fun getRepositoryDirectory(): File =
+    if (settings.getBoolean(PreferenceKeys.PREF_SHARED_REPO, false))
+      File(
+        File(
+          Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),
+          "PasswordStore",
+        ),
+        "store",
+      )
+    else File(filesDir, "store")
 
   /* referencePath: /a/b/c
    * /a/b/c/d/e/dir -> /d/e/dir
