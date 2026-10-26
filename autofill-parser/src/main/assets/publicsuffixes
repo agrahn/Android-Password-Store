@@ -1,4 +1,4 @@
-147805
+147803
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -311,6 +311,7 @@
 *.yokohama.jp
 *.zerops.app
 *.zerops.zone
+*.ztna-dingtalk.com
 0.bg
 0am.jp
 0g0.jp
@@ -604,7 +605,6 @@ aland.fi
 alessandria.it
 alesund.no
 algard.no
-aliases121.com
 alibaba
 alibabacloudcs.com
 alipay
@@ -7050,7 +7050,6 @@ ownprovider.com
 ox.rs
 oxa.cloud
 oy.lc
-oya.to
 oyabe.toyama.jp
 oyama.tochigi.jp
 oyamazaki.kyoto.jp
