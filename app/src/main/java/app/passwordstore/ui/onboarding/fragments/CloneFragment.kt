@@ -7,83 +7,31 @@ package app.passwordstore.ui.onboarding.fragments
 
 import android.os.Bundle
 import android.view.View
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.edit
 import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import app.passwordstore.R
-import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.FragmentCloneBinding
-import app.passwordstore.ui.git.config.GitServerConfigActivity
-import app.passwordstore.util.extensions.finish
 import app.passwordstore.util.extensions.performTransactionWithBackStack
-import app.passwordstore.util.extensions.sharedPrefs
-import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.extensions.windowInsetsLambda
-import app.passwordstore.util.settings.PreferenceKeys
-import com.github.michaelbull.result.onErr
-import com.github.michaelbull.result.runCatching
-import java.io.File
-import logcat.LogPriority.ERROR
-import logcat.asLog
-import logcat.logcat
 
 class CloneFragment : Fragment(R.layout.fragment_clone) {
 
   private val binding by viewBinding(FragmentCloneBinding::bind)
 
-  private val settings by unsafeLazy { requireActivity().applicationContext.sharedPrefs }
-
-  private val cloneAction =
-    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-      if (result.resultCode == AppCompatActivity.RESULT_OK) {
-        if (File(PasswordRepository.getRepositoryDirectory(), ".gpg-id").isFile()) {
-          settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
-          finish()
-        } else {
-          // non-pass repository --> go to key selection
-          runCatching {
-            parentFragmentManager.performTransactionWithBackStack(
-              KeySelectionFragment.newInstance()
-            )
-          }
-            .onErr { e -> logcat(ERROR) { e.asLog() } }
-        }
-      }
-    }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     ViewCompat.setOnApplyWindowInsetsListener(view, windowInsetsLambda)
 
-    binding.cloneRemote.setOnClickListener { cloneToHiddenDir() }
-    binding.createLocal.setOnClickListener { createRepository() }
-  }
-
-  /** Clones a remote Git repository to the app's private directory */
-  private fun cloneToHiddenDir() {
-    cloneAction.launch(GitServerConfigActivity.createCloneIntent(requireContext()))
-  }
-
-  private fun createRepository() {
-    val localDir = PasswordRepository.getRepositoryDirectory()
-    runCatching {
-      check(localDir.exists() || localDir.mkdir()) { "Failed to create directory!" }
-      PasswordRepository.createRepository(localDir)
-      if (!PasswordRepository.isInitialized) {
-        PasswordRepository.initialize()
-      }
-      parentFragmentManager.performTransactionWithBackStack(KeySelectionFragment.newInstance())
+    binding.cloneRemote.setOnClickListener {
+      parentFragmentManager.performTransactionWithBackStack(RepoVisibilityFragment.newInstance())
     }
-      .onErr { e ->
-        logcat(ERROR) { e.asLog() }
-        if (!localDir.delete()) {
-          logcat { "Failed to delete local repository: $localDir" }
-        }
-        finish()
-      }
+
+    binding.createLocal.setOnClickListener {
+      parentFragmentManager.performTransactionWithBackStack(
+        RepoVisibilityFragment.newInstance(shouldClone = false)
+      )
+    }
   }
 
   companion object {
