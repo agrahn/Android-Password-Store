@@ -64,11 +64,10 @@ constructor(
     }
 
   var url
-    get() = settings.getString(PreferenceKeys.GIT_REMOTE_URL)
+    get() = PasswordRepository.getRemoteURI() ?: settings.getString(PreferenceKeys.GIT_REMOTE_URL)
     private set(value) {
       requireNotNull(value) { "Cannot set a null URL" }
       if (value == url) return
-      settings.edit { putString(PreferenceKeys.GIT_REMOTE_URL, value) }
       if (PasswordRepository.isInitialized) PasswordRepository.addRemote("origin", value, true)
       // When the server changes, remote password, multiplexing support and host key file
       // should be deleted/reset.

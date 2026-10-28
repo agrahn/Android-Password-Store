@@ -11,6 +11,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.MenuItem
 import android.view.View
+import androidx.core.content.edit
 import androidx.core.os.postDelayed
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
@@ -21,10 +22,12 @@ import app.passwordstore.databinding.ActivityGitCloneBinding
 import app.passwordstore.ui.dialogs.BasicBottomSheet
 import app.passwordstore.ui.git.base.BaseGitActivity
 import app.passwordstore.util.extensions.enableEdgeToEdgeView
+import app.passwordstore.util.extensions.sharedPrefs
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.settings.AuthMode
 import app.passwordstore.util.settings.GitSettings
+import app.passwordstore.util.settings.PreferenceKeys
 import app.passwordstore.util.settings.Protocol
 import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.onErr
@@ -47,6 +50,8 @@ class GitServerConfigActivity : BaseGitActivity() {
 
   private lateinit var oldAuthMode: AuthMode
   private lateinit var newAuthMode: AuthMode
+
+  private val settings by lazy { sharedPrefs }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -81,10 +86,15 @@ class GitServerConfigActivity : BaseGitActivity() {
     }
 
     binding.serverUrl.setText(
-      gitSettings.url.also {
-        if (it.isNullOrEmpty()) return@also
-        setAuthModes(it.startsWith("http://") || it.startsWith("https://"))
-      }
+      (if (isClone) settings.getString(PreferenceKeys.GIT_REMOTE_URL, null)
+        else {
+          PasswordRepository.initialize()
+          PasswordRepository.getRemoteURI()
+        })
+        .also {
+          if (it.isNullOrEmpty()) return@also
+          setAuthModes(it.startsWith("http://") || it.startsWith("https://"))
+        }
     )
 
     binding.serverUrl.doOnTextChanged { text, _, _, _ ->
@@ -171,7 +181,7 @@ class GitServerConfigActivity : BaseGitActivity() {
               .show()
             Handler(Looper.getMainLooper()).postDelayed(500) { finish() }
           } else {
-            cloneRepository()
+            cloneRepository(newUrl)
           }
         }
         is GitSettings.UpdateConnectionSettingsResult.AuthModeMismatch -> {
@@ -215,7 +225,7 @@ class GitServerConfigActivity : BaseGitActivity() {
     }
 
   /** Clones the repository, the directory exists, deletes it */
-  private fun cloneRepository() {
+  private fun cloneRepository(newUrl: String) {
     val localDir =
       requireNotNull(PasswordRepository.getRepositoryDirectory()) {
         "Repository directory must be set before cloning"
@@ -244,13 +254,18 @@ class GitServerConfigActivity : BaseGitActivity() {
                 localDir.mkdirs()
               }
               snackbar.dismiss()
+
+              settings.edit { putString(PreferenceKeys.GIT_REMOTE_URL, newUrl) }
               launchGitOperation(GitOp.CLONE)
                 .fold(
                   success = {
                     setResult(RESULT_OK)
                     finish()
                   },
-                  failure = { err -> promptOnErrorHandler(err) { finish() } },
+                  failure = { err ->
+                    settings.edit { remove(PreferenceKeys.GIT_REMOTE_URL) }
+                    promptOnErrorHandler(err) { finish() }
+                  },
                 )
             }
           }
@@ -274,13 +289,17 @@ class GitServerConfigActivity : BaseGitActivity() {
           MaterialAlertDialogBuilder(this).setMessage(e.message).show()
         }
       lifecycleScope.launch {
+        settings.edit { putString(PreferenceKeys.GIT_REMOTE_URL, newUrl) }
         launchGitOperation(GitOp.CLONE)
           .fold(
             success = {
               setResult(RESULT_OK)
               finish()
             },
-            failure = { promptOnErrorHandler(it) },
+            failure = {
+              settings.edit { remove(PreferenceKeys.GIT_REMOTE_URL) }
+              promptOnErrorHandler(it)
+            },
           )
       }
     }

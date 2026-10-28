@@ -218,13 +218,6 @@ private fun migrateToGitUrlBasedConfig(sharedPrefs: SharedPreferences, gitSettin
       }
     }
 
-  sharedPrefs.edit {
-    remove(PreferenceKeys.GIT_REMOTE_LOCATION)
-    remove(PreferenceKeys.GIT_REMOTE_PORT)
-    remove(PreferenceKeys.GIT_REMOTE_SERVER)
-    remove(PreferenceKeys.GIT_REMOTE_USERNAME)
-    remove(PreferenceKeys.GIT_REMOTE_PROTOCOL)
-  }
   if (
     url == null ||
       gitSettings.updateConnectionSettingsIfValid(
@@ -232,9 +225,17 @@ private fun migrateToGitUrlBasedConfig(sharedPrefs: SharedPreferences, gitSettin
         newAuthMode = gitSettings.authMode,
         newUrl = url,
       ) != GitSettings.UpdateConnectionSettingsResult.Valid
-  ) {
+  )
     logcat(TAG, ERROR) { "Failed to migrate to URL-based Git config, generated URL is invalid." }
-  }
+  else
+    sharedPrefs.edit {
+      remove(PreferenceKeys.GIT_REMOTE_LOCATION)
+      remove(PreferenceKeys.GIT_REMOTE_PORT)
+      remove(PreferenceKeys.GIT_REMOTE_SERVER)
+      remove(PreferenceKeys.GIT_REMOTE_USERNAME)
+      remove(PreferenceKeys.GIT_REMOTE_PROTOCOL)
+      putString(PreferenceKeys.GIT_REMOTE_URL, url)
+    }
 }
 
 private fun migrateToHideAll(sharedPrefs: SharedPreferences) {
