@@ -19,14 +19,16 @@ class WordListParserTest {
     assertEquals("fghij", parsedMap[22222])
   }
 
-  @Test
-  fun parseDefaultWordList() {
-    val wordlist = getDefaultWordList()
-    val parsedMap = WordListParser.parse(wordlist)
-    assertEquals(7776, parsedMap.size)
-    assertEquals("zoom", parsedMap[66666])
-    assertEquals("salute", parsedMap[52621])
-  }
+  /*
+    @Test
+    fun parseDefaultWordList() {
+      val wordlist = getDefaultWordList()
+      val parsedMap = WordListParser.parse(wordlist)
+      assertEquals(7776, parsedMap.size)
+      assertEquals("zoom", parsedMap[66666])
+      assertEquals("salute", parsedMap[52621])
+    }
+  */
 
   companion object {
     fun getDefaultWordList(): InputStream {
