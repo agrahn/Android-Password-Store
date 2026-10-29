@@ -288,10 +288,13 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
           }
           R.id.menu_pin_password -> {
             val passwordItem = recyclerAdapter.getSelectedItems()[0]
-            shortcutHandler.addPinnedShortcut(
-              passwordItem,
-              passwordItem.createAuthEnabledIntent(requireContext()),
-            )
+            lifecycleScope.launch {
+              shortcutHandler.addPinnedShortcut(
+                passwordItem,
+                passwordItem.createAuthEnabledIntent(requireContext()),
+              )
+            }
+            mode.finish()
             false
           }
           else -> false
@@ -387,7 +390,9 @@ class PasswordFragment : Fragment(R.layout.password_recycler_view) {
               if (requireArguments().getBoolean("matchWith", false)) {
                 requireStore().matchPasswordWithApp(item)
               } else if (item.type == PasswordItem.TYPE_PASSWORD) {
-                requireStore().decryptPassword(item)
+                lifecycleScope.launch {
+                  requireStore().decryptPassword(item)
+                }
               } else if (item.type == PasswordItem.TYPE_GPG_ID) {
                 showGpgIds(item.file)
               }
