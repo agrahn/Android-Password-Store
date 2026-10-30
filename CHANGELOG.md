@@ -6,7 +6,8 @@ All notable changes to this project will be documented in this file
 
 ### Added
 
-- **External repository** option restored: Repositories can now be cloned to or created in an external, shared folder under Device › Documents › PasswordStore
+- **External repository** option restored: Repositories can now be cloned to or created in an external, shared folder under Device › PasswordStore. However, "All files access" permission must be granted via Settings -> Apps -> Special app access. It is needed to see and edit externally added (via syncthing, for example) pass files. External storage will be located in the Device > PasswordStore folder
+
 
 ### Fixed
 

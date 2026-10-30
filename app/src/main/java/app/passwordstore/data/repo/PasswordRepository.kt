@@ -112,6 +112,15 @@ object PasswordRepository {
     }
   }
 
+  /** Retrieves the first URI associated with the current branch's remote */
+  fun getRemoteURI(): String? {
+    val currentBranch = getCurrentBranch() ?: return null
+    val storedConfig = repository?.config ?: return null
+    val remoteName = storedConfig.getString("branch", currentBranch, "remote") ?: "origin"
+
+    return RemoteConfig(storedConfig, remoteName).getURIs().firstOrNull()?.toString()
+  }
+
   fun closeRepository() {
     repository?.close()
     repository = null
@@ -130,13 +139,7 @@ object PasswordRepository {
 
   fun getRepositoryDirectory(): File =
     if (settings.getBoolean(PreferenceKeys.PREF_SHARED_REPO, false))
-      File(
-        File(
-          Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),
-          "PasswordStore",
-        ),
-        "store",
-      )
+      File(File(Environment.getExternalStorageDirectory(), "PasswordStore"), "store")
     else File(filesDir, "store")
 
   /* referencePath: /a/b/c

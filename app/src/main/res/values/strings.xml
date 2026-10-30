@@ -407,7 +407,7 @@
   <string name="select_repo_visibility_create_text">Specify whether you want to create the repository within the app’s internal directory (recommended) or in a shared folder that other apps can also access.</string>
   <string name="internal_repo">app-internal (hidden)</string>
   <string name="shared_repo">shared folder</string>
-  <string name="shared_repo_path" translatable="false">%1$s › Documents › PasswordStore</string>
+  <string name="shared_repo_path" translatable="false">%1$s › PasswordStore</string>
 
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">Potentially incorrect URL</string>
