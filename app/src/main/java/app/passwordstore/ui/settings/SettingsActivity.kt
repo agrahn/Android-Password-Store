@@ -44,7 +44,12 @@ class SettingsActivity : AppCompatActivity() {
 
   override fun onResume() {
     super.onResume()
-    autofillSettings.run { autofillSwitchPreference?.checked = isAutofillServiceEnabled }
+    autofillSettings.run {
+      autofillSwitchPreference?.run {
+        checked = isAutofillServiceEnabled
+        requestRebind()
+      }
+    }
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {

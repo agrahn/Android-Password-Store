@@ -10,7 +10,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import app.passwordstore.R
 import app.passwordstore.data.crypto.CryptoRepository
@@ -41,7 +40,6 @@ import java.net.SocketTimeoutException
 import javax.inject.Inject
 import javax.net.SocketFactory
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.asLog
 import logcat.logcat
@@ -105,10 +103,7 @@ abstract class BaseGitActivity : AppCompatActivity() {
 
       var networkPermission = Manifest.permission.ACCESS_LOCAL_NETWORK
 
-      if (
-        ContextCompat.checkSelfPermission(this, networkPermission) !=
-          PackageManager.PERMISSION_GRANTED
-      ) {
+      if (checkSelfPermission(networkPermission) != PackageManager.PERMISSION_GRANTED) {
 
         localNetworkAccessSetupCompletion = CompletableDeferred<Unit>()
 

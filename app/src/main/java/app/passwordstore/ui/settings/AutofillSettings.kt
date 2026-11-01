@@ -24,7 +24,6 @@ import de.Maxr1998.modernpreferences.helpers.editText
 import de.Maxr1998.modernpreferences.helpers.onClick
 import de.Maxr1998.modernpreferences.helpers.switch
 import de.Maxr1998.modernpreferences.preferences.SwitchPreference
-import kotlinx.coroutines.launch
 
 class AutofillSettings(private val activity: FragmentActivity) : SettingsProvider {
 
@@ -34,7 +33,10 @@ class AutofillSettings(private val activity: FragmentActivity) : SettingsProvide
   var autofillSwitchPreference: SwitchPreference? = null
   private val requestSetAutofillServiceAction =
     activity.registerForActivityResult(StartActivityForResult()) { _ ->
-      autofillSwitchPreference?.run { checked = isAutofillServiceEnabled }
+      autofillSwitchPreference?.run {
+        checked = isAutofillServiceEnabled
+        requestRebind()
+      }
     }
 
   private fun showAutofillDialog() {
@@ -73,7 +75,12 @@ class AutofillSettings(private val activity: FragmentActivity) : SettingsProvide
           }
         requestSetAutofillServiceAction.launch(intent)
       }
-      setNegativeButton(R.string.dialog_cancel, null)
+      setNegativeButton(R.string.dialog_cancel) { _, _ ->
+        autofillSwitchPreference?.run {
+          checked = isAutofillServiceEnabled
+          requestRebind()
+        }
+      }
       show()
     }
   }

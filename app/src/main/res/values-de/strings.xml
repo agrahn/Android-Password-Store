@@ -400,9 +400,9 @@
   <string name="gpg_key_select">Schlüssel auswählen</string>
   <string name="gpg_key_single_select">Schlüssel auswählen</string>
   <string name="select_n_repository_visibility">Sichtbarkeit des Repositorys</string>
-  <string name="select_repo_visibility_clone_text">Legen Sie fest, ob das Repository in das interne Verzeichnis der App (empfohlen) oder in einen freigegebenen Ordner geklont werden soll, auf den auch andere Apps zugreifen können.</string>
-  <string name="select_repo_visibility_create_text">Legen Sie fest, ob das Repository innerhalb des internen Verzeichnisses der App (empfohlen) oder in einem freigegebenen Ordner angelegt werden soll, auf den auch andere Apps zugreifen können.</string>
-  <string name="internal_repo">app-intern (versteckt)</string>
+  <string name="select_repo_visibility_clone_text">Legen Sie fest, ob das Repository in das interne Verzeichnis der App oder in einen freigegebenen Ordner geklont werden soll, auf den auch andere Apps zugreifen können.</string>
+  <string name="select_repo_visibility_create_text">Legen Sie fest, ob das Repository im internen Verzeichnis der App oder in einem freigegebenen Ordner angelegt werden soll, auf den auch andere Apps zugreifen können.</string>
+  <string name="internal_repo">versteckt, app-intern (empfohlen)</string>
   <string name="shared_repo">freigegebener Ordner</string>
 
 
