@@ -5,12 +5,16 @@
 
 package app.passwordstore.ui.settings
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ShortcutManager
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.core.content.edit
 import androidx.core.content.getSystemService
@@ -24,6 +28,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import app.passwordstore.BuildConfig
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.ui.git.config.GitConfigActivity
@@ -59,6 +64,7 @@ import de.Maxr1998.modernpreferences.helpers.onClick
 import de.Maxr1998.modernpreferences.helpers.pref
 import de.Maxr1998.modernpreferences.helpers.subScreen
 import de.Maxr1998.modernpreferences.helpers.switch
+import de.Maxr1998.modernpreferences.preferences.SwitchPreference
 import java.io.IOException
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
@@ -80,6 +86,32 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
       RepositorySettingsEntryPoint::class.java,
     )
   }
+
+  private var sharedRepoPref: SwitchPreference? = null
+
+  private val requestAllFilesPermissionAction =
+    activity.registerForActivityResult(StartActivityForResult()) { _ ->
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        activity.sharedPrefs.edit {
+          putBoolean(PreferenceKeys.PREF_SHARED_REPO, Environment.isExternalStorageManager())
+        }
+        sharedRepoPref?.run {
+          checked = Environment.isExternalStorageManager()
+          requestRebind()
+        }
+      }
+    }
+
+  private val requestReadWriteAccessAction =
+    activity.registerForActivityResult(RequestMultiplePermissions()) { result ->
+      activity.sharedPrefs.edit {
+        putBoolean(PreferenceKeys.PREF_SHARED_REPO, result.all { it.value })
+      }
+      sharedRepoPref?.run {
+        checked = result.all { it.value }
+        requestRebind()
+      }
+    }
 
   private val storeExportAction =
     activity.registerForActivityResult(
@@ -308,13 +340,44 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
         defaultValue = true
       }
 
-      switch(PreferenceKeys.PREF_SHARED_REPO) {
-        titleRes = R.string.prefs_external_repository_title
-        summaryRes = R.string.prefs_external_repository_summary
-        summaryOn = activity.getString(R.string.shared_repo_path, android.os.Build.MODEL)
-        disableDependents = true
-        defaultValue = false
-      }
+      sharedRepoPref =
+        switch(PreferenceKeys.PREF_SHARED_REPO) {
+          titleRes = R.string.prefs_external_repository_title
+          summaryRes = R.string.prefs_external_repository_summary
+          summaryOn = activity.getString(R.string.shared_repo_path, android.os.Build.MODEL)
+          disableDependents = true
+          defaultValue = false
+          onClick {
+            if (
+              checked &&
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
+                !Environment.isExternalStorageManager()
+            ) {
+              requestAllFilesPermissionAction.launch(
+                Intent(
+                  android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                  "package:${BuildConfig.APPLICATION_ID}".toUri(),
+                )
+              )
+            }
+
+            if (
+              checked &&
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.R &&
+                activity.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                  PackageManager.PERMISSION_GRANTED
+            ) {
+              requestReadWriteAccessAction.launch(
+                arrayOf(
+                  Manifest.permission.READ_EXTERNAL_STORAGE,
+                  Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                )
+              )
+            }
+
+            false
+          }
+        }
 
       pref(PreferenceKeys.EXPORT_PASSWORDS) {
         titleRes = R.string.prefs_export_passwords_title

@@ -26,7 +26,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import java.io.File
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class FolderCreationDialogFragment : DialogFragment() {

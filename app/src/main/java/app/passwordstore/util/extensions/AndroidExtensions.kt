@@ -22,7 +22,6 @@ import android.view.View
 import android.view.autofill.AutofillManager
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.Modifier
-import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.fragment.app.FragmentActivity
 import app.passwordstore.BuildConfig
@@ -102,11 +101,6 @@ suspend fun FragmentActivity.commitChange(message: String): Result<Unit, Throwab
       }
     }
     .execute()
-}
-
-/** Check if [permission] has been granted to the app. */
-fun FragmentActivity.isPermissionGranted(permission: String): Boolean {
-  return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 }
 
 /**

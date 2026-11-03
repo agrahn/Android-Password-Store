@@ -10,7 +10,11 @@
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-  <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage"/>
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+  <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+      tools:ignore="ScopedStorage"
+      tools:targetApi="30"/>
   <!-- Required by Autofill to verify the certificate hashes of packages -->
   <uses-permission
     android:name="android.permission.QUERY_ALL_PACKAGES"
@@ -26,6 +30,7 @@
   <application
     android:name=".Application"
     android:allowBackup="false"
+    android:requestLegacyExternalStorage="true"
     android:dataExtractionRules="@xml/data_extraction_rules"
     android:fullBackupContent="@xml/backup_content"
     android:icon="@mipmap/ic_launcher"

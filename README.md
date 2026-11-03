@@ -54,4 +54,4 @@ Issues and pull requests are welcome, but avoid bulky, hard to digest multi-feat
 
 ## Donations
 
-If you wish to sponsor the original author, financial contributions can be made through [OpenCollective](https://opencollective.com/android-password-store).
+If you wish to support the original author, financial contributions can be made through [OpenCollective](https://opencollective.com/android-password-store).

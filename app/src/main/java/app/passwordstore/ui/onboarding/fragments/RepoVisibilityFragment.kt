@@ -5,13 +5,21 @@
 
 package app.passwordstore.ui.onboarding.fragments
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
+import app.passwordstore.BuildConfig
 import app.passwordstore.R
 import app.passwordstore.data.repo.PasswordRepository
 import app.passwordstore.databinding.FragmentRepoVisibilityBinding
@@ -35,6 +43,24 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
   private val binding by viewBinding(FragmentRepoVisibilityBinding::bind)
 
   private val settings by unsafeLazy { requireActivity().applicationContext.sharedPrefs }
+
+  private val requestAllFilesPermissionAction =
+    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
+      if (
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()
+      ) {
+        if (requireArguments().getBoolean(SHOULD_CLONE_EXTRA)) cloneRepository()
+        else createRepository()
+      }
+    }
+
+  private val requestReadWriteAccessAction =
+    registerForActivityResult(RequestMultiplePermissions()) { result ->
+      if (result.all { it.value }) {
+        if (requireArguments().getBoolean(SHOULD_CLONE_EXTRA)) cloneRepository()
+        else createRepository()
+      }
+    }
 
   private val cloneAction =
     registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -69,6 +95,8 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
         }
       }
 
+      sharedRepo.isChecked = settings.getBoolean(PreferenceKeys.PREF_SHARED_REPO, false)
+
       sharedRepo.setOnCheckedChangeListener { _, isChecked ->
         if (isChecked) {
           repoSharedParent.text = getString(R.string.shared_repo_path, android.os.Build.MODEL)
@@ -78,8 +106,33 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
 
       continueButton.setOnClickListener {
         settings.edit { putBoolean(PreferenceKeys.PREF_SHARED_REPO, sharedRepo.isChecked) }
-        if (requireArguments().getBoolean(SHOULD_CLONE_EXTRA)) cloneRepository()
-        else createRepository()
+        if (
+          sharedRepo.isChecked &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
+            !Environment.isExternalStorageManager()
+        ) {
+          requestAllFilesPermissionAction.launch(
+            Intent(
+              android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+              "package:${BuildConfig.APPLICATION_ID}".toUri(),
+            )
+          )
+        } else if (
+          sharedRepo.isChecked &&
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.R &&
+            requireActivity().checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+              PackageManager.PERMISSION_GRANTED
+        ) {
+          requestReadWriteAccessAction.launch(
+            arrayOf(
+              Manifest.permission.READ_EXTERNAL_STORAGE,
+              Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            )
+          )
+        } else {
+          if (requireArguments().getBoolean(SHOULD_CLONE_EXTRA)) cloneRepository()
+          else createRepository()
+        }
       }
     }
   }
@@ -108,7 +161,6 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
       check(localDir.exists() || localDir.mkdirs()) { "Failed to create directory!" }
       PasswordRepository.createRepository(localDir)
       PasswordRepository.initialize()
-      parentFragmentManager.performTransactionWithBackStack(KeySelectionFragment.newInstance())
       if (File(PasswordRepository.getRepositoryDirectory(), ".gpg-id").isFile()) {
         settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
         finish()
