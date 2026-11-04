@@ -224,19 +224,17 @@ abstract class BaseGitActivity : AppCompatActivity() {
         gitSettings.useMultiplexing = false
         SSHException(
           DisconnectReason.TOO_MANY_CONNECTIONS,
-          "The server does not support multiple Git operations per SSH session. Please try again, a slower fallback mode will be used.",
+          resources.getString(R.string.git_multiplexing_unsupported_error),
         )
       }
       err.message?.contains("int org.eclipse.jgit.lib.AnyObjectId.w1") == true -> {
-        IllegalStateException(
-          "Your local repository appears to be an incomplete Git clone, please delete and re-clone from settings"
-        )
+        IllegalStateException(resources.getString(R.string.git_incomplete_clone_error))
       }
       err is TransportException &&
         err.disconnectReason == DisconnectReason.HOST_KEY_NOT_VERIFIABLE -> {
         SSHException(
           DisconnectReason.HOST_KEY_NOT_VERIFIABLE,
-          "WARNING: The remote host key has changed. If this is expected, please go to Git server settings and clear the saved host key.",
+          resources.getString(R.string.git_hostkey_changed),
         )
       }
       else -> {
