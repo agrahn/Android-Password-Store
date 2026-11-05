@@ -381,9 +381,7 @@ class PasswordCreationActivity : BasePGPActivity() {
         if (PasswordRepository.isEmpty()) {
           initBefore.show()
         } else {
-          requireKeysExist {
-            requireEncryptionKeysExist(binding.directory.text.toString()) { ids -> encrypt(ids) }
-          }
+          requireEncryptionKeysExist(binding.directory.text.toString()) { ids -> encrypt(ids) }
         }
       }
       R.id.save_and_copy_password -> {
@@ -391,9 +389,7 @@ class PasswordCreationActivity : BasePGPActivity() {
         if (PasswordRepository.isEmpty()) {
           initBefore.show()
         } else {
-          requireKeysExist {
-            requireEncryptionKeysExist(binding.directory.text.toString()) { ids -> encrypt(ids) }
-          }
+          requireEncryptionKeysExist(binding.directory.text.toString()) { ids -> encrypt(ids) }
         }
       }
       else -> return super.onOptionsItemSelected(item)

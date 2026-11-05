@@ -373,8 +373,8 @@
   <string name="biometric_prompt_description_persistently_cache_password">PGP parolasını şifrele ve cihazda önbelleğe al</string>
   <string name="biometric_prompt_description_unlock_entry">Parmağınızla girdinin kilidini açın</string>
   <string name="pgp_wrong_passphrase_input">Yanlış parola</string>
-  <string name="pgp_id_label">PGP Kimliği: </string>
-  <string name="pgp_id_label_plural">PGP Kimlikleri: </string>
+  <string name="pgp_id_label">PGP Kimliği: %1$s</string>
+  <string name="pgp_id_label_plural">PGP Kimlikleri: %1$s</string>
   <string name="aes_key_invalidated_dialog_title">Uyarı! Yeni parmak izi eklendi</string>
   <string name="aes_key_invalidated_dialog_message">Son kullanımdan bu yana cihaz kilit ayarlarına yeni bir parmak izi kaydedildi. Başka biri tarafından değil, sizin tarafınızdan eklendiğinden emin olun</string>
 
