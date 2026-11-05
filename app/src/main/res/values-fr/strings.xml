@@ -250,7 +250,6 @@
   <string name="new_folder_set_gpg_key">Définir la clé PGP pour le dossier</string>
   <!-- GitException messages -->
   <string name="git_unknown_error">Erreur inconnue</string>
-  <string name="git_pull_rebase_fail_error">Tirer a échoué, vous êtes dans un \'head\' détaché. En utilisant \"settings &gt; git utils\", enregistrez vos modifications sur le dépôt distant dans une nouvelle branche et résolvez le conflit sur votre ordinateur.</string>
   <string name="git_pull_merge_fail_error">La fusion a échoué, vous êtes dans un état de conflit. TODO : Ajouter une méthode de récupération.</string>
   <string name="git_push_nff_error">La poussée a été rejetée par le dépôt distant, exécutez une tirée avant de pousser à nouveau. Vous pouvez utiliser Synchroniser plutôt que de tirer/pousser car il implémente les deux.</string>
   <string name="git_push_generic_error">L\'envoi a été rejeté par le dépôt distant, raison : %1$s</string>

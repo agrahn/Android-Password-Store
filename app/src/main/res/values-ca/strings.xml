@@ -262,7 +262,6 @@
     <string name="password_decryption_no_decryption_key">Ha fallat el desxifrat: No s\'ha trobat la clau corresponent</string>
     <string name="password_decryption_unknown_error">Ha fallat el desxifrat per un error desconegut</string>
     <string name="git_unknown_error">Error desconegut</string>
-    <string name="git_pull_rebase_fail_error">La baixada ha fallat, estàs en HEAD separat. Usa Configuració > Utilitats de Git, desa els canvis a una brance remota nova i resol els conflictes al teu ordinador.</string>
     <string name="git_pull_merge_fail_error">Ha fallat la fusió, hi ha conflictes per resoldre. TODO: Afegir un métode de recuperació.</string>
     <string name="git_push_nff_error">La pujada ha estat refusada per servidor remot, torna a provar. Pots usar Sincronitza en comptes de baixar/pujar ja que implementa tots dos.</string>
     <string name="git_push_generic_error">La pujada ha estat refusada per servidor remot, motiu: %1$s</string>

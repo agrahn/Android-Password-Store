@@ -309,7 +309,6 @@
 
   <!-- GitException messages -->
   <string name="git_unknown_error">Error desconocido</string>
-  <string name="git_pull_rebase_fail_error">El pull ha fallado, estás en un detached HEAD. Usa "Configuración > Utilidades > Git", guarda tus cambios en el remoto creando una nueva rama y resuelve el conflicto en tu equipo.</string>
   <string name="git_pull_merge_fail_error">El merge ha fallado, estás en un estado de conflicto. TODO: Añadir un método de recuperación.</string>
 
   <string name="git_push_nff_error">Push fue rechazado por el servidor remoto, ejecute pull antes de volver a presionar. Puede usar Sincronizar en lugar de pull/push, ya que implementa ambos</string>

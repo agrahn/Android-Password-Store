@@ -254,7 +254,6 @@
   <string name="new_folder_set_gpg_key">Ustaw klucz PGP dla katalogu</string>
   <!-- GitException messages -->
   <string name="git_unknown_error">Nieznany błąd</string>
-  <string name="git_pull_rebase_fail_error">Zaciąganie zmian nie powiodło się, nie jesteś na żadnej gałęzi (detached head). Używając \"Ustawienia &gt; narzędzia Git\", wyślij lokalne zmiany do zdalnego repozytorium na nowej gałęzi i rozwiąż konflikt na komputerze.</string>
   <string name="git_pull_merge_fail_error">Scalanie nie powiodło się, jesteś w stanie konfliktu. TODO: Dodać tryb ratunkową.</string>
   <string name="git_push_nff_error">Operacja wypchnięcia zmian została odrzucona przez zdalne repozytorium. Zaciągnij zmiany przed ponownym wysłaniem. Możesz użyć synchronizacji zamiast pull/push ponieważ zawiera obu te kroki</string>
   <string name="git_push_generic_error">Operacja wypchnięcia zmian została odrzucona przez zdalne repozytorium, powód: %1$s</string>

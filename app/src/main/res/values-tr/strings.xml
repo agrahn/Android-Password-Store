@@ -304,7 +304,6 @@
 
   <!-- GitException messages -->
   <string name="git_unknown_error">Bilinmeyen hata</string>
-  <string name="git_pull_rebase_fail_error">Pull işlemi başarısız oldu, ayrık bir HEAD durumundasınız. "Ayarlar > Git araçları"nı kullanarak değişikliklerinizi uzak depodaki yeni bir dala push\'layın ve çakışmayı bilgisayarınızda çözün.</string>
   <string name="git_pull_merge_fail_error">Merge işlemi başarısız oldu, çakışma durumundasınız. TODO: Bir kurtarma yöntemi ekleyin.</string>
 
   <string name="git_push_nff_error">Push işlemi uzak depo tarafından reddedildi, tekrar push\'lamadan önce pull yapın. Her ikisini de uyguladığı için pull/push yerine Senkronize Et kullanabilirsiniz</string>

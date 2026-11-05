@@ -258,7 +258,6 @@ username@example.com:…</string>
   <string name="new_folder_set_gpg_key">디렉토리의 PGP 키 설정</string>
   <!-- GitException messages -->
   <string name="git_unknown_error">알 수 없는 오류</string>
-  <string name="git_pull_rebase_fail_error">풀이 실패하여 head가 분리된 상태입니다. \"설정 &gt; git 기능\"을 사용하여 원격 저장소에 변경 내용을 새 브랜치에 저장하고 컴퓨터에서 충돌을 해결하세요.</string>
   <string name="git_pull_merge_fail_error">병합에 실패하여 충돌 상태 입니다. 할 일: 복구 방법을 추가하세요.</string>
   <string name="git_push_nff_error">원격에서 푸시가 거부된 경우 다시 푸시하기 전에 풀을 실행합니다. 풀/푸시 대신 동기화를 사용하면 두 가지를 모두 구현할 수 있습니다</string>
   <string name="git_push_generic_error">원격에서 푸시를 거부했습니다. 원인: %1$s</string>

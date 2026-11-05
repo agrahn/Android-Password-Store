@@ -371,7 +371,7 @@
 
   <!-- GitException messages -->
   <string name="git_unknown_error">Unknown error</string>
-  <string name="git_pull_rebase_fail_error">Pull has failed, you’re in a detached head. Use “Settings › Repository › Local Git config &amp; utilities › Abort rebase and push new branch” to save your changes to the remote in a new branch and resolve the conflict there.</string>
+  <string name="git_pull_rebase_fail_error">Pull has failed, you’re in a detached head. Use\n\n\tSettings › Repository › Local Git config &amp; utilities › Abort rebase and push new branch\n\nto save your changes to the remote in a new branch and resolve the conflict there.</string>
   <string name="git_pull_merge_fail_error">Merge has failed, you’re in a conflicting state. TODO: Add a recovery method.</string>
 
   <string name="git_push_nff_error">Push was rejected by remote, run pull before pushing again. You can use Synchronise rather than pull/push as it implements both.</string>
@@ -388,7 +388,7 @@
   <string name="git_break_out_of_detached_unneeded">The repository is not rebasing, no need to push to another branch.</string>
   <string name="git_multiplexing_unsupported_error">The server does not support multiple Git operations per SSH session. Please try again, a slower fallback mode will be used.</string>
   <string name="git_incomplete_clone_error">Your local repository appears to be an incomplete Git clone, please delete it and clone it again.</string>
-  <string name="git_hostkey_changed">WARNING: The remote host key has changed. If this was to be expected, please go to “Settings › Repository › Remote repository” and clear the saved host key.</string>
+  <string name="git_hostkey_changed">WARNING: The remote host key has changed. If this was to be expected, please go to\n\n\tSettings › Repository › Remote repository\n\nand clear the saved host key.</string>
 
   <!-- PGP key selection in folder creation -->
   <string name="gpg_key_select_mandatory">Selecting a PGP key is necessary to proceed</string>
