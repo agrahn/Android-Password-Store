@@ -77,11 +77,8 @@ class AutofillDecryptActivity : BasePGPActivity() {
       intent?.getBooleanExtra(EXTRA_SEARCH_ACTION, true) ?: throw NullPointerException()
     action = if (isSearchAction) AutofillAction.Search else AutofillAction.Match
     logcat { action.toString() }
-    requireKeysExist {
-      requireDecryptionKeysExist(PasswordRepository.getParentPath(filePath, repositoryPath)) { ids
-        ->
-        getPersistentAndDecrypt(ids, action = "autofill")
-      }
+    requireDecryptionKeysExist(PasswordRepository.getParentPath(filePath, repositoryPath)) { ids ->
+      getPersistentAndDecrypt(ids, action = "autofill")
     }
   }
 

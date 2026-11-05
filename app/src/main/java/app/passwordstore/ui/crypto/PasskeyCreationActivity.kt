@@ -443,19 +443,17 @@ class PasskeyCreationActivity : BasePGPActivity() {
             }
             .show()
         } else {
-          requireKeysExist {
-            requireEncryptionKeysExist(binding.directory.text.toString()) { ids ->
-              // biometric auth needed for passkey creation
-              if (!editing)
-                BiometricAuthenticator.authenticate(this, allowPin = true) { result ->
-                  when (result) {
-                    is Result.Success -> encrypt(ids)
-                    is Result.Retry -> {}
-                    else -> finish()
-                  }
+          requireEncryptionKeysExist(binding.directory.text.toString()) { ids ->
+            // biometric auth needed for passkey creation
+            if (!editing)
+              BiometricAuthenticator.authenticate(this, allowPin = true) { result ->
+                when (result) {
+                  is Result.Success -> encrypt(ids)
+                  is Result.Retry -> {}
+                  else -> finish()
                 }
-              else encrypt(ids)
-            }
+              }
+            else encrypt(ids)
           }
         }
       }

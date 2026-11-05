@@ -344,8 +344,8 @@
     <string name="biometric_prompt_description_persistently_cache_password">Xifra la frase de pas de PGP a la memòria cau del dispositiu</string>
     <string name="biometric_prompt_description_unlock_entry">Desbloqueja l\'entrada amb l\'emprempta digital</string>
     <string name="pgp_wrong_passphrase_input">Frase de pas incorrecta</string>
-    <string name="pgp_id_label">PGP ID:</string>
-    <string name="pgp_id_label_plural">PGP IDS:</string>
+    <string name="pgp_id_label">PGP ID: %1$s</string>
+    <string name="pgp_id_label_plural">PGP IDS: %1$s</string>
     <string name="aes_key_invalidated_dialog_title">Avís! S\'ha afegit una nova empremta digital</string>
     <string name="aes_key_invalidated_dialog_message">S\'ha registrat una nova empremta digital a la configuració de bloqueig del dispositiu. Assegureu-vos que l\'heu afegit vosaltres i no algú altre</string>
     <string name="pin_new_entry_title">Defineix el PIN</string>

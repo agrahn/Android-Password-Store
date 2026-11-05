@@ -87,10 +87,8 @@ class PasskeyAuthenticationActivity : BasePGPActivity() {
           return
         }
 
-    requireKeysExist {
-      requireDecryptionKeysExist(PasswordRepository.getParentPath(passkeyPath, repoPath)) { ids ->
-        getPersistentAndDecrypt(ids, action = "passkey")
-      }
+    requireDecryptionKeysExist(PasswordRepository.getParentPath(passkeyPath, repoPath)) { ids ->
+      getPersistentAndDecrypt(ids, action = "passkey")
     }
   }
 

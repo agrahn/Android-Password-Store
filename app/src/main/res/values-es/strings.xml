@@ -402,8 +402,6 @@
   <string name="biometric_prompt_description_persistently_cache_password">Cifrar y almacenar en caché la frase de paso PGP en el dispositivo</string>
   <string name="biometric_prompt_description_unlock_entry">Desbloquea la entrada con tu huella dactilar</string>
   <string name="pgp_wrong_passphrase_input">Frase de paso incorrecta</string>
-  <string name="pgp_id_label">PGP ID: </string>
-  <string name="pgp_id_label_plural">PGP IDs: </string>
   <string name="aes_key_invalidated_dialog_title">¡Advertencia! Se agregó una nueva huella digital</string>
   <string name="aes_key_invalidated_dialog_message">Se ha registrado una nueva huella digital en la configuración de bloqueo del dispositivo desde el último uso. Asegúrese de que lo haya agregado usted y no otra persona</string>
 

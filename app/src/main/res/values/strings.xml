@@ -251,7 +251,7 @@
   <string name="oreo_autofill_save_app_not_supported">This app is currently not supported</string>
   <string name="oreo_autofill_save_passwords_dont_match">Passwords don’t match</string>
   <string name="oreo_autofill_generate_password">Create entry</string>
-  <string name="oreo_autofill_warning_publisher_header">This app’s signature has changed since you first associated a Password Store entry with it: </string>
+  <string name="oreo_autofill_warning_publisher_header">This app’s signature has changed since you first associated a Password Store entry with it:</string>
   <string name="oreo_autofill_warning_publisher_footer"><b>The currently installed app may be trying to steal your credentials by pretending to be a trusted app.</b>\n\nIt is strongly recommended to uninstall the app and to reinstall it from a trusted source, such as the Play Store, Amazon Appstore, F-Droid, or your phone manufacturer’s store.</string>
   <string name="oreo_autofill_warning_publisher_install_time">Installed: %1$s</string>
   <string name="oreo_autofill_warning_publisher_app_name" translatable="false">“%1$s”</string>
@@ -269,7 +269,7 @@
   <string name="oreo_autofill_no_support">No support</string>
   <string name="oreo_autofill_enable_dialog_description">Password Store can offer to fill login forms and even save credentials you enter in apps or on websites.</string>
   <string name="oreo_autofill_enable_dialog_instructions">To enable this feature, tap OK to go to Autofill settings. There, select Password Store from the list and confirm the confirmation prompt with OK.\n\nIn some browsers, the option “Autofill using another service” or similar must also be enabled.</string>
-  <string name="oreo_autofill_enable_dialog_installed_browsers">Autofill support with installed browsers: </string>
+  <string name="oreo_autofill_enable_dialog_installed_browsers">Autofill support with installed browsers:</string>
 
   <string name="ssh_key_does_not_exist">Unable to open the ssh private key, please check that the file exists</string>
   <string name="new_password_title">New password</string>
@@ -500,9 +500,9 @@
   <string name="pgp_short_key_identifier">invalid: short ID</string>
   <string name="pgp_unknown_key_identifier">unknown key ID</string>
   <string name="no_pgp_keys_dialog_title">No PGP keys found</string>
-  <string name="no_pgp_keys_dialog_message">Open the PGP key manager and import matching PGP keys from backups for key ID(s): </string>
+  <string name="no_pgp_keys_dialog_message">Open the PGP key manager and import matching PGP keys from backups for key ID(s): %1$s</string>
   <string name="no_decryption_keys_dialog_title">No decryption keys found</string>
-  <string name="no_decryption_keys_dialog_message">Open the PGP key manager and import matching secret PGP keys from backups for key ID(s): </string>
+  <string name="no_decryption_keys_dialog_message">Open the PGP key manager and import matching secret PGP keys from backups for key ID(s): %1$s</string>
   <string name="pgp_unknown">unknown</string>
   <string name="pgp_public_only">public only</string>
   <string name="invalid_gpg_id_dialog_title">Empty or malformatted .gpg-id file</string>
@@ -516,8 +516,8 @@
   <string name="biometric_prompt_description_unlock_entry">Unlock entry with your fingerprint</string>
   <string name="biometric_prompt_description_unlock_authentication_key">Unlock authentication key with your device credentials</string>
   <string name="pgp_wrong_passphrase_input">Wrong passphrase</string>
-  <string name="pgp_id_label">PGP ID: </string>
-  <string name="pgp_id_label_plural">PGP IDs: </string>
+  <string name="pgp_id_label">PGP ID: %1$s</string>
+  <string name="pgp_id_label_plural">PGP IDs: %1$s</string>
   <string name="aes_key_invalidated_dialog_title">Warning! New fingerprint added</string>
   <string name="aes_key_invalidated_dialog_message">A new fingerprint has been registered in the device lock settings since the last use. Make sure it was added by you and not by someone else.</string>
 

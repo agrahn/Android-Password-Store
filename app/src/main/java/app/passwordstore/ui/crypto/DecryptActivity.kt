@@ -78,9 +78,7 @@ class DecryptActivity : BasePGPActivity() {
       }
       fab.setOnClickListener { copyPassword() }
     }
-    requireKeysExist {
-      requireDecryptionKeysExist(relativeParentPath) { ids -> getPersistentAndDecrypt(ids) }
-    }
+    requireDecryptionKeysExist(relativeParentPath) { ids -> getPersistentAndDecrypt(ids) }
   }
 
   override fun onDestroy() {
