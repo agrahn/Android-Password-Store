@@ -492,14 +492,11 @@ open class BasePGPActivity : AppCompatActivity() {
             runCatching {
               // update temporary passphrase cache
               val isHardwareBacked = AESEncryption.isHardwareBacked()
-              val encryptedPassphrase = AESEncryption.encrypt(passphrase)
-              if (isHardwareBacked && cacheEnabled && encryptedPassphrase != null)
-                cachedPassphrases.put(id, encryptedPassphrase)
+              val encryptedPassphrase =
+                if (isHardwareBacked && cacheEnabled) AESEncryption.encrypt(passphrase) else null
+              encryptedPassphrase?.let { cachedPassphrases.put(id, it) }
               settings.edit {
-                putBoolean(
-                  PreferenceKeys.CACHE_PASSPHRASE,
-                  isHardwareBacked && cacheEnabled && encryptedPassphrase != null,
-                )
+                putBoolean(PreferenceKeys.CACHE_PASSPHRASE, encryptedPassphrase != null)
               }
 
               // update persistent passphrase cache

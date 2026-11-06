@@ -30,7 +30,6 @@ import app.passwordstore.util.credman.CredmanUtils
 import app.passwordstore.util.credman.verifyCaller
 import app.passwordstore.util.extensions.base64
 import app.passwordstore.util.extensions.getString
-import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.toByteArray
 import app.passwordstore.util.extensions.toCharArray
 import app.passwordstore.util.extensions.wipe
@@ -42,6 +41,7 @@ import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onErr
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -100,7 +100,10 @@ class PasskeyAuthenticationActivity : BasePGPActivity() {
     val encryptedFile = File(passkeyPath)
     val message = withContext(dispatcherProvider.io()) { encryptedFile.readBytes().inputStream() }
     val outputStream = ByteArrayOutputStream()
-    val results = repository.decrypt(passphrases, identifiers, message, outputStream)
+    val results =
+      withContext(dispatcherProvider.io()) {
+        repository.decrypt(passphrases, identifiers, message, outputStream)
+      }
     val lastResult = results.last()
     if (lastResult.second.isOk) {
       val decryptedEntryBytes = lastResult.second.getOrThrow().toByteArray()
@@ -264,13 +267,33 @@ class PasskeyAuthenticationActivity : BasePGPActivity() {
       } else if (
         results.filter { it.second.getError() is NoDecryptionKeyAvailableException }.any()
       ) {
-        snackbar(message = getString(R.string.password_decryption_no_decryption_key))
-        val timer = Executors.newSingleThreadScheduledExecutor()
-        timer.schedule({ finish() }, 4.toLong(), TimeUnit.SECONDS)
+        Snackbar.make(
+            findViewById(android.R.id.content),
+            resources.getString(R.string.password_decryption_no_decryption_key),
+            Snackbar.LENGTH_SHORT,
+          )
+          .addCallback(
+            object : Snackbar.Callback() {
+              override fun onDismissed(transientBottomBar: Snackbar, event: Int) {
+                finish()
+              }
+            }
+          )
+          .show()
       } else {
-        snackbar(message = getString(R.string.password_decryption_unknown_error))
-        val timer = Executors.newSingleThreadScheduledExecutor()
-        timer.schedule({ finish() }, 4.toLong(), TimeUnit.SECONDS)
+        Snackbar.make(
+            findViewById(android.R.id.content),
+            resources.getString(R.string.password_decryption_unknown_error),
+            Snackbar.LENGTH_SHORT,
+          )
+          .addCallback(
+            object : Snackbar.Callback() {
+              override fun onDismissed(transientBottomBar: Snackbar, event: Int) {
+                finish()
+              }
+            }
+          )
+          .show()
       }
       results
         .filter { it.second.getError() is Throwable }
