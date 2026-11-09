@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file
 
 ### Fixed
 
-- Committer email, allow setting empty value in Git configuration; `aps@<device model>` used as default
+- Setting empty committer email in Git configuration; `aps@<device model>` used as default
 - Host key verification failure when using Keystore-native SSH key
 
 ## [2.0.3] - 2026-10-02
