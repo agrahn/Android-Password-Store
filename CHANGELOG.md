@@ -4,13 +4,15 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-11-09
+
 ### Added
 
 - **External repository** option restored: Repositories can now be cloned to or created in an external, shared folder under Device › PasswordStore. However, "All files access" permission must be granted from within the app or via Settings -> Apps -> Special app access. The permission is required to view and edit externally added (via Syncthing, for example) pass files.
 
 ### Fixed
 
-- Committer email, allow setting empty value in Git configuration; `aps@<device model>` used as default
+- Setting empty committer email in Git configuration; `aps@<device model>` used as default
 - Host key verification failure when using Keystore-native SSH key
 
 ## [2.0.3] - 2026-10-02
@@ -726,7 +728,8 @@ All notable changes to this project will be documented in this file
 
 - Fix elements overlapping.
 
-[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v2.0.3...HEAD
+[unreleased]: https://github.com/agrahn/Android-Password-Store/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/agrahn/Android-Password-Store/compare/v2.0.3...v2.1.0
 [2.0.3]: https://github.com/agrahn/Android-Password-Store/compare/v2.0.2...v2.0.3
 [2.0.2]: https://github.com/agrahn/Android-Password-Store/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/agrahn/Android-Password-Store/compare/v2.0.0...v2.0.1

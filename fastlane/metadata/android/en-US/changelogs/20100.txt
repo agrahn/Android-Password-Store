@@ -1,0 +1,8 @@
+Added
+
+- External repository option: Repositories can now be cloned to or created in an external, shared folder under Device › PasswordStore. However, "All files access" permission must be granted from within the app or via Settings -> Apps -> Special app access. The permission is required to view and edit externally added (via Syncthing, for example) pass files.
+
+Fixed
+
+- Setting empty committer email in Git configuration; aps@<device model> used as default
+- Host key verification failure when using Keystore-native SSH key
