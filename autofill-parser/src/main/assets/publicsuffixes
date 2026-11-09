@@ -1,4 +1,4 @@
-147794
+147956
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
@@ -84,6 +84,7 @@
 *.ap-southeast-6.rds.amazonaws.com
 *.ap-southeast-7.airflow.amazonaws.com
 *.ap-southeast-7.rds.amazonaws.com
+*.apps.grok.bot
 *.appwrite.run
 *.at.playit.plus
 *.at.ply.gg
@@ -221,6 +222,7 @@
 *.owo.codes
 *.p.azurewebsites.net
 *.pa.crm.dev
+*.pages.grok.bot
 *.paywhirl.com
 *.pb.crm.dev
 *.pc.crm.dev
@@ -471,6 +473,7 @@ activetrail.biz
 actor
 ad
 ad.jp
+ad.vn
 adachi.tokyo.jp
 adimo.co.uk
 adm.br
@@ -714,6 +717,7 @@ ap.gov.pl
 ap.it
 ap.leg.br
 ap.ngrok.io
+ap.vn
 aparecida.br
 apartments
 api.br
@@ -911,6 +915,7 @@ auth.eu-west-1.amazoncognito.com
 auth.eu-west-2.amazoncognito.com
 auth.eu-west-3.amazoncognito.com
 auth.il-central-1.amazoncognito.com
+auth.lovable.app
 auth.me-central-1.amazoncognito.com
 auth.me-south-1.amazoncognito.com
 auth.mx-central-1.amazoncognito.com
@@ -2279,6 +2284,7 @@ dnsupdater.de
 do
 doc.ec
 docs
+docsflowy.site
 doctor
 does-it.net
 doesntexist.com
@@ -5280,6 +5286,7 @@ lindås.no
 link
 linkyard-cloud.ch
 linkyard.cloud
+linkyhost.page
 littlestar.jp
 live
 live-on.net
@@ -5449,6 +5456,7 @@ mangyshlak.su
 maniwa.okayama.jp
 manno.kagawa.jp
 mantova.it
+manus.space
 maori.nz
 map
 map.fastly.net
@@ -6751,6 +6759,7 @@ on.biz.ng
 on.ca
 on.expo.app
 on.staging.expo.app
+on.vn
 onagawa.miyagi.jp
 oncilla.mythic-beasts.com
 ondigitalocean.app
@@ -7077,6 +7086,7 @@ pabianice.pl
 padova.it
 padua.it
 page
+pagelemon.dev
 pages-research.it.hs-heilbronn.de
 pages.dev
 pages.gay
@@ -8070,6 +8080,8 @@ sandvik
 sandvikcoromant
 sandøy.no
 sango.nara.jp
+sanity.run
+sanity.studio
 sanjo.niigata.jp
 sannan.hyogo.jp
 sannohe.aomori.jp
@@ -8470,6 +8482,7 @@ sld.do
 sld.pa
 slg.br
 sling
+sliplane.app
 slupsk.pl
 slz.br
 sm
