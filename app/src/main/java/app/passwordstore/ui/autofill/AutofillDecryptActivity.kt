@@ -25,6 +25,7 @@ import app.passwordstore.util.autofill.AutofillMatcher
 import app.passwordstore.util.autofill.AutofillPreferences
 import app.passwordstore.util.autofill.AutofillResponseBuilder
 import app.passwordstore.util.extensions.base64
+import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.toCharArray
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.settings.PreferenceKeys
@@ -32,7 +33,6 @@ import com.github.androidpasswordstore.autofillparser.AutofillAction
 import com.github.androidpasswordstore.autofillparser.FormOrigin
 import com.github.michaelbull.result.getError
 import com.github.michaelbull.result.getOrThrow
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -88,12 +88,10 @@ class AutofillDecryptActivity : BasePGPActivity() {
     onSuccess: suspend (String) -> Unit,
   ) {
     val encryptedFile = File(filePath)
-    val message = withContext(dispatcherProvider.io()) { encryptedFile.readBytes().inputStream() }
+    val message =
+      withContext(dispatcherProvider.default()) { encryptedFile.readBytes().inputStream() }
     val outputStream = ByteArrayOutputStream()
-    val results =
-      withContext(dispatcherProvider.io()) {
-        repository.decrypt(passphrases, identifiers, message, outputStream)
-      }
+    val results = repository.decrypt(passphrases, identifiers, message, outputStream)
     val lastResult = results.last()
 
     if (lastResult.second.isOk) {
@@ -118,19 +116,11 @@ class AutofillDecryptActivity : BasePGPActivity() {
           cachedPassphrases.clear()
         }
 
-        Snackbar.make(
-            findViewById(android.R.id.content),
-            resources.getString(R.string.password_decryption_no_autofill_with_passkey_error),
-            Snackbar.LENGTH_SHORT,
-          )
-          .addCallback(
-            object : Snackbar.Callback() {
-              override fun onDismissed(transientBottomBar: Snackbar, event: Int) {
-                finish()
-              }
-            }
-          )
-          .show()
+        snackbar(
+          message = resources.getString(R.string.password_decryption_no_autofill_with_passkey_error)
+        ) {
+          finish()
+        }
       } else {
         val directoryStructure = AutofillPreferences.directoryStructure(this)
         val credentials =
@@ -215,33 +205,13 @@ class AutofillDecryptActivity : BasePGPActivity() {
       } else if (
         results.filter { it.second.getError() is NoDecryptionKeyAvailableException }.any()
       ) {
-        Snackbar.make(
-            findViewById(android.R.id.content),
-            resources.getString(R.string.password_decryption_no_decryption_key),
-            Snackbar.LENGTH_SHORT,
-          )
-          .addCallback(
-            object : Snackbar.Callback() {
-              override fun onDismissed(transientBottomBar: Snackbar, event: Int) {
-                finish()
-              }
-            }
-          )
-          .show()
+        snackbar(message = resources.getString(R.string.password_decryption_no_decryption_key)) {
+          finish()
+        }
       } else {
-        Snackbar.make(
-            findViewById(android.R.id.content),
-            resources.getString(R.string.password_decryption_unknown_error),
-            Snackbar.LENGTH_SHORT,
-          )
-          .addCallback(
-            object : Snackbar.Callback() {
-              override fun onDismissed(transientBottomBar: Snackbar, event: Int) {
-                finish()
-              }
-            }
-          )
-          .show()
+        snackbar(message = resources.getString(R.string.password_decryption_unknown_error)) {
+          finish()
+        }
       }
 
       results

@@ -27,6 +27,7 @@ import com.github.michaelbull.result.runCatching
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
+import kotlinx.coroutines.withContext
 import logcat.asLog
 import logcat.logcat
 
@@ -74,19 +75,23 @@ constructor(
     return pgpCryptoHandler.isPassphraseProtected(keys, anySubkey)
   }
 
-  fun isPasswordCorrect(
+  suspend fun isPasswordCorrect(
     identifier: PGPIdentifier,
     subkeyIdentifier: KeyId?,
     passphrase: CharArray?,
     anySubkey: Boolean = false,
   ): Boolean {
-    val key = pgpKeyManager.getKeyById(identifier).get() ?: return false
-    return pgpCryptoHandler.passphraseIsCorrect(
-      key,
-      subkeyIdentifier,
-      passphrase,
-      anySubkey = anySubkey,
-    )
+    val key =
+      withContext(dispatcherProvider.io()) { pgpKeyManager.getKeyById(identifier).get() }
+        ?: return false
+    return withContext(dispatcherProvider.default()) {
+      pgpCryptoHandler.passphraseIsCorrect(
+        key,
+        subkeyIdentifier,
+        passphrase,
+        anySubkey = anySubkey,
+      )
+    }
   }
 
   fun getEmailFromKeyId(identifier: PGPIdentifier): String? {
@@ -110,7 +115,7 @@ constructor(
     pgpCryptoHandler.unlockJcaAuthKeyPair(key, passphrase).getOrThrow()
   }
 
-  fun decrypt(
+  suspend fun decrypt(
     passphrases: Map<String, CharArray?>,
     identities: List<PGPIdentifier>,
     encryptedMessage: ByteArrayInputStream,
@@ -121,16 +126,18 @@ constructor(
       identities.mapUntil({ it.second.isOk }) { id ->
         encryptedMessage.reset()
         message.reset()
-        val key = pgpKeyManager.getKeyById(id).get()
+        val key = withContext(dispatcherProvider.io()) { pgpKeyManager.getKeyById(id).get() }
         val decryptionOptions = PGPDecryptOptions.Builder().build()
         val result =
-          pgpCryptoHandler.decrypt(
-            key,
-            passphrases.values.first(),
-            encryptedMessage,
-            message,
-            decryptionOptions,
-          )
+          withContext(dispatcherProvider.default()) {
+            pgpCryptoHandler.decrypt(
+              key,
+              passphrases.values.first(),
+              encryptedMessage,
+              message,
+              decryptionOptions,
+            )
+          }
         result.getError()?.let { logcat { it.asLog() } }
         Pair(id.toString(), result.map { message })
       }
@@ -140,67 +147,83 @@ constructor(
         message.reset()
         val pgpId = PGPIdentifier.fromString(id)
         requireNotNull(pgpId) { "Error while parsing cached PGP identifier \"${id}\"" }
-        val key = pgpKeyManager.getKeyById(pgpId).get()
+        val key = withContext(dispatcherProvider.io()) { pgpKeyManager.getKeyById(pgpId).get() }
         val decryptionOptions = PGPDecryptOptions.Builder().build()
         val result =
-          pgpCryptoHandler.decrypt(
-            key,
-            passphrases[id],
-            encryptedMessage,
-            message,
-            decryptionOptions,
-          )
+          withContext(dispatcherProvider.default()) {
+            pgpCryptoHandler.decrypt(
+              key,
+              passphrases[id],
+              encryptedMessage,
+              message,
+              decryptionOptions,
+            )
+          }
         result.getError()?.let { logcat { it.asLog() } }
         Pair(id, result.map { message })
       }
     }
   }
 
-  fun decryptSym(
+  suspend fun decryptSym(
     passphrase: CharArray,
     encryptedMessage: ByteArrayInputStream,
     message: ByteArrayOutputStream,
   ) = run {
     val decryptionOptions = PGPDecryptOptions.Builder().build()
-    pgpCryptoHandler.decrypt(null, passphrase, encryptedMessage, message, decryptionOptions).map {
-      message
-    }
+    withContext(dispatcherProvider.default()) {
+        pgpCryptoHandler.decrypt(null, passphrase, encryptedMessage, message, decryptionOptions)
+      }
+      .map {
+        message
+      }
   }
 
-  fun encrypt(
+  suspend fun encrypt(
     identities: List<PGPIdentifier>,
     message: ByteArrayInputStream,
     encryptedMessage: ByteArrayOutputStream,
-  ) = run {
-    // get primary key IDs in order to identify and avoid duplicate keys
-    val primaryKeyIds =
-      identities
-        .mapNotNull { getLongKeyIdFromKeyId(it) }
-        .distinct()
-        .mapNotNull { PGPIdentifier.fromString(it) }
-    val keys = primaryKeyIds.map { id -> pgpKeyManager.getKeyById(id) }.filterOk()
-    val encryptionOptions =
-      PGPEncryptOptions.Builder()
-        .withAsciiArmor(settings.getBoolean(PreferenceKeys.ASCII_ARMOR, false))
-        .build()
-    val result = pgpCryptoHandler.encrypt(keys, null, message, encryptedMessage, encryptionOptions)
-    result.getError()?.let { logcat { it.asLog() } }
-    val succeededUserEmails =
-      result.get()?.mapNotNull { key ->
-        KeyUtils.tryGetUserId(key)?.toString()?.let { PGPIdentifier.splitUserId(it) }
-      }
-    Pair(succeededUserEmails, result.map { encryptedMessage })
-  }
+  ) =
+    withContext(dispatcherProvider.io()) {
+      // get primary key IDs in order to identify and avoid duplicate keys
+      val primaryKeyIds =
+        identities
+          .mapNotNull { getLongKeyIdFromKeyId(it) }
+          .distinct()
+          .mapNotNull { PGPIdentifier.fromString(it) }
+      val keys = primaryKeyIds.map { id -> pgpKeyManager.getKeyById(id) }.filterOk()
+      val encryptionOptions =
+        PGPEncryptOptions.Builder()
+          .withAsciiArmor(settings.getBoolean(PreferenceKeys.ASCII_ARMOR, false))
+          .build()
+      val result =
+        withContext(dispatcherProvider.default()) {
+          pgpCryptoHandler.encrypt(keys, null, message, encryptedMessage, encryptionOptions)
+        }
+      result.getError()?.let { logcat { it.asLog() } }
+      val succeededUserEmails =
+        result.get()?.mapNotNull { key ->
+          KeyUtils.tryGetUserId(key)?.toString()?.let { PGPIdentifier.splitUserId(it) }
+        }
+      Pair(succeededUserEmails, result.map { encryptedMessage })
+    }
 
-  fun encryptSym(
+  suspend fun encryptSym(
     passphrase: CharArray,
     message: ByteArrayInputStream,
     encryptedMessage: ByteArrayOutputStream,
     withArmor: Boolean = false,
   ) = run {
     val encryptionOptions = PGPEncryptOptions.Builder().withAsciiArmor(withArmor).build()
-    pgpCryptoHandler
-      .encrypt(listOf<PGPKey>(), passphrase, message, encryptedMessage, encryptionOptions)
+    withContext(dispatcherProvider.default()) {
+        pgpCryptoHandler.encrypt(
+          listOf<PGPKey>(),
+          passphrase,
+          message,
+          encryptedMessage,
+          encryptionOptions,
+        )
+      }
       .map { encryptedMessage }
   }
 }

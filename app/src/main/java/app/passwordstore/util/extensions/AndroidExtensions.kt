@@ -106,15 +106,23 @@ suspend fun FragmentActivity.commitChange(message: String): Result<Unit, Throwab
 /**
  * Show a [Snackbar] in a [FragmentActivity] and correctly anchor it to a
  * [com.google.android.material.floatingactionbutton.FloatingActionButton] if one exists in the
- * [view]
+ * [view]; run optional [onDismiss] function when snackbar closes
  */
 fun FragmentActivity.snackbar(
   view: View = findViewById(android.R.id.content),
   message: String,
   length: Int = Snackbar.LENGTH_SHORT,
+  onDismiss: () -> Unit = {},
 ): Snackbar {
   val snackbar = Snackbar.make(view, message, length)
   snackbar.anchorView = findViewById(R.id.fab)
+  snackbar.addCallback(
+    object : Snackbar.Callback() {
+      override fun onDismissed(transientBottomBar: Snackbar, event: Int) {
+        onDismiss()
+      }
+    }
+  )
   snackbar.show()
   return snackbar
 }
