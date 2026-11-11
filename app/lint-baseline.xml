@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 9.4.0" type="baseline" client="gradle" dependencies="false" name="AGP (9.4.0)" variant="all" version="9.4.0">
+<issues format="6" by="lint 9.5.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.5.1)" variant="all" version="9.5.1">
 
     <issue
         id="InvalidPackage"
         message="Invalid package reference in org.bouncycastle:bcpkix-jdk18on; not included in Android: `javax.naming.directory`. Referenced from `org.bouncycastle.cert.dane.fetcher.JndiDANEFetcherFactory`.">
         <location
-            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.bouncycastle/bcpkix-jdk18on/1.86/fb5ea65959db10fe5d61148bb2b77f6e231455b1/bcpkix-jdk18on-1.86.jar"/>
+            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.bouncycastle/bcpkix-jdk18on/1.87/ce798f0dafb058963024bbe1096f77192cf3edd7/bcpkix-jdk18on-1.87.jar"/>
     </issue>
 
     <issue
         id="InvalidPackage"
         message="Invalid package reference in org.bouncycastle:bcpkix-jdk18on; not included in Android: `javax.naming`. Referenced from `org.bouncycastle.cert.dane.fetcher.JndiDANEFetcherFactory.1`.">
         <location
-            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.bouncycastle/bcpkix-jdk18on/1.86/fb5ea65959db10fe5d61148bb2b77f6e231455b1/bcpkix-jdk18on-1.86.jar"/>
+            file="$GRADLE_USER_HOME/caches/modules-2/files-2.1/org.bouncycastle/bcpkix-jdk18on/1.87/ce798f0dafb058963024bbe1096f77192cf3edd7/bcpkix-jdk18on-1.87.jar"/>
     </issue>
 
     <issue
@@ -58,7 +58,7 @@
         errorLine2="  ^">
         <location
             file="src/main/res/values-it/strings.xml"
-            line="21"
+            line="20"
             column="3"/>
     </issue>
 
@@ -69,7 +69,7 @@
         errorLine2="  ^">
         <location
             file="src/main/res/values-pt-rBR/strings.xml"
-            line="21"
+            line="20"
             column="3"/>
     </issue>
 
