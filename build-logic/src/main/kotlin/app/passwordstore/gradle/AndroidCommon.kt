@@ -37,6 +37,7 @@ object AndroidCommon {
       testOptions {
         animationsDisabled = true
         unitTests.isReturnDefaultValues = true
+        unitTests.isIncludeAndroidResources = true
       }
     }
 
@@ -57,6 +58,7 @@ object AndroidCommon {
       testOptions {
         animationsDisabled = true
         unitTests.isReturnDefaultValues = true
+        unitTests.isIncludeAndroidResources = true
       }
     }
 
