@@ -9,6 +9,8 @@ package app.passwordstore.gradle
 
 import app.passwordstore.gradle.signing.configureBuildSigning
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.variant.ApplicationAndroidComponentsExtension
+import com.android.build.api.variant.HasUnitTestBuilder
 import com.android.build.gradle.AppPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -21,6 +23,13 @@ class ApplicationPlugin : Plugin<Project> {
   override fun apply(project: Project) {
     project.pluginManager.apply(AppPlugin::class)
     AndroidCommon.configure(project)
+    project.extensions.configure<ApplicationAndroidComponentsExtension> {
+      beforeVariants(selector().withBuildType("release")) {
+        val unitTestBuilder = it as HasUnitTestBuilder
+        unitTestBuilder.enableUnitTest = true
+      }
+    }
+
     val minifySwitch = project.providers.environmentVariable("DISABLE_MINIFY")
     project.extensions.configure<ApplicationExtension> {
       dependenciesInfo {

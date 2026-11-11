@@ -16,7 +16,7 @@ private infix fun String.matchedForDomain(domain: String) =
   SearchableRepositoryViewModel.generateStrictDomainRegex(domain)?.containsMatchIn(this) == true
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [23])
+@Config(sdk = [26], application = android.app.Application::class)
 class StrictDomainRegexTest {
 
   @Test
