@@ -6,9 +6,8 @@
 package app.passwordstore.passgen.diceware
 
 import kotlin.random.Random
-
-// import kotlin.test.assertEquals
-// import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class DicewarePassphraseGeneratorTest {
   /** Pre-seeded [Random] instance to ensure tests are deterministic. */
@@ -16,18 +15,15 @@ class DicewarePassphraseGeneratorTest {
 
   private val intGenerator = RandomIntGenerator { it.random(random) }
 
-  /*
-    @Test
-    fun generatePassphrase() {
-      val die = Die(6, intGenerator)
+  @Test
+  fun generatePassphrase() {
+    val die = Die(6, intGenerator)
 
-      val generator = DicewarePassphraseGenerator(die, WordListParserTest.getDefaultWordList())
+    val generator = DicewarePassphraseGenerator(die, WordListParserTest.getDefaultWordList())
 
-      assertEquals(
-        "Salvation_Cozily_Croon_Trustee_Fidgety",
-        generator.generatePassphrase(5, '_', false, true),
-      )
-    }
-  */
-
+    assertEquals(
+      "Salvation_Cozily_Croon_Trustee_Fidgety",
+      generator.generatePassphrase(5, '_', false, true),
+    )
+  }
 }
