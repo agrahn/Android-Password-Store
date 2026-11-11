@@ -40,6 +40,7 @@ import app.passwordstore.ui.APSAppBar
 import app.passwordstore.ui.compose.theme.APSTheme
 import app.passwordstore.ui.dialogs.AddPgpKeyBottomSheet
 import app.passwordstore.ui.dialogs.PasswordDialog
+import app.passwordstore.util.coroutines.DispatcherProvider
 import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.wipe
 import app.passwordstore.util.git.sshj.SshKey
@@ -55,6 +56,7 @@ import java.io.IOException
 import java.security.SecureRandom
 import javax.inject.Inject
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
@@ -64,6 +66,7 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   @Inject lateinit var cryptoRepository: CryptoRepository
   @Inject lateinit var pgpKeyManager: PGPKeyManager
+  @Inject lateinit var dispatcherProvider: DispatcherProvider
 
   /* Counter for the user's passphrase attempts */
   private var retries = 0
@@ -257,38 +260,44 @@ class PGPKeyListActivity : AppCompatActivity() {
 
   private fun exportKey(identifier: PGPIdentifier) {
     retries = 0
-    lifecycleScope.launch {
+    lifecycleScope.launch(dispatcherProvider.main()) {
       if (cryptoRepository.isPasswordProtected(listOf(identifier), anySubkey = true)) {
         // export as symmetrically encrypted file after passphrase verification
         askPassphrase(identifier)
       } else if (isSecretKey(identifier)) {
         // a secret key without passphrase is symm. encrypted and exported without verification
-        confirmBackupCode(identifier, generateBackupCode())
+        confirmBackupCode(
+          identifier,
+          withContext(dispatcherProvider.default()) { generateBackupCode() },
+        )
       } else {
         // write public key to file unencrypted
-        writeBackupFile(identifier)
+        withContext(dispatcherProvider.io()) { writeBackupFile(identifier) }
       }
     }
   }
 
   private fun exportPublicKey(identifier: PGPIdentifier) {
-    lifecycleScope.launch { writeBackupFile(identifier) }
+    lifecycleScope.launch(dispatcherProvider.io()) { writeBackupFile(identifier) }
   }
 
-  private fun askPassphrase(identifier: PGPIdentifier, isError: Boolean = false) {
+  private suspend fun askPassphrase(identifier: PGPIdentifier, isError: Boolean = false) {
     if (++retries > MAX_RETRIES) return
 
     val shortUserId = cryptoRepository.getEmailFromKeyId(identifier) ?: return
-    val label = "${resources.getString(R.string.pgp_id_label)} ${shortUserId}"
+    val label = resources.getString(R.string.pgp_id_label, shortUserId)
     val dialog = PasswordDialog.newInstance(label, onCancelFinish = false)
     if (isError) dialog.setError()
     dialog.show(supportFragmentManager, "PASSWORD_DIALOG")
     dialog.setFragmentResultListener(PasswordDialog.PASSWORD_RESULT_KEY) { key, bundle ->
       if (key == PasswordDialog.PASSWORD_RESULT_KEY) {
         val passphrase = bundle.getCharArray(PasswordDialog.PASSWORD_PHRASE_KEY) ?: charArrayOf()
-        lifecycleScope.launch {
+        lifecycleScope.launch(dispatcherProvider.main()) {
           if (cryptoRepository.isPasswordCorrect(identifier, null, passphrase, anySubkey = true)) {
-            confirmBackupCode(identifier, generateBackupCode())
+            confirmBackupCode(
+              identifier,
+              withContext(dispatcherProvider.default()) { generateBackupCode() },
+            )
           } else {
             askPassphrase(identifier, isError = true)
           }
@@ -313,7 +322,7 @@ class PGPKeyListActivity : AppCompatActivity() {
         .setView(dialogView)
         .setMessage(code)
         .setPositiveButton(R.string.dialog_ok) { _, _ ->
-          lifecycleScope.launch { writeBackupFile(identifier, code) }
+          lifecycleScope.launch(dispatcherProvider.io()) { writeBackupFile(identifier, code) }
         }
         .setNegativeButton(R.string.dialog_cancel, null)
         .setCancelable(false)
@@ -329,19 +338,21 @@ class PGPKeyListActivity : AppCompatActivity() {
     dialog.show()
   }
 
-  private fun writeBackupFile(identifier: PGPIdentifier, code: String? = null) {
+  private suspend fun writeBackupFile(identifier: PGPIdentifier, code: String? = null) {
     val keyIdAndContent = run {
       val key = pgpKeyManager.getKeyById(identifier, withArmor = true).getOrThrow()
       val contents =
         if (code != null) { // encrypt secret keys symmetrically
           val keyContents = ByteArrayOutputStream()
           val result =
-            cryptoRepository.encryptSym(
-              code.toCharArray(),
-              key.contents.inputStream(),
-              keyContents,
-              withArmor = true,
-            )
+            withContext(dispatcherProvider.default()) {
+              cryptoRepository.encryptSym(
+                code.toCharArray(),
+                key.contents.inputStream(),
+                keyContents,
+                withArmor = true,
+              )
+            }
           if (result.isOk) {
             val encrypted = result.getOrThrow().toByteArray()
             val firstNewline = encrypted.indexOf('\n'.code.toByte())

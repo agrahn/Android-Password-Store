@@ -34,6 +34,7 @@ import com.github.michaelbull.result.map
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.runBlocking
 import logcat.LogPriority.ERROR
 import logcat.asLog
 import logcat.logcat
@@ -122,12 +123,14 @@ class PGPKeyChangePassphraseActivity : AppCompatActivity() {
           binding.oldPassphrase.text?.let { CharArray(it.length) { i -> it[i] } } ?: charArrayOf()
         val oldPassphraseIsCorrect =
           if (
-            cryptoRepository.isPasswordCorrect(
-              identifier,
-              subkeyIdentifier,
-              if (oldPassphrase.isEmpty()) null else oldPassphrase,
-              anySubkey = subkeyIdentifier?.let { false } ?: true,
-            )
+            runBlocking {
+              cryptoRepository.isPasswordCorrect(
+                identifier,
+                subkeyIdentifier,
+                if (oldPassphrase.isEmpty()) null else oldPassphrase,
+                anySubkey = subkeyIdentifier?.let { false } ?: true,
+              )
+            }
           )
             true
           else {

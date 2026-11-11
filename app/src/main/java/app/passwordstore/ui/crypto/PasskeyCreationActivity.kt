@@ -554,7 +554,7 @@ class PasskeyCreationActivity : BasePGPActivity() {
           editExtra?.wipe()
 
           val (succeededUserEmails, encryptionResult) =
-            withContext(dispatcherProvider.io()) {
+            withContext(dispatcherProvider.default()) {
               repository.encrypt(
                 identifiers,
                 ByteArrayInputStream(contentBytes),

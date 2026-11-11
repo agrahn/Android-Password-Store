@@ -100,10 +100,7 @@ class PasskeyAuthenticationActivity : BasePGPActivity() {
     val encryptedFile = File(passkeyPath)
     val message = withContext(dispatcherProvider.io()) { encryptedFile.readBytes().inputStream() }
     val outputStream = ByteArrayOutputStream()
-    val results =
-      withContext(dispatcherProvider.io()) {
-        repository.decrypt(passphrases, identifiers, message, outputStream)
-      }
+    val results = repository.decrypt(passphrases, identifiers, message, outputStream)
     val lastResult = results.last()
     if (lastResult.second.isOk) {
       val decryptedEntryBytes = lastResult.second.getOrThrow().toByteArray()

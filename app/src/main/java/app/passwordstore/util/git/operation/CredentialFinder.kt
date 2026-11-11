@@ -200,7 +200,7 @@ class CredentialFinder(
       val message =
         callingActivity.resources.getString(messageRes) +
           if (SshKey.pgpLongKeyId != 0L)
-            "\n${callingActivity.resources.getString(R.string.pgp_id_label)} ${repository.getEmailFromKeyId(KeyId(SshKey.pgpLongKeyId))}"
+            "\n${callingActivity.resources.getString(R.string.pgp_id_label, repository.getEmailFromKeyId(KeyId(SshKey.pgpLongKeyId)))}"
           else ""
       MaterialAlertDialogBuilder(callingActivity)
         .run {
