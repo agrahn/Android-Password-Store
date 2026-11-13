@@ -82,6 +82,12 @@ class VersioningPlugin : Plugin<Project> {
         semverString.set(version.nextMinorVersion("SNAPSHOT").toString())
         propertyFile.set(propFile)
       }
+      tasks.register<VersioningTask>("setVersion") {
+        description = "Set the version to a provided semantic version string"
+        semverString.set(providers.gradleProperty("semver"))
+        propertyFile.set(propFile)
+      }
+
       afterEvaluate {
         check(androidAppPluginApplied.get()) {
           "Plugin 'com.android.application' must be applied to ${project.displayName} to use the Versioning Plugin"
