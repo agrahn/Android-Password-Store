@@ -21,9 +21,18 @@ abstract class VersioningTask : DefaultTask() {
   @get:OutputFile abstract val propertyFile: RegularFileProperty
 
   /** Generate the Android 'versionCode' property */
-  private fun Version.androidCode(): Long {
+
+  /* private fun Version.androidCode(): Long {
     return majorVersion() * 1_00_00 + minorVersion() * 1_00 + patchVersion()
+  } */
+
+  /** increment patch in versionCode by two for f-droid hosting two differently signed pkgs */
+  private fun Version.androidCode(): Long = buildString {
+    append(majorVersion())
+    append(minorVersion().toString().padStart(2, '0'))
+    append((1 + 2 * patchVersion()).toString().padStart(2, '0'))
   }
+    .toLong()
 
   private fun Version.toPropFileText(): String {
     val newVersionCode = androidCode()
