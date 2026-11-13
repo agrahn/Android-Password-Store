@@ -4,6 +4,7 @@
  */
 package app.passwordstore.util.git.operation
 
+import android.widget.RadioGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentActivity
@@ -152,14 +153,20 @@ abstract class GitOperation(protected val callingActivity: FragmentActivity) {
   }
 
   private fun onMissingSshKeyFile() {
-    var dialog =
-      MaterialAlertDialogBuilder(callingActivity)
-        .setTitle(R.string.ssh_preferences_dialog_title)
-        .setMessage(R.string.ssh_preferences_dialog_text)
-        .setNeutralButton(R.string.button_label_import) { _, _ -> getSshKey(false) }
-        .setNegativeButton(R.string.ssh_preferences_dialog_generate) { _, _ -> getSshKey(true) }
-        .setPositiveButton(R.string.ssh_preferences_dialog_pgp_key) { _, _ -> usePgpKey() }
-        .show()
+    val content = callingActivity.layoutInflater.inflate(R.layout.dialog_authkey_setup, null)
+    val actionGroup = content.findViewById<RadioGroup>(R.id.ssh_key_action_group)
+
+    MaterialAlertDialogBuilder(callingActivity)
+      .setTitle(R.string.ssh_preferences_dialog_title)
+      .setView(content)
+      .setPositiveButton(R.string.dialog_ok) { _, _ ->
+        when (actionGroup.checkedRadioButtonId) {
+          R.id.ssh_key_action_pgp -> usePgpKey()
+          R.id.ssh_key_action_import -> getSshKey(generateKey = false)
+          R.id.ssh_key_action_generate -> getSshKey(generateKey = true)
+        }
+      }
+      .show()
   }
 
   suspend fun executeAfterAuthentication(authMode: AuthMode): Result<Unit, Throwable> {
