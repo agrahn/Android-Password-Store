@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright © 2014-2026 The Android Password Store Authors. All Rights Reserved.
+  ~ SPDX-License-Identifier: GPL-3.0-only
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  android:padding="@dimen/activity_horizontal_margin">
+
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/normal_margin"
+    android:text="@string/ssh_preferences_dialog_text" />
+
+  <RadioGroup
+    android:id="@+id/ssh_key_action_group"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/normal_margin"
+    android:orientation="vertical">
+
+    <com.google.android.material.radiobutton.MaterialRadioButton
+      android:id="@+id/ssh_key_action_pgp"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="@string/ssh_preferences_dialog_pgp_key" />
+
+    <com.google.android.material.radiobutton.MaterialRadioButton
+      android:id="@+id/ssh_key_action_generate"
+      android:layout_width="match_parent"
+      android:checked="true"
+      android:layout_height="wrap_content"
+      android:text="@string/ssh_preferences_dialog_generate" />
+
+    <com.google.android.material.radiobutton.MaterialRadioButton
+      android:id="@+id/ssh_key_action_import"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="@string/button_label_import" />
+  </RadioGroup>
+</LinearLayout>
