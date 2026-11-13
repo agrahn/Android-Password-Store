@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file
 
 ### Fixed
 
-- Some dialogs refactored/fixed
+- A few dialogs refactored/fixed
 - PGP ops moved to default thread for slightly better app performance
 
 ## [2.1.0] - 2026-11-09
