@@ -106,6 +106,16 @@
       app:layout_constraintTop_toBottomOf="@id/repo_visibility_group" />
 
     <com.google.android.material.button.MaterialButton
+      android:id="@+id/choose_folder_button"
+      style="?attr/borderlessButtonStyle"
+      android:visibility="invisible"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/choose_folder"
+      app:layout_constraintStart_toStartOf="@id/repo_visibility"
+      app:layout_constraintTop_toBottomOf="@id/repo_shared_parent" />
+
+    <com.google.android.material.button.MaterialButton
       android:id="@+id/continue_button"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
@@ -113,7 +123,7 @@
       android:text="@string/dialog_continue"
       app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@id/repo_shared_parent" />
+      app:layout_constraintTop_toBottomOf="@id/choose_folder_button" />
 
   </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

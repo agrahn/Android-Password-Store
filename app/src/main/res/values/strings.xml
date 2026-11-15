@@ -413,6 +413,7 @@
   <string name="shared_repo">shared folder</string>
   <string name="shared_repo_path" translatable="false">%1$s › PasswordStore</string>
   <string name="shared_repo_unsupported_folder">This folder cannot be used. Choose a folder in the device’s shared storage.</string>
+  <string name="choose_folder">Choose folder</string>
 
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">Potentially incorrect URL</string>

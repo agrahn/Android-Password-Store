@@ -409,6 +409,7 @@
   <string name="internal_repo">versteckt, app-intern (empfohlen)</string>
   <string name="shared_repo">freigegebener Ordner</string>
   <string name="shared_repo_unsupported_folder">Dieser Ordner kann nicht verwendet werden. Wählen Sie einen Ordner im gemeinsamen Speicher des Geräts.</string>
+  <string name="choose_folder">Ordner auswählen</string>
 
 
   <!-- SSH port validation -->

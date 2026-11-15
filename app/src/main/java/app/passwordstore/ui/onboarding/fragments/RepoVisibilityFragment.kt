@@ -27,6 +27,7 @@ import app.passwordstore.ui.git.config.GitServerConfigActivity
 import app.passwordstore.util.extensions.finish
 import app.passwordstore.util.extensions.performTransactionWithBackStack
 import app.passwordstore.util.extensions.sharedPrefs
+import app.passwordstore.util.extensions.snackbar
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.extensions.windowInsetsLambda
@@ -80,6 +81,13 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
       }
     }
 
+  private val chooseFolderAction =
+    registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+      if (uri == null) return@registerForActivityResult
+      if (PasswordRepository.setSharedRepoFromTreeUri(uri)) refreshSharedRepoPath()
+      else requireActivity().snackbar(message = getString(R.string.shared_repo_unsupported_folder))
+    }
+
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     ViewCompat.setOnApplyWindowInsetsListener(view, windowInsetsLambda)
@@ -92,6 +100,7 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
       internalRepo.setOnCheckedChangeListener { _, isChecked ->
         if (isChecked) {
           repoSharedParent.visibility = View.INVISIBLE
+          chooseFolderButton.visibility = View.INVISIBLE
         }
       }
 
@@ -99,10 +108,13 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
         if (isChecked) {
           refreshSharedRepoPath()
           repoSharedParent.visibility = View.VISIBLE
+          chooseFolderButton.visibility = View.VISIBLE
         }
       }
 
       sharedRepo.isChecked = settings.getBoolean(PreferenceKeys.PREF_SHARED_REPO, false)
+
+      chooseFolderButton.setOnClickListener { chooseFolderAction.launch(null) }
 
       continueButton.setOnClickListener {
         settings.edit { putBoolean(PreferenceKeys.PREF_SHARED_REPO, sharedRepo.isChecked) }
