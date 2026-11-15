@@ -187,7 +187,7 @@
   <string name="ssh_keygen_existing_message">¿Reemplazar la clave SSH existente? Es posible que pierda el acceso a su servidor.</string>
   <string name="ssh_keygen_replace_with_pgp_key_message">Ya existe una clave SSH. ¿Desea eliminarla y utilizar una clave PGP para autenticación en su lugar? Es posible que pierda el acceso a su servidor.</string>
   <string name="ssh_keygen_existing_replace">Reemplazar</string>
-  <string name="ssh_keygen_replace_with_pgp_key">Remplazar con clave PGP</string>
+  <string name="ssh_keygen_replace_with_pgp_key">Reemplazar con clave PGP</string>
   <string name="ssh_keygen_existing_keep">Mantener</string>
 
 
