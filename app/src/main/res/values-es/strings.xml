@@ -18,6 +18,7 @@
   <string name="dialog_delete_msg">¿Desea eliminar el directorio actual del almacén de contraseñas?\n(%1$s)</string>
   <string name="dialog_delete">Eliminar directorio</string>
   <string name="dialog_do_not_delete">Cancelar</string>
+    <string name="title_activity_git_remote">Repositorio remoto</string>
     <string name="title_activity_git_config">Configuración de Git</string>
     <string name="title_activity_git_log">Registro de commits</string>
 
@@ -67,6 +68,7 @@
   <string name="server_url">URL del repositorio</string>
 
   <string name="connection_mode">Modo de autenticación</string>
+  <string name="show_server_response">Mostrar banner del servidor (si lo hubiera)</string>
 
   <!-- Git Config fragment -->
   <string name="git_user_name_hint">Usuario</string>
@@ -94,7 +96,9 @@
 
   <!-- Preferences -->
   <string name="pref_category_repository_title">Repositorio</string>
+  <string name="pref_git_server_auth_key">Clave de autenticación</string>
   <string name="pref_edit_git_config">Configuración y utilidades locales de Git</string>
+  <string name="pref_ssh_use_pgp_key_title">Usar clave PGP</string>
   <string name="pref_import_ssh_key_title">Importar clave SSH</string>
   <string name="pref_ssh_keygen_title">Generar claves SSH</string>
   <string name="pref_ssh_see_key_title">Ver la clave SSH pública generada</string>
@@ -102,6 +106,8 @@
   <string name="pref_dialog_delete_title">Vaciar repositorio</string>
   <string name="pref_category_general_title">General</string>
   <string name="pref_category_passwords_title">Contraseñas</string>
+  <string name="pref_biometrics_and_pin_timeout_title">Periodo de validez (en días) de la biometría o el PIN</string>
+  <string name="pref_biometrics_and_pin_timeout_summary">Tras expirar, deberá reintroducir la frase de paso PGP. 0 significa para siempre. Valor actual: %1$s</string>
   <string name="pref_clipboard_timeout_title">Tiempo de expiración al copiar</string>
   <string name="pref_clipboard_timeout_summary">Establezca el tiempo (en segundos) que desea que la contraseña permanezca en el portapapeles. 0 significa para siempre. Valor actual: %1$s</string>
   <string name="pref_copy_title">Copiar automáticamente la contraseña</string>
@@ -119,14 +125,17 @@
   <string name="pref_type_independent_sort_order">Independiente del tipo</string>
   <string name="pref_recently_used_sort_order">Usado recientemente</string>
   <string name="pref_category_autofill_title">Autocompletar</string>
-  <string name="pref_autofill_enable_title">Habilitar Autocompletar</string>
+  <string name="pref_autofill_enable_title">Habilitar autocompletar</string>
+  <string name="pref_autofill_ask_save_passwords_title">Preguntar si guardar contraseñas</string>
   <string name="pref_category_misc_title">Misc</string>
   <string name="pref_clear_clipboard_title">Funcionalidad alternativa del historial del portapapeles</string>
   <string name="pref_clear_clipboard_summary">Inundar el historial del portapapeles (dispositivos Samsung, Gboard) con números aleatorios, borrando cualquier contraseña.</string>
   <string name="pref_git_delete_repo_summary">Elimina el repositorio local (oculto)</string>
-  <string name="prefs_export_passwords_title">Repositorio de exportación</string>
+  <string name="prefs_external_repository_title">Repositorio externo</string>
+  <string name="prefs_external_repository_summary">El repositorio de contraseñas se encuentra en una carpeta compartida a la que otras apps pueden acceder también.</string>
+  <string name="prefs_export_passwords_title">Exportar repositorio</string>
   <string name="prefs_export_passwords_summary">Exporta el repositorio de contraseñas a un directorio externo</string>
-  <string name="prefs_import_passwords_title">Repositorio de importación</string>
+  <string name="prefs_import_passwords_title">Importar repositorio</string>
   <string name="prefs_import_passwords_summary">Importa un repositorio de contraseñas desde un directorio externo</string>
   <string name="prefs_repo_not_empty_dialog_title">El repositorio local no está vacío</string>
   <string name="prefs_repo_not_empty_dialog_summary">El repositorio de contraseñas local debe eliminarse primero</string>
@@ -176,7 +185,9 @@
   <string name="ssh_keygen_explanation_ecdsa"><b>ECDSA (NIST P-256)</b>\nAutenticación rápida y compatible con la mayoría de los servidores que aún reciben actualizaciones.</string>
   <string name="ssh_keygen_existing_title">Clave SSH</string>
   <string name="ssh_keygen_existing_message">¿Reemplazar la clave SSH existente? Es posible que pierda el acceso a su servidor.</string>
+  <string name="ssh_keygen_replace_with_pgp_key_message">Ya existe una clave SSH. ¿Desea eliminarla y utilizar una clave PGP para autenticación en su lugar? Es posible que pierda el acceso a su servidor.</string>
   <string name="ssh_keygen_existing_replace">Reemplazar</string>
+  <string name="ssh_keygen_replace_with_pgp_key">Reemplazar con clave PGP</string>
   <string name="ssh_keygen_existing_keep">Mantener</string>
 
 
@@ -197,6 +208,8 @@
   <string name="git_log">Mostrar registro de commits</string>
   <string name="show_password_pref_title">Mostrar la contraseña</string>
   <string name="show_password_pref_summary">Controla la visibilidad de las contraseñas una vez descifradas. Esto no deshabilita la copia en el portapapeles.</string>
+  <string name="show_extra_content_pref_title">Mostrar contenido extra</string>
+  <string name="show_extra_content_pref_summary">Controla la visibilidad del contenido extra una vez descifrado.</string>
   <string name="fast_unlock_pref_title">Desbloqueo rápido de entradas</string>
   <string name="pwd_generate_button">Generar</string>
   <string name="refresh_list">Actualizar lista</string>
@@ -260,6 +273,7 @@
   <string name="button_create">Crear</string>
   <string name="pref_search_on_start_title">Abrir búsqueda al inicio</string>
   <string name="pref_search_on_start_summary">Abrir la barra de búsqueda cuando se inicia la aplicación</string>
+  <string name="pref_search_filter_mode_title">Filtro de resultados de búsqueda</string>
   <string name="clone_git_repo">El repositorio debe clonarse antes de sincronizar los cambios.</string>
   <string name="pref_app_theme_title">Tema de la aplicación</string>
   <string name="pref_app_theme_value_light">Claro</string>
