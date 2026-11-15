@@ -154,7 +154,7 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
       }
   }
 
-  /** Fresh Git repository */
+  /** Fresh Git repository, or an existing non-empty folder used as it is */
   private fun createRepository() {
     val localDir = PasswordRepository.getRepositoryDirectory()
     runCatching {

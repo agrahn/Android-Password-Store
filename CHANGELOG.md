@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+### Added
+
+- **External repository**: a folder that already contains files is used as it is. It is not initialised as a Git repository, and changes are committed only if it is one.
+
 ## [2.1.1] - 2026-11-13
 
 ### Fixed

@@ -63,6 +63,7 @@ object PasswordRepository {
   }
 
   fun createRepository(repositoryDir: File) {
+    if (repositoryDir.exists() && repositoryDir.listFiles()?.isEmpty() != true) return
     repositoryDir.delete()
     repository = Git.init().setDirectory(repositoryDir).call().repository
   }
