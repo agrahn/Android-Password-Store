@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file
 ### Added
 
 - **External repository**: a folder that already contains files is used as it is. It is not initialised as a Git repository, and changes are committed only if it is one.
+- **External repository** folder can be chosen via Settings -> Repository: any folder in the shared storage below the top level of a storage volume.
 
 ## [2.1.1] - 2026-11-13
 

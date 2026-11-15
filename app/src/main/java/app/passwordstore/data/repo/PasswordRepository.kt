@@ -4,7 +4,10 @@
  */
 package app.passwordstore.data.repo
 
+import android.net.Uri
 import android.os.Environment
+import android.provider.DocumentsContract
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.edit
 import app.passwordstore.Application
 import app.passwordstore.data.password.PasswordItem
@@ -138,10 +141,48 @@ object PasswordRepository {
     closeRepository()
   }
 
-  fun getRepositoryDirectory(): File =
-    if (settings.getBoolean(PreferenceKeys.PREF_SHARED_REPO, false))
-      File(File(Environment.getExternalStorageDirectory(), "PasswordStore"), "store")
-    else File(filesDir, "store")
+  fun getRepositoryDirectory(): File {
+    if (!settings.getBoolean(PreferenceKeys.PREF_SHARED_REPO, false)) return File(filesDir, "store")
+    val path = settings.getString(PreferenceKeys.PREF_SHARED_REPO_PATH, null)
+    return if (path != null) File(path)
+    else File(File(Environment.getExternalStorageDirectory(), "PasswordStore"), "store")
+  }
+
+  fun setSharedRepoFromTreeUri(uri: Uri): Boolean {
+    if (uri.authority != "com.android.externalstorage.documents") return false
+    val dir =
+      pathFromTreeDocumentId(
+        DocumentsContract.getTreeDocumentId(uri),
+        Environment.getExternalStorageDirectory(),
+      ) ?: return false
+    settings.edit {
+      putString(PreferenceKeys.PREF_SHARED_REPO_PATH, dir.absolutePath)
+      putBoolean(PreferenceKeys.REPO_CHANGED, true)
+    }
+    return true
+  }
+
+  @VisibleForTesting
+  fun pathFromTreeDocumentId(documentId: String, primaryRoot: File): File? {
+    val volume = documentId.substringBefore(':')
+    val relativePath = documentId.substringAfter(':', "")
+    if (
+      volume.isEmpty() ||
+        volume == "." ||
+        volume == ".." ||
+        '/' in volume ||
+        relativePath.all { it == '/' } ||
+        relativePath.split('/').any { it == ".." || it == "." }
+    )
+      return null
+    val volumeRoot =
+      when (volume) {
+        "primary" -> primaryRoot
+        "home" -> File(primaryRoot, "Documents")
+        else -> File("/storage/$volume")
+      }
+    return File(volumeRoot, relativePath)
+  }
 
   /* referencePath: /a/b/c
    * /a/b/c/d/e/dir -> /d/e/dir

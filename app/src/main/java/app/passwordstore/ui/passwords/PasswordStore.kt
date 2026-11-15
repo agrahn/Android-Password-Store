@@ -403,9 +403,9 @@ class PasswordStore : BaseGitActivity() {
   private fun checkLocalRepository(localDir: File?) {
     if (localDir != null && settings.getBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, false)) {
       // do not push the fragment if we already have it
-      if (
-        getPasswordFragment() == null || settings.getBoolean(PreferenceKeys.REPO_CHANGED, false)
-      ) {
+      val repoChanged = settings.getBoolean(PreferenceKeys.REPO_CHANGED, false)
+      if (getPasswordFragment() == null || repoChanged) {
+        if (repoChanged) runCatching { model.reset() }
         settings.edit { putBoolean(PreferenceKeys.REPO_CHANGED, false) }
         val args = Bundle()
         args.putString(REQUEST_ARG_PATH, PasswordRepository.getRepositoryDirectory().absolutePath)

@@ -31,6 +31,7 @@ object PreferenceKeys {
   const val GIT_SHOW_SSH_SERVER_RESPONSE = "git_show_ssh_server_response"
 
   const val PREF_SHARED_REPO = "pref_shared_repo"
+  const val PREF_SHARED_REPO_PATH = "pref_shared_repo_path"
 
   const val GIT_REMOTE_AUTH = "git_remote_auth"
   const val GIT_REMOTE_KEY_TYPE = "git_remote_key_type"

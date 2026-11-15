@@ -147,6 +147,7 @@
   <string name="pref_git_delete_repo_summary">Deletes the hidden, app-internal repository.</string>
   <string name="prefs_external_repository_title">External repository</string>
   <string name="prefs_external_repository_summary">The password repository is located in a shared folder that other apps can also access.</string>
+  <string name="prefs_external_repository_folder_title">External repository folder</string>
   <string name="prefs_export_passwords_title">Export repository</string>
   <string name="prefs_export_passwords_summary">Exports the password repository to an external directory.</string>
   <string name="prefs_export_passwords_dialog_title">Exporting passwords</string>
@@ -411,6 +412,7 @@
   <string name="internal_repo">hidden, app-internal (recommended)</string>
   <string name="shared_repo">shared folder</string>
   <string name="shared_repo_path" translatable="false">%1$s › PasswordStore</string>
+  <string name="shared_repo_unsupported_folder">This folder cannot be used. Choose a folder in the device’s shared storage.</string>
 
   <!-- SSH port validation -->
   <string name="ssh_scheme_needed_title">Potentially incorrect URL</string>

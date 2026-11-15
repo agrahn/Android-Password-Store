@@ -88,6 +88,18 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
   }
 
   private var sharedRepoPref: SwitchPreference? = null
+  private var sharedRepoFolderPref: Preference? = null
+
+  private fun sharedRepoSummary() =
+    activity.sharedPrefs.getString(PreferenceKeys.PREF_SHARED_REPO_PATH, null)
+      ?: activity.getString(R.string.shared_repo_path, Build.MODEL)
+
+  private fun setSharedRepoFolderPrefEnabled(enabled: Boolean) {
+    sharedRepoFolderPref?.run {
+      this.enabled = enabled
+      requestRebind()
+    }
+  }
 
   private val requestAllFilesPermissionAction =
     activity.registerForActivityResult(StartActivityForResult()) { _ ->
@@ -99,6 +111,7 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
           checked = Environment.isExternalStorageManager()
           requestRebind()
         }
+        setSharedRepoFolderPrefEnabled(Environment.isExternalStorageManager())
       }
     }
 
@@ -110,6 +123,26 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
       sharedRepoPref?.run {
         checked = result.all { it.value }
         requestRebind()
+      }
+      setSharedRepoFolderPrefEnabled(result.all { it.value })
+    }
+
+  private val chooseFolderAction =
+    activity.registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
+      if (uri == null) return@registerForActivityResult
+      if (PasswordRepository.setSharedRepoFromTreeUri(uri)) {
+        runCatching { PasswordRepository.initialize() }
+          .onErr { it.message?.let { message -> activity.snackbar(message = message) } }
+        sharedRepoFolderPref?.run {
+          summary = sharedRepoSummary()
+          requestRebind()
+        }
+        sharedRepoPref?.run {
+          summaryOn = sharedRepoSummary()
+          requestRebind()
+        }
+      } else {
+        activity.snackbar(message = activity.getString(R.string.shared_repo_unsupported_folder))
       }
     }
 
@@ -344,10 +377,11 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
         switch(PreferenceKeys.PREF_SHARED_REPO) {
           titleRes = R.string.prefs_external_repository_title
           summaryRes = R.string.prefs_external_repository_summary
-          summaryOn = activity.getString(R.string.shared_repo_path, android.os.Build.MODEL)
+          summaryOn = sharedRepoSummary()
           disableDependents = true
           defaultValue = false
           onClick {
+            setSharedRepoFolderPrefEnabled(checked)
             if (
               checked &&
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
@@ -376,6 +410,17 @@ class RepositorySettings(private val activity: FragmentActivity) : SettingsProvi
             }
 
             false
+          }
+        }
+
+      sharedRepoFolderPref =
+        pref(PreferenceKeys.PREF_SHARED_REPO_PATH) {
+          titleRes = R.string.prefs_external_repository_folder_title
+          summary = sharedRepoSummary()
+          enabled = activity.sharedPrefs.getBoolean(PreferenceKeys.PREF_SHARED_REPO, false)
+          onClick {
+            chooseFolderAction.launch(null)
+            true
           }
         }
 

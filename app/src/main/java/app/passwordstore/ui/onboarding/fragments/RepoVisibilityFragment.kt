@@ -95,14 +95,14 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
         }
       }
 
-      sharedRepo.isChecked = settings.getBoolean(PreferenceKeys.PREF_SHARED_REPO, false)
-
       sharedRepo.setOnCheckedChangeListener { _, isChecked ->
         if (isChecked) {
-          repoSharedParent.text = getString(R.string.shared_repo_path, android.os.Build.MODEL)
+          refreshSharedRepoPath()
           repoSharedParent.visibility = View.VISIBLE
         }
       }
+
+      sharedRepo.isChecked = settings.getBoolean(PreferenceKeys.PREF_SHARED_REPO, false)
 
       continueButton.setOnClickListener {
         settings.edit { putBoolean(PreferenceKeys.PREF_SHARED_REPO, sharedRepo.isChecked) }
@@ -135,6 +135,12 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
         }
       }
     }
+  }
+
+  private fun refreshSharedRepoPath() {
+    binding.repoSharedParent.text =
+      settings.getString(PreferenceKeys.PREF_SHARED_REPO_PATH, null)
+        ?: getString(R.string.shared_repo_path, Build.MODEL)
   }
 
   /** Clones a remote Git repository */
