@@ -274,7 +274,6 @@
   <string name="pref_search_on_start_title">Abrir búsqueda al inicio</string>
   <string name="pref_search_on_start_summary">Abrir la barra de búsqueda cuando se inicia la aplicación</string>
   <string name="pref_search_filter_mode_title">Filtro de resultados de búsqueda</string>
-  
   <string name="clone_git_repo">El repositorio debe clonarse antes de sincronizar los cambios.</string>
   <string name="pref_app_theme_title">Tema de la aplicación</string>
   <string name="pref_app_theme_value_light">Claro</string>
