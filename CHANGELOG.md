@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file
 
 ## [Unreleased]
 
+### Added
+
+- Allow existing, external password directory, Device › PasswordStore › store, that is not backed by Git
+
 ## [2.1.1] - 2026-11-13
 
 ### Fixed
@@ -15,7 +19,7 @@ All notable changes to this project will be documented in this file
 
 ### Added
 
-- **External repository** option restored: Repositories can now be cloned to or created in an external, shared folder under Device › PasswordStore. However, "All files access" permission must be granted from within the app or via Settings -> Apps -> Special app access. The permission is required to view and edit externally added (via Syncthing, for example) pass files.
+- **External repository** option restored: Repositories can now be cloned to or created in an external, shared folder under Device › PasswordStore. However, "All files access" permission must be granted from within the app or via Settings -> Apps -> Special app access. The permission is required to view and edit externally added (via Syncthing, for example) pass files
 
 ### Fixed
 

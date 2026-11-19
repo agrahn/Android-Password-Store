@@ -29,11 +29,12 @@ import app.passwordstore.util.settings.AuthMode
 import app.passwordstore.util.settings.GitSettings
 import app.passwordstore.util.settings.PreferenceKeys
 import app.passwordstore.util.settings.Protocol
-import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.onErr
+import com.github.michaelbull.result.onOk
 import com.github.michaelbull.result.runCatching
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.LogPriority.ERROR
@@ -224,83 +225,76 @@ class GitServerConfigActivity : BaseGitActivity() {
       }
     }
 
-  /** Clones the repository, the directory exists, deletes it */
+  /**
+   * Clones the repository; if a non-empty directory exists, it will be deleted with user consent
+   */
   private fun cloneRepository(newUrl: String) {
-    val localDir =
-      requireNotNull(PasswordRepository.getRepositoryDirectory()) {
-        "Repository directory must be set before cloning"
-      }
-    val localDirFiles = localDir.listFiles() ?: emptyArray()
-    // Warn if non-empty folder unless it's a just-initialized store that has just a .git folder
-    if (
-      localDir.exists() &&
-        localDirFiles.isNotEmpty() &&
-        !(localDirFiles.size == 1 && localDirFiles[0].name == ".git")
-    ) {
-      MaterialAlertDialogBuilder(this)
-        .setTitle(R.string.dialog_delete_title)
-        .setMessage(resources.getString(R.string.dialog_delete_msg, localDir.toString()))
-        .setCancelable(false)
-        .setPositiveButton(R.string.dialog_delete) { dialog, _ ->
-          runCatching {
-            lifecycleScope.launch {
-              val snackbar =
-                snackbar(
-                  message = getString(R.string.delete_directory_progress_text),
-                  length = Snackbar.LENGTH_INDEFINITE,
-                )
-              withContext(dispatcherProvider.io()) {
-                localDir.deleteRecursively()
-                localDir.mkdirs()
-              }
-              snackbar.dismiss()
+    lifecycleScope.launch {
+      var doClone = true
+      var repoExists = false
 
-              settings.edit { putString(PreferenceKeys.GIT_REMOTE_URL, newUrl) }
-              launchGitOperation(GitOp.CLONE)
-                .fold(
-                  success = {
-                    setResult(RESULT_OK)
-                    finish()
-                  },
-                  failure = { err ->
-                    settings.edit { remove(PreferenceKeys.GIT_REMOTE_URL) }
-                    promptOnErrorHandler(err) { finish() }
-                  },
-                )
-            }
-          }
-            .onErr { e ->
-              e.printStackTrace()
-              MaterialAlertDialogBuilder(this).setMessage(e.message).show()
-            }
-          dialog.cancel()
+      val localDir =
+        requireNotNull(PasswordRepository.getRepositoryDirectory()) {
+          "Repository directory must be set before cloning"
         }
-        .setNegativeButton(R.string.dialog_do_not_delete) { dialog, _ -> dialog.cancel() }
-        .show()
-    } else {
-      runCatching {
-        // Silently delete & replace the lone .git folder if it exists
-        if (localDir.exists() && localDirFiles.size == 1 && localDirFiles[0].name == ".git") {
-          localDir.deleteRecursively()
-        }
+
+      var dialogInteractionCompletion: CompletableDeferred<Unit>? = null
+
+      /**
+       * Warn if a non-empty folder exists unless it's a just-initialized store that has just a .git
+       * folder
+       */
+      val localDirFiles = localDir.listFiles() ?: emptyArray()
+      if (
+        localDir.exists() &&
+          localDirFiles.isNotEmpty() &&
+          !(localDirFiles.size == 1 && localDirFiles[0].name == ".git")
+      ) {
+        doClone = false
+        repoExists = true
+        dialogInteractionCompletion = CompletableDeferred<Unit>()
+        MaterialAlertDialogBuilder(this@GitServerConfigActivity)
+          .setTitle(R.string.dialog_delete_title)
+          .setMessage(resources.getString(R.string.dialog_delete_msg, localDir.toString()))
+          .setCancelable(false)
+          .setPositiveButton(R.string.dialog_delete) { dialog, _ -> doClone = true }
+          .setNegativeButton(R.string.dialog_cancel, null)
+          .setOnDismissListener { dialogInteractionCompletion?.complete(Unit) }
+          .show()
       }
-        .onErr { e ->
-          logcat(ERROR) { e.asLog() }
-          MaterialAlertDialogBuilder(this).setMessage(e.message).show()
+
+      dialogInteractionCompletion?.await()
+
+      if (doClone) {
+        runCatching {
+          val snackbar =
+            if (repoExists)
+              snackbar(
+                message = getString(R.string.delete_directory_progress_text),
+                length = Snackbar.LENGTH_INDEFINITE,
+              )
+            else null
+          withContext(dispatcherProvider.io()) {
+            localDir.deleteRecursively()
+          }
+          snackbar?.dismiss()
         }
-      lifecycleScope.launch {
-        settings.edit { putString(PreferenceKeys.GIT_REMOTE_URL, newUrl) }
-        launchGitOperation(GitOp.CLONE)
-          .fold(
-            success = {
-              setResult(RESULT_OK)
-              finish()
-            },
-            failure = {
-              settings.edit { remove(PreferenceKeys.GIT_REMOTE_URL) }
-              promptOnErrorHandler(it)
-            },
-          )
+          .onOk {
+            settings.edit { putString(PreferenceKeys.GIT_REMOTE_URL, newUrl) }
+            launchGitOperation(GitOp.CLONE)
+              .onOk {
+                setResult(RESULT_OK)
+                finish()
+              }
+              .onErr { e ->
+                settings.edit { remove(PreferenceKeys.GIT_REMOTE_URL) }
+                promptOnErrorHandler(e)
+              }
+          }
+          .onErr { e ->
+            logcat(ERROR) { e.asLog() }
+            MaterialAlertDialogBuilder(this@GitServerConfigActivity).setMessage(e.message).show()
+          }
       }
     }
   }

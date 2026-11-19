@@ -158,16 +158,18 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
   private fun createRepository() {
     val localDir = PasswordRepository.getRepositoryDirectory()
     runCatching {
-      check(localDir.exists() || localDir.mkdirs()) { "Failed to create directory!" }
-      PasswordRepository.createRepository(localDir)
-      PasswordRepository.initialize()
-      if (File(PasswordRepository.getRepositoryDirectory(), ".gpg-id").isFile()) {
-        settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) }
-        finish()
-      } else {
-        // non-pass repository --> go to key selection
-        parentFragmentManager.performTransactionWithBackStack(KeySelectionFragment.newInstance())
-      }
+      if (!localDir.exists()) { // allow for existing, external non-Git repo
+        check(localDir.mkdirs()) { "Failed to create directory!" }
+        PasswordRepository.createRepository(localDir)
+        PasswordRepository.initialize()
+        if (File(PasswordRepository.getRepositoryDirectory(), ".gpg-id").isFile()) {
+          settings.edit { putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, true) } // as Git repo
+          finish()
+        } else {
+          // non-pass repository --> go to key selection
+          parentFragmentManager.performTransactionWithBackStack(KeySelectionFragment.newInstance())
+        }
+      } else finish()
     }
       .onErr { e ->
         logcat(ERROR) { e.asLog() }
