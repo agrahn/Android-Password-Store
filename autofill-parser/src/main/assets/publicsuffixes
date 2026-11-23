@@ -1,8 +1,9 @@
-148459
+148692
 119
 *.001.test.code-builder-stg.platform.salesforce.com
 *.0e.vc
 *.0emm.com
+*.2na.am
 *.aa.crm.dev
 *.ab.crm.dev
 *.ac.crm.dev
@@ -231,6 +232,7 @@
 *.pf.crm.dev
 *.pg
 *.platformsh.site
+*.prairielearn-user-content.com
 *.private.repost.aws
 *.privatelink.snowflake.app
 *.qualyhqpartner.com
@@ -2896,6 +2898,7 @@ farsund.no
 fashion
 fashionstore.jp
 fast
+fastedge.app
 fastly-edge.com
 fastly-terrarium.com
 fastlylb.net
@@ -2977,6 +2980,7 @@ fitjar.no
 fitness
 fj
 fj.cn
+fj.kg
 fjaler.no
 fjell.no
 fl.us
@@ -3266,6 +3270,7 @@ gb
 gb.net
 gbiz
 gc.ca
+gcorecdn.com
 gcp.databricksapps.com
 gd
 gd.cn
@@ -4888,6 +4893,7 @@ kiyosu.aichi.jp
 kizu.kyoto.jp
 klabu.no
 klepp.no
+kliv.site
 klodzko.pl
 klæbu.no
 km
@@ -5089,6 +5095,7 @@ kyowa.akita.jp
 kyowa.hokkaido.jp
 kyuragi.saga.jp
 kz
+kz.ci
 kárášjohka.no
 kåfjord.no
 l-o-g-i-n.de
@@ -5451,6 +5458,7 @@ maibara.shiga.jp
 maif
 mail-box.ne.jp
 mail.pl
+mailerpage.io
 main.jp
 maintenance.aero
 maison
@@ -6429,6 +6437,7 @@ ninja
 ninjaneer-sites.com
 ninohe.iwate.jp
 ninomiya.kanagawa.jp
+nippy.site
 nirasaki.yamanashi.jp
 nis.za
 nishi.fukuoka.jp
@@ -7355,6 +7364,7 @@ pro.typeform.com
 pro.vn
 prochowice.pl
 prod
+prod.enter.pro
 prod.page
 production.aero
 productions
@@ -7406,6 +7416,7 @@ puter.app
 puter.site
 puter.work
 pv.it
+pvf.cc
 pvh.br
 pvt.ge
 pvt.k12.ma.us
@@ -8563,6 +8574,7 @@ sokndal.no
 sol.site
 sola.no
 solar
+solidres.page
 solund.no
 solutions
 soma.fukushima.jp
@@ -8650,6 +8662,7 @@ stackit.zone
 stada
 stage.nodeart.io
 staging.expo.app
+staging.wordsmithmcpcontent.com
 stalowa-wola.pl
 stange.no
 staples
@@ -8749,6 +8762,7 @@ su.it
 sub.jp
 subsc-pay.com
 subsc-pay.net
+subscribepage.io
 sucks
 sud-sardegna.it
 sudsardegna.it
@@ -9443,6 +9457,7 @@ umi.fukuoka.jp
 umig.gov.pl
 umso.co
 unazuki.toyama.jp
+uncld.dev
 under.jp
 undo.jp
 uni5.net
@@ -9943,6 +9958,7 @@ wodzislaw.pl
 wolomin.pl
 woltlab-demo.com
 woodside
+wordsmithmcpcontent.com
 work
 workers.dev
 workinggroup.aero
@@ -9984,7 +10000,6 @@ x443.pw
 xbox
 xen.prgmr.com
 xerox
-xihuan
 xii.jp
 xin
 xj.cn
@@ -9997,6 +10012,7 @@ xxx
 xxx.ec
 xyz
 xyz.br
+xyz.ci
 xz.cn
 y.bg
 y.se
