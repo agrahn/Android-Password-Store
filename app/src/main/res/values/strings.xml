@@ -410,6 +410,9 @@
   <string name="select_repo_visibility_create_text">Specify whether you want to create the repository within the app’s internal directory or in a shared folder that other apps can also access.</string>
   <string name="internal_repo">hidden, app-internal (recommended)</string>
   <string name="shared_repo">shared folder</string>
+  <string name="custom_repo">existing folder (synced by another app)</string>
+  <string name="custom_repo_invalid_path">The selected folder cannot be accessed as a local path</string>
+  <string name="custom_repo_empty">The selected folder is empty</string>
   <string name="shared_repo_path" translatable="false">%1$s › PasswordStore</string>
 
   <!-- SSH port validation -->

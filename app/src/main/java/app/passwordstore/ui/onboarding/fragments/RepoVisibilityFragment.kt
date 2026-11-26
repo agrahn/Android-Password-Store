@@ -8,6 +8,7 @@ package app.passwordstore.ui.onboarding.fragments
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -27,6 +28,8 @@ import app.passwordstore.ui.git.config.GitServerConfigActivity
 import app.passwordstore.util.extensions.finish
 import app.passwordstore.util.extensions.performTransactionWithBackStack
 import app.passwordstore.util.extensions.sharedPrefs
+import app.passwordstore.util.extensions.snackbar
+import app.passwordstore.util.extensions.treeUriToFilePath
 import app.passwordstore.util.extensions.unsafeLazy
 import app.passwordstore.util.extensions.viewBinding
 import app.passwordstore.util.extensions.windowInsetsLambda
@@ -49,18 +52,40 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
       if (
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()
       ) {
-        if (requireArguments().getBoolean(SHOULD_CLONE_EXTRA)) cloneRepository()
-        else createRepository()
+        runPendingAction()
       }
     }
 
   private val requestReadWriteAccessAction =
     registerForActivityResult(RequestMultiplePermissions()) { result ->
-      if (result.all { it.value }) {
-        if (requireArguments().getBoolean(SHOULD_CLONE_EXTRA)) cloneRepository()
-        else createRepository()
-      }
+      if (result.all { it.value }) runPendingAction()
     }
+
+  /** Folder selection for the custom (user-chosen, externally synced) store location */
+  private val selectFolderAction =
+    registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
+      val path = uri?.treeUriToFilePath()
+      val dir = path?.let(::File)
+      if (dir == null || !dir.isDirectory) {
+        requireActivity().snackbar(message = getString(R.string.custom_repo_invalid_path))
+        return@registerForActivityResult
+      }
+      if (dir.listFiles()?.isEmpty() != false) {
+        requireActivity().snackbar(message = getString(R.string.custom_repo_empty))
+        return@registerForActivityResult
+      }
+      settings.edit { putString(PreferenceKeys.CUSTOM_REPO_PATH, dir.absolutePath) }
+      finish()
+    }
+
+  /** Action deferred until external storage access has been granted */
+  private var pendingAction: (() -> Unit)? = null
+
+  private fun runPendingAction() {
+    val action = pendingAction ?: return
+    pendingAction = null
+    action()
+  }
 
   private val cloneAction =
     registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -85,9 +110,11 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
     ViewCompat.setOnApplyWindowInsetsListener(view, windowInsetsLambda)
 
     with(binding) {
-      if (requireArguments().getBoolean(SHOULD_CLONE_EXTRA))
+      if (requireArguments().getBoolean(SHOULD_CLONE_EXTRA)) {
         repoVisibilityText.setText(R.string.select_repo_visibility_clone_text)
-      else repoVisibilityText.setText(R.string.select_repo_visibility_create_text)
+        // Cloning is a Git operation; a custom folder is only offered for local creation
+        customRepo.visibility = View.GONE
+      } else repoVisibilityText.setText(R.string.select_repo_visibility_create_text)
 
       internalRepo.setOnCheckedChangeListener { _, isChecked ->
         if (isChecked) {
@@ -106,8 +133,17 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
 
       continueButton.setOnClickListener {
         settings.edit { putBoolean(PreferenceKeys.PREF_SHARED_REPO, sharedRepo.isChecked) }
+        pendingAction =
+          when {
+            customRepo.isChecked -> {
+              { selectFolderAction.launch(null) }
+            }
+            requireArguments().getBoolean(SHOULD_CLONE_EXTRA) -> ::cloneRepository
+            else -> ::createRepository
+          }
+        val needsExternalAccess = sharedRepo.isChecked || customRepo.isChecked
         if (
-          sharedRepo.isChecked &&
+          needsExternalAccess &&
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
             !Environment.isExternalStorageManager()
         ) {
@@ -118,7 +154,7 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
             )
           )
         } else if (
-          sharedRepo.isChecked &&
+          needsExternalAccess &&
             Build.VERSION.SDK_INT < Build.VERSION_CODES.R &&
             requireActivity().checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
               PackageManager.PERMISSION_GRANTED
@@ -130,8 +166,7 @@ class RepoVisibilityFragment : Fragment(R.layout.fragment_repo_visibility) {
             )
           )
         } else {
-          if (requireArguments().getBoolean(SHOULD_CLONE_EXTRA)) cloneRepository()
-          else createRepository()
+          runPendingAction()
         }
       }
     }

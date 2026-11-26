@@ -4,6 +4,8 @@
  */
 package app.passwordstore.util.extensions
 
+import android.net.Uri
+import android.os.Environment
 import android.util.Base64
 import app.passwordstore.data.repo.PasswordRepository
 import com.github.michaelbull.result.get
@@ -43,6 +45,29 @@ fun File.isInsideRepository(): Boolean {
 
 /** Recursively lists the files in this [File], skipping any directories it encounters. */
 fun File.listFilesRecursively() = walkTopDown().filter { !it.isDirectory }.toList()
+
+/**
+ * Converts a tree [Uri] as returned by
+ * [android.provider.DocumentsContract.ACTION_OPEN_DOCUMENT_TREE] into a local file path usable with
+ * direct file access. The resulting path is only accessible if the app holds the "all files access"
+ * permission. Returns `null` if the URI does not point to a folder on external storage (e.g. a
+ * cloud storage provider document tree).
+ */
+fun Uri.treeUriToFilePath(): String? {
+  if (scheme != "content" || authority != "com.android.externalstorage.documents") return null
+  val docId = pathSegments.dropWhile { it != "tree" }.getOrNull(1) ?: return null
+  val parts = docId.split(":", limit = 2)
+  val volume = parts[0]
+  if (volume.isEmpty()) return null
+  val relative = parts.getOrNull(1)?.trim('/') ?: ""
+  val root =
+    when (volume) {
+      "primary",
+      "home" -> Environment.getExternalStorageDirectory().absolutePath
+      else -> "/storage/$volume"
+    }
+  return if (relative.isEmpty()) root else "$root/$relative"
+}
 
 /**
  * Unique SHA-1 hash of this commit as hexadecimal string.
