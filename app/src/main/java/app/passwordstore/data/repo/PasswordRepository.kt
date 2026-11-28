@@ -127,20 +127,25 @@ object PasswordRepository {
     settings.edit {
       putBoolean(PreferenceKeys.REPOSITORY_INITIALIZED, false)
       putBoolean(PreferenceKeys.PREF_SHARED_REPO, false)
+      putString(PreferenceKeys.CUSTOM_REPO_PATH, null)
     }
   }
 
   fun deleteRepository() {
-    getRepositoryDirectory().let { dir ->
-      dir.deleteRecursively()
+    // A user-selected custom folder is owned by an external sync mechanism; only unlink it
+    if (settings.getString(PreferenceKeys.CUSTOM_REPO_PATH, null).isNullOrEmpty()) {
+      getRepositoryDirectory().let { dir -> dir.deleteRecursively() }
     }
     closeRepository()
   }
 
-  fun getRepositoryDirectory(): File =
-    if (settings.getBoolean(PreferenceKeys.PREF_SHARED_REPO, false))
+  fun getRepositoryDirectory(): File {
+    val customPath = settings.getString(PreferenceKeys.CUSTOM_REPO_PATH, null)
+    if (!customPath.isNullOrEmpty()) return File(customPath)
+    return if (settings.getBoolean(PreferenceKeys.PREF_SHARED_REPO, false))
       File(File(Environment.getExternalStorageDirectory(), "PasswordStore"), "store")
     else File(filesDir, "store")
+  }
 
   /* referencePath: /a/b/c
    * /a/b/c/d/e/dir -> /d/e/dir

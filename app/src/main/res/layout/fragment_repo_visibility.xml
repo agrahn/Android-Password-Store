@@ -92,6 +92,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/shared_repo" />
+
+      <com.google.android.material.radiobutton.MaterialRadioButton
+        android:id="@+id/custom_repo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/custom_repo" />
     </RadioGroup>
 
     <TextView

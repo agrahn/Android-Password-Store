@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file
 ### Added
 
 - Allow existing, external password directory, Device › PasswordStore › store, that is not backed by Git
+- Password store can now be placed in a user-selected folder on the device (e.g. one maintained by a third-party sync tool) without Git
 
 ## [2.1.1] - 2026-11-13
 
